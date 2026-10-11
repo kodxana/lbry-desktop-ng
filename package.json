@@ -1,22 +1,21 @@
 {
   "name": "lbry",
   "version": "0.53.9",
-  "description": "A browser for the LBRY network, a digital marketplace controlled by its users.",
+  "description": "Community-maintained restoration of the original LBRY Desktop with LBRY SDK NG.",
   "keywords": [
     "lbry"
   ],
   "license": "MIT",
-  "homepage": "https://lbry.com/",
+  "homepage": "https://github.com/kodxana/lbry-desktop-ng",
   "bugs": {
-    "url": "https://github.com/lbryio/lbry-desktop/issues"
+    "url": "https://github.com/kodxana/lbry-desktop-ng/issues"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lbryio/lbry-desktop"
+    "url": "https://github.com/kodxana/lbry-desktop-ng"
   },
   "author": {
-    "name": "LBRY Inc.",
-    "email": "hello@lbry.com"
+    "name": "LBRY Inc."
   },
   "main": "./dist/electron/main.js",
   "scripts": {
