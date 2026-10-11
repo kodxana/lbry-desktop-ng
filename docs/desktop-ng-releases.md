@@ -2,8 +2,9 @@
 
 The first NG installer target is Windows x64. It bundles the SDK pinned in
 [`build/sdk-candidate.json`](../build/sdk-candidate.json), including SDK NG
-PR #27, the updated wallet hubs from PR #29, and the pending PR #28 startup
-cancellation fix. The executable still reports SDK `0.114.0rc4`, but the older public rc4
+PR #27, the updated wallet hubs from PR #29, the header sync improvements from
+PR #30, and the pending PR #28 startup cancellation fix. The executable still
+reports SDK `0.114.0rc4`, but the older public rc4
 release is a different binary. Build and startup both verify the pinned SHA-256.
 
 ## Build locally
@@ -23,7 +24,7 @@ The initial version is `0.54.0-rc.1`. Expected release files are:
 - `LBRY-Desktop-NG-0.54.0-rc.1-windows-x64.exe.blockmap`
 - `latest.yml`
 
-These local builds are unsigned. A community signing identity has not been
+These builds are unsigned. A community signing identity has not been
 configured. Electron 17.2.0 remains the compatibility baseline; runtime
 modernization and installed upgrade acceptance are still outstanding.
 
@@ -87,13 +88,27 @@ their packaging and automatic updates are not validated in this fork.
    Windows profile before promoting it. Verify wallet persistence, clean SDK
    shutdown, application restart, and the new bundled SDK hash.
 
-The SDK candidate currently comes from a GitHub Actions artifact, which can
-expire. Before public distribution, promote that verified SDK build to a durable
-SDK NG release and update the acquisition instructions/provenance together.
-Do not substitute the older rc4 release just because its version string matches.
+The SDK candidate was built by GitHub Actions. Its exact `lbrynet-windows.zip`
+is also preserved as an asset of the Desktop NG prerelease, so rebuilding does
+not depend on the expiring Actions artifact. `SDK-CANDIDATE.json` records the
+original CI provenance and archive/executable hashes. Do not substitute the
+older SDK rc4 release just because its version string matches.
 
-No Desktop NG release has been published by these changes. A desktop CI release
-workflow and signing setup remain separate work.
+## Published Windows prerelease
+
+[0.54.0-rc.1](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.1)
+was published manually from desktop commit
+`9f23f440d9aec68eba8b21a475f70311cfa39347`. The tag points to that tested source;
+the restoration PR remains open. The release contains the installer, blockmap,
+`latest.yml`, SDK archive, candidate manifest, `SHA256SUMS`, `provenance.json`
+and `VALIDATION.md`.
+
+All eight public assets were downloaded without authentication and matched
+their recorded SHA-256 hashes. The pinned GitHub updater provider resolved the
+public prerelease and the expected installer URL, size and SHA-512 metadata.
+This verifies discovery and downloads; an installed old-to-new upgrade remains
+outstanding. A desktop CI release workflow and signing setup remain separate
+work. Future builds must use a new version and tag, preserving these assets.
 
 ## Automated coverage
 

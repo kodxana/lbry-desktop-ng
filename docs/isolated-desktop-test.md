@@ -3,8 +3,9 @@
 This is a local compatibility build based on the original LBRY Desktop 0.53.9,
 maintained by the community for SDK testing. It is not an LBRY Inc. release.
 It uses a verified Windows SDK candidate containing the shutdown fixes from
-SDK NG PR #27, the wallet hubs from PR #29, and the pending PR #28 for
-interrupted startup. The SDK still reports `0.114.0rc4`; the public rc4 release
+SDK NG PR #27, the wallet hubs from PR #29, header sync improvements from PR #30,
+and the pending PR #28 for interrupted startup. The SDK still reports
+`0.114.0rc4`; the public rc4 release
 predates these fixes.
 `SDK-CANDIDATE.json` records the exact source and hashes. The current pin is
 Windows-only; Linux/macOS builds need corresponding verified candidates.
@@ -36,9 +37,10 @@ Electron 17.2.0; modernizing that runtime is separate restoration work.
 
 1. Install the original lock without postinstall scripts:
    `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`.
-2. Download `lbrynet-windows` from
-   <https://github.com/kodxana/lbry-sdk-ng/actions/runs/38152558981> and extract
-   `lbrynet.exe`. CI artifacts expire after 14 days; this is not a public release.
+2. Download [lbrynet-windows.zip](https://github.com/kodxana/lbry-desktop-ng/releases/download/v0.54.0-rc.1/lbrynet-windows.zip)
+   from the Desktop NG prerelease and extract `lbrynet.exe`. This preserves the
+   exact SDK from [CI run 38164960994](https://github.com/kodxana/lbry-sdk-ng/actions/runs/38164960994).
+   The ZIP's SHA-256 is `a9432175a1c4d86d1b3a0557a8eb65e4927d57265d76a6e6579787af971694e1`.
 3. Run `node build/downloadDaemon.js "path\to\lbrynet.exe"`.
    This verifies SHA-256 before replacing the cached executable. A failed import
    preserves the existing cached file.

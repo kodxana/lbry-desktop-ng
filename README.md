@@ -26,8 +26,11 @@ disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setu
 
 The current build retains Electron 17.2.0 and Node 16.20.2 as the compatibility
 baseline. Modernizing the desktop runtime and dependencies is still required.
-There are no published Desktop NG installers yet. Historical upstream binaries
-do not contain this fork's integration changes.
+The first [Windows x64 prerelease, 0.54.0-rc.1](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.1),
+is available for testing. Download the desktop installer from its Assets list;
+the other files provide updater metadata, checksums, SDK source provenance and
+validation details. Historical upstream binaries do not contain this fork's
+integration changes.
 
 See [build and launch instructions](docs/isolated-desktop-test.md) and the
 [Windows validation record](docs/windows-sdk-validation.md). The validation
@@ -37,7 +40,7 @@ funded transactions, wallet encryption/backup UI, Linux and macOS remain outside
 that acceptance coverage.
 
 See [NG installer and GitHub update instructions](docs/desktop-ng-releases.md)
-for `build:ng`, release files, profiles and update tests. Local installers are
+for `build:ng`, release files, profiles and update tests. Current installers are
 unsigned; an installed upgrade through a published release still needs acceptance
 testing. The inherited LBRY Inc. publishing workflow has been removed. Desktop
 CI, signing and a community publishing workflow remain to be established.
