@@ -119,6 +119,7 @@ async function main() {
         assert(addresses.length > 0);
         if (run === 0) initialAddresses = addresses;
         else assert.deepEqual(addresses, initialAddresses);
+        await daemon.quitForUpdate();
       } finally { await daemon.quit() }
       assert.equal((await daemon.exited).code, 0);
     }

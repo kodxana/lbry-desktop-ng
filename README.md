@@ -11,11 +11,12 @@ persistence, playback, downloads and shutdown.
 
 ## Current status
 
-Restoration is in progress. The first development target is an isolated Windows
-x64 compatibility build of Desktop 0.53.9 with the SDK NG Windows shutdown fix.
-Its executable is named **LBRY SDK Test** and uses its own profile, wallet and
-ports. It does not import an existing wallet or register itself as the default
-LBRY application.
+Restoration is in progress. Windows x64 builds now bundle the pinned SDK NG
+candidate with the Windows shutdown fix. **LBRY Desktop NG** has its own profile,
+wallet and ports, and checks this fork's GitHub releases for updates. The
+separate **LBRY SDK Test** ZIP keeps updates disabled for compatibility testing.
+Neither build imports an existing wallet or replaces the original app's protocol
+registration.
 
 The current build retains Electron 17.2.0 and Node 16.20.2 as the compatibility
 baseline. Modernizing the desktop runtime and dependencies is still required.
@@ -29,10 +30,11 @@ paused download resumed after restart, and clean shutdown. Paid content,
 funded transactions, wallet encryption/backup UI, Linux and macOS remain outside
 that acceptance coverage.
 
-The inherited LBRY Inc. publishing workflow has been removed from this branch.
-CI and a community release pipeline still need to be established. Build locally
-with the documented `build:sdk-test` command; the ordinary upstream packaging
-configuration has not been converted into a Desktop NG release configuration.
+See [NG installer and GitHub update instructions](docs/desktop-ng-releases.md)
+for `build:ng`, release files, profiles and update tests. Local installers are
+unsigned; an installed upgrade through a published release still needs acceptance
+testing. The inherited LBRY Inc. publishing workflow has been removed. Desktop
+CI, signing and a community publishing workflow remain to be established.
 
 ## Contributing
 

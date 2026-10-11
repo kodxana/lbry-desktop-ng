@@ -2,9 +2,7 @@
 /* eslint space-before-function-paren:0 */
 // Module imports
 import '@babel/polyfill';
-import SemVer from 'semver';
-import https from 'https';
-import { app, dialog, ipcMain, session, shell, BrowserWindow } from 'electron';
+import { app, dialog, ipcMain, session } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';
 import LbryFirstInstance from './LbryFirstInstance';
@@ -16,48 +14,29 @@ import startSandbox from './startSandbox';
 import installDevtools from './installDevtools';
 import fs from 'fs';
 import path from 'path';
-import testSettings from '../sdk-test.json';
+import desktopSettings from '../desktop-settings.json';
 import { diskSpaceLinux, diskSpaceWindows, diskSpaceMac } from '../ui/util/diskspace';
 
 const Daemon = require('./Daemon.cjs');
 const { createProfile } = require('./testProfile.cjs');
-const { download } = require('electron-dl');
+const DesktopUpdater = require('./DesktopUpdater.cjs');
 const mime = require('mime');
 const remote = require('@electron/remote/main');
 const os = require('os');
-const sudo = require('sudo-prompt');
 const probe = require('ffmpeg-probe');
 const MAX_IPC_SEND_BUFFER_SIZE = 500000000; // large files crash when serialized for ipc message
 
 remote.initialize();
-const rootArgument = process.argv.find(arg => arg.startsWith('--sdk-test-root='));
-const testProfile = createProfile(rootArgument
-  ? rootArgument.slice('--sdk-test-root='.length)
-  : path.join(app.getPath('appData'), testSettings.appName));
-app.setPath('userData', testProfile.desktop);
+const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
+const rootArgument = process.argv.find(arg => arg.startsWith(rootFlag));
+const desktopProfile = createProfile(rootArgument
+  ? rootArgument.slice(rootFlag.length)
+  : path.join(app.getPath('appData'), desktopSettings.appName), desktopSettings);
+app.setPath('userData', desktopProfile.desktop);
 // Electron 17 keeps Chromium session data inside userData.
-app.setPath('logs', testProfile.logs);
-app.setPath('downloads', testProfile.downloads);
-app.setPath('temp', testProfile.temp);
-const upgradeDisabled = true;
-autoUpdater.autoDownload = !upgradeDisabled;
-autoUpdater.autoInstallOnAppQuit = false;
-autoUpdater.allowPrerelease = false;
-
-const UPDATE_STATE_INIT = 0;
-const UPDATE_STATE_CHECKING = 1;
-const UPDATE_STATE_UPDATES_FOUND = 2;
-const UPDATE_STATE_NO_UPDATES_FOUND = 3;
-const UPDATE_STATE_DOWNLOADING = 4;
-const UPDATE_STATE_DOWNLOADED = 5;
-let updateState = UPDATE_STATE_INIT;
-let updateDownloadItem;
-
-const isAutoUpdateSupported = false;
-
-// This is used to keep track of whether we are showing the special dialog
-// that we show on Windows after you decline an upgrade and close the app later.
-let showingAutoUpdateCloseAlert = false;
+app.setPath('logs', desktopProfile.logs);
+app.setPath('downloads', desktopProfile.downloads);
+app.setPath('temp', desktopProfile.temp);
 
 // Keep a global reference, if you don't, they will be closed automatically when the JavaScript
 // object is garbage collected.
@@ -70,9 +49,9 @@ let lbryFirst;
 const appState = {};
 const PROTOCOL = 'lbry';
 
-// This test build must not replace the installed app's lbry:// handler.
-app.name = testSettings.appName;
-app.setAppUserModelId(testSettings.appId);
+// Keep the community and test profiles separate from the original desktop app.
+app.name = desktopSettings.appName;
+app.setAppUserModelId(desktopSettings.appId);
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
@@ -85,12 +64,12 @@ if (isDev) {
 const startDaemon = async () => {
   const directory = isDev ? path.join(__static, 'daemon') : path.join(process.resourcesPath, 'static', 'daemon');
   const binary = process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
-  daemon = new Daemon(testProfile, binary, process.env.LBRY_HEADERS);
+  daemon = new Daemon(desktopProfile, binary, process.env.LBRY_HEADERS);
   await daemon.launch();
   daemon.on('exit', () => {
     daemon = null;
     if (!appState.isQuitting) {
-      dialog.showErrorBox('Test SDK exited', 'See the logs in ' + testProfile.logs);
+      dialog.showErrorBox('SDK exited', 'See the logs in ' + desktopProfile.logs);
       app.quit();
     }
   });
@@ -186,7 +165,7 @@ if (!gotSingleInstanceLock) {
     try {
       await startDaemon();
     } catch (error) {
-      dialog.showErrorBox('SDK test startup failed', error.message);
+      dialog.showErrorBox('SDK startup failed', error.message);
       app.exit(1);
       return;
     }
@@ -224,34 +203,6 @@ app.on('activate', () => {
 });
 
 app.on('will-quit', event => {
-  if (
-    process.platform === 'win32' &&
-    updateState === UPDATE_STATE_DOWNLOADED &&
-    isAutoUpdateSupported &&
-    !appState.autoUpdateAccepted &&
-    !showingAutoUpdateCloseAlert
-  ) {
-    // We're on Win and have an update downloaded, but the user declined it (or closed
-    // the app without accepting it). Now the user is closing the app, so the new update
-    // will install. On Mac this is silent, but on Windows they get a confusing permission
-    // escalation dialog, so we show Windows users a warning dialog first.
-
-    showingAutoUpdateCloseAlert = true;
-    dialog.showMessageBox(
-      {
-        type: 'info',
-        title: 'LBRY Will Upgrade',
-        message: 'LBRY has a pending upgrade. Please select "Yes" to install it on the prompt shown after this one.',
-      },
-      () => {
-        app.quit();
-      }
-    );
-
-    event.preventDefault();
-    return;
-  }
-
   appState.isQuitting = true;
 
   if (daemon) {
@@ -262,7 +213,7 @@ app.on('will-quit', event => {
         daemon = null;
         app.quit();
       }).catch(error => {
-        dialog.showErrorBox('SDK test shutdown failed', error.message);
+        dialog.showErrorBox('SDK shutdown failed', error.message);
         app.exit(1);
       });
     }
@@ -410,80 +361,8 @@ ipcMain.on('get-disk-space', async (event) => {
   }
 });
 
-ipcMain.on('version-info-requested', () => {
-  function formatRc(ver) {
-    // Adds dash if needed to make RC suffix SemVer friendly
-    return ver.replace(/([^-])rc/, '$1-rc');
-  }
-
-  const localVersion = pjson.version;
-  let result = '';
-  const onSuccess = res => {
-    res.on('data', data => {
-      result += data;
-    });
-
-    res.on('end', () => {
-      let json;
-      try {
-        json = JSON.parse(result);
-      } catch (e) {
-        return;
-      }
-      const tagName = json.tag_name;
-      if (tagName) {
-        const [, remoteVersion] = tagName.match(/^v([\d.]+(?:-?rc\d+)?)$/);
-        if (!remoteVersion) {
-          if (rendererWindow) {
-            rendererWindow.webContents.send('version-info-received', localVersion);
-          }
-        } else {
-          const upgradeAvailable = SemVer.gt(formatRc(remoteVersion), formatRc(localVersion));
-          if (rendererWindow) {
-            rendererWindow.webContents.send('version-info-received', {
-              remoteVersion,
-              localVersion,
-              upgradeAvailable,
-            });
-          }
-        }
-      } else if (rendererWindow) {
-        rendererWindow.webContents.send('version-info-received', { localVersion });
-      }
-    });
-  };
-
-  const requestLatestRelease = (alreadyRedirected = false) => {
-    const req = https.get(
-      {
-        hostname: 'api.github.com',
-        path: '/repos/lbryio/lbry-desktop/releases/latest',
-        headers: { 'user-agent': `LBRY/${localVersion}` },
-      },
-      res => {
-        if (res.statusCode === 301 || res.statusCode === 302) {
-          requestLatestRelease(res.headers.location, true);
-        } else {
-          onSuccess(res);
-        }
-      }
-    );
-
-    if (alreadyRedirected) return;
-    req.on('error', err => {
-      console.log('Failed to get current version from GitHub. Error:', err);
-      if (rendererWindow) {
-        rendererWindow.webContents.send('version-info-received', null);
-      }
-    });
-  };
-
-  if (upgradeDisabled && rendererWindow) {
-    rendererWindow.webContents.send('version-info-received', { localVersion });
-    return;
-  }
-
-  requestLatestRelease();
+ipcMain.on('version-info-requested', event => {
+  event.reply('version-info-received', updates.versionInfo());
 });
 
 ipcMain.on('launch-lbry-first', async () => {
@@ -502,165 +381,29 @@ process.on('uncaughtException', async error => {
   try { if (daemon) await daemon.quit(); } finally { app.exit(1) }
 });
 
-// Auto updater
-autoUpdater.on('download-progress', () => {
-  updateState = UPDATE_STATE_DOWNLOADING;
+const updates = new DesktopUpdater(autoUpdater, {
+  enabled: app.isPackaged && desktopSettings.autoUpdates === true && process.platform === 'win32',
+  version: pjson.version,
+  stopSdk: async () => {
+    appState.isQuitting = true;
+    try {
+      if (daemon) await daemon.quitForUpdate();
+      daemon = null;
+    } catch (error) {
+      appState.isQuitting = false;
+      throw error;
+    }
+  },
+  onError: (error, installing) => {
+    console.error('Desktop update failed:', error.message);
+    if (installing) {
+      appState.isQuitting = false;
+      dialog.showErrorBox('Update could not be installed', error.message + '\nPlease restart LBRY Desktop NG.');
+    }
+  },
 });
 
-autoUpdater.on('update-downloaded', () => {
-  updateState = UPDATE_STATE_DOWNLOADED;
-
-  // If this download was trigger by
-  // autoUpdateAccepted it means, the user
-  // wants to install the new update but
-  // needed to downloaded the files first.
-  if (appState.autoUpdateAccepted) {
-    autoUpdater.quitAndInstall();
-  }
-});
-
-autoUpdater.on('update-available', () => {
-  if (updateState === UPDATE_STATE_DOWNLOADING) {
-    return;
-  }
-  updateState = UPDATE_STATE_UPDATES_FOUND;
-});
-
-autoUpdater.on('update-not-available', () => {
-  updateState = UPDATE_STATE_NO_UPDATES_FOUND;
-});
-
-autoUpdater.on('error', () => {
-  if (updateState === UPDATE_STATE_DOWNLOADING) {
-    updateState = UPDATE_STATE_UPDATES_FOUND;
-    return;
-  }
-  updateState = UPDATE_STATE_INIT;
-});
-
-// Manual (.deb) update
-ipcMain.on('cancel-download-upgrade', () => {
-  if (updateDownloadItem) {
-    // Cancel the download and execute the onCancel
-    // callback set in the options.
-    updateDownloadItem.cancel();
-  }
-});
-
-ipcMain.on('download-upgrade', (event, params) => {
-  if (upgradeDisabled) return;
-  if (updateState !== UPDATE_STATE_UPDATES_FOUND) {
-    return;
-  }
-  if (isAutoUpdateSupported) {
-    updateState = UPDATE_STATE_DOWNLOADING;
-    autoUpdater.downloadUpdate();
-    return;
-  }
-
-  const { url, options } = params;
-  const dir = fs.mkdtempSync(app.getPath('temp') + path.sep);
-
-  updateState = UPDATE_STATE_DOWNLOADING;
-
-  // Grab the download item's handler to allow
-  // cancelling the operation if required.
-  options.onStarted = function(downloadItem) {
-    updateDownloadItem = downloadItem;
-  };
-  options.onCancel = function() {
-    updateState = UPDATE_STATE_UPDATES_FOUND;
-    updateDownloadItem = undefined;
-  };
-  options.onProgress = function(p) {
-    rendererWindow.webContents.send('download-progress-update', p);
-  };
-  options.onCompleted = function(c) {
-    updateState = UPDATE_STATE_DOWNLOADED;
-    updateDownloadItem = undefined;
-    rendererWindow.webContents.send('download-update-complete', c);
-  };
-  options.directory = dir;
-  const win = BrowserWindow.getFocusedWindow();
-  download(win, url, options).catch(e => {
-    updateState = UPDATE_STATE_UPDATES_FOUND;
-    console.log('e', e);
-  });
-});
-
-// Update behavior
-ipcMain.on('autoUpdateAccepted', () => {
-  if (upgradeDisabled) return;
-  appState.autoUpdateAccepted = true;
-
-  // quitAndInstall can only be called if the
-  // update has been downloaded. Since the user
-  // can disable auto updates, we have to make
-  // sure it has been downloaded first.
-  if (updateState === UPDATE_STATE_DOWNLOADED) {
-    autoUpdater.quitAndInstall();
-    return;
-  }
-
-  if (updateState !== UPDATE_STATE_UPDATES_FOUND) {
-    return;
-  }
-
-  // If the update hasn't been downloaded,
-  // start downloading it. After it's done, the
-  // event 'update-downloaded' will be triggered,
-  // where we will be able to resume the
-  // update installation.
-  updateState = UPDATE_STATE_DOWNLOADING;
-  autoUpdater.downloadUpdate();
-});
-
-ipcMain.on('check-for-updates', (event, autoDownload) => {
-  if (upgradeDisabled) return;
-  if (![UPDATE_STATE_INIT, UPDATE_STATE_NO_UPDATES_FOUND].includes(updateState)) {
-    return;
-  }
-
-  updateState = UPDATE_STATE_CHECKING;
-
-  // If autoDownload is true, checkForUpdates will begin the
-  // download automatically.
-  if (autoDownload) {
-    updateState = UPDATE_STATE_DOWNLOADING;
-  }
-
-  autoUpdater.autoDownload = autoDownload;
-  autoUpdater.checkForUpdates();
-});
-
-ipcMain.on('upgrade', (event, installerPath) => {
-  if (upgradeDisabled) return;
-  // what to do if no shutdown in a long time?
-  console.log('Update downloaded to', installerPath);
-  console.log('The app will close and you will be prompted to install the latest version of LBRY.');
-  console.log('After the install is complete, please reopen the app.');
-
-  // Prevent .deb package from opening with archive manager (Ubuntu >= 20)
-  if (process.platform === 'linux' && !process.env.APPIMAGE) {
-    sudo.exec(`dpkg -i ${installerPath}`, { name: app.name }, (err, stdout, stderr) => {
-      if (err || stderr) {
-        rendererWindow.webContents.send('upgrade-installing-error');
-        return;
-      }
-
-      // Re-launch the application when the installation finishes.
-      app.relaunch();
-      app.quit();
-    });
-
-    return;
-  }
-
-  app.on('quit', () => {
-    console.log('Launching upgrade installer at', installerPath);
-    // This gets triggered called after *all* other quit-related events, so
-    // we'll only get here if we're fully prepared and quitting for real.
-    shell.openPath(installerPath);
-  });
-  app.quit();
-});
+ipcMain.on('check-for-updates', (event, preferences) => updates.check(preferences));
+ipcMain.on('update-prereleases', (event, allow) => updates.setPrereleases(allow));
+ipcMain.on('autoUpdateAccepted', () => updates.accept());
+ipcMain.on('autoUpdateDeclined', () => updates.decline());

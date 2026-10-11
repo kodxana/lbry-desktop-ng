@@ -1,5 +1,6 @@
 import isDev from 'electron-is-dev';
-import { ipcRenderer } from 'electron';
+import desktopSettings from '../../../desktop-settings.json';
+import { ipcRenderer, shell } from 'electron';
 import * as remote from '@electron/remote';
 import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
@@ -27,7 +28,6 @@ import {
 import {
   selectIsUpgradeSkipped,
   selectUpdateUrl,
-  selectUpgradeDownloadPath,
   selectAutoUpdateDeclined,
   selectRemoteVersion,
   selectUpgradeTimer,
@@ -78,15 +78,7 @@ export function doSkipUpgrade() {
 }
 
 export function doStartUpgrade() {
-  return (dispatch, getState) => {
-    const state = getState();
-    const upgradeDownloadPath = selectUpgradeDownloadPath(state);
-
-    ipcRenderer.send('upgrade', upgradeDownloadPath);
-    dispatch({
-      type: ACTIONS.UPGRADE_INIT_INSTALL,
-    });
-  };
+  return () => ipcRenderer.send('autoUpdateAccepted');
 }
 
 export function doShowUpgradeInstallationError() {
@@ -97,29 +89,16 @@ export function doShowUpgradeInstallationError() {
 
 export function doDownloadUpgrade() {
   return (dispatch, getState) => {
-    const state = getState();
-    const url = selectUpdateUrl(state);
-    ipcRenderer.send('download-upgrade', { url, options: {} });
-    dispatch({
-      type: ACTIONS.UPGRADE_DOWNLOAD_STARTED,
-    });
+    shell.openExternal(selectUpdateUrl(getState()));
     dispatch(doHideModal());
-    dispatch(doOpenModal(MODALS.DOWNLOADING));
   };
 }
 
 export function doDownloadUpgradeRequested() {
-  // This means the user requested an upgrade by clicking the "upgrade" button in the navbar.
-  // If on Mac and Windows, we do some new behavior for the auto-update system.
-  // This will probably be reorganized once we get auto-update going on Linux and remove
-  // the old logic.
-
   return (dispatch) => {
-    if (['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE) {
-      // electron-updater behavior
+    if (process.platform === 'win32' && desktopSettings.autoUpdates) {
       dispatch(doOpenModal(MODALS.AUTO_UPDATE_DOWNLOADED));
     } else {
-      // Old behavior for Linux
       dispatch(doDownloadUpgrade());
     }
   };
@@ -152,6 +131,7 @@ export function doAutoUpdate() {
 
 export function doAutoUpdateDeclined() {
   return (dispatch) => {
+    ipcRenderer.send('autoUpdateDeclined');
     dispatch(doClearUpgradeTimer());
 
     dispatch({
@@ -172,26 +152,26 @@ export function doCheckUpgradeAvailable() {
       type: ACTIONS.CHECK_UPGRADE_START,
     });
 
-    const autoUpdateSupported = ['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE;
+    const autoUpdateSupported = process.platform === 'win32' && desktopSettings.autoUpdates;
 
     const autoUpdateDeclined = selectAutoUpdateDeclined(state);
 
-    // If auto update isn't supported (Linux using .deb packages)
-    // don't perform any download, just get the upgrade info
-    // (release notes and version)
     const disableAutoUpdate = !autoUpdateSupported || selectDisableAutoUpdates(state);
 
-    if (autoUpdateDeclined || isDev) {
+    if (autoUpdateDeclined || isDev || !autoUpdateSupported) {
       return;
     }
 
-    ipcRenderer.send('check-for-updates', !disableAutoUpdate);
+    ipcRenderer.send('check-for-updates', {
+      autoDownload: !disableAutoUpdate,
+      allowPrerelease: makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state),
+    });
   };
 }
 
 export function doNotifyUpdateAvailable(e) {
   return (dispatch, getState) => {
-    const remoteVersion = e.releaseName || e.version;
+    const remoteVersion = e.version;
 
     const state = getState();
     const noModalBeingDisplayed = !selectModal(state);
@@ -207,7 +187,7 @@ export function doNotifyUpdateAvailable(e) {
       },
     });
 
-    const autoUpdateSupported = ['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE;
+    const autoUpdateSupported = process.platform === 'win32' && desktopSettings.autoUpdates;
 
     if (autoUpdateSupported) {
       return;
@@ -385,7 +365,7 @@ export function doQuit() {
 }
 
 export function doQuitAnyDaemon() {
-  // The main process stops only the SDK child owned by this test instance.
+  // The main process stops only the SDK child owned by this application.
   return doQuit();
 }
 

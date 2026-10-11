@@ -15,6 +15,7 @@ import { Provider } from 'react-redux';
 import * as SETTINGS from 'constants/settings';
 import {
   doDaemonReady,
+  doCheckUpgradeAvailable,
   doAutoUpdate,
   doOpenModal,
   doHideModal,
@@ -144,6 +145,10 @@ autoUpdater.on('update-available', (e) => {
   app.store.dispatch(doNotifyUpdateAvailable(e));
 });
 
+autoUpdater.on('update-not-available', () => {
+  app.store.dispatch({ type: ACTIONS.CHECK_UPGRADE_SUCCESS, data: { upgradeAvailable: false } });
+});
+
 autoUpdater.on('update-downloaded', () => {
   app.store.dispatch(doAutoUpdateReset());
 });
@@ -230,11 +235,17 @@ function AppWrapper() {
     if (persistDone) {
       const state = store.getState();
       const enabled = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state);
-      if (enabled) {
-        autoUpdater.allowPrerelease = true;
-      } else {
-        autoUpdater.allowPrerelease = false;
-      }
+      let previous = enabled;
+      const sendPreferences = () => {
+        const allow = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(store.getState());
+        if (allow !== previous) {
+          previous = allow;
+          ipcRenderer.send('update-prereleases', allow);
+          store.dispatch(doCheckUpgradeAvailable());
+        }
+      };
+      ipcRenderer.send('update-prereleases', enabled);
+      return store.subscribe(sendPreferences);
     }
   }, [persistDone]);
 
@@ -246,7 +257,7 @@ function AppWrapper() {
       console.error(error.message); // eslint-disable-line no-console
     });
 
-    if (['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE) {
+    if (process.platform === 'win32') {
       autoUpdater.on('update-available', () => {
         console.log('Update available'); // eslint-disable-line no-console
       });

@@ -11400,9 +11400,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lbry@workspace:.":
+"lbry-desktop-ng@workspace:.":
   version: 0.0.0-use.local
-  resolution: "lbry@workspace:."
+  resolution: "lbry-desktop-ng@workspace:."
   dependencies:
     "@babel/core": ^7.0.0
     "@babel/plugin-proposal-class-properties": ^7.0.0

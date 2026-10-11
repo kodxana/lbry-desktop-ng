@@ -12,6 +12,9 @@ const STATIC_ROOT = path.resolve(__dirname, 'static/');
 const DIST_ROOT = path.resolve(__dirname, 'dist/');
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
+const desktopSettings = path.resolve(__dirname, process.env.LBRY_DESKTOP_BUILD === 'sdk-test'
+  ? 'sdk-test.json' : 'desktop-settings.json');
+
 const { ifProduction } = getIfUtils(NODE_ENV);
 
 let mainConfig = {
@@ -43,6 +46,7 @@ let mainConfig = {
     ],
   },
   plugins: [
+    new webpack.NormalModuleReplacementPlugin(/desktop-settings\.json$/, desktopSettings),
     new CopyWebpackPlugin({
       patterns: [
         {
@@ -87,6 +91,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 let plugins = [
+  new webpack.NormalModuleReplacementPlugin(/desktop-settings\.json$/, desktopSettings),
   new DefinePlugin({
     IS_WEB: JSON.stringify(false),
   }),

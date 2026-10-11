@@ -2,11 +2,11 @@ const fs = require('fs');
 const path = require('path');
 const net = require('net');
 const dgram = require('dgram');
-const settings = require('../sdk-test.json');
+const testSettings = require('../sdk-test.json');
 
-function createProfile(root) {
+function createProfile(root, settings = testSettings) {
   if (!path.isAbsolute(root) || path.resolve(root) === path.parse(root).root) {
-    throw new Error('The SDK test profile must be an absolute directory path.');
+    throw new Error('The desktop profile must be an absolute directory path.');
   }
   root = path.resolve(root);
   const marker = path.join(root, 'sdk-test-profile.json');
@@ -16,7 +16,7 @@ function createProfile(root) {
     }
   } else {
     if (fs.existsSync(root) && fs.readdirSync(root).length) {
-      throw new Error('Choose an empty directory for the SDK test profile: ' + root);
+      throw new Error('Choose an empty directory for the desktop profile: ' + root);
     }
     fs.mkdirSync(root, { recursive: true });
     fs.writeFileSync(marker, JSON.stringify({ appId: settings.appId }), { flag: 'wx' });
@@ -79,7 +79,7 @@ async function assertPortsAvailable(ports) {
       udp.bind({ port: ports.peerPort, address: '0.0.0.0', exclusive: true }, resolve);
     });
   } catch (error) {
-    throw new Error('An SDK test port is unavailable; no existing SDK will be used. ' + error.message);
+    throw new Error('An SDK port is unavailable; no existing SDK will be used. ' + error.message);
   } finally {
     for (const socket of sockets) {
       try { await new Promise(resolve => socket.close(resolve)) } catch (_) { /* Not bound. */ }

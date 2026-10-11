@@ -27,8 +27,8 @@ function PrivacyAgreement(props: Props) {
   if (isolatedTestBuild) {
     return (
       <section className="main--contained">
-        <h1>{__('SDK compatibility test')}</h1>
-        <p>{__('Usage reporting is disabled in this test build.')}</p>
+        <h1>{__('Welcome to LBRY Desktop NG')}</h1>
+        <p>{__('This community build uses a separate wallet. Usage reporting is disabled.')}</p>
         <Button button="primary" label={__('Next')} onClick={handleNextPage} />
       </section>
     );

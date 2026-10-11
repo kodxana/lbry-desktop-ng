@@ -1,3 +1,4 @@
+import { releasesUrl } from 'util/desktop-updates';
 // @flow
 import { SITE_HELP_EMAIL } from 'config';
 import * as ICONS from 'constants/icons';
@@ -111,16 +112,16 @@ class HelpPage extends React.PureComponent<Props, State> {
         osName = parseInt(ver.os_release.match(/^\d+/), 10) < 16 ? 'Mac OS X' : 'Mac OS';
 
         platform = `${osName} ${ver.os_release}`;
-        newVerLink = 'https://lbry.com/get/lbry.dmg';
+        newVerLink = releasesUrl;
       } else if (process.env.APPIMAGE !== undefined) {
         platform = `Linux (AppImage)`;
-        newVerLink = 'https://lbry.com/get/lbry.AppImage';
+        newVerLink = releasesUrl;
       } else if (ver.os_system === 'Linux') {
         platform = `Linux (${ver.platform})`;
-        newVerLink = 'https://lbry.com/get/lbry.deb';
+        newVerLink = releasesUrl;
       } else {
         platform = `Windows (${ver.platform})`;
-        newVerLink = 'https://lbry.com/get/lbry.msi';
+        newVerLink = releasesUrl;
       }
     } else {
       ver = null;

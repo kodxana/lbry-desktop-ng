@@ -5,7 +5,7 @@ import windowStateKeeper from 'electron-window-state';
 import SUPPORTED_LANGUAGES from 'constants/supported_languages';
 import { SUPPORTED_SUB_LANGUAGE_CODES, SUB_LANG_CODE_LEN } from 'constants/supported_sub_languages';
 import SUPPORTED_BROWSER_LANGUAGES from 'constants/supported_browser_languages';
-import testSettings from '../sdk-test.json';
+import desktopSettings from '../desktop-settings.json';
 
 import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
@@ -66,7 +66,7 @@ export default appState => {
   let window = new BrowserWindow(windowConfiguration);
   window.on('page-title-updated', event => {
     event.preventDefault();
-    window.setTitle(testSettings.appName);
+    window.setTitle(desktopSettings.appName);
   });
   remote.enable(window.webContents);
 

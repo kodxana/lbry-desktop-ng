@@ -1,6 +1,6 @@
 # LBRY SDK Test for Windows
 
-This is a local compatibility build of the original LBRY Desktop 0.53.9,
+This is a local compatibility build based on the original LBRY Desktop 0.53.9,
 maintained by the community for SDK testing. It is not an LBRY Inc. release.
 It uses the verified SDK candidate containing the Windows shutdown fix from
 SDK NG PR #27. The SDK still reports `0.114.0rc4`; the public rc4 release
@@ -40,12 +40,15 @@ Electron 17.2.0; modernizing that runtime is separate restoration work.
    This verifies SHA-256 before replacing the cached executable. A failed import
    preserves the existing cached file.
 4. Run `node node_modules/electron/install.js`, then `node build/buildSdkTest.js`.
-   It runs isolation/restart tests, compiles both bundles and creates a ZIP under
+   It runs update and isolation/restart tests, compiles both bundles and creates a ZIP under
    `dist/sdk-test`. It does not publish or sign the build.
 
 The SDK acquisition step accepts `LBRY_SDK_BINARY` as an alternative to a file
 argument. A runtime `LBRY_DAEMON` override must match the same pinned hash;
 `LBRY_HEADERS` is a separate optional initial-header file.
+
+The separately named NG installer enables GitHub updates and uses different
+ports and profiles. See [Desktop NG builds and updates](desktop-ng-releases.md).
 
 ## Compatibility checks
 

@@ -1,6 +1,6 @@
 {
-  "name": "lbry",
-  "version": "0.53.9",
+  "name": "lbry-desktop-ng",
+  "version": "0.54.0-rc.1",
   "description": "Community-maintained restoration of the original LBRY Desktop with LBRY SDK NG.",
   "keywords": [
     "lbry"
@@ -28,7 +28,7 @@
     "dev:electron": "cross-env NODE_ENV=development node ./electron/devServer.js",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
-    "build": "cross-env NODE_ENV=production yarn compile:electron && electron-builder build",
+    "build": "yarn build:ng",
     "build:dir": "yarn build -- --dir -c.compression=store -c.mac.identity=null",
     "crossenv": "cross-env",
     "flow": "flow",
@@ -38,7 +38,9 @@
     "flow-defs": "flow-typed install",
     "precommit": "lint-staged",
     "postinstall": "electron-builder install-app-deps && node ./build/downloadDaemon.js",
-    "postinstall:warning": "echo '\n\nWARNING\n\nNot all node modules were installed because NODE_ENV is set to \"production\".\nThis should only be set after installing dependencies with \"yarn\". The app will not work.\n\n'"
+    "postinstall:warning": "echo '\n\nWARNING\n\nNot all node modules were installed because NODE_ENV is set to \"production\".\nThis should only be set after installing dependencies with \"yarn\". The app will not work.\n\n'",
+    "build:ng": "node build/buildDesktop.js",
+    "test:desktop-updates": "node build/testDesktopUpdates.js"
   },
   "dependencies": {
     "@electron/remote": "^2.0.1",

@@ -104,6 +104,14 @@ class Daemon {
     return this.shutdown;
   }
 
+  async quitForUpdate() {
+    await this.quit();
+    const result = await this.exited;
+    if (!result || result.code !== 0 || result.signal) {
+      throw new Error('SDK did not exit cleanly. The update was not installed; check the SDK logs before retrying.');
+    }
+  }
+
   async stopOwnedProcess() {
     const child = this.subprocess;
     if (!child) return;

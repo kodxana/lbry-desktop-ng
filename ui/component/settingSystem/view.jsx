@@ -19,6 +19,7 @@ import * as DAEMON_SETTINGS from 'constants/daemon_settings';
 import SettingEnablePrereleases from 'component/settingEnablePrereleases';
 import SettingDisableAutoUpdates from 'component/settingDisableAutoUpdates';
 
+const desktopSettings = require('../../../desktop-settings.json');
 const IS_MAC = process.platform === 'darwin';
 const { isolatedTestBuild } = require('../../../package.json').lbrySettings;
 
@@ -171,7 +172,7 @@ export default function SettingSystem(props: Props) {
                 label={<React.Fragment>{__('Allow the app to share data to LBRY.inc')}</React.Fragment>}
                 helper={
                   isolatedTestBuild
-                    ? __('Disabled in the SDK test build.')
+                    ? __('Usage reporting is disabled in this community build.')
                     : isAuthenticated
                       ? __('Internal sharing is required while signed in.')
                       : __('Internal sharing is required to participate in rewards programs.')
@@ -203,6 +204,10 @@ export default function SettingSystem(props: Props) {
                 <SettingsRow title={__('Leave app running in notification area when the window is closed')}>
                   <SettingClosingBehavior noLabels />
                 </SettingsRow>
+              </React.Fragment>
+            )}
+            {desktopSettings.autoUpdates && process.platform === 'win32' && (
+              <React.Fragment>
                 <SettingsRow
                   title={__('Enable Upgrade to Test Builds')}
                   subtitle={__('Prereleases may break things and we may not be able to fix them for you.')}
@@ -212,7 +217,7 @@ export default function SettingSystem(props: Props) {
                 <SettingsRow
                   title={__('Disable automatic updates')}
                   subtitle={__(
-                    "Preven't new updates to be downloaded automatically in the background (we will keep notifying you if there is an update)"
+                    'Prevent new updates from downloading automatically in the background. You will still be notified when an update is available.'
                   )}
                 >
                   <SettingDisableAutoUpdates />

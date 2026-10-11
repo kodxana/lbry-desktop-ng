@@ -1,6 +1,6 @@
 // @flow
 require('proxy-polyfill');
-const sdkTest = require('../sdk-test.json');
+const desktopSettings = require('../desktop-settings.json');
 
 const CHECK_DAEMON_STARTED_TRY_NUMBER = 200;
 //
@@ -11,7 +11,7 @@ const CHECK_DAEMON_STARTED_TRY_NUMBER = 200;
 const Lbry = {
   isConnected: false,
   connectPromise: null,
-  daemonConnectionString: 'http://127.0.0.1:' + sdkTest.apiPort,
+  daemonConnectionString: 'http://127.0.0.1:' + desktopSettings.apiPort,
   alternateConnectionString: '',
   methodsUsingAlternateConnectionString: [],
   apiRequestHeaders: { 'Content-Type': 'application/json-rpc' },
