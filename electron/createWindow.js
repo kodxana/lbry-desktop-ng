@@ -5,7 +5,7 @@ import windowStateKeeper from 'electron-window-state';
 import SUPPORTED_LANGUAGES from 'constants/supported_languages';
 import { SUPPORTED_SUB_LANGUAGE_CODES, SUB_LANG_CODE_LEN } from 'constants/supported_sub_languages';
 import SUPPORTED_BROWSER_LANGUAGES from 'constants/supported_browser_languages';
-import { TO_TRAY_WHEN_CLOSED } from 'constants/settings';
+import testSettings from '../sdk-test.json';
 
 import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
@@ -64,6 +64,10 @@ export default appState => {
   const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 
   let window = new BrowserWindow(windowConfiguration);
+  window.on('page-title-updated', event => {
+    event.preventDefault();
+    window.setTitle(testSettings.appName);
+  });
   remote.enable(window.webContents);
 
   // Let us register listeners on the window, so we can update the state
@@ -118,27 +122,8 @@ export default appState => {
       return;
     }
 
-    if (!appState.autoUpdateAccepted) {
-      event.preventDefault();
-      if (window.isFullScreen()) {
-        window.once('leave-full-screen', () => {
-          window.hide();
-        });
-        window.setFullScreen(false);
-      } else {
-        window.hide();
-      }
-    }
-
-    const getToTrayWhenClosedSetting = window.webContents.executeJavaScript(`localStorage.getItem('${TO_TRAY_WHEN_CLOSED}')`);
-
-    getToTrayWhenClosedSetting.then(toTrayWhenClosedSetting => {
-      const closeApp = toTrayWhenClosedSetting === 'false';
-
-      if (closeApp) {
-        app.quit();
-      }
-    });
+    event.preventDefault();
+    app.quit();
   });
 
   window.on('focus', () => {

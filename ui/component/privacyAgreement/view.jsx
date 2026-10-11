@@ -10,6 +10,7 @@ import image from 'static/img/yrblsec.svg';
 
 const LIMITED = 'limited';
 const NONE = 'none';
+const { isolatedTestBuild } = require('../../../package.json').lbrySettings;
 
 type Props = {
   signOut: () => void,
@@ -22,6 +23,16 @@ type Props = {
 function PrivacyAgreement(props: Props) {
   const { setShareDataInternal, authenticated, signOut, authenticateIfSharingData, handleNextPage } = props;
   const [share, setShare] = useState(undefined); // preload
+
+  if (isolatedTestBuild) {
+    return (
+      <section className="main--contained">
+        <h1>{__('SDK compatibility test')}</h1>
+        <p>{__('Usage reporting is disabled in this test build.')}</p>
+        <Button button="primary" label={__('Next')} onClick={handleNextPage} />
+      </section>
+    );
+  }
 
   function handleSubmit() {
     if (share === LIMITED) {

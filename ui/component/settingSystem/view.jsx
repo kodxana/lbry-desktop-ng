@@ -20,6 +20,7 @@ import SettingEnablePrereleases from 'component/settingEnablePrereleases';
 import SettingDisableAutoUpdates from 'component/settingDisableAutoUpdates';
 
 const IS_MAC = process.platform === 'darwin';
+const { isolatedTestBuild } = require('../../../package.json').lbrySettings;
 
 type Price = {
   currency: string,
@@ -169,11 +170,13 @@ export default function SettingSystem(props: Props) {
                 checked={daemonSettings.share_usage_data}
                 label={<React.Fragment>{__('Allow the app to share data to LBRY.inc')}</React.Fragment>}
                 helper={
-                  isAuthenticated
-                    ? __('Internal sharing is required while signed in.')
-                    : __('Internal sharing is required to participate in rewards programs.')
+                  isolatedTestBuild
+                    ? __('Disabled in the SDK test build.')
+                    : isAuthenticated
+                      ? __('Internal sharing is required while signed in.')
+                      : __('Internal sharing is required to participate in rewards programs.')
                 }
-                disabled={isAuthenticated && daemonSettings.share_usage_data}
+                disabled={isolatedTestBuild || (isAuthenticated && daemonSettings.share_usage_data)}
               />
               <FormField
                 type="checkbox"
@@ -185,33 +188,37 @@ export default function SettingSystem(props: Props) {
               />
             </SettingsRow>
             {/* Auto launch in a hidden state doesn't work on mac https://github.com/Teamwork/node-auto-launch/issues/81 */}
-            {!IS_MAC && (
-              <SettingsRow
-                title={__('Start minimized')}
-                subtitle={__(
-                  'Improve view speed and help the LBRY network by allowing the app to cuddle up in your system tray.'
+            {!isolatedTestBuild && (
+              <React.Fragment>
+                {!IS_MAC && (
+                  <SettingsRow
+                    title={__('Start minimized')}
+                    subtitle={__(
+                      'Improve view speed and help the LBRY network by allowing the app to cuddle up in your system tray.'
+                    )}
+                  >
+                    <SettingAutoLaunch noLabels />
+                  </SettingsRow>
                 )}
-              >
-                <SettingAutoLaunch noLabels />
-              </SettingsRow>
+                <SettingsRow title={__('Leave app running in notification area when the window is closed')}>
+                  <SettingClosingBehavior noLabels />
+                </SettingsRow>
+                <SettingsRow
+                  title={__('Enable Upgrade to Test Builds')}
+                  subtitle={__('Prereleases may break things and we may not be able to fix them for you.')}
+                >
+                  <SettingEnablePrereleases />
+                </SettingsRow>
+                <SettingsRow
+                  title={__('Disable automatic updates')}
+                  subtitle={__(
+                    "Preven't new updates to be downloaded automatically in the background (we will keep notifying you if there is an update)"
+                  )}
+                >
+                  <SettingDisableAutoUpdates />
+                </SettingsRow>
+              </React.Fragment>
             )}
-            <SettingsRow title={__('Leave app running in notification area when the window is closed')}>
-              <SettingClosingBehavior noLabels />
-            </SettingsRow>
-            <SettingsRow
-              title={__('Enable Upgrade to Test Builds')}
-              subtitle={__('Prereleases may break things and we may not be able to fix them for you.')}
-            >
-              <SettingEnablePrereleases />
-            </SettingsRow>
-            <SettingsRow
-              title={__('Disable automatic updates')}
-              subtitle={__(
-                "Preven't new updates to be downloaded automatically in the background (we will keep notifying you if there is an update)"
-              )}
-            >
-              <SettingDisableAutoUpdates />
-            </SettingsRow>
             <SettingsRow
               title={
                 <span>

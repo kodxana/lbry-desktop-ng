@@ -25,6 +25,7 @@ let mainConfig = {
   },
   module: {
     rules: [
+      { test: /\.cjs$/, type: 'javascript/auto' },
       {
         test: /\.(jsx?$|s?css$)/,
         use: [

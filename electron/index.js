@@ -8,7 +8,6 @@ import { app, dialog, ipcMain, session, shell, BrowserWindow } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';
 import LbryFirstInstance from './LbryFirstInstance';
-import Daemon from './Daemon';
 import isDev from 'electron-is-dev';
 import createTray from './createTray';
 import createWindow from './createWindow';
@@ -17,8 +16,11 @@ import startSandbox from './startSandbox';
 import installDevtools from './installDevtools';
 import fs from 'fs';
 import path from 'path';
+import testSettings from '../sdk-test.json';
 import { diskSpaceLinux, diskSpaceWindows, diskSpaceMac } from '../ui/util/diskspace';
 
+const Daemon = require('./Daemon.cjs');
+const { createProfile } = require('./testProfile.cjs');
 const { download } = require('electron-dl');
 const mime = require('mime');
 const remote = require('@electron/remote/main');
@@ -28,15 +30,18 @@ const probe = require('ffmpeg-probe');
 const MAX_IPC_SEND_BUFFER_SIZE = 500000000; // large files crash when serialized for ipc message
 
 remote.initialize();
-const filePath = path.join(process.resourcesPath, 'static', 'upgradeDisabled');
-let upgradeDisabled;
-try {
-  fs.accessSync(filePath, fs.constants.R_OK);
-  upgradeDisabled = true;
-} catch (err) {
-  upgradeDisabled = false;
-}
+const rootArgument = process.argv.find(arg => arg.startsWith('--sdk-test-root='));
+const testProfile = createProfile(rootArgument
+  ? rootArgument.slice('--sdk-test-root='.length)
+  : path.join(app.getPath('appData'), testSettings.appName));
+app.setPath('userData', testProfile.desktop);
+// Electron 17 keeps Chromium session data inside userData.
+app.setPath('logs', testProfile.logs);
+app.setPath('downloads', testProfile.downloads);
+app.setPath('temp', testProfile.temp);
+const upgradeDisabled = true;
 autoUpdater.autoDownload = !upgradeDisabled;
+autoUpdater.autoInstallOnAppQuit = false;
 autoUpdater.allowPrerelease = false;
 
 const UPDATE_STATE_INIT = 0;
@@ -48,7 +53,7 @@ const UPDATE_STATE_DOWNLOADED = 5;
 let updateState = UPDATE_STATE_INIT;
 let updateDownloadItem;
 
-const isAutoUpdateSupported = ['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE;
+const isAutoUpdateSupported = false;
 
 // This is used to keep track of whether we are showing the special dialog
 // that we show on Windows after you decline an upgrade and close the app later.
@@ -65,17 +70,9 @@ let lbryFirst;
 const appState = {};
 const PROTOCOL = 'lbry';
 
-if (isDev && process.platform === 'win32') {
-  // Setting this is required to get this working in dev mode.
-  app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [
-    path.resolve(process.argv[1]),
-  ]);
-} else if (process.platform !== 'linux') {
-  app.setAsDefaultProtocolClient(PROTOCOL);
-}
-
-app.name = 'LBRY';
-app.setAppUserModelId('io.lbry.LBRY');
+// This test build must not replace the installed app's lbry:// handler.
+app.name = testSettings.appName;
+app.setAppUserModelId(testSettings.appId);
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
@@ -86,35 +83,17 @@ if (isDev) {
 }
 
 const startDaemon = async () => {
-  let isDaemonRunning = false;
-
-  await Lbry.status()
-    .then(() => {
-      isDaemonRunning = true;
-      console.log('SDK already running');
-    })
-    .catch(() => {
-      console.log('Starting SDK');
-    });
-
-  if (!isDaemonRunning) {
-    daemon = new Daemon();
-    daemon.on('exit', () => {
-      if (!isDev) {
-        daemon = null;
-        if (!appState.isQuitting) {
-          dialog.showErrorBox(
-            'Daemon has Exited',
-            'The daemon may have encountered an unexpected error, or another daemon instance is already running. \n\n' +
-              'For more information please visit: \n' +
-              'https://lbry.com/faq/startup-troubleshooting'
-          );
-        }
-        app.quit();
-      }
-    });
-    await daemon.launch();
-  }
+  const directory = isDev ? path.join(__static, 'daemon') : path.join(process.resourcesPath, 'static', 'daemon');
+  const binary = process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
+  daemon = new Daemon(testProfile, binary, process.env.LBRY_HEADERS);
+  await daemon.launch();
+  daemon.on('exit', () => {
+    daemon = null;
+    if (!appState.isQuitting) {
+      dialog.showErrorBox('Test SDK exited', 'See the logs in ' + testProfile.logs);
+      app.quit();
+    }
+  });
 };
 
 let isLbryFirstRunning = false;
@@ -204,7 +183,13 @@ if (!gotSingleInstanceLock) {
   });
 
   app.on('ready', async () => {
-    await startDaemon();
+    try {
+      await startDaemon();
+    } catch (error) {
+      dialog.showErrorBox('SDK test startup failed', error.message);
+      app.exit(1);
+      return;
+    }
     startSandbox();
 
     if (isDev) {
@@ -270,8 +255,17 @@ app.on('will-quit', event => {
   appState.isQuitting = true;
 
   if (daemon) {
-    daemon.quit();
     event.preventDefault();
+    if (!appState.waitingForDaemon) {
+      appState.waitingForDaemon = true;
+      daemon.quit().then(() => {
+        daemon = null;
+        app.quit();
+      }).catch(error => {
+        dialog.showErrorBox('SDK test shutdown failed', error.message);
+        app.exit(1);
+      });
+    }
   }
   if (lbryFirst) {
     lbryFirst.quit();
@@ -501,12 +495,11 @@ ipcMain.on('launch-lbry-first', async () => {
   }
 });
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', async error => {
   console.log(error);
   dialog.showErrorBox('Error Encountered', `Caught error: ${error}`);
   appState.isQuitting = true;
-  if (daemon) daemon.quit();
-  app.exit(1);
+  try { if (daemon) await daemon.quit(); } finally { app.exit(1) }
 });
 
 // Auto updater
@@ -555,6 +548,7 @@ ipcMain.on('cancel-download-upgrade', () => {
 });
 
 ipcMain.on('download-upgrade', (event, params) => {
+  if (upgradeDisabled) return;
   if (updateState !== UPDATE_STATE_UPDATES_FOUND) {
     return;
   }
@@ -596,6 +590,7 @@ ipcMain.on('download-upgrade', (event, params) => {
 
 // Update behavior
 ipcMain.on('autoUpdateAccepted', () => {
+  if (upgradeDisabled) return;
   appState.autoUpdateAccepted = true;
 
   // quitAndInstall can only be called if the
@@ -621,6 +616,7 @@ ipcMain.on('autoUpdateAccepted', () => {
 });
 
 ipcMain.on('check-for-updates', (event, autoDownload) => {
+  if (upgradeDisabled) return;
   if (![UPDATE_STATE_INIT, UPDATE_STATE_NO_UPDATES_FOUND].includes(updateState)) {
     return;
   }
@@ -638,6 +634,7 @@ ipcMain.on('check-for-updates', (event, autoDownload) => {
 });
 
 ipcMain.on('upgrade', (event, installerPath) => {
+  if (upgradeDisabled) return;
   // what to do if no shutdown in a long time?
   console.log('Update downloaded to', installerPath);
   console.log('The app will close and you will be prompted to install the latest version of LBRY.');

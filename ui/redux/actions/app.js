@@ -1,4 +1,3 @@
-import { execSync } from 'child_process';
 import isDev from 'electron-is-dev';
 import { ipcRenderer } from 'electron';
 import * as remote from '@electron/remote';
@@ -386,25 +385,8 @@ export function doQuit() {
 }
 
 export function doQuitAnyDaemon() {
-  return (dispatch) => {
-    // @if TARGET='app'
-    Lbry.stop()
-      .catch(() => {
-        try {
-          if (process.platform === 'win32') {
-            execSync('taskkill /im lbrynet.exe /t /f');
-          } else {
-            execSync('pkill lbrynet');
-          }
-        } catch (error) {
-          dispatch(doAlertError(`Quitting daemon failed due to: ${error.message}`));
-        }
-      })
-      .finally(() => {
-        dispatch(doQuit());
-      });
-    // @endif
-  };
+  // The main process stops only the SDK child owned by this test instance.
+  return doQuit();
 }
 
 export function doChangeVolume(volume) {

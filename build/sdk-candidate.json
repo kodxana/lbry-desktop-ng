@@ -1,0 +1,14 @@
+{
+  "version": "0.114.0rc4",
+  "repository": "kodxana/lbry-sdk-ng",
+  "mergedCommit": "13c196bc58892a76a7b16376fdb8bfaf184e3991",
+  "buildCommit": "7ead3559b12c2e4101453c4be407a24a6eb046c0",
+  "sourceTree": "bdb69dbe0077940a7e51c1fac159bdce7a91cd80",
+  "workflowRun": "38129193211",
+  "artifactId": "11698778486",
+  "artifacts": {
+    "win32": { "sha256": "c69fcb2d7e8e62cc7cfc726844c410abf08908304ca1eb304585d282e905a2ee" },
+    "linux": { "sha256": "2428ad9617289ac1324c27ea307ec776d14bac84b18c872e1bf5ba6890b89c71" },
+    "darwin": { "sha256": "5ab8780deb49cab179fcf0b5aa9352457ff54ad5ce152f4c79f56cd98f90957c" }
+  }
+}
