@@ -50,6 +50,13 @@ for 45 seconds, the screen offers a plain waiting message alongside hub recovery
 Polling alone does not reset this timer, and a locked wallet still requires the
 existing unlock dialog.
 
+SDK PR #30 measures header progress from the height present at startup to the
+connected hub's reported tip. Only applied headers count; downloaded headers
+waiting for validation do not. During catch-up the SDK keeps up to four header
+batches in flight over the same hub connection, then validates and applies them
+in order. It does not benchmark hubs or open extra hub connections for sync.
+The existing desktop progress display consumes this corrected SDK status.
+
 Returning to hub selection retains the other addresses checked during that app
 session and probes them again. Remembering an address does not bypass its check
 or change the saved wallet configuration. The custom-address option remains
@@ -100,16 +107,23 @@ No funds or mainnet transactions are needed for these tests.
 
 ## Current Windows build, 2026-10-11
 
-The rebuilt `0.54.0-rc.1` installer includes the updated wallet hubs from SDK
-PR #29 and the interrupted-startup fix from pending PR #28. Its SHA-256 is
-`671cf5c3d5e7ae143fac937b2bb22536ea84acde8fa3b0e223097591805b1458`.
+The rebuilt `0.54.0-rc.1` installer includes the header progress and catch-up
+improvements from merged SDK PR #30, the updated wallet hubs from PR #29 and
+the interrupted-startup fix from pending PR #28. Its SHA-256 is
+`0c11a572f2dfcc5bd3d7b95071bc97c05abdd5f4cfc8d1722aa6c545680aae9a`.
 The bundled SDK's SHA-256 is
-`fb165a3b1e272f1841a108d0b20a146e23aa515c9ba2100309faf8a1ee5b1cf6`;
+`ca152fa170bcba1948fae455eb84a622700eb6881e1a3e7bfbd9d31e2e666c57`;
 the candidate manifest records its source tree and CI artifact. The installer
-size and SHA-512 match `latest.yml`, and its updater targets this fork.
+size and SHA-512 match `latest.yml`, and its updater targets this fork. The
+packaged `SDK-CANDIDATE.json` and embedded startup checks match the source pin.
 
 The build passed the setup, updater and real-SDK isolation checks described
 above, including recovery from a stalled hub and seven clean SDK shutdowns.
+The combined SDK passed 21 focused progress, header-download and interrupted
+startup tests locally, plus the native Windows CI wallet and packaged-daemon
+checks in [run 38164960994](https://github.com/kodxana/lbry-sdk-ng/actions/runs/38164960994).
+The first NSIS packaging attempt could not access Windows' short temporary
+path; packaging succeeded with a workspace-local temporary directory.
 The packaged UI contains the new progress and recovery screens and no longer
 contains the spinning splash toggle. Hub selection, header progress and return
 to settings-only setup were exercised in a disposable profile before the final
@@ -117,6 +131,13 @@ styling revision. The final appearance still needs manual acceptance; that
 revision reuses the existing getting-started layout and dark theme. Earlier
 playback and UI observations apply only to the artifacts identified in their
 respective validation records.
+
+For a first-sync test, use a new empty directory with the unpacked executable's
+`--ng-profile=<absolute-path>` option. Choose a hub and start syncing. Headers
+already cached in an existing profile can make initial sync too short to
+observe. Closing and reopening the same test profile checks catch-up from its
+saved state; never delete an existing wallet to repeat this test. This rebuild
+does not change the desktop layout or its dark theme.
 
 ## Earlier packaged Windows check, 2026-10-11
 
