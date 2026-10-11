@@ -18,8 +18,10 @@ separate **LBRY SDK Test** ZIP keeps updates disabled for compatibility testing.
 Neither build imports an existing wallet or replaces the original app's protocol
 registration.
 
-First-run setup includes a wallet hub response-time check and a choice between
-automatic selection and a responding hub. Windows storage checks use the native
+Before the first wallet sync, setup checks hub response times and offers
+automatic selection, a responding hub or a custom address. Startup keeps a
+**Choose another hub** button available if the selected server fails.
+Windows storage checks use the native
 disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setup.md).
 
 The current build retains Electron 17.2.0 and Node 16.20.2 as the compatibility

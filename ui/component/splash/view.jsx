@@ -15,7 +15,6 @@ import 'css-doodle';
 
 const FORTY_FIVE_SECONDS = 45 * 1000;
 const UPDATE_INTERVAL = 1000; // 1 second
-const MAX_WALLET_WAIT = 20; // 20 seconds for wallet to be started, but servers to be unavailable
 const MAX_SYNC_WAIT = 45; // 45 seconds to sync wallet, show message if taking long
 
 type Props = {
@@ -29,8 +28,7 @@ type Props = {
   },
   animationHidden: boolean,
   toggleSplashAnimation: () => void,
-  clearWalletServers: () => void,
-  doShowSnackBar: (string) => void,
+  onChooseHub: () => void,
 };
 
 type State = {
@@ -40,7 +38,6 @@ type State = {
   error: boolean,
   isRunning: boolean,
   launchWithIncompatibleDaemon: boolean,
-  waitingForWallet: number,
   waitingForSync: number,
 };
 
@@ -55,7 +52,6 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
       error: false,
       launchWithIncompatibleDaemon: !process.env.NODE_ENV === 'production',
       isRunning: false,
-      waitingForWallet: 0,
       waitingForSync: 0,
     };
 
@@ -65,19 +61,21 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
+    this.active = true;
     const { checkDaemonVersion } = this.props;
     this.adjustErrorTimeout();
 
     Lbry.connect()
       .then(checkDaemonVersion)
       .then(() => {
-        this.updateStatus();
+        if (this.active) this.updateStatus();
       })
       .catch(() => {
+        if (!this.active) return;
         this.setState({
           message: __('Connection Failure'),
           details: __(
-            'Try closing all LBRY processes and starting again. If this still happens, your anti-virus software or firewall may be preventing LBRY from connecting. Contact hello@lbry.com if you think this is a software bug.'
+            'Could not connect to the local SDK. You can choose another hub or restart the app.'
           ),
         });
       });
@@ -88,6 +86,8 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
   }
 
   componentWillUnmount() {
+    this.active = false;
+    clearTimeout(this.pollTimeout);
     if (this.timeout) {
       clearTimeout(this.timeout);
     }
@@ -105,48 +105,51 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
     }, FORTY_FIVE_SECONDS);
   }
 
-  updateStatus() {
-    const { modal, notifyUnlockWallet, clearWalletServers, doShowSnackBar } = this.props;
+  async updateStatus() {
+    if (!this.active) return;
+    const { modal, notifyUnlockWallet } = this.props;
     const { launchedModal } = this.state;
-
-    Lbry.status().then((status) => {
-      const sdkStatus = status;
-      const { wallet } = status;
-      Lbry.wallet_status().then((walletStatus) => {
-        if (sdkStatus.is_running && wallet && wallet.available_servers) {
-          if (walletStatus.is_locked) {
-            // Clear the error timeout, it might sit on this step for a while until someone enters their password
-            if (this.timeout) {
-              clearTimeout(this.timeout);
-            }
-            // Make sure there isn't another active modal (like INCOMPATIBLE_DAEMON)
-            this.updateStatusCallback(sdkStatus, walletStatus, true);
-            if (launchedModal === false && !modal) {
-              this.setState({ launchedModal: true }, () => notifyUnlockWallet());
-            }
-          } else {
-            this.updateStatusCallback(sdkStatus, walletStatus);
-          }
-        } else if (!sdkStatus.is_running && walletStatus.is_syncing) {
-          // Clear the timeout if wallet is still syncing
+    try {
+      const sdkStatus = await Lbry.status();
+      if (!this.active) return;
+      const { wallet } = sdkStatus;
+      let walletStatus;
+      try { walletStatus = await Lbry.wallet_status() } catch (error) {
+        // wallet_status requires the wallet component to finish starting.
+        if (sdkStatus.is_running) throw error;
+        walletStatus = { is_syncing: Boolean(wallet && wallet.available_servers), is_locked: false };
+      }
+      if (!this.active) return;
+      if (sdkStatus.is_running && wallet && wallet.available_servers) {
+        if (walletStatus.is_locked) {
+          // Clear the error timeout while waiting for the wallet password.
           if (this.timeout) {
             clearTimeout(this.timeout);
           }
-          this.updateStatusCallback(sdkStatus, walletStatus);
-        } else if (this.state.waitingForWallet > MAX_WALLET_WAIT && launchedModal === false && !modal) {
-          clearWalletServers();
-          doShowSnackBar(
-            __(
-              'The wallet server took a bit too long. Resetting defaults just in case. Shutdown (Cmd/Ctrl+Q) LBRY and restart if this continues.'
-            )
-          );
-          this.setState({ waitingForWallet: 0 });
-          this.updateStatusCallback(sdkStatus, walletStatus);
+          this.updateStatusCallback(sdkStatus, walletStatus, true);
+          if (launchedModal === false && !modal) {
+            this.setState({ launchedModal: true }, () => notifyUnlockWallet());
+          }
         } else {
           this.updateStatusCallback(sdkStatus, walletStatus);
         }
-      });
-    });
+      } else {
+        if (!sdkStatus.is_running && walletStatus.is_syncing && this.timeout) {
+          clearTimeout(this.timeout);
+        }
+        this.updateStatusCallback(sdkStatus, walletStatus);
+      }
+    } catch (_) {
+      if (!this.active) return;
+      this.setState({ details: __('Waiting for the wallet connection. You can choose another hub below.') });
+      this.schedulePoll();
+    }
+  }
+
+  schedulePoll() {
+    if (!this.active) return;
+    clearTimeout(this.pollTimeout);
+    this.pollTimeout = setTimeout(() => this.updateStatus(), UPDATE_INTERVAL);
   }
 
   updateStatusCallback(status: StatusResponse, walletStatus: WalletStatusResponse, waitingForUnlock: boolean = false) {
@@ -154,11 +157,11 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
 
     // If the wallet is locked, stop doing anything and make the user input their password
     if (startupStatus && wallet && wallet.available_servers < 1) {
-      this.setState({ waitingForWallet: this.state.waitingForWallet + UPDATE_INTERVAL / 1000 });
+      this.setState({ details: __('Connecting to a wallet hub. You can choose another hub below.') });
     } else if (status.is_running && !waitingForUnlock) {
       Lbry.resolve({ urls: 'lbry://one' }).then(() => {
-        this.setState({ isRunning: true }, () => this.continueAppLaunch());
-      });
+        if (this.active) this.setState({ isRunning: true }, () => this.continueAppLaunch());
+      }).catch(() => this.schedulePoll());
 
       return;
     } else if (wallet && !status.is_running && walletStatus.is_syncing) {
@@ -173,7 +176,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
           message: __('Loading Wallet'),
           details: (
             <React.Fragment>
-              <div>{__('Large account history')}</div>
+              <div>{__('Synchronizing wallet headers and history')}</div>
               <div>{__('Please wait...')}</div>
             </React.Fragment>
           ),
@@ -186,9 +189,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
       });
     }
 
-    setTimeout(() => {
-      this.updateStatus();
-    }, UPDATE_INTERVAL);
+    this.schedulePoll();
   }
 
   runWithIncompatibleDaemon() {
@@ -212,6 +213,8 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
   }
 
   timeout: ?TimeoutID;
+  pollTimeout: ?TimeoutID;
+  active: boolean;
 
   renderModals() {
     const { modal } = this.props;
@@ -237,7 +240,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
 
   render() {
     const { error, details } = this.state;
-    const { animationHidden, toggleSplashAnimation } = this.props;
+    const { animationHidden, toggleSplashAnimation, onChooseHub, modal } = this.props;
 
     return (
       <div className="splash">
@@ -247,6 +250,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
             <div className="splash__details">{details}</div>
           </>
         )}
+        {!modal && <Button button="primary" className="splash__hub-choice" label={__('Choose another hub')} onClick={onChooseHub} />}
 
         {!animationHidden && !error && (
           <css-doodle class="doodle">
@@ -308,13 +312,13 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
                       help_link: (
                         <Button
                           button="link"
-                          href="https://lbry.com/faq/startup-troubleshooting"
-                          label={__('this link')}
+                          href="https://github.com/kodxana/lbry-desktop-ng/issues"
+                          label={__('community issue tracker')}
                         />
                       ),
                     }}
                   >
-                    Reach out to hello@lbry.com for help, or check out %help_link%.
+                    You can choose another hub or report the problem in the %help_link%.
                   </I18nMessage>
                 </p>
               </React.Fragment>

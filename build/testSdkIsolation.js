@@ -107,6 +107,20 @@ async function main() {
   }));
   let initialAddresses;
   try {
+    const originalConfig = fs.readFileSync(profile.config);
+    const setupDaemon = new Daemon(profile, binary, path.join(root, 'headers-must-not-be-read'));
+    try {
+      await setupDaemon.launch({ settingsOnly: true });
+      const status = await setupDaemon.rpc('status');
+      assert.deepEqual(status.startup_status, {});
+      assert(!status.wallet);
+      assert.equal(fs.readdirSync(profile.wallet).length, 0, 'Setup must not create a wallet or headers');
+      assert.equal(sockets.size, 0, 'Setup must not contact the wallet hub');
+      assert.deepEqual(fs.readFileSync(profile.config), originalConfig, 'Setup flags must not be persisted');
+      assert((await setupDaemon.rpc('settings_get')).lbryum_servers.length > 0);
+      await setupDaemon.quitForUpdate();
+      console.log('PASS: real SDK settings-only startup exposes hubs without opening a wallet, reading headers or contacting a hub');
+    } finally { await setupDaemon.quit() }
     for (let run = 0; run < 2; run++) {
       const daemon = new Daemon(profile, binary);
       try {
@@ -134,35 +148,42 @@ async function main() {
     });
     await new Promise(resolve => stalled.listen(0, '127.0.0.1', resolve));
     const stalledEndpoint = '127.0.0.1:' + stalled.address().port;
-    const previousServers = ['127.0.0.1:' + hub.address().port, stalledEndpoint];
+    const workingEndpoint = '127.0.0.1:' + hub.address().port;
     const config = yaml.load(fs.readFileSync(profile.config, 'utf8'));
-    config.lbryum_servers = previousServers;
+    config.lbryum_servers = [stalledEndpoint];
     fs.writeFileSync(profile.config, yaml.dump(config));
     let daemon = new Daemon(profile, binary);
     const selection = new HubSelection({
       rpc: (method, params) => daemon.rpc(method, params),
       hasCustomServers: () => true,
       probe: async endpoint => ({ ...parseServer(endpoint), error: null, latency: 1 }),
-      connectionTimeout: 3000,
-      restart: async () => {
+      restart: async settingsOnly => {
         await daemon.quitForUpdate();
         daemon = new Daemon(profile, binary);
-        await daemon.launch();
+        await daemon.launch({ settingsOnly });
       },
     });
     try {
-      await daemon.launch();
-      selection.connectionTimeout = 60000;
-      await selection.waitForWallet();
+      await daemon.launch({ settingsOnly: true });
       await selection.scan();
-      selection.connectionTimeout = 3000;
-      await assert.rejects(selection.select(stalledEndpoint), /previous connection has been restored/);
+      await selection.select(stalledEndpoint);
+      assert.equal(selection.settingsOnly, false, 'Start must return before a stalled wallet finishes syncing');
+      await selection.prepare();
+      assert.deepEqual((await daemon.rpc('status')).startup_status, {});
+      await selection.scan();
+      await selection.checkCustom(workingEndpoint);
+      await selection.select(workingEndpoint);
+      const deadline = Date.now() + 60000;
+      while (!(await daemon.rpc('status')).is_running) {
+        assert(Date.now() < deadline, 'Wallet recovery timed out');
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
       assert.deepEqual((await daemon.rpc('settings_get')).lbryum_servers,
-        previousServers.map(endpoint => { const { host, port } = parseServer(endpoint); return [host, port] }));
+        [['127.0.0.1', hub.address().port]]);
       assert.equal((await daemon.rpc('wallet_balance')).total, '0.0');
       assert.deepEqual((await daemon.rpc('address_list')).items.map(item => item.address).sort(), initialAddresses);
       await daemon.quitForUpdate();
-      console.log('PASS: real SDK recovers from a stalled hub; previous servers, wallet addresses and balance survive');
+      console.log('PASS: stalled sync returns to setup; a custom working hub recovers the same wallet and zero balance');
     } finally {
       await daemon.quit();
       sockets.forEach(socket => socket.destroy());
@@ -174,9 +195,9 @@ async function main() {
   }
   assert.equal(unexpected.size, 0);
   const log = fs.readFileSync(path.join(profile.logs, 'daemon-console.log'), 'utf8');
-  assert.equal((log.match(/finished shutting down/g) || []).length, 5);
+  assert.equal((log.match(/finished shutting down/g) || []).length, 7);
   assert(!log.includes('Task was destroyed but it is pending!'));
-  console.log('PASS: real packaged SDK preserves the empty wallet and completes all five shutdowns cleanly');
+  console.log('PASS: real packaged SDK preserves the empty wallet and completes all seven shutdowns cleanly');
   console.log('Evidence: ' + root);
 }
 

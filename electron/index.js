@@ -20,7 +20,7 @@ const Daemon = require('./Daemon.cjs');
 const { createProfile } = require('./testProfile.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
-const { HubSelection } = require('./hubServers.cjs');
+const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
 const mime = require('mime');
 const remote = require('@electron/remote/main');
@@ -62,11 +62,11 @@ if (isDev) {
   process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
 }
 
-const startDaemon = async () => {
+const startDaemon = async (settingsOnly = false) => {
   const directory = isDev ? path.join(__static, 'daemon') : path.join(process.resourcesPath, 'static', 'daemon');
   const binary = process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
   daemon = new Daemon(desktopProfile, binary, process.env.LBRY_HEADERS);
-  await daemon.launch();
+  await daemon.launch({ settingsOnly });
   const ownedDaemon = daemon;
   ownedDaemon.on('exit', () => {
     if (daemon === ownedDaemon) daemon = null;
@@ -77,20 +77,28 @@ const startDaemon = async () => {
   });
 };
 
+const hubSetupMarker = path.join(desktopProfile.root, 'hub-setup-complete.json');
+const readHubConfig = () => {
+  const config = yaml.load(fs.readFileSync(desktopProfile.config, 'utf8')) || {};
+  return Object.prototype.hasOwnProperty.call(config, 'lbryum_servers')
+    ? config.lbryum_servers.map(endpoint => { const { host, port } = parseServer(endpoint); return [host, port] }) : null;
+};
 const hubs = new HubSelection({
+  settingsOnly: !fs.existsSync(hubSetupMarker),
   rpc: (method, params) => {
     if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
     return daemon.rpc(method, params);
   },
-  hasCustomServers: () => Object.prototype.hasOwnProperty.call(
-    yaml.load(fs.readFileSync(desktopProfile.config, 'utf8')) || {}, 'lbryum_servers'
-  ),
-  restart: async () => {
-    if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
-    daemon.expectedExit = true;
-    await daemon.quitForUpdate();
+  hasCustomServers: () => readHubConfig() !== null,
+  onConfigured: () => fs.writeFileSync(hubSetupMarker, JSON.stringify({ version: 1 }) + '\n'),
+  restart: async settingsOnly => {
     if (appState.isQuitting) throw new Error('Application is closing.');
-    await startDaemon();
+    if (daemon && daemon.subprocess) {
+      daemon.expectedExit = true;
+      await daemon.quitForUpdate();
+    }
+    if (appState.isQuitting) throw new Error('Application is closing.');
+    await startDaemon(settingsOnly);
   },
 });
 
@@ -101,6 +109,22 @@ ipcMain.handle('hub-servers-scan', event => {
 ipcMain.handle('hub-servers-select', (event, endpoint) => {
   if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
   return hubs.select(endpoint);
+});
+ipcMain.handle('hub-startup-state', event => {
+  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  return { settingsOnly: hubs.settingsOnly };
+});
+ipcMain.handle('hub-servers-prepare', event => {
+  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  return hubs.prepare();
+});
+ipcMain.handle('hub-servers-check', (event, endpoint) => {
+  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  return hubs.checkCustom(endpoint);
+});
+ipcMain.handle('hub-servers-config', event => {
+  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  return readHubConfig();
 });
 
 let isLbryFirstRunning = false;
@@ -191,7 +215,7 @@ if (!gotSingleInstanceLock) {
 
   app.on('ready', async () => {
     try {
-      await startDaemon();
+      await startDaemon(hubs.settingsOnly);
     } catch (error) {
       dialog.showErrorBox('SDK startup failed', error.message);
       app.exit(1);

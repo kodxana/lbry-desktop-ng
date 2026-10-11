@@ -151,13 +151,11 @@ async function selectionTests() {
   const original = ['first:50001', 'second:50001'];
   let configured = original.slice();
   let custom = false;
-  let connected = true;
-  let failConnection = false;
+  let failStart = false;
   let failRestore = false;
   let reprobeFails = false;
   let restarts = 0;
   const selection = new HubSelection({
-    connectionTimeout: 1,
     hasCustomServers: () => custom,
     probe: async endpoint => ({ ...parseServer(endpoint), latency: 2, error: reprobeFails ? 'Timed out' : null }),
     rpc: async (method, params) => {
@@ -167,20 +165,23 @@ async function selectionTests() {
       }) }; }
       if (method === 'settings_set') { configured = params.value; custom = true }
       if (method === 'settings_clear') { configured = original.slice(); custom = false }
-      if (method === 'status') return { wallet: { available_servers: connected ? 1 : 0 } };
+      assert.notEqual(method, 'status', 'Selection must not wait for wallet synchronization');
     },
-    restart: async () => {
+    restart: async settingsOnly => {
       restarts++;
-      connected = !(failConnection && (configured.length === 1 || failRestore));
+      if (failStart && (!settingsOnly || failRestore)) throw new Error('Fixture startup failure');
     },
   });
   await assert.rejects(selection.select('unoffered:1'), /Check the hubs/);
   await selection.scan();
   assert.equal(await selection.select(null), null);
-  assert.equal(restarts, 0, 'Automatic selection must leave defaults untouched');
+  assert.equal(restarts, 1, 'Automatic selection must start the normal SDK');
+  assert(!custom, 'Automatic selection must leave defaults untouched');
+  await assert.rejects(selection.select(original[0]), /Open hub setup/);
+  await selection.prepare();
   reprobeFails = true;
   await assert.rejects(selection.select(original[0]), /no longer responding/);
-  assert.equal(restarts, 0);
+  assert.equal(restarts, 2);
   reprobeFails = false;
   const inFlight = selection.select(original[0]);
   await assert.rejects(selection.select(original[1]), /Wait/);
@@ -188,18 +189,25 @@ async function selectionTests() {
   assert.equal((await inFlight).endpoint, original[0]);
   assert.deepEqual(configured, [original[0]]);
   assert(custom);
+  await selection.prepare();
+  await assert.rejects(selection.select('custom.example:50001'), /Check the hubs/);
+  assert.equal((await selection.checkCustom('custom.example:50001')).error, null);
+  await selection.select('custom.example:50001');
+  assert.deepEqual(configured, ['custom.example:50001']);
+  await selection.prepare();
   await selection.select(null);
   assert(!custom);
-  failConnection = true;
-  await assert.rejects(selection.select(original[0]), /previous connection has been restored/);
+  await selection.prepare();
+  failStart = true;
+  await assert.rejects(selection.select(original[0]), /previous hub setting was restored/);
   assert.deepEqual(configured, original);
   assert(!custom, 'Rollback must restore automatic discovery, not pin the default list');
   custom = true;
-  await assert.rejects(selection.select(original[0]), /previous connection has been restored/);
+  await assert.rejects(selection.select(original[0]), /previous hub setting was restored/);
   assert(custom, 'Rollback must preserve an existing custom list');
   failRestore = true;
-  await assert.rejects(selection.select(original[0]), /could not be restored/);
-  console.log('PASS: hub save, automatic choice, duplicate requests, reprobe, rollback and recovery failure reporting');
+  await assert.rejects(selection.select(original[0]), /could not restart or restore/);
+  console.log('PASS: pre-sync selection, custom hub checks, automatic choice, duplicate requests and startup failure recovery');
 }
 
 async function main() {
@@ -207,5 +215,6 @@ async function main() {
   await hostingTests();
   await protocolTests();
   await selectionTests();
+  await require('./testStartup')();
 }
 main().catch(error => { console.error(error); process.exitCode = 1 });

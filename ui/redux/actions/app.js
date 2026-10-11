@@ -24,6 +24,7 @@ import {
   doSetDaemonSetting,
   doFindFFmpeg,
   doGetDaemonStatus,
+  doSaveCustomWalletServers,
 } from 'redux/actions/settings';
 import {
   selectIsUpgradeSkipped,
@@ -42,7 +43,8 @@ import { lbrySettings as config, version as appVersion } from 'package.json';
 import analytics, { SHARE_INTERNAL } from 'analytics';
 import { doSignOutCleanup } from 'util/saved-passwords';
 import { doNotificationSocketConnect } from 'redux/actions/websocket';
-import { stringifyServerParam, shouldSetSetting } from 'util/sync-settings';
+import { shouldSetSetting } from 'util/sync-settings';
+import { withLocalHubPreference } from 'util/hub-preferences';
 
 const CHECK_UPGRADE_INTERVAL = 10 * 60 * 1000;
 
@@ -550,7 +552,9 @@ export function doGetAndPopulatePreferences() {
     let preferenceKey;
     preferenceKey = syncEnabled && hasVerifiedEmail ? 'shared' : 'local';
 
-    function successCb(savedPreferences) {
+    async function successCb(savedPreferences) {
+      const localHubs = await ipcRenderer.invoke('hub-servers-config');
+      savedPreferences = withLocalHubPreference(savedPreferences, localHubs);
       const successState = getState();
       const daemonSettings = selectDaemonSettings(successState);
       if (savedPreferences !== null) {
@@ -559,14 +563,9 @@ export function doGetAndPopulatePreferences() {
         const { settings } = savedPreferences.value;
         if (settings) {
           Object.entries(settings).forEach(([key, val]) => {
-            if (SDK_SYNC_KEYS.includes(key)) {
+            if (SDK_SYNC_KEYS.includes(key) && key !== DAEMON_SETTINGS.LBRYUM_SERVERS) {
               if (shouldSetSetting(key, val, daemonSettings[key])) {
-                if (key === DAEMON_SETTINGS.LBRYUM_SERVERS) {
-                  const servers = stringifyServerParam(val);
-                  dispatch(doSetDaemonSetting(key, servers, true));
-                } else {
-                  dispatch(doSetDaemonSetting(key, val, true));
-                }
+                dispatch(doSetDaemonSetting(key, val, true));
               }
             }
             // probably set commentServer here instead of in doPopulateSharedUserState()
@@ -575,6 +574,8 @@ export function doGetAndPopulatePreferences() {
       } else {
         dispatch(doSetPrefsReady());
       }
+      dispatch(doSaveCustomWalletServers(localHubs ? localHubs.map(([host, port]) => [host, String(port)]) : []));
+      dispatch({ type: ACTIONS.SHARED_PREFERENCE_SET, data: { key: DAEMON_SETTINGS.LBRYUM_SERVERS, value: localHubs } });
       return true;
     }
 

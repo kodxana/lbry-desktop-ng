@@ -4,15 +4,13 @@ import PrivacyAgreement from 'component/privacyAgreement';
 import HostingSplash from 'component/hostingSplash';
 import HostingSplashCustom from 'component/hostingSplashCustom';
 import WelcomeSplash from 'component/welcomeSplash';
-import HubSetup from 'component/hubSetup';
 import Page from 'component/page';
 import { useHistory } from 'react-router-dom';
 
 const SPLASH_PAGE = 0;
-const HUB_PAGE = 1;
-const PRIVACY_PAGE = 2;
-const HOSTING_PAGE = 3;
-const HOSTING_ADVANCED = 4;
+const PRIVACY_PAGE = 1;
+const HOSTING_PAGE = 2;
+const HOSTING_ADVANCED = 3;
 
 type DaemonStatus = {
   disk_space: {
@@ -48,8 +46,6 @@ export default function Welcome(props: Props) {
 
   const handleNextPage = () => {
     if (welcomePage === SPLASH_PAGE) {
-      setWelcomePage(HUB_PAGE);
-    } else if (welcomePage === HUB_PAGE) {
       setWelcomePage(PRIVACY_PAGE);
     } else if (welcomePage === PRIVACY_PAGE) {
       setWelcomePage(HOSTING_PAGE);
@@ -72,7 +68,6 @@ export default function Welcome(props: Props) {
   return (
     <Page noHeader noSideNavigation>
       {welcomePage === SPLASH_PAGE && <WelcomeSplash handleNextPage={handleNextPage} />}
-      {welcomePage === HUB_PAGE && <HubSetup handleNextPage={handleNextPage} />}
       {welcomePage === PRIVACY_PAGE && <PrivacyAgreement handleNextPage={handleNextPage} />}
       {welcomePage === HOSTING_PAGE && <HostingSplash handleNextPage={handleNextPage} handleDone={handleDone} />}
       {welcomePage === HOSTING_ADVANCED && (

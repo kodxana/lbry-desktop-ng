@@ -43,3 +43,9 @@
     padding: var(--spacing-xs);
   }
 }
+
+.splash__hub-choice {
+  position: absolute;
+  bottom: 15%;
+  z-index: 1;
+}

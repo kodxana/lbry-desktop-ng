@@ -2,7 +2,7 @@ import '@babel/polyfill';
 import ErrorBoundary from 'component/errorBoundary';
 import App from 'component/app';
 import SnackBar from 'component/snackBar';
-import SplashScreen from 'component/splash';
+import SdkStartup from 'component/sdkStartup';
 import * as ACTIONS from 'constants/action_types';
 import { changeZoomFactor } from 'util/zoomWindow';
 import { ipcRenderer, shell } from 'electron';
@@ -310,7 +310,7 @@ function AppWrapper() {
             </ConnectedRouter>
           ) : (
             <Fragment>
-              <SplashScreen onReadyToLaunch={() => setReadyToLaunch(true)} />
+              <SdkStartup onReadyToLaunch={() => setReadyToLaunch(true)} />
               <SnackBar />
             </Fragment>
           )}

@@ -74,12 +74,22 @@ async function probeHubs(endpoints, probe = probeHub) {
 }
 
 class HubSelection {
-  constructor({ rpc, restart, hasCustomServers, probe = probeHub, connectionTimeout = 60000 }) {
-    Object.assign(this, { rpc, restart, hasCustomServers, probe, connectionTimeout });
+  constructor({ rpc, restart, hasCustomServers, onConfigured = () => {}, settingsOnly = true, probe = probeHub }) {
+    Object.assign(this, { rpc, restart, hasCustomServers, onConfigured, settingsOnly, probe });
     this.offered = new Set();
   }
 
+  async prepare() {
+    if (this.selecting || this.scanning) throw new Error('Wait for the current hub check to finish.');
+    this.selecting = true;
+    try {
+      if (!this.settingsOnly) await this.restart(true);
+      this.settingsOnly = true;
+    } finally { this.selecting = false }
+  }
+
   async scan() {
+    if (!this.settingsOnly) throw new Error('Open hub setup before checking servers.');
     if (this.selecting) throw new Error('A hub change is already in progress.');
     if (!this.scanning) {
       this.scanning = (async () => {
@@ -92,17 +102,19 @@ class HubSelection {
     try { return await this.scanning } finally { this.scanning = null }
   }
 
-  async waitForWallet() {
-    const deadline = Date.now() + this.connectionTimeout;
-    do {
-      const status = await this.rpc('status');
-      if (status.wallet && status.wallet.available_servers > 0) return;
-      await new Promise(resolve => setTimeout(resolve, 250));
-    } while (Date.now() < deadline);
-    throw new Error('The wallet could not connect to the selected hub.');
+  async checkCustom(endpoint) {
+    if (!this.settingsOnly || this.selecting || this.scanning) throw new Error('Wait for the current hub check to finish.');
+    const server = parseServer(endpoint);
+    this.scanning = this.probe(server.endpoint);
+    try {
+      const result = await this.scanning;
+      if (!result.error) this.offered.add(server.endpoint);
+      return result;
+    } finally { this.scanning = null }
   }
 
   async select(endpoint) {
+    if (!this.settingsOnly) throw new Error('Open hub setup before changing servers.');
     if (this.selecting || this.scanning) throw new Error('Wait for the current hub check to finish.');
     if (endpoint !== null && !this.offered.has(endpoint)) throw new Error('Check the hubs before choosing one.');
     this.selecting = true;
@@ -110,24 +122,24 @@ class HubSelection {
       if (endpoint !== null && (await this.probe(endpoint)).error) throw new Error('That hub is no longer responding. Please check again.');
       const previous = (await this.rpc('settings_get')).lbryum_servers.map(server => parseServer(server).endpoint);
       const hadCustom = this.hasCustomServers();
-      if (endpoint === null && !hadCustom) return null;
       try {
-        if (endpoint === null) await this.rpc('settings_clear', { key: 'lbryum_servers' });
-        else await this.rpc('settings_set', { key: 'lbryum_servers', value: [endpoint] });
-        // A full owned-SDK restart also bounds a stalled wallet startup. Do not
-        // overlap wallet_reconnect calls, which may still be syncing after an HTTP timeout.
-        await this.restart();
-        await this.waitForWallet();
+        if (endpoint === null && hadCustom) await this.rpc('settings_clear', { key: 'lbryum_servers' });
+        else if (endpoint !== null) await this.rpc('settings_set', { key: 'lbryum_servers', value: [endpoint] });
+        // Return when the owned API is ready, without waiting for headers or
+        // wallet history. The startup screen keeps hub recovery available.
+        await this.restart(false);
+        this.settingsOnly = false;
+        await this.onConfigured();
       } catch (error) {
         try {
+          await this.restart(true);
+          this.settingsOnly = true;
           if (hadCustom) await this.rpc('settings_set', { key: 'lbryum_servers', value: previous });
           else await this.rpc('settings_clear', { key: 'lbryum_servers' });
-          await this.restart();
-          await this.waitForWallet();
         } catch (_) {
-          throw new Error('The hub change failed and the previous connection could not be restored. Restart the app and check wallet server settings.');
+          throw new Error('The SDK could not restart or restore the previous hub setting. Close the app and check the SDK logs.');
         }
-        throw new Error('The hub change failed. Your previous connection has been restored.');
+        throw new Error('The SDK could not start. The previous hub setting was restored; you can choose another hub.');
       }
       return endpoint === null ? null : parseServer(endpoint);
     } finally { this.selecting = false }

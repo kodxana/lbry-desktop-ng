@@ -7,6 +7,14 @@ const { artifactFor, verifiedBytes } = require('../build/sdkArtifact.cjs');
 const candidate = require('../build/sdk-candidate.json');
 const { daemonFlags, daemonEnvironment, assertPortsAvailable } = require('./testProfile.cjs');
 
+// Component inventory of the checksum-pinned SDK. The integration test requires
+// startup_status to be empty in this mode so SDK upgrades cannot silently enable sync.
+const SETUP_COMPONENTS = [
+  'database', 'blob_manager', 'wallet', 'wallet_server_payments', 'dht', 'hash_announcer',
+  'file_manager', 'disk_space', 'background_downloader', 'peer_protocol_server', 'upnp',
+  'exchange_rate_manager', 'tracker_announcer_component', 'libtorrent_component',
+];
+
 class Daemon {
   constructor(profile, binary, headers) {
     this.profile = profile;
@@ -55,11 +63,12 @@ class Daemon {
     if (version.lbrynet_version !== candidate.version) throw new Error('SDK version mismatch.');
   }
 
-  async launch() {
+  async launch({ settingsOnly = false } = {}) {
     verifiedBytes(this.binary, artifactFor().sha256);
     await assertPortsAvailable(this.profile.ports);
     const flags = daemonFlags(this.profile);
-    if (this.headers) flags.push('--initial-headers=' + this.headers);
+    if (settingsOnly) flags.push(...SETUP_COMPONENTS.map(name => '--components-to-skip=' + name));
+    else if (this.headers) flags.push('--initial-headers=' + this.headers);
     this.log = fs.createWriteStream(path.join(this.profile.logs, 'daemon-console.log'), { flags: 'a' });
     const child = spawn(this.binary, flags, {
       cwd: this.profile.root, env: daemonEnvironment(this.profile), windowsHide: true,
@@ -85,6 +94,9 @@ class Daemon {
         if (!this.subprocess) throw new Error('SDK exited during startup; see ' + this.profile.logs);
         try {
           await this.verifyOwner();
+          if (settingsOnly && Object.keys((await this.rpc('status')).startup_status).length !== 0) {
+            throw new Error('The SDK started unexpected components during hub setup.');
+          }
           this.ready = true;
           return;
         } catch (error) {
