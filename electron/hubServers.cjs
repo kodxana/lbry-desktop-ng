@@ -77,6 +77,7 @@ class HubSelection {
   constructor({ rpc, restart, hasCustomServers, onConfigured = () => {}, settingsOnly = true, probe = probeHub }) {
     Object.assign(this, { rpc, restart, hasCustomServers, onConfigured, settingsOnly, probe });
     this.offered = new Set();
+    this.candidates = [];
   }
 
   async prepare() {
@@ -94,7 +95,12 @@ class HubSelection {
     if (!this.scanning) {
       this.scanning = (async () => {
         const settings = await this.rpc('settings_get');
-        const servers = await probeHubs(settings.lbryum_servers, this.probe);
+        // Keep the other choices when returning from a manually selected hub.
+        // Probe them again; remembering an address does not make it eligible.
+        const configured = settings.lbryum_servers.map(endpoint => parseServer(endpoint).endpoint);
+        if (configured.length > 64) throw new Error('Too many configured hubs to check.');
+        this.candidates = [...new Set([...configured, ...this.candidates])].slice(0, 64);
+        const servers = await probeHubs(this.candidates, this.probe);
         this.offered = new Set(servers.filter(server => !server.error).map(server => server.endpoint));
         return { servers };
       })();

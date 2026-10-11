@@ -190,6 +190,10 @@ async function selectionTests() {
   assert.deepEqual(configured, [original[0]]);
   assert(custom);
   await selection.prepare();
+  const recoveryChoices = await selection.scan();
+  assert.deepEqual(recoveryChoices.servers.map(server => server.endpoint).sort(), original,
+    'Returning from a manual hub must still offer the other previously checked servers');
+  assert.deepEqual(configured, [original[0]], 'Scanning alternatives must not change the wallet preference');
   await assert.rejects(selection.select('custom.example:50001'), /Check the hubs/);
   assert.equal((await selection.checkCustom('custom.example:50001')).error, null);
   await selection.select('custom.example:50001');
