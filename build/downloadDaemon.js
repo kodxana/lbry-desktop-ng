@@ -24,7 +24,7 @@ function prepareDaemon(source = process.env.LBRY_SDK_BINARY) {
         'https://github.com/' + candidate.repository + '/actions/runs/' + candidate.workflowRun);
     }
   }
-  console.log('Verified SDK ' + candidate.version + ' (' + candidate.mergedCommit.slice(0, 8) + '): ' + destination);
+  console.log('Verified SDK ' + candidate.version + ' (' + candidate.headCommit.slice(0, 8) + '): ' + destination);
 }
 
 if (require.main === module) {

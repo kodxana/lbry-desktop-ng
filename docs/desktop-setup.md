@@ -2,25 +2,39 @@
 
 ## Wallet hubs
 
-The welcome flow checks the hubs returned by the bundled SDK's `settings_get`.
+Before the first wallet sync, the desktop starts the bundled SDK in a
+settings-only mode: every component is skipped with runtime flags. The local
+settings API is available, but no wallet, headers or hub connection is opened.
+The picker checks the hubs returned by the SDK's `settings_get`.
+The bundled defaults include the four Odysee hubs and the existing Grin,
+Lizard and lbry.network hubs. The old `spv*.lbry.com` defaults are removed.
+An explicit server override remains authoritative until the user changes it
+or returns to automatic selection.
 It shows successful response times first and labels unavailable servers. The
 measurement includes DNS, TCP connection, `server.version` and `server.features`;
 it is not ICMP ping or a measure of operator trust. Probes send no wallet addresses.
 They require a compatible protocol and the LBRY mainnet genesis hash, use a
 four-second deadline, and run at most four connections concurrently.
 
-Automatic selection is the default. A manual choice is checked again before
-being saved through the SDK settings API. The desktop stops its owned SDK
-cleanly, starts it with the saved configuration and waits up to 60 seconds for
-the wallet connection. On failure it restores the previous setting and restarts
-again. Recovery errors are reported rather than claiming the choice succeeded.
-Returning to automatic selection clears the custom setting, preserving the
-SDK's discovery and failover behavior. Settings → Wallet Server remains available
-for later changes or manually entered addresses.
+Automatic selection is the default. A custom `host:port` can be checked even
+when every configured hub is unavailable. A manual choice is checked again
+before being saved through the SDK settings API. **Start syncing** stops the
+settings-only SDK cleanly and starts it with the saved configuration. The UI
+continues as soon as the local API is ready, without waiting for wallet sync.
+If that restart fails, the desktop returns to settings-only mode and restores
+the previous choice; recovery failures are displayed.
 
-This step follows the existing SDK bootstrap and initial wallet synchronization.
-It does not choose a hub before the first network connection and is not yet a
-recovery screen for a bootstrap that cannot reach any hub.
+During sync, **Choose another hub** stops the owned SDK and returns to the
+picker. This remains available when a server passes its probe but later stalls.
+Returning to automatic selection clears the custom setting, preserving SDK
+discovery and failover. Old wallet/cloud preferences cannot overwrite the local
+hub choice when preferences load after sync. Settings → Wallet Server remains
+available for later changes.
+
+After a successful SDK restart, `hub-setup-complete.json` in the desktop profile
+skips the picker on later launches. Sync still offers the recovery button.
+Existing NG profiles without this marker see the picker once. The component
+skip flags are never written into the user's SDK configuration.
 
 ## Windows storage
 
@@ -50,17 +64,40 @@ Run `yarn test:desktop-setup` with the documented Node 16.20.2 build environment
 - Local TCP hub fixtures: fragmented JSON, incompatible protocol, wrong network,
   invalid/oversized replies, refused connections, timeouts and concurrency limits.
 - SDK host/port tuple normalization, duplicate choices, a failed second probe,
-  automatic selection, saved custom choices and both successful/failed rollback.
+  custom address checks, automatic selection and successful/failed rollback.
+- Old wallet preferences cannot replace the local hub choice. The sync poller
+  retries API failures and ignores responses received after returning to setup.
 
 `yarn test:sdk-isolation` also runs the real bundled SDK against local regtest
-hubs. A hub that stops responding after the probe forces a rollback. The
-previous server list, wallet addresses and zero balance survive; all five SDK
+hubs. Settings-only startup leaves the wallet directory empty, contacts no hub,
+does not read an initial-header file and leaves configuration unchanged. A hub
+that stops responding after its probe can be replaced before sync finishes.
+The recovered wallet retains its addresses and zero balance; all seven SDK
 shutdowns complete without forced termination or pending-task destruction.
 No funds or mainnet transactions are needed for these tests.
 
-## Packaged Windows check, 2026-10-11
+## Current Windows build, 2026-10-11
 
-The local NG installer was built with Node 16.20.2 and Electron 17.2.0. Its
+The rebuilt `0.54.0-rc.1` installer includes the updated wallet hubs from SDK
+PR #29 and the interrupted-startup fix from pending PR #28. Its SHA-256 is
+`c5d0439eaf0a2dac8918cfe2cba5b8884a25999cd9a0589ef2f0796f2edeece2`.
+The bundled SDK's SHA-256 is
+`fb165a3b1e272f1841a108d0b20a146e23aa515c9ba2100309faf8a1ee5b1cf6`;
+the candidate manifest records its source tree and CI artifact. The installer
+size and SHA-512 match `latest.yml`, and its updater targets this fork.
+
+The build passed the setup, updater and real-SDK isolation checks described
+above, including recovery from a stalled hub and seven clean SDK shutdowns.
+A settings-only smoke test against the SDK extracted into the final package
+confirmed all seven defaults, restored them after clearing a custom list,
+created no wallet and exited cleanly. This build is ready for manual testing
+of the picker before initial sync. Earlier playback and UI observations apply
+only to the artifacts identified in their respective validation records.
+
+## Earlier packaged Windows check, 2026-10-11
+
+Before moving hub selection ahead of sync, the local NG installer was built
+with Node 16.20.2 and Electron 17.2.0. Its
 SHA-256 is `ff53bf9d107267bfc63ecafd5dd791c074995503db7fd9ea1b0e7edee53bf4e1`.
 The bundled SDK retained the pinned SHA-256 from `build/sdk-candidate.json`, and
 the installer's SHA-512 matched `latest.yml`.

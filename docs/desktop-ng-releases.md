@@ -2,7 +2,8 @@
 
 The first NG installer target is Windows x64. It bundles the SDK pinned in
 [`build/sdk-candidate.json`](../build/sdk-candidate.json), including SDK NG
-PR #27. The executable still reports SDK `0.114.0rc4`, but the older public rc4
+PR #27, the updated wallet hubs from PR #29, and the pending PR #28 startup
+cancellation fix. The executable still reports SDK `0.114.0rc4`, but the older public rc4
 release is a different binary. Build and startup both verify the pinned SHA-256.
 
 ## Build locally

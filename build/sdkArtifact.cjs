@@ -4,7 +4,7 @@ const candidate = require('./sdk-candidate.json');
 
 function artifactFor(platform = process.platform, arch = process.arch) {
   if (arch !== 'x64' || !candidate.artifacts[platform]) {
-    throw new Error('This SDK candidate supports Windows, Linux and Intel macOS x64 only.');
+    throw new Error('This SDK candidate supports Windows x64 only.');
   }
   return candidate.artifacts[platform];
 }
