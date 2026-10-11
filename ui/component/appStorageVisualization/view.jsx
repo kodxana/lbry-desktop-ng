@@ -1,6 +1,7 @@
 // @flow
 import * as React from 'react';
 import I18nMessage from 'component/i18nMessage';
+import Button from 'component/button';
 import { ipcRenderer } from 'electron';
 
 type Props = {
@@ -25,6 +26,7 @@ function StorageViz(props: Props) {
         <div className={'storage__bar'}>
           <div className="help">{__('Cannot get disk space information.')}</div>
         </div>
+        <Button button="link" label={__('Retry storage check')} onClick={() => ipcRenderer.send('get-disk-space')} />
       </div>
     );
   }

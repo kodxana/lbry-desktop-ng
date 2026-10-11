@@ -17,7 +17,7 @@ class Daemon {
     this.ready = false;
   }
 
-  rpc(method) {
+  rpc(method, params = {}) {
     return new Promise((resolve, reject) => {
       const request = http.request({
         host: '127.0.0.1',
@@ -39,7 +39,7 @@ class Daemon {
       });
       request.setTimeout(3000, () => request.destroy(new Error('SDK request timed out.')));
       request.on('error', reject);
-      request.end(JSON.stringify({ method, params: {} }));
+      request.end(JSON.stringify({ method, params }));
     });
   }
 

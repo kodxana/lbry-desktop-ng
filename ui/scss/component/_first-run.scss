@@ -33,3 +33,13 @@
   padding: var(--spacing-s);
   background-color: var(--color-card-background);
 }
+
+.hub-setup {
+  max-width: 850px;
+
+  .hub-setup__servers {
+    max-height: 35vh;
+    overflow-y: auto;
+    padding: var(--spacing-xs);
+  }
+}

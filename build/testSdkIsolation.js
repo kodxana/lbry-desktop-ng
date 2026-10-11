@@ -7,6 +7,8 @@ const net = require('net');
 const dgram = require('dgram');
 const crypto = require('crypto');
 const Daemon = require('../electron/Daemon.cjs');
+const { HubSelection, parseServer } = require('../electron/hubServers.cjs');
+const yaml = require('js-yaml');
 const { createProfile, daemonEnvironment, assertPortsAvailable } = require('../electron/testProfile.cjs');
 const { stageBinary, artifactFor } = require('./sdkArtifact.cjs');
 
@@ -123,15 +125,58 @@ async function main() {
       } finally { await daemon.quit() }
       assert.equal((await daemon.exited).code, 0);
     }
+
+    // Simulate a hub that stops responding after the setup probe succeeds.
+    const stalled = net.createServer(socket => {
+      sockets.add(socket);
+      socket.on('close', () => sockets.delete(socket));
+      socket.on('error', () => {});
+    });
+    await new Promise(resolve => stalled.listen(0, '127.0.0.1', resolve));
+    const stalledEndpoint = '127.0.0.1:' + stalled.address().port;
+    const previousServers = ['127.0.0.1:' + hub.address().port, stalledEndpoint];
+    const config = yaml.load(fs.readFileSync(profile.config, 'utf8'));
+    config.lbryum_servers = previousServers;
+    fs.writeFileSync(profile.config, yaml.dump(config));
+    let daemon = new Daemon(profile, binary);
+    const selection = new HubSelection({
+      rpc: (method, params) => daemon.rpc(method, params),
+      hasCustomServers: () => true,
+      probe: async endpoint => ({ ...parseServer(endpoint), error: null, latency: 1 }),
+      connectionTimeout: 3000,
+      restart: async () => {
+        await daemon.quitForUpdate();
+        daemon = new Daemon(profile, binary);
+        await daemon.launch();
+      },
+    });
+    try {
+      await daemon.launch();
+      selection.connectionTimeout = 60000;
+      await selection.waitForWallet();
+      await selection.scan();
+      selection.connectionTimeout = 3000;
+      await assert.rejects(selection.select(stalledEndpoint), /previous connection has been restored/);
+      assert.deepEqual((await daemon.rpc('settings_get')).lbryum_servers,
+        previousServers.map(endpoint => { const { host, port } = parseServer(endpoint); return [host, port] }));
+      assert.equal((await daemon.rpc('wallet_balance')).total, '0.0');
+      assert.deepEqual((await daemon.rpc('address_list')).items.map(item => item.address).sort(), initialAddresses);
+      await daemon.quitForUpdate();
+      console.log('PASS: real SDK recovers from a stalled hub; previous servers, wallet addresses and balance survive');
+    } finally {
+      await daemon.quit();
+      sockets.forEach(socket => socket.destroy());
+      await new Promise(resolve => stalled.close(resolve));
+    }
   } finally {
     sockets.forEach(socket => socket.destroy());
     await new Promise(resolve => hub.close(resolve));
   }
   assert.equal(unexpected.size, 0);
   const log = fs.readFileSync(path.join(profile.logs, 'daemon-console.log'), 'utf8');
-  assert.equal((log.match(/finished shutting down/g) || []).length, 2);
+  assert.equal((log.match(/finished shutting down/g) || []).length, 5);
   assert(!log.includes('Task was destroyed but it is pending!'));
-  console.log('PASS: real packaged SDK creates an empty wallet, preserves addresses on restart and exits cleanly twice');
+  console.log('PASS: real packaged SDK preserves the empty wallet and completes all five shutdowns cleanly');
   console.log('Evidence: ' + root);
 }
 

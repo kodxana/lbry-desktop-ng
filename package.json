@@ -19,6 +19,7 @@
   },
   "main": "./dist/electron/main.js",
   "scripts": {
+    "test:desktop-setup": "node build/testDesktopSetup.js",
     "test:sdk-isolation": "node build/testSdkIsolation.js",
     "build:sdk-test": "node build/buildSdkTest.js",
     "analyze": "source-map-explorer --only-mapped dist/electron/webpack/ui*.js --html dist/sourceMap.html",
@@ -56,6 +57,7 @@
     "express": "^4.17.1",
     "ffmpeg-probe": "^1.0.6",
     "humanize-duration": "^3.27.0",
+    "js-yaml": "4.1.0",
     "match-sorter": "^6.3.0",
     "mime": "^3.0.0",
     "node-html-parser": "^5.1.0",

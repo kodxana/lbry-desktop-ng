@@ -18,6 +18,10 @@ separate **LBRY SDK Test** ZIP keeps updates disabled for compatibility testing.
 Neither build imports an existing wallet or replaces the original app's protocol
 registration.
 
+First-run setup includes a wallet hub response-time check and a choice between
+automatic selection and a responding hub. Windows storage checks use the native
+disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setup.md).
+
 The current build retains Electron 17.2.0 and Node 16.20.2 as the compatibility
 baseline. Modernizing the desktop runtime and dependencies is still required.
 There are no published Desktop NG installers yet. Historical upstream binaries

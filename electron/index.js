@@ -15,14 +15,15 @@ import installDevtools from './installDevtools';
 import fs from 'fs';
 import path from 'path';
 import desktopSettings from '../desktop-settings.json';
-import { diskSpaceLinux, diskSpaceWindows, diskSpaceMac } from '../ui/util/diskspace';
 
 const Daemon = require('./Daemon.cjs');
 const { createProfile } = require('./testProfile.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
+const { getDiskSpace } = require('./diskSpace.cjs');
+const { HubSelection } = require('./hubServers.cjs');
+const yaml = require('js-yaml');
 const mime = require('mime');
 const remote = require('@electron/remote/main');
-const os = require('os');
 const probe = require('ffmpeg-probe');
 const MAX_IPC_SEND_BUFFER_SIZE = 500000000; // large files crash when serialized for ipc message
 
@@ -66,14 +67,41 @@ const startDaemon = async () => {
   const binary = process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
   daemon = new Daemon(desktopProfile, binary, process.env.LBRY_HEADERS);
   await daemon.launch();
-  daemon.on('exit', () => {
-    daemon = null;
-    if (!appState.isQuitting) {
+  const ownedDaemon = daemon;
+  ownedDaemon.on('exit', () => {
+    if (daemon === ownedDaemon) daemon = null;
+    if (!appState.isQuitting && !ownedDaemon.expectedExit) {
       dialog.showErrorBox('SDK exited', 'See the logs in ' + desktopProfile.logs);
       app.quit();
     }
   });
 };
+
+const hubs = new HubSelection({
+  rpc: (method, params) => {
+    if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
+    return daemon.rpc(method, params);
+  },
+  hasCustomServers: () => Object.prototype.hasOwnProperty.call(
+    yaml.load(fs.readFileSync(desktopProfile.config, 'utf8')) || {}, 'lbryum_servers'
+  ),
+  restart: async () => {
+    if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
+    daemon.expectedExit = true;
+    await daemon.quitForUpdate();
+    if (appState.isQuitting) throw new Error('Application is closing.');
+    await startDaemon();
+  },
+});
+
+ipcMain.handle('hub-servers-scan', event => {
+  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  return hubs.scan();
+});
+ipcMain.handle('hub-servers-select', (event, endpoint) => {
+  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  return hubs.select(endpoint);
+});
 
 let isLbryFirstRunning = false;
 const startLbryFirst = async () => {
@@ -340,23 +368,10 @@ ipcMain.handle('get-file-details-from-path', async (event, path) => {
 ipcMain.on('get-disk-space', async (event) => {
   try {
     const { data_dir } = await Lbry.settings_get();
-    let diskSpace;
-    switch (os.platform()) {
-      case 'linux':
-        diskSpace = await diskSpaceLinux(data_dir);
-        break;
-      case 'darwin':
-        diskSpace = await diskSpaceMac(data_dir);
-        break;
-      case 'win32':
-        diskSpace = await diskSpaceWindows(data_dir);
-        break;
-      default:
-        throw new Error('unknown platform');
-    }
-    rendererWindow.webContents.send('send-disk-space', { diskSpace });
+    const diskSpace = await getDiskSpace(path.join(data_dir, 'blobfiles'));
+    if (!event.sender.isDestroyed()) event.reply('send-disk-space', { diskSpace });
   } catch (e) {
-    rendererWindow.webContents.send('send-disk-space', { error: e.message || e });
+    if (!event.sender.isDestroyed()) event.reply('send-disk-space', { error: e.message || e });
     console.log('Failed to get disk space', e);
   }
 });

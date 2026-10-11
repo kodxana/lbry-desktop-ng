@@ -100,12 +100,11 @@ rewards.setCallback('claimRewardSuccess', (reward) => {
 ipcRenderer.on('send-disk-space', (event, result) => {
   if (result.error) {
     console.log(`disk space error: ${result.error}`);
-  } else {
-    app.store.dispatch({
-      type: ACTIONS.DISK_SPACE,
-      data: result.diskSpace,
-    });
   }
+  app.store.dispatch({
+    type: ACTIONS.DISK_SPACE,
+    data: result.error ? null : result.diskSpace,
+  });
 });
 
 ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
