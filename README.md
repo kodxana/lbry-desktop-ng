@@ -11,7 +11,7 @@ persistence, playback, downloads and shutdown.
 
 ## Current status
 
-Restoration is in progress. Windows x64 builds now bundle the pinned SDK NG
+Restoration is in progress. Windows and Linux x64 builds bundle the pinned SDK NG
 candidate with the Windows shutdown fix. **LBRY Desktop NG** has its own profile,
 wallet and ports, and checks this fork's GitHub releases for updates. The
 separate **LBRY SDK Test** ZIP keeps updates disabled for compatibility testing.
@@ -26,8 +26,9 @@ disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setu
 
 The current build retains Electron 17.2.0 and Node 16.20.2 as the compatibility
 baseline. Modernizing the desktop runtime and dependencies is still required.
-The first [Windows x64 prerelease, 0.54.0-rc.1](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.1),
-is available for testing. Download the desktop installer from its Assets list;
+The [0.54.0-rc.1 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.1)
+is available for Windows and Linux x64 testing. Download the Windows installer
+or Linux AppImage/tar.gz from its Assets list; see the [Linux instructions](docs/linux-desktop.md).
 the other files provide updater metadata, checksums, SDK source provenance and
 validation details. Historical upstream binaries do not contain this fork's
 integration changes.
@@ -35,9 +36,10 @@ integration changes.
 See [build and launch instructions](docs/isolated-desktop-test.md) and the
 [Windows validation record](docs/windows-sdk-validation.md). The validation
 covers an unfunded light wallet, two free MP4 streams, playback controls, a
-paused download resumed after restart, and clean shutdown. Paid content,
-funded transactions, wallet encryption/backup UI, Linux and macOS remain outside
-that acceptance coverage.
+paused download resumed after restart, and clean shutdown on Windows. Linux
+setup and wallet checks are recorded separately in the Linux guide. Paid
+content, funded transactions, wallet encryption/backup UI and macOS remain
+outside that acceptance coverage.
 
 See [NG installer and GitHub update instructions](docs/desktop-ng-releases.md)
 for `build:ng`, release files, profiles and update tests. Current installers are

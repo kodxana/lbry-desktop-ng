@@ -7,6 +7,9 @@ PR #30, and the pending PR #28 startup cancellation fix. The executable still
 reports SDK `0.114.0rc4`, but the older public rc4
 release is a different binary. Build and startup both verify the pinned SHA-256.
 
+Linux x64 AppImage and tar.gz packages use the matching Linux SDK from that
+same CI run. See [Linux desktop builds and validation](linux-desktop.md).
+
 ## Build locally
 
 Use Node 16.20.2 and the checked-in Yarn 3.2.0. Follow the dependency and SDK
@@ -74,8 +77,8 @@ let users disable prereleases or automatic downloading. Stable checks use
 GitHub's latest non-prerelease; test-release checks use its release feed.
 Downgrades are disabled. Missing releases and network/download errors leave the
 desktop running. Help shows the result of the most recent update check.
-Linux and macOS currently use the GitHub releases page for manual downloads;
-their packaging and automatic updates are not validated in this fork.
+Linux uses the GitHub releases page for manual downloads; Linux automatic
+updates are not enabled. macOS packaging and updates remain unvalidated.
 
 ## Preparing a release
 

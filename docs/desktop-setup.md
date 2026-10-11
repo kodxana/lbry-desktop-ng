@@ -71,7 +71,8 @@ through hidden Windows PowerShell, querying the SDK's actual `blobfiles`
 directory. Paths go through standard input, not shell interpolation. Available
 space respects the caller's quota, retains 64-bit values, and is converted to
 the KiB units expected by the UI. The Unix path uses `df -kP` with a separate
-path argument; Linux/macOS execution remains unvalidated.
+path argument. The Linux package tests exercise that path with real directories;
+macOS execution remains unvalidated.
 
 A failed check clears stale capacity readings and offers a retry. Setup treats
 unknown capacity separately from a full drive, and continuing with unknown
