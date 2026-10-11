@@ -66,13 +66,15 @@ export default function Welcome(props: Props) {
   };
 
   return (
-    <Page noHeader noSideNavigation>
-      {welcomePage === SPLASH_PAGE && <WelcomeSplash handleNextPage={handleNextPage} />}
-      {welcomePage === PRIVACY_PAGE && <PrivacyAgreement handleNextPage={handleNextPage} />}
-      {welcomePage === HOSTING_PAGE && <HostingSplash handleNextPage={handleNextPage} handleDone={handleDone} />}
-      {welcomePage === HOSTING_ADVANCED && (
-        <HostingSplashCustom handleNextPage={handleDone} handleGoBack={handleGoBack} />
-      )}
-    </Page>
+    <div className="first-run" theme="dark">
+      <Page noHeader noSideNavigation>
+        {welcomePage === SPLASH_PAGE && <WelcomeSplash handleNextPage={handleNextPage} />}
+        {welcomePage === PRIVACY_PAGE && <PrivacyAgreement handleNextPage={handleNextPage} />}
+        {welcomePage === HOSTING_PAGE && <HostingSplash handleNextPage={handleNextPage} handleDone={handleDone} />}
+        {welcomePage === HOSTING_ADVANCED && (
+          <HostingSplashCustom handleNextPage={handleDone} handleGoBack={handleGoBack} />
+        )}
+      </Page>
+    </div>
   );
 }

@@ -36,6 +36,25 @@ skips the picker on later launches. Sync still offers the recovery button.
 Existing NG profiles without this marker see the picker once. The component
 skip flags are never written into the user's SDK configuration.
 
+## Startup presentation
+
+Hub selection, startup and the getting-started pages use the existing desktop
+dark theme. The startup screens reuse the first-run columns, Yrbl illustration,
+section typography, buttons and form fields. The spinning splash animation and
+its toggle are removed.
+
+Startup shows the connected hub and the SDK's header progress when available.
+Header completion is not presented as overall wallet readiness: history and
+other startup checks may still be running. If the reported state stops changing
+for 45 seconds, the screen offers a plain waiting message alongside hub recovery.
+Polling alone does not reset this timer, and a locked wallet still requires the
+existing unlock dialog.
+
+Returning to hub selection retains the other addresses checked during that app
+session and probes them again. Remembering an address does not bypass its check
+or change the saved wallet configuration. The custom-address option remains
+available, including when no listed hub responds.
+
 ## Windows storage
 
 The original desktop ran `wmic logicaldisk`; that executable is absent on the
@@ -67,6 +86,9 @@ Run `yarn test:desktop-setup` with the documented Node 16.20.2 build environment
   custom address checks, automatic selection and successful/failed rollback.
 - Old wallet preferences cannot replace the local hub choice. The sync poller
   retries API failures and ignores responses received after returning to setup.
+- Header progress rejects missing or invalid percentages and does not imply
+  wallet readiness. Unchanged status does not reset the waiting timer; real
+  progress clears the waiting notice. Recovery rechecks session hub alternatives.
 
 `yarn test:sdk-isolation` also runs the real bundled SDK against local regtest
 hubs. Settings-only startup leaves the wallet directory empty, contacts no hub,
@@ -80,7 +102,7 @@ No funds or mainnet transactions are needed for these tests.
 
 The rebuilt `0.54.0-rc.1` installer includes the updated wallet hubs from SDK
 PR #29 and the interrupted-startup fix from pending PR #28. Its SHA-256 is
-`c5d0439eaf0a2dac8918cfe2cba5b8884a25999cd9a0589ef2f0796f2edeece2`.
+`671cf5c3d5e7ae143fac937b2bb22536ea84acde8fa3b0e223097591805b1458`.
 The bundled SDK's SHA-256 is
 `fb165a3b1e272f1841a108d0b20a146e23aa515c9ba2100309faf8a1ee5b1cf6`;
 the candidate manifest records its source tree and CI artifact. The installer
@@ -88,11 +110,13 @@ size and SHA-512 match `latest.yml`, and its updater targets this fork.
 
 The build passed the setup, updater and real-SDK isolation checks described
 above, including recovery from a stalled hub and seven clean SDK shutdowns.
-A settings-only smoke test against the SDK extracted into the final package
-confirmed all seven defaults, restored them after clearing a custom list,
-created no wallet and exited cleanly. This build is ready for manual testing
-of the picker before initial sync. Earlier playback and UI observations apply
-only to the artifacts identified in their respective validation records.
+The packaged UI contains the new progress and recovery screens and no longer
+contains the spinning splash toggle. Hub selection, header progress and return
+to settings-only setup were exercised in a disposable profile before the final
+styling revision. The final appearance still needs manual acceptance; that
+revision reuses the existing getting-started layout and dark theme. Earlier
+playback and UI observations apply only to the artifacts identified in their
+respective validation records.
 
 ## Earlier packaged Windows check, 2026-10-11
 

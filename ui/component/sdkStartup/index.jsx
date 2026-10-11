@@ -4,6 +4,7 @@ import { ipcRenderer } from 'electron';
 import Button from 'component/button';
 import HubSetup from 'component/hubSetup';
 import SplashScreen from 'component/splash';
+import SetupLayout from 'component/setupLayout';
 
 type Props = { onReadyToLaunch: () => void };
 
@@ -13,12 +14,17 @@ export default function SdkStartup({ onReadyToLaunch }: Props) {
 
   React.useEffect(() => {
     let active = true;
-    ipcRenderer.invoke('hub-startup-state').then(state => {
-      if (active) setPhase(state.settingsOnly ? 'choose' : 'sync');
-    }).catch(() => {
-      if (active) setError(__('Could not read startup state. Please close and reopen the app.'));
-    });
-    return () => { active = false };
+    ipcRenderer
+      .invoke('hub-startup-state')
+      .then((state) => {
+        if (active) setPhase(state.settingsOnly ? 'choose' : 'sync');
+      })
+      .catch(() => {
+        if (active) setError(__('Could not read startup state. Please close and reopen the app.'));
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   async function chooseHub() {
@@ -34,15 +40,19 @@ export default function SdkStartup({ onReadyToLaunch }: Props) {
   }
 
   if (phase === 'sync') return <SplashScreen onReadyToLaunch={onReadyToLaunch} onChooseHub={chooseHub} />;
+  if (phase === 'choose') return <HubSetup handleNextPage={() => setPhase('sync')} />;
   return (
-    <main className="main--launching">
-      {phase === 'choose' ? <HubSetup handleNextPage={() => setPhase('sync')} /> : (
-        <section className="main--contained">
-          <h1>{__('Preparing wallet setup…')}</h1>
-          {error && <p role="alert">{error}</p>}
-          {error && <Button button="primary" label={__('Retry')} onClick={chooseHub} />}
-        </section>
+    <SetupLayout>
+      <h1 className="section__title--large">{__('Preparing wallet setup')}</h1>
+      <p className="section__subtitle" role="status">
+        {__('Preparing your connection settings. Your wallet will sync after you choose a hub.')}
+      </p>
+      {error && (
+        <p className="error__text" role="alert">
+          {error}
+        </p>
       )}
-    </main>
+      {error && <Button button="primary" label={__('Retry')} onClick={chooseHub} />}
+    </SetupLayout>
   );
 }

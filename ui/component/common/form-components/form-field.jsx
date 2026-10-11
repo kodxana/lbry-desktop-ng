@@ -15,6 +15,7 @@ type Props = {
   error?: string | boolean,
   helper?: string | React$Node,
   inputButton?: React$Node,
+  inputName?: string,
   label?: string | Node,
   labelOnLeft: boolean,
   max?: number,
@@ -60,6 +61,7 @@ export class FormField extends React.PureComponent<Props> {
       error,
       helper,
       inputButton,
+      inputName,
       label,
       labelOnLeft,
       name,
@@ -88,7 +90,7 @@ export class FormField extends React.PureComponent<Props> {
 
     const inputSimple = (type: string) => (
       <>
-        <input id={name} type={type} {...inputProps} />
+        <input id={name} name={inputName} type={type} {...inputProps} />
         <label htmlFor={name}>{label}</label>
       </>
     );

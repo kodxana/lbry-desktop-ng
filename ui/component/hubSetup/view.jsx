@@ -2,6 +2,7 @@
 import React from 'react';
 import { ipcRenderer } from 'electron';
 import Button from 'component/button';
+import SetupLayout from 'component/setupLayout';
 import { FormField } from 'component/common/form-components/form-field';
 
 type Server = { endpoint: string, host: string, port: number, latency: ?number, error: ?string };
@@ -38,7 +39,9 @@ export default function HubSetup({ handleNextPage }: Props) {
 
   React.useEffect(() => {
     scan();
-    return () => { mounted.current = false };
+    return () => {
+      mounted.current = false;
+    };
   }, []);
 
   async function checkCustom() {
@@ -47,7 +50,7 @@ export default function HubSetup({ handleNextPage }: Props) {
     try {
       const server = await ipcRenderer.invoke('hub-servers-check', customAddress.trim());
       if (mounted.current) {
-        setServers(previous => [server, ...previous.filter(item => item.endpoint !== server.endpoint)]);
+        setServers((previous) => [server, ...previous.filter((item) => item.endpoint !== server.endpoint)]);
         if (!server.error) setSelected(server.endpoint);
         else setError(__('That hub did not pass the connection check. Try another address.'));
       }
@@ -72,57 +75,84 @@ export default function HubSetup({ handleNextPage }: Props) {
   }
 
   return (
-    <section className="main--contained hub-setup">
-      <h1 className="section__title--large">{__('Choose a wallet hub')}</h1>
-      <p>{__('Wallet sync is paused until you choose a hub.')}</p>
-      <p>{__('Hubs connect your wallet to the LBRY network. Keep automatic selection or choose a responding server.')}</p>
-      <p className="help">{__('Response time includes connecting and checking the LBRY protocol. It can change over time.')}</p>
-      <fieldset disabled={saving || scanning}>
-        <legend className="section__subtitle">{__('Hub servers')}</legend>
-        <FormField
-          name="wallet-hub-auto"
-          type="radio"
-          checked={selected === null}
-          label={__('Automatic selection (recommended)')}
-          helper={__('Let the SDK choose a hub and switch if it becomes unavailable.')}
-          onChange={() => setSelected(null)}
-        />
-        <div className="hub-setup__servers">
-          {servers.map(server => (
-            <FormField
-              key={server.endpoint}
-              name={`wallet-hub-${server.endpoint}`}
-              type="radio"
-              disabled={Boolean(server.error)}
-              checked={selected === server.endpoint}
-              label={`${server.endpoint} — ${server.error ? __(server.error) : `${server.latency} ms`}`}
-              onChange={() => setSelected(server.endpoint)}
-            />
-          ))}
+    <SetupLayout>
+      <section className="hub-setup">
+        <h1 className="section__title--large">{__('Choose a wallet hub')}</h1>
+        <p className="section__subtitle">
+          {__(
+            'Hubs connect your wallet to LBRY. Keep automatic selection or choose a responding server before sync starts.'
+          )}
+        </p>
+        <fieldset disabled={saving || scanning} className="section__body">
+          <legend className="section__subtitle">{__('Hub servers')}</legend>
+          <FormField
+            name="wallet-hub-auto"
+            inputName="wallet-hub"
+            type="radio"
+            checked={selected === null}
+            label={__('Automatic selection (recommended)')}
+            helper={__('Let the SDK choose a hub and switch if it becomes unavailable.')}
+            onChange={() => setSelected(null)}
+          />
+          <div className="hub-setup__servers">
+            {servers.map((server) => (
+              <FormField
+                key={server.endpoint}
+                name={`wallet-hub-${server.endpoint}`}
+                inputName="wallet-hub"
+                type="radio"
+                disabled={Boolean(server.error)}
+                checked={selected === server.endpoint}
+                label={
+                  <span className="hub-setup__server-label">
+                    <span className="hub-setup__endpoint">{server.endpoint}</span>
+                    <span className="hub-setup__response">
+                      {server.error ? __(server.error) : `${server.latency} ms`}
+                    </span>
+                  </span>
+                }
+                onChange={() => setSelected(server.endpoint)}
+              />
+            ))}
+          </div>
+          <details className="hub-setup__custom">
+            <summary>{__('Use a custom hub')}</summary>
+            <div className="hub-setup__custom-field">
+              <FormField
+                name="custom-wallet-hub"
+                type="text"
+                label={__('Hub address')}
+                placeholder="hub.example.org:50001"
+                value={customAddress}
+                onChange={(event) => setCustomAddress(event.target.value)}
+              />
+              <Button
+                button="link"
+                label={__('Check hub')}
+                disabled={saving || scanning || !customAddress.trim()}
+                onClick={checkCustom}
+              />
+            </div>
+          </details>
+        </fieldset>
+        <div className="hub-setup__status help" role="status">
+          {scanning && <p>{__('Checking hub response times…')}</p>}
+          {saving && <p>{__('Starting your wallet…')}</p>}
+          {!scanning && !servers.some((server) => !server.error) && (
+            <p>{__('No hubs responded. Try a custom address, check again, or continue with automatic selection.')}</p>
+          )}
+          {error && <p role="alert">{error}</p>}
         </div>
-        <FormField
-          name="custom-wallet-hub"
-          type="text"
-          label={__('Custom hub address')}
-          placeholder="hub.example.org:50001"
-          value={customAddress}
-          onChange={event => setCustomAddress(event.target.value)}
-        />
-        <Button button="link" label={__('Check custom hub')} disabled={saving || scanning || !customAddress.trim()} onClick={checkCustom} />
-      </fieldset>
-      <div aria-live="polite">
-        {scanning && <p>{__('Checking hub response times…')}</p>}
-        {saving && <p>{__('Starting your wallet…')}</p>}
-        {!scanning && !servers.some(server => !server.error) && (
-          <p>{__('No hubs responded. Try a custom address, check again, or continue with automatic selection.')}</p>
-        )}
-        {error && <p role="alert">{error}</p>}
-      </div>
-      <div className="card__actions">
-        <Button button="primary" label={__('Start syncing')} disabled={saving || scanning} onClick={next} />
-        <Button button="link" label={__('Check again')} disabled={saving || scanning} onClick={scan} />
-      </div>
-      <p className="help">{__('You can change this later in Settings → Wallet Server.')}</p>
-    </section>
+        <div className="first-run__actions">
+          <Button button="primary" label={__('Start syncing')} disabled={saving || scanning} onClick={next} />
+          <Button button="link" label={__('Check again')} disabled={saving || scanning} onClick={scan} />
+        </div>
+        <p className="help">
+          {__(
+            'Response times measure the connection, not trust. You can change hubs later in Settings → Wallet Server.'
+          )}
+        </p>
+      </section>
+    </SetupLayout>
   );
 }

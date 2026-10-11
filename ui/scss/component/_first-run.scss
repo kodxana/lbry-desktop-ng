@@ -34,18 +34,8 @@
   background-color: var(--color-card-background);
 }
 
-.hub-setup {
-  max-width: 850px;
-
-  .hub-setup__servers {
-    max-height: 35vh;
-    overflow-y: auto;
-    padding: var(--spacing-xs);
-  }
-}
-
-.splash__hub-choice {
-  position: absolute;
-  bottom: 15%;
-  z-index: 1;
+.first-run {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
 }
