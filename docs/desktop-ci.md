@@ -2,7 +2,7 @@
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
-Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 17.2.0. The
+Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 22.3.27. The
 [build-tooling migration](build-tooling.md) moves compilation to Webpack 5.
 The [packaging/updater migration](packaging-updater.md) adds old-client metadata
 compatibility, cache recovery, interrupted downloads and install-handoff checks.

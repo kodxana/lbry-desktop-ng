@@ -16,7 +16,7 @@ const timeout = setTimeout(() => app.exit(1), 45000);
 app
   .whenReady()
   .then(async () => {
-    // Electron 17 configures Linux OSCrypt when its network service starts.
+    // These Electron versions configure Linux OSCrypt when the network service starts.
     // The application gets this through its window; this windowless test must
     // initialize the same service before using safeStorage (no network request).
     await session.defaultSession.cookies.get({});
@@ -36,7 +36,7 @@ app
     } else if (phase === 'forgotten') {
       assert.equal(store.read().state, 'forgotten');
     } else if (phase === 'unavailable') {
-      assert.equal(safeStorage.isEncryptionAvailable(), false, 'Electron 17 must reject the Linux basic backend');
+      assert.equal(safeStorage.isEncryptionAvailable(), false, 'Electron must reject the Linux basic backend');
       assert.throws(() => store.save(secret));
       assert.equal(store.read().state, 'forgotten', 'Insecure fallback must not replace the existing record');
     } else throw new Error('Unknown phase');

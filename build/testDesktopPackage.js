@@ -25,6 +25,7 @@ assert.equal(bundled.name, pkg.name);
 assert.equal(bundled.version, pkg.version);
 assert.equal(bundled.main, 'main.js');
 const entries = new Set(asar.listPackage(archive).map((entry) => entry.replace(/\\/g, '/')));
+assert(![...entries].some((entry) => entry.endsWith('.node')), 'Native addons need a separate Electron ABI review');
 assert.deepEqual(
   asar.extractFile(archive, 'licenses/electron-cookies.LICENSE'),
   fs.readFileSync(path.join(__dirname, '../ui/util/electron-cookies.LICENSE'))

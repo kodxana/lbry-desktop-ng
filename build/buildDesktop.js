@@ -32,6 +32,7 @@ for (const args of [
   ['build/testPasswordStorage.js'],
   ['build/testFileSelection.js'],
   ['build/testWindowControls.js'],
+  ['build/testRendererLifecycle.js'],
   ['build/testContextMenu.js'],
   ['build/testDesktopInfo.js'],
   ['build/testSdkIsolation.js'],
