@@ -2,7 +2,7 @@
 const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
-const { app, safeStorage } = require('electron');
+const { app, safeStorage, session } = require('electron');
 const PasswordStore = require('../../electron/PasswordStore.cjs');
 
 const [root, phase] = process.argv.slice(2);
@@ -15,7 +15,11 @@ if (process.platform === 'linux') {
 const timeout = setTimeout(() => app.exit(1), 45000);
 app
   .whenReady()
-  .then(() => {
+  .then(async () => {
+    // Electron 17 configures Linux OSCrypt when its network service starts.
+    // The application gets this through its window; this windowless test must
+    // initialize the same service before using safeStorage (no network request).
+    await session.defaultSession.cookies.get({});
     const store = new PasswordStore(root, safeStorage);
     if (phase === 'save' || phase === 'migrate') {
       assert(safeStorage.isEncryptionAvailable(), 'Real OS encryption must be available for this test');
