@@ -35,13 +35,21 @@ async function main() {
     });
   });
   assert.equal(localForage.driver(), localForage.INDEXEDDB);
-  if (phase === 'documents' || phase === 'fileDialogs' || phase === 'wallet') {
+  if (
+    phase === 'documents' ||
+    phase === 'fileDialogs' ||
+    phase === 'wallet' ||
+    phase === 'passwords' ||
+    phase === 'passwordRestart'
+  ) {
     // Follow the desktop component import order to resolve its existing app/router cycle.
     require('component/app');
     const tests = {
       documents: () => require('./documents'),
       fileDialogs: () => require('./fileDialogs'),
       wallet: () => require('./wallet'),
+      passwords: () => require('./passwords'),
+      passwordRestart: () => require('./passwordRestart'),
     };
     const test = tests[phase]().default;
     const message = await test(store, history, remote.app.getPath('userData'));

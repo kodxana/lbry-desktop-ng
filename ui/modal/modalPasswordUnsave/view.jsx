@@ -19,7 +19,8 @@ class ModalPasswordUnsave extends React.PureComponent<Props> {
         confirmButtonLabel={__('Forget')}
         abortButtonLabel={__('Nevermind')}
         onConfirmed={() =>
-          deleteSavedPassword().then(() => {
+          deleteSavedPassword().then((forgotten) => {
+            if (!forgotten) return;
             this.props.closeModal();
             if (this.props.callback) {
               this.props.callback();

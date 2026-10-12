@@ -11,6 +11,7 @@ import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
 const remote = require('@electron/remote/main');
 const shell = require('electron').shell;
+export const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 function GetAppLangCode() {
   // https://www.electronjs.org/docs/api/locales
   // 1. Gets the user locale.
@@ -61,7 +62,6 @@ export default appState => {
   };
   const lbryProto = 'lbry://';
   const lbryProtoQ = 'lbry://?';
-  const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 
   let window = new BrowserWindow(windowConfiguration);
   window.on('page-title-updated', event => {
