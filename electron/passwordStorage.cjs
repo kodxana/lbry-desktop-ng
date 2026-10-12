@@ -38,6 +38,8 @@ function registerPasswordStorage({
     const run = async () => {
       try {
         switch (operation) {
+          case 'status':
+            return { ok: true, saved: store.hasSavedPassword() || (await legacyCookies()).length > 0 };
           case 'read':
             return { ok: true, ...store.read() };
           case 'save':

@@ -14,7 +14,7 @@ import SettingShareUrl from 'component/settingShareUrl';
 import SettingsRow from 'component/settingsRow';
 import SettingWalletServer from 'component/settingWalletServer';
 import Spinner from 'component/spinner';
-import { getPasswordFromCookie } from 'util/saved-passwords';
+import { hasSavedPassword } from 'util/saved-passwords';
 import * as DAEMON_SETTINGS from 'constants/daemon_settings';
 import SettingEnablePrereleases from 'component/settingEnablePrereleases';
 import SettingDisableAutoUpdates from 'component/settingDisableAutoUpdates';
@@ -110,11 +110,13 @@ export default function SettingSystem(props: Props) {
   // Update storedPassword state
   React.useEffect(() => {
     updateWalletStatus();
-    getPasswordFromCookie().then((p) => {
-      if (typeof p === 'string') {
-        setStoredPassword(true);
-      }
+    let active = true;
+    hasSavedPassword().then((saved) => {
+      if (active) setStoredPassword(saved);
     });
+    return () => {
+      active = false;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -174,8 +176,8 @@ export default function SettingSystem(props: Props) {
                   isolatedTestBuild
                     ? __('Usage reporting is disabled in this community build.')
                     : isAuthenticated
-                      ? __('Internal sharing is required while signed in.')
-                      : __('Internal sharing is required to participate in rewards programs.')
+                    ? __('Internal sharing is required while signed in.')
+                    : __('Internal sharing is required to participate in rewards programs.')
                 }
                 disabled={isolatedTestBuild || (isAuthenticated && daemonSettings.share_usage_data)}
               />
@@ -313,10 +315,10 @@ export default function SettingSystem(props: Props) {
               />
             </SettingsRow>
 
-            {walletEncrypted && storedPassword && (
+            {storedPassword && (
               <SettingsRow
                 title={__('Save wallet password')}
-                subtitle={__('Automatically unlock your wallet on startup')}
+                subtitle={__('Forget the password stored on this device.')}
               >
                 <FormField
                   type="checkbox"

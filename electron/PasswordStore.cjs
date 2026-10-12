@@ -66,6 +66,16 @@ class PasswordStore {
     return saved;
   }
 
+  hasSavedPassword() {
+    try {
+      const record = JSON.parse(this.fs.readFileSync(this.file, 'utf8'));
+      return !(record && record.version === 1 && record.forgotten === true);
+    } catch (error) {
+      // Settings must still offer Forget for corrupt or inaccessible records.
+      return error.code !== 'ENOENT';
+    }
+  }
+
   write(record, password) {
     const temporary = this.file + '.' + randomBytes(12).toString('hex') + '.tmp';
     let fd;

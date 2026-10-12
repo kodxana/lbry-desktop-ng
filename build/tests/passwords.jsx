@@ -6,10 +6,14 @@ import Encrypt from 'modal/modalWalletEncrypt/view';
 import Unlock from 'modal/modalWalletUnlock/view';
 import Forget from 'modal/modalPasswordUnsave/view';
 import SyncPassword from 'component/syncPassword/view';
+import SettingAccount from 'component/settingAccount/view';
+import SettingSystem from 'component/settingSystem/view';
+import * as ACTIONS from 'constants/action_types';
 import { doSignOut } from 'redux/actions/app';
 import {
   getSavedPassword,
   getSavedPasswordState,
+  hasSavedPassword,
   setSavedPassword,
   deleteSavedPassword,
   doSignOutCleanup,
@@ -24,7 +28,7 @@ const click = (label) =>
     .find((button) => button.textContent === label)
     .click();
 
-export default async function passwords(store, history) {
+export default async function passwords(store, history, root) {
   await control('reset');
   // Use the production Electron cookie shim, including a host-only cookie and a
   // path/domain variant. The auth token must survive password migration.
@@ -198,6 +202,63 @@ export default async function passwords(store, history) {
   }
 
   assert(await deleteSavedPassword());
+  assert(await setSavedPassword('fixture-restart-password', true));
+  let statusRequests = 0;
+  render(
+    <SettingAccount
+      isAuthenticated={false}
+      walletEncrypted
+      hasChannels={false}
+      doWalletStatus={() => statusRequests++}
+    />,
+    store,
+    history
+  );
+  await waitFor(
+    () => statusRequests === 1 && !document.body.textContent.includes('To enable Sync, close LBRY'),
+    'Account settings must recognize a protected password'
+  );
+  unmount();
+
+  // Keep the unrelated hub settings row on a known status so unmount has no reason
+  // to clear a disconnected server configuration or contact the SDK.
+  store.dispatch({ type: ACTIONS.DAEMON_STATUS_RECEIVED, data: { status: { wallet: { available_servers: [] } } } });
+  let forgetCallback;
+  render(
+    <SettingSystem
+      daemonSettings={{ download_dir: root, save_files: true, save_blobs: true }}
+      ffmpegStatus={{ available: true, which: 'fixture-ffmpeg' }}
+      findingFFmpeg={false}
+      walletEncrypted={false}
+      isAuthenticated={false}
+      allowAnalytics={false}
+      updateWalletStatus={() => statusRequests++}
+      confirmForgetPassword={({ callback }) => {
+        forgetCallback = callback;
+      }}
+      setDaemonSetting={() => {}}
+      clearDaemonSetting={() => {}}
+      clearCache={() => Promise.resolve()}
+      findFFmpeg={() => {}}
+      encryptWallet={() => {}}
+      decryptWallet={() => {}}
+      toggle3PAnalytics={() => {}}
+    />,
+    store,
+    history
+  );
+  await waitFor(
+    () => document.getElementById('save_password'),
+    'System settings must offer Forget for a saved sync password'
+  );
+  document.getElementById('save_password').click();
+  assert.equal(typeof forgetCallback, 'function', 'Settings must open the Forget confirmation');
+  assert(await hasSavedPassword());
+  assert(await deleteSavedPassword());
+  forgetCallback();
+  await waitFor(() => !document.getElementById('save_password'), 'Forget success must refresh settings');
+  assert.equal(await hasSavedPassword(), false);
+  unmount();
   assert(await setSavedPassword('fixture-restart-password', true));
   return 'real cookie migration, wallet save failures, successful unlock snapshots, Forget retry, sync opt-in and offline sign-out';
 }

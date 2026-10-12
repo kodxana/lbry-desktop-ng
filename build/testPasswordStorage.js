@@ -270,6 +270,7 @@ async function unitTests() {
 
   const corrupt = service();
   fs.writeFileSync(corrupt.store.file, 'corrupt protected record');
+  assert(await corrupt.client().hasSavedPassword(), 'An unreadable password must still be forgettable in settings');
   assert.equal(
     await corrupt.client().getSavedPassword(),
     null,
@@ -318,7 +319,7 @@ function nativeTests() {
     });
     process.stdout.write((result.stdout || '') + (result.stderr || ''));
     if (result.error) throw result.error;
-    assert.equal(result.status, 0, 'Native password test failed: ' + phase);
+    assert.equal(result.status, 0, 'Native password test failed: ' + phase + (result.signal ? ' (' + result.signal + ')' : ''));
   }
 }
 

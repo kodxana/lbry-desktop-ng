@@ -18,7 +18,7 @@ const passwords = createPasswordClient(async (operation, value) => {
     return { ok: true };
   }
 }, legacyPasswordCookies(window.localStorage, [domain]));
-const { setSavedPassword, getSavedPassword, getSavedPasswordState, deleteSavedPassword } = passwords;
+const { setSavedPassword, getSavedPassword, getSavedPasswordState, hasSavedPassword, deleteSavedPassword } = passwords;
 
 function setCookie(name, value, expirationDaysOnWeb) {
   let expires = '';
@@ -104,6 +104,7 @@ export {
   setSavedPassword,
   getSavedPassword,
   getSavedPasswordState,
+  hasSavedPassword,
   deleteSavedPassword,
   getAuthToken,
   setAuthToken,

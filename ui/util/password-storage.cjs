@@ -79,6 +79,15 @@ function createPasswordClient(invoke, legacy) {
     });
   return {
     getSavedPasswordState,
+    hasSavedPassword: () =>
+      serial(async () => {
+        try {
+          return (await request('status')).saved || legacy.read().length > 0;
+        } catch (_) {
+          // Keep Forget available when a legacy jar or storage metadata is unreadable.
+          return true;
+        }
+      }),
     getSavedPassword: async () => (await getSavedPasswordState()).password,
     setSavedPassword: (value, remember) =>
       serial(async () => {
