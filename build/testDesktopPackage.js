@@ -27,8 +27,12 @@ assert.equal(bundled.main, 'main.js');
 for (const entry of ['main.js', 'ui.js', 'index.html']) {
   assert(asar.extractFile(archive, entry).length > 0, 'Missing packaged entry: ' + entry);
 }
-const updater = yaml.load(fs.readFileSync(path.join(resources, 'app-update.yml'), 'utf8'));
-for (const [key, value] of Object.entries(source)) assert.equal(updater[key], value);
+// Windows uses electron-updater. Linux updates are manual, so its unpacked
+// directory need not contain the NSIS updater configuration.
+if (!linux) {
+  const updater = yaml.load(fs.readFileSync(path.join(resources, 'app-update.yml'), 'utf8'));
+  for (const [key, value] of Object.entries(source)) assert.equal(updater[key], value);
+}
 const manifest = yaml.load(fs.readFileSync(path.join(output, linux ? 'latest-linux.yml' : 'latest.yml'), 'utf8'));
 assert.equal(manifest.version, pkg.version);
 assert(manifest.files.length > 0);

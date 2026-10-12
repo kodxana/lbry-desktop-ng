@@ -191,8 +191,14 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
-    await until(() => evaluate("document.body.innerText.includes('Choose a wallet hub')"), 'Hub picker did not render');
-    await until(() => evaluate("!document.querySelector('fieldset').disabled"), 'Hub probe did not finish');
+    await until(
+      () => evaluate("Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"),
+      'Hub picker did not render'
+    );
+    await until(
+      () => evaluate("Boolean(document.querySelector('fieldset') && !document.querySelector('fieldset').disabled)"),
+      'Hub probe did not finish'
+    );
     assert.deepEqual((await rpc('status')).startup_status, {});
     assert.equal(fs.readdirSync(profile.wallet).length, 0);
     const before = await evaluate(
