@@ -48,8 +48,9 @@ outside that acceptance coverage.
 See [NG installer and GitHub update instructions](docs/desktop-ng-releases.md)
 for `build:ng`, release files, profiles and update tests. Current installers are
 unsigned; an installed upgrade through a published release still needs acceptance
-testing. The inherited LBRY Inc. publishing workflow has been removed. Desktop
-CI, signing and a community publishing workflow remain to be established.
+testing. [Desktop CI and regression checks](docs/desktop-ci.md) build Windows and
+Linux test packages and exercise startup, updates, saved state and SDK shutdown.
+Signing and a community publishing workflow remain to be established.
 
 ## Contributing
 

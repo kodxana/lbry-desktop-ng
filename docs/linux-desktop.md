@@ -6,6 +6,9 @@ build. The Linux SDK is pinned by SHA-256 in `build/sdk-candidate.json`.
 
 ## Run
 
+The bundled Linux SDK requires glibc 2.36 or newer. Ubuntu 24.04 is the current
+test baseline; Ubuntu 22.04's glibc 2.35 cannot run this SDK binary.
+
 Download `LBRY-Desktop-NG-0.54.0-rc.1-linux-x86_64.AppImage`, then:
 
 ```sh
@@ -27,6 +30,11 @@ system libraries, including GTK 3, NSS/NSPR, GBM and ALSA. Minimal server/WSL
 installations may not provide them. A working Chromium sandbox is required;
 these packages do not disable it. ARM64 and older distributions are not
 validated.
+
+Hosts that restrict unprivileged user namespaces may require a root-owned SUID
+`chrome-sandbox` helper. CI configures this for its unpacked test copy on the
+Ubuntu 24.04 runner. This does not establish out-of-the-box AppImage startup under
+every distribution's sandbox policy; that remains a release acceptance check.
 
 NG uses a separate profile at `~/.config/LBRY Desktop NG` by default, or below
 `XDG_CONFIG_HOME` when set. An existing original LBRY wallet is not imported.
