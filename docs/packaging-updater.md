@@ -34,11 +34,11 @@ Upstream changes reviewed:
   disabled. Downloading does not imply permission to install. SDK shutdown must
   finish cleanly before `quitAndInstall(false, true)`; ordinary app exit never
   installs an update.
-- Electron 28 builds require Windows 10 or later. Windows metadata declares the
-  minimum OS, and NSIS rejects unsupported systems before replacing files.
-  The installer check also protects RC1–RC3, whose updater ignores the metadata
-  field. Package tests verify the platform-specific metadata and run a harmless
-  compiled fixture through supported, unsupported and native OS checks.
+- Electron 28 builds require Windows 10 or later. NSIS rejects unsupported
+  systems before replacing files, including updates from RC1–RC3. Those older
+  clients can still offer/download an update; rejection happens at installation.
+  Package tests run a harmless compiled fixture through supported, unsupported
+  and native OS checks. The portable test ZIP has no installer guard.
 - The renderer uses the scoped `desktop-updater` IPC commands for status, release
   preferences, checking, accepting and declining. It no longer loads
   `electron-updater` or attaches callbacks through `@electron/remote`. The main

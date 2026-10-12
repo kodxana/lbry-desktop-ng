@@ -16,10 +16,11 @@ References: [Electron 28.3.3 runtime versions](https://releases.electronjs.org/r
 and [the pinned release's migration notes](https://github.com/electron/electron/blob/v28.3.3/docs/breaking-changes.md).
 
 - Electron 23 drops Windows 7, 8 and 8.1. Windows 10 or later is required.
-  Windows update metadata declares `minimumSystemVersion: 10.0.0`. Updater 6
-  refuses unsupported updates; RC1–RC3's updater 4 ignores that field. The NSIS
-  initialization guard therefore also rejects older Windows before replacing
-  files, including silent installation. Linux metadata has no Windows minimum.
+  The NSIS initialization guard rejects older Windows before replacing files,
+  including silent installation. RC1–RC3's updater ignores minimum-OS metadata,
+  and the pinned builder does not expose that field for Windows. An old client
+  can still offer and download the update, but the installer leaves its existing
+  files intact. Portable ZIP builds have no installer guard.
 - Electron 27 drops macOS 10.13 and 10.14. A future macOS build needs 10.15 or
   later, but this project currently validates Windows and Linux only.
 - Removed scroll-touch events, WebContents capturer-count APIs, `getPrinters`,
@@ -63,8 +64,7 @@ shutdown and clean renderer exits do not show a crash notice.
 - Packaged and development smoke tests assert the running Electron version,
   complete local hub sync and verify clean SDK shutdown. Package inspection
   rejects unexpected native addons and verifies the SDK and update digests.
-- Updater tests simulate Windows 7/8/8.1/10/11 releases using both real updater
-  versions. A compiled NSIS fixture runs the production guard with supported,
+- A compiled NSIS fixture runs the production guard with supported,
   unsupported and native OS detection; its only install action writes a marker
   in `dist`. The unsupported case exits with 1633 without reaching that action.
   This checks the guard, not actual installation on a Windows 7 virtual machine.

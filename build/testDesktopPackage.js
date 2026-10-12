@@ -52,7 +52,6 @@ if (!linux) {
 }
 const manifest = yaml.load(fs.readFileSync(path.join(output, linux ? 'latest-linux.yml' : 'latest.yml'), 'utf8'));
 assert.equal(manifest.version, pkg.version);
-assert.equal(manifest.minimumSystemVersion, linux ? undefined : '10.0.0');
 assert(manifest.files.length > 0);
 for (const file of manifest.files) {
   assert.equal(path.basename(file.url), file.url, 'Update asset must be a local filename');
