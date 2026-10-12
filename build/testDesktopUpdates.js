@@ -112,6 +112,7 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
     missing = false,
     interrupted = false,
     assetRequests = 0;
+  let minimumSystemVersion;
   const requested = [];
   const server = http.createServer((req, res) => {
     const url = req.url.split('?')[0];
@@ -147,7 +148,10 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
       }
       const version = url.split('/').slice(-2)[0].slice(1);
       const file = `LBRY-Desktop-NG-${version}-windows-x64.exe`;
-      res.end(`version: ${version}\nfiles:\n  - url: ${file}\n    sha512: ${sha512}\n    size: ${payload.length}\n`);
+      res.end(
+        `version: ${version}\nfiles:\n  - url: ${file}\n    sha512: ${sha512}\n    size: ${payload.length}\n` +
+          (minimumSystemVersion ? `minimumSystemVersion: ${minimumSystemVersion}\n` : '')
+      );
     } else if (url.endsWith('.exe')) {
       assetRequests++;
       const data = corrupt ? Buffer.from('corrupted installer') : payload;
@@ -219,6 +223,31 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
       console.log('PASS: updater ' + updaterVersion + ' discovers the actual built release metadata');
       return;
     }
+    const os = require('os');
+    const originalRelease = os.release;
+    minimumSystemVersion = require('../electron-builder.json').win.releaseInfo.minimumSystemVersion;
+    try {
+      for (const release of ['6.1.7601', '6.2.9200', '6.3.9600', '10.0.19045', '10.0.22631']) {
+        os.release = () => release;
+        await control.check();
+        assert.equal(
+          control.versionInfo().upgradeAvailable,
+          legacy || release.startsWith('10.'),
+          'Only the current updater enforces minimumSystemVersion on Windows ' + release
+        );
+        assert.equal(assetRequests, 0);
+      }
+    } finally {
+      os.release = originalRelease;
+      minimumSystemVersion = undefined;
+    }
+    assert.equal(errors.length, 0);
+    console.log(
+      'PASS: updater ' +
+        updaterVersion +
+        ': minimum Windows version metadata ' +
+        (legacy ? 'requires the installer guard' : 'blocks unsupported upgrades')
+    );
     await control.check();
     assert.equal(control.versionInfo().remoteVersion, '0.54.0');
     assert.equal(assetRequests, 0, 'Checking with automatic downloads disabled must not fetch an installer');

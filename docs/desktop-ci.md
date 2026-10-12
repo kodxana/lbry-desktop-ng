@@ -2,7 +2,7 @@
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
-Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 22.3.27. The
+Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 28.3.3. The
 [build-tooling migration](build-tooling.md) moves compilation to Webpack 5.
 The [packaging/updater migration](packaging-updater.md) adds old-client metadata
 compatibility, cache recovery, interrupted downloads and install-handoff checks.
@@ -33,6 +33,11 @@ remove the old-format compatibility check.
 Additional renderer phases mount the production document viewers, file selector,
 update prompt, wallet backup card and encryption/unlock forms with the real store
 and router:
+
+- Media checks mount the production Video.js player against generated MP4, HLS
+  and audio fixtures. They verify decoding, HTTP ranges, redirect/type detection,
+  MediaSource, pause, seek, playback completion and disposal. Only the fixture's
+  loopback origin is allowed during that phase; no network media is downloaded.
 
 - Bundling checks load the real application styles and verify dark/light themes,
   primary button colors, RTL layout, emitted image URLs, shader source imports,

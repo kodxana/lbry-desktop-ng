@@ -52,6 +52,7 @@
   ],
   "protocols": [],
   "nsis": {
+    "include": "build/installer.nsh",
     "oneClick": false,
     "perMachine": false,
     "allowToChangeInstallationDirectory": true,
@@ -59,6 +60,9 @@
     "deleteAppDataOnUninstall": false
   },
   "win": {
+    "releaseInfo": {
+      "minimumSystemVersion": "10.0.0"
+    },
     "target": [
       {
         "target": "nsis",

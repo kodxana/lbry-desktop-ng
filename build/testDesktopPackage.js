@@ -52,6 +52,7 @@ if (!linux) {
 }
 const manifest = yaml.load(fs.readFileSync(path.join(output, linux ? 'latest-linux.yml' : 'latest.yml'), 'utf8'));
 assert.equal(manifest.version, pkg.version);
+assert.equal(manifest.minimumSystemVersion, linux ? undefined : '10.0.0');
 assert(manifest.files.length > 0);
 for (const file of manifest.files) {
   assert.equal(path.basename(file.url), file.url, 'Update asset must be a local filename');
@@ -76,6 +77,11 @@ fs.mkdirSync(path.resolve(__dirname, '../dist/ci'), { recursive: true });
 fs.writeFileSync(path.resolve(__dirname, '../dist/ci/package.json'), JSON.stringify(evidence, null, 2) + '\n');
 console.log('PASS: packaged entry points, SDK pin, application identity and updater asset digests');
 if (!linux) {
+  const guard = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'testInstaller.js')], {
+    stdio: 'inherit',
+  });
+  if (guard.error) throw guard.error;
+  assert.equal(guard.status, 0, 'The installer must reject unsupported Windows before replacing files');
   const result = require('child_process').spawnSync(
     process.execPath,
     [path.join(__dirname, 'testDesktopUpdates.js'), '--built-metadata'],
