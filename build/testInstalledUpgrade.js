@@ -33,6 +33,7 @@ const published = {
   version: '0.54.0-rc.3',
   name: 'LBRY-Desktop-NG-0.54.0-rc.3-windows-x64.exe',
   sha256: '090218f260c8772392d9105d4fbb9b899af70d4fed2fe1b8473435ebd5548596',
+  electron: '17.2.0',
 };
 const password = 'Unfunded installed upgrade fixture ł';
 const hash = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -215,6 +216,7 @@ async function main() {
   let client;
   let mainClient;
   let running;
+  const targetElectron = require('../package.json').devDependencies.electron;
   const launch = async () => {
     const reservation = net.createServer();
     const port = await listen(reservation);
@@ -262,6 +264,7 @@ async function main() {
       published.version
     );
     const originalKeys = keyHash();
+    assert.equal(await mainClient.evaluate('process.versions.electron'), published.electron);
     const originalAddresses = (await rpc('address_list')).items.map((item) => item.address).sort();
     assert(originalAddresses.length > 0);
     await client.evaluate("localStorage.setItem('installed-upgrade-fixture', 'preserve desktop storage'); true");
@@ -277,6 +280,8 @@ async function main() {
     for (let index = 0; index < candidates.length; index++) {
       const candidate = candidates[index];
       const legacy = index === 0;
+      const sourceElectron = await mainClient.evaluate('process.versions.electron');
+      assert.equal(sourceElectron, legacy ? published.electron : targetElectron);
       feed = await updateServer(candidate);
       const handoffFile = path.join(evidenceDirectory, 'handoff-' + index + '.json');
       const sourceVersion = await mainClient.evaluate(
@@ -377,6 +382,8 @@ async function main() {
       );
       await assertPortsAvailable(settings);
       await launch();
+      assert.equal(await mainClient.evaluate('process.versions.electron'), targetElectron);
+      assert.equal(await client.evaluate('process.versions.electron'), targetElectron);
       assert.equal(
         await mainClient.evaluate("process.mainModule.require('electron').app.getVersion()"),
         candidate.version
@@ -403,6 +410,8 @@ async function main() {
       assert.equal(handoff.handoffs, 1);
       evidence.hops.push({
         from: sourceVersion,
+        sourceElectron,
+        targetElectron,
         to: candidate.version,
         installerSha256: candidate.sha256,
         declinedDownloadDidNotInstall: true,

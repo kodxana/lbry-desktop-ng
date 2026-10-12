@@ -40,7 +40,7 @@ const desktopProfile = createProfile(rootArgument
   ? rootArgument.slice(rootFlag.length)
   : path.join(app.getPath('appData'), desktopSettings.appName), desktopSettings);
 app.setPath('userData', desktopProfile.desktop);
-// Electron 17 keeps Chromium session data inside userData.
+// Chromium session data defaults to this profile's userData directory.
 app.setPath('logs', desktopProfile.logs);
 app.setPath('downloads', desktopProfile.downloads);
 app.setPath('temp', desktopProfile.temp);

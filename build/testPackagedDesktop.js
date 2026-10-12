@@ -236,6 +236,9 @@ async function main() {
       throw error;
     }
     console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
+    const runtime = await evaluate('process.versions.electron');
+    assert.equal(runtime, require(root + '/package.json').devDependencies.electron);
+    console.log('PASS: ' + label + ' runs Electron ' + runtime);
     const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
     assert.equal(metadata.ok, true);
     assert.equal(typeof metadata.locale, 'string');

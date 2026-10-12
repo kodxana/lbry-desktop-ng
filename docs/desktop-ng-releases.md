@@ -28,8 +28,9 @@ The current build version is `0.54.0-rc.3`. Expected release files are:
 - `latest.yml`
 
 These builds are unsigned. A community signing identity has not been
-configured. Electron 17.2.0 remains the compatibility baseline; runtime
-modernization and installed upgrade acceptance are still outstanding.
+configured. Source builds use Electron 22.3.27 as an unsupported intermediate
+checkpoint; the published RC3 still uses Electron 17.2.0. See the
+[runtime migration](electron-runtime.md) for scope and installed-upgrade coverage.
 
 `node build/buildSdkTest.js` continues to produce the separate test ZIP under
 `dist/sdk-test`, with updates disabled. Do not publish a test ZIP as an installer

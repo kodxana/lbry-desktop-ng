@@ -2,9 +2,10 @@
 
 The build now pins electron-builder 26.17.0, electron-updater 6.8.10 and the
 host-side archive reader @electron/asar 4.3.1. These use the stable v26 release
-line; the v27/updater v7 prereleases are a separate migration. Electron 17.2.0,
-React, the SDK candidate and the application version are unchanged. Published
-RC3 packages still contain the old dependencies.
+line; the v27/updater v7 prereleases are a separate migration. React, the SDK
+candidate and the application version are unchanged. The subsequent
+[runtime migration](electron-runtime.md) moves Electron from 17.2.0 to 22.3.27.
+Published RC3 packages still contain the old dependencies.
 
 Upstream changes reviewed:
 
