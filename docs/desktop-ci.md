@@ -45,7 +45,10 @@ node build/testRenderer.js
 ```
 
 On a headless Linux host, use `xvfb-run -a node build/testRenderer.js`. The workflow
-lists the runtime libraries needed on Ubuntu. Renderer logs are in `dist/ci`.
+lists the runtime libraries needed on Ubuntu. Ubuntu 24.04's hosted runner also
+requires Electron's `chrome-sandbox` helper to be root-owned with mode 4755;
+CI configures the installed and unpacked test copies on that disposable runner.
+It does not use `--no-sandbox`. Renderer logs are in `dist/ci`.
 
 For SDK integration and packaging, import an already verified candidate using
 `node build/downloadDaemon.js /absolute/path/to/lbrynet`, or run
