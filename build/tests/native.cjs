@@ -2,34 +2,47 @@ const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
 const { app, dialog, ipcMain } = require('electron');
-const { getFileFromPath } = require('../../electron/fileSelection.cjs');
+const { registerFileSelection } = require('../../electron/fileSelection.cjs');
 
-module.exports = function configureNativeFixtures(root) {
+module.exports = function configureNativeFixtures(root, getWindow, rendererURL) {
   const downloads = path.join(root, 'fixture-downloads');
   fs.mkdirSync(downloads);
   app.setPath('downloads', downloads);
   let response;
   const dialogs = [];
-  const reads = [];
-  dialog.showOpenDialog = async (options) => {
+  let release;
+  let pending = false;
+  dialog.showOpenDialog = async (window, options) => {
+    assert.equal(window, getWindow(), 'The native dialog must belong to the active app window');
     assert(response, 'A dialog must have an explicit fixture response');
     dialogs.push(options);
     const next = response;
     response = null;
+    for (const selected of next.filePaths || []) {
+      assert(
+        path.resolve(selected) === root || path.resolve(selected).startsWith(root + path.sep),
+        'Only synthetic files may be read'
+      );
+    }
+    if (next.hold) {
+      pending = true;
+      await new Promise((resolve) => {
+        release = resolve;
+      });
+      pending = false;
+    }
     if (next.error) throw new Error(next.error);
     return next;
   };
-  ipcMain.handle('get-file-from-path', (event, selected, read) => {
-    assert(
-      path.resolve(selected) === root || path.resolve(selected).startsWith(root + path.sep),
-      'Only synthetic files may be read'
-    );
-    reads.push({ selected, read });
-    return getFileFromPath(event, selected, read);
+  registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL });
+  ipcMain.handle('fixture-dialog-release', () => {
+    assert(release, 'No held dialog to release');
+    release();
+    release = null;
   });
   ipcMain.handle('fixture-dialog', (_event, next) => {
-    response = next;
-    return { dialogs, reads };
+    if (next !== undefined) response = next;
+    return { dialogs, pending };
   });
   ipcMain.handle('fixture-file-input', async (event, selected) => {
     assert(path.resolve(selected).startsWith(root + path.sep));

@@ -21,6 +21,7 @@ const Daemon = require('./Daemon.cjs');
 const { createProfile } = require('./testProfile.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
 const { registerPasswordStorage } = require('./passwordStorage.cjs');
+const { registerFileSelection } = require('./fileSelection.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
@@ -44,6 +45,7 @@ app.setPath('temp', desktopProfile.temp);
 // Keep a global reference, if you don't, they will be closed automatically when the JavaScript
 // object is garbage collected.
 let rendererWindow;
+registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL });
 registerPasswordStorage({
   ipcMain,
   safeStorage,
@@ -314,15 +316,6 @@ app.on('will-finish-launching', () => {
 app.on('before-quit', () => {
   appState.isQuitting = true;
 });
-
-// Get the content of a file as a raw buffer of bytes.
-// Useful to convert a file path to a File instance.
-// Example:
-// const result = await ipcMain.invoke('get-file-from-path', 'path/to/file');
-// const file = new File([result.buffer], result.name);
-// NOTE: if path points to a folder, an empty
-// file will be given.
-ipcMain.handle('get-file-from-path', require('./fileSelection.cjs').getFileFromPath);
 
 ipcMain.handle('get-file-details-from-path', async (event, path) => {
     const isFfMp4 = (ffprobeResults) => {

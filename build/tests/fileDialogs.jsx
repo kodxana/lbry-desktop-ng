@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { ipcRenderer } from 'electron';
 import FileSelector from 'component/common/file-selector';
-import { render, unmount, waitFor, tick } from './helpers';
+import { render, unmount, waitFor } from './helpers';
 
 export default async function fileDialogs(store, history, root) {
   const selected = path.join(root, 'chosen ł #1.txt');
@@ -17,9 +17,8 @@ export default async function fileDialogs(store, history, root) {
   render(<FileSelector type="openFile" filters={filters} onFileChosen={onFileChosen} />, store, history);
   await ipcRenderer.invoke('fixture-dialog', { canceled: true, filePaths: [selected] });
   browse();
-  await tick();
+  await waitFor(() => !document.querySelector('button').disabled, 'Cancel must re-enable Browse');
   let calls = await ipcRenderer.invoke('fixture-dialog', { canceled: false, filePaths: [selected] });
-  assert.equal(calls.reads.length, 0, 'Cancel must not read a file');
   assert.equal(chosen.length, 0);
   browse();
   await waitFor(() => chosen.length === 1, 'Selected native file was not delivered');
@@ -40,7 +39,6 @@ export default async function fileDialogs(store, history, root) {
   assert.equal(chosen[1].file.size, 0);
   calls = await ipcRenderer.invoke('fixture-dialog', null);
   assert.deepEqual(calls.dialogs[2].properties, ['openDirectory']);
-  assert.equal(calls.reads[1].read, false);
   unmount();
 
   render(<FileSelector type="openFile" readFile={false} onFileChosen={onFileChosen} />, store, history);
@@ -86,5 +84,32 @@ export default async function fileDialogs(store, history, root) {
   await waitFor(() => chosen.length === 6, 'A failed selection must be retryable');
   assert(!document.body.textContent.includes('could not be opened'));
   unmount();
-  return 'native dialog options/cancel/errors/retry, real file IPC, metadata-only folders/files, File.path, repeat selection and disabled browse';
+
+  const selector = React.createRef();
+  render(<FileSelector ref={selector} type="openFile" onFileChosen={onFileChosen} />, store, history);
+  const before = (await ipcRenderer.invoke('fixture-dialog', { hold: true, canceled: false, filePaths: [selected] }))
+    .dialogs.length;
+  browse();
+  browse();
+  await waitFor(async () => (await ipcRenderer.invoke('fixture-dialog')).pending, 'Native dialog was not opened');
+  assert(document.querySelector('button').disabled, 'Pending native selection must disable Browse');
+  assert.equal(
+    (await ipcRenderer.invoke('fixture-dialog')).dialogs.length,
+    before + 1,
+    'Double clicks must open only one dialog'
+  );
+  assert.deepEqual(await ipcRenderer.invoke('select-file', { type: 'openFile' }), { ok: false, error: 'busy' });
+  // Leaving the form must not deliver the old selection into a new form.
+  const unmountedSelector = selector.current;
+  unmount();
+  render(<FileSelector type="openFile" onFileChosen={onFileChosen} />, store, history);
+  await ipcRenderer.invoke('fixture-dialog-release');
+  await waitFor(() => !unmountedSelector.selecting, 'Held selection did not finish');
+  assert.equal(chosen.length, 6, 'An unmounted selector must not deliver its old result');
+  await ipcRenderer.invoke('fixture-dialog', { canceled: false, filePaths: [selected] });
+  browse();
+  await waitFor(() => chosen.length === 7, 'A new form must be able to select after the previous form unmounts');
+  assert(!document.body.textContent.includes('could not be opened'));
+  unmount();
+  return 'native dialog options/cancel/errors/retry, scoped file IPC, metadata-only folders/files, File.path, repeat selection, pending dialogs and unmounted selectors';
 }

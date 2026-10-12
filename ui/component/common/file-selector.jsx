@@ -1,6 +1,5 @@
 // @flow
 import * as React from 'react';
-import * as remote from '@electron/remote';
 import { ipcRenderer } from 'electron';
 import Button from 'component/button';
 import { FormField } from 'component/common/form';
@@ -19,10 +18,12 @@ type Props = {
   readFile?: boolean,
 };
 
-type State = { selectionError?: string };
+type State = { selectionError?: string, selecting: boolean };
 
 class FileSelector extends React.PureComponent<Props, State> {
-  state = { selectionError: undefined };
+  state = { selectionError: undefined, selecting: false };
+  mounted = false;
+  selecting = false;
   static defaultProps = {
     autoFocus: false,
     type: 'file',
@@ -39,6 +40,14 @@ class FileSelector extends React.PureComponent<Props, State> {
     this.fileInputButton = this.fileInputButton.bind(this);
   }
 
+  componentDidMount() {
+    this.mounted = true;
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
+  }
+
   handleFileInputSelection = () => {
     const { files } = this.fileInput.current;
     if (!files || !files.length) {
@@ -53,47 +62,29 @@ class FileSelector extends React.PureComponent<Props, State> {
     this.fileInput.current.value = null; // clear the file input
   };
 
-  handleDirectoryInputSelection = () => {
-    this.setState({ selectionError: undefined });
-    let defaultPath;
-    let properties;
-    let isWin = process.platform === 'win32';
-    let type = this.props.type;
-
-    if (isWin === true) {
-      defaultPath = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
-    }
-
-    if (type === 'openFile') {
-      properties = ['openFile'];
-    }
-
-    if (type === 'openDirectory') {
-      properties = ['openDirectory'];
-    }
-
-    remote.dialog
-      .showOpenDialog({
-        properties,
-        defaultPath,
+  handleDirectoryInputSelection = async () => {
+    if (this.selecting || this.props.disabled) return;
+    this.selecting = true;
+    this.setState({ selectionError: undefined, selecting: true });
+    try {
+      const result = await ipcRenderer.invoke('select-file', {
+        type: this.props.type,
         filters: this.props.filters,
-      })
-      .then((result) => {
-        const path = result && !result.canceled && result.filePaths && result.filePaths[0];
-        if (path) {
-          return ipcRenderer.invoke('get-file-from-path', path, this.props.readFile);
-        }
-      })
-      .then((result) => {
-        if (!result) {
-          return;
-        }
-        const file = new File([result.buffer], result.name, {
-          type: result.mime,
-        });
-        this.props.onFileChosen({ file, path: result.path });
-      })
-      .catch(() => this.setState({ selectionError: __('The selected file or folder could not be opened.') }));
+        readFile: this.props.readFile,
+      });
+      if (!this.mounted) return;
+      if (!result.ok) throw new Error('File selection failed');
+      if (result.file) {
+        const selected = result.file;
+        const file = new File([selected.buffer], selected.name, { type: selected.mime });
+        this.props.onFileChosen({ file, path: selected.path });
+      }
+    } catch (_) {
+      if (this.mounted) this.setState({ selectionError: __('The selected file or folder could not be opened.') });
+    } finally {
+      this.selecting = false;
+      if (this.mounted) this.setState({ selecting: false });
+    }
   };
 
   fileInputButton = () => {
@@ -113,7 +104,7 @@ class FileSelector extends React.PureComponent<Props, State> {
           webkitdirectory="true"
           className="form-field--with-button"
           error={error || this.state.selectionError}
-          disabled={disabled}
+          disabled={disabled || this.state.selecting}
           type="text"
           readOnly="readonly"
           value={placeHolder || __('Choose a file')}
@@ -121,7 +112,7 @@ class FileSelector extends React.PureComponent<Props, State> {
             <Button
               autoFocus={autoFocus}
               button="primary"
-              disabled={disabled}
+              disabled={disabled || this.state.selecting}
               onClick={
                 type === 'openDirectory' || type === 'openFile'
                   ? this.handleDirectoryInputSelection

@@ -215,6 +215,11 @@ async function main() {
     };
     const appVersion = await evaluate("require('@electron/remote').app.getVersion()");
     assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
+    assert.deepEqual(
+      await evaluate("require('electron').ipcRenderer.invoke('select-file', {type: 'invalid'})"),
+      { ok: false, error: 'invalid' },
+      'The file selection handler must recognize the application renderer before validating the request'
+    );
     await until(
       () => evaluate("Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"),
       'Hub picker did not render'

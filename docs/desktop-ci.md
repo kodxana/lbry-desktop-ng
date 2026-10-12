@@ -44,11 +44,18 @@ wallet backup card and encryption/unlock forms with the real store and router:
   goes through CodeMirror, including literal markup, Unicode, read-only mode,
   theme changes and missing files. PDF/HTML checks cover local file URL encoding;
   HTML also retains its empty sandbox. These are not PDF pixel-rendering tests.
-- File selection uses scripted responses at `dialog.showOpenDialog`, the real
-  `@electron/remote` transport, the production `get-file-from-path` IPC handler,
+- File selection uses scripted responses at `dialog.showOpenDialog`, the production
+  `select-file` IPC handler (without `@electron/remote`),
   and Chromium file inputs populated through CDP. Tests cover filters, cancellation,
   Unicode paths, directory and metadata-only selection, repeated selection of the
-  same file, disabled controls, read/dialog failures and retry. OS file-picker
+  same file, disabled controls, read/dialog failures, retry, duplicate requests
+  and unmounting while a dialog is open. Dialogs belong to the app window.
+  `node build/testFileSelection.js` also checks request validation, main-frame
+  sender restrictions, cancellation without disk access, and discarding results
+  when the window is closed, replaced or navigated away. The handler reads only
+  paths returned by the picker; the old `get-file-from-path` endpoint is removed.
+  Packaged and development smoke tests verify that the handler recognizes each
+  renderer's document URL before validating a request. OS file-picker
   interaction itself is not automated.
 - Backups use the real UI and ZIP library with invented wallet bytes. Tests read
   the ZIP back, verify its contents and portable filename, and check missing-source
