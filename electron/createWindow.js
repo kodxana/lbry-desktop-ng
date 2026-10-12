@@ -10,6 +10,7 @@ import desktopSettings from '../desktop-settings.json';
 import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
 const { forwardFullscreenEvents } = require('./windowControls.cjs');
+const { watchRenderer } = require('./rendererLifecycle.cjs');
 const shell = require('electron').shell;
 export const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 function GetAppLangCode() {
@@ -62,7 +63,8 @@ export default appState => {
   const lbryProto = 'lbry://';
   const lbryProtoQ = 'lbry://?';
 
-  let window = new BrowserWindow(windowConfiguration);
+  const window = new BrowserWindow(windowConfiguration);
+  watchRenderer({ window, app, dialog, appState });
   window.on('page-title-updated', event => {
     event.preventDefault();
     window.setTitle(desktopSettings.appName);
@@ -125,23 +127,6 @@ export default appState => {
     app.quit();
   });
 
-  window.on('unresponsive', () => {
-    dialog.showMessageBox(
-      window,
-      {
-        type: 'warning',
-        buttons: ['Wait', 'Quit'],
-        title: 'LBRY Unresponsive',
-        defaultId: 1,
-        message: 'LBRY is not responding. Would you like to quit?',
-        cancelId: 0,
-      },
-      buttonIndex => {
-        if (buttonIndex === 1) app.quit();
-      }
-    );
-  });
-
   window.once('ready-to-show', () => {
     startMinimized ? window.hide() : window.show();
   });
@@ -164,10 +149,6 @@ export default appState => {
         window.webContents.send('language-set', language);
       }
     });
-  });
-
-  window.webContents.on('crashed', () => {
-    window = null;
   });
 
   window.webContents.setWindowOpenHandler((details) => {

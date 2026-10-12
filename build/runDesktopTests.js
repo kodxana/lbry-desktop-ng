@@ -8,6 +8,7 @@ for (const file of [
   'testPasswordStorage.js',
   'testFileSelection.js',
   'testWindowControls.js',
+  'testRendererLifecycle.js',
   'testContextMenu.js',
   'testDesktopInfo.js',
 ]) {

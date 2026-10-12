@@ -59,6 +59,8 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    assert.equal(process.versions.electron, require('../../package.json').devDependencies.electron);
+    await require('./rendererLifecycle.cjs')();
     await require('../testDesktopUpdates')();
     require('./updater.cjs')(() => activeWindow, require('url').pathToFileURL(path.join(output, 'index.html')).href);
     require('./contextMenu.cjs')(
