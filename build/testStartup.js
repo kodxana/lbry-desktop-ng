@@ -96,8 +96,9 @@ module.exports = async function startupTests() {
   await splash.updateStatus();
   const historyTimer = splash.timeout;
   timers.get(historyTimer)();
+  history.pending_operations += 1;
   await splash.updateStatus();
-  assert.equal(splash.timeout, historyTimer, 'Polling unchanged history must not hide a stall');
+  assert.equal(splash.timeout, historyTimer, 'Queue changes without history progress must not hide a stall');
   history.entries_completed = 200;
   await splash.updateStatus();
   assert.notEqual(splash.timeout, historyTimer, 'Saved history batches reset the progress timer');

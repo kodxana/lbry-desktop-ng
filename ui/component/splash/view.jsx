@@ -125,7 +125,9 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
         wallet && wallet.blocks,
         wallet && wallet.blocks_behind,
         wallet && wallet.headers_synchronization_progress,
-        wallet && wallet.history_sync,
+        wallet && wallet.history_sync && wallet.history_sync.state,
+        wallet && wallet.history_sync && wallet.history_sync.entries_completed,
+        wallet && wallet.history_sync && wallet.history_sync.entries_total,
       ])
     );
     this.setState({ status, waitingForUnlock, connectionFailed: false });
