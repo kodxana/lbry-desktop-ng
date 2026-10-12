@@ -29,6 +29,7 @@ for (const args of [
   ['build/testDesktopSetup.js'],
   ['build/testDesktopUpdates.js'],
   ['build/testPasswordStorage.js'],
+  ['build/testFileSelection.js'],
   ['build/testSdkIsolation.js'],
   ['--max_old_space_size=4096', 'node_modules/webpack/bin/webpack.js', '--config', 'webpack.electron.config.js'],
   [

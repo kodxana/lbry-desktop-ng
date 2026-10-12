@@ -61,7 +61,11 @@ app
   .whenReady()
   .then(async () => {
     await require('../testDesktopUpdates')();
-    require('./native.cjs')(root);
+    require('./native.cjs')(
+      root,
+      () => activeWindow,
+      require('url').pathToFileURL(path.join(output, 'index.html')).href
+    );
     passwordStore = registerPasswordStorage({
       ipcMain,
       safeStorage: passwordBackend,
