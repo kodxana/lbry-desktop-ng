@@ -64,6 +64,7 @@ app
   .then(async () => {
     await require('../testDesktopUpdates')();
     require('./updater.cjs')(() => activeWindow, require('url').pathToFileURL(path.join(output, 'index.html')).href);
+    require('./contextMenu.cjs')(() => activeWindow, require('url').pathToFileURL(path.join(output, 'index.html')).href);
     configureWindow = require('./windowControls.cjs')(
       () => activeWindow,
       require('url').pathToFileURL(path.join(output, 'index.html')).href
@@ -133,6 +134,7 @@ app
       'documents',
       'fileDialogs',
       'windowControls',
+      'contextMenu',
       'updater',
       'updaterRestart',
       'wallet',
