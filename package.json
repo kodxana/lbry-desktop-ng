@@ -19,6 +19,10 @@
   },
   "main": "./dist/electron/main.js",
   "scripts": {
+    "test:desktop": "node build/runDesktopTests.js",
+    "test:renderer": "node build/testRenderer.js",
+    "test:desktop-package": "node build/testDesktopPackage.js",
+    "test:packaged-desktop": "node build/testPackagedDesktop.js",
     "test:desktop-setup": "node build/testDesktopSetup.js",
     "test:sdk-isolation": "node build/testSdkIsolation.js",
     "build:sdk-test": "node build/buildSdkTest.js",
