@@ -6,6 +6,9 @@ build. The Linux SDK is pinned by SHA-256 in `build/sdk-candidate.json`.
 
 ## Run
 
+The bundled Linux SDK requires glibc 2.36 or newer. Ubuntu 24.04 is the current
+test baseline; Ubuntu 22.04's glibc 2.35 cannot run this SDK binary.
+
 Download `LBRY-Desktop-NG-0.54.0-rc.1-linux-x86_64.AppImage`, then:
 
 ```sh

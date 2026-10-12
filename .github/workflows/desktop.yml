@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-22.04]
+        os: [windows-2022, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 45
     env:
@@ -41,7 +41,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libgtk-3-0 libnss3 libasound2 libgbm1 libfuse2
+          sudo apt-get install -y xvfb libgtk-3-0t64 libnss3 libasound2t64 libgbm1 libfuse2t64
       - name: Setup, sync progress and updater regressions
         run: node build/runDesktopTests.js
       - name: Renderer and saved-state regressions (Windows)
@@ -71,7 +71,10 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: desktop-evidence-${{ runner.os }}
-          path: dist/ci/
+          path: |
+            dist/ci/
+            dist/package-tests/*-desktop.log
+            dist/isolation-tests/*/logs/daemon-console.log
           if-no-files-found: warn
           retention-days: 14
       - name: Keep test packages

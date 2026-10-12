@@ -1,9 +1,10 @@
 # Desktop regression checks
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
-branches, and manual dispatches. Windows 2022 and Ubuntu 22.04 runners use the
+branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
 current Node 16.20.2, Yarn 3.2.0 and Electron 17.2.0 baseline. Dependency upgrades
-are separate changes; installing the lockfile must not change it.
+are separate changes; installing the lockfile must not change it. The pinned
+Linux SDK requires glibc 2.36 or newer, so it cannot run on Ubuntu 22.04.
 
 ## Checks
 
@@ -73,8 +74,10 @@ It creates its own profile and does not reuse the user's application data.
 
 CI keeps Windows installers, Linux AppImage/tar packages and verification records
 for 14 days. Builds are unsigned and use `--publish never`; CI creates no release
-and installs no update. Generated profile directories, wallets and SDK data are
-excluded from uploads. No signing or publishing secrets are available to the jobs.
+and installs no update. Failure diagnostics include console logs from the
+disposable SDK and packaged-app fixtures. Wallet files, browser profiles and SDK
+databases are excluded from uploads. No signing or publishing secrets are available
+to the jobs.
 
 For each dependency migration, keep the existing fixture checks, add regressions
 for changed APIs, and require both platform jobs to pass. The application source,
