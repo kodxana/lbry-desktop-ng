@@ -55,9 +55,12 @@ shutdown and clean renderer exits do not show a crash notice.
   (Electron 17) to the private Electron 22 candidate, then to a second candidate.
   It asserts both main and renderer runtime versions, install/decline choices,
   SDK exit before NSIS, automatic restart, unchanged wallet keys/addresses,
-  encryption, remembered passwords and cookie/localStorage persistence.
+  encryption, remembered passwords and cookie/localStorage persistence. An
+  IndexedDB database created by the actual Electron 17 renderer must also
+  survive both upgrades with unchanged fixture contents.
 
 All wallet tests use disposable, unfunded fixtures. Installed upgrades run only
 on fresh GitHub-hosted Windows runners and publish no releases. Linux updates
-remain manual. Native dialog presentation and notification popups still need
-manual acceptance.
+remain manual. Full media playback (including HLS/hardware decoding), PDF page
+rendering/printing, native dialog presentation and notification popups still need
+manual acceptance on the upgraded runtime.

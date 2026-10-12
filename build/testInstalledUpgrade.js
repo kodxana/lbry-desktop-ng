@@ -216,6 +216,30 @@ async function main() {
   let client;
   let mainClient;
   let running;
+  const indexedState = { subscriptions: ['@fixture#123'], positions: { fixture: 42 }, label: 'Saved state ł' };
+  // Exercise a database physically created by the old Chromium runtime, rather
+  // than seeding the new runtime with a JSON representation of old UI state.
+  const indexedDBState = (write = false) =>
+    client.evaluate(`new Promise((resolve, reject) => {
+    const opened = indexedDB.open('installed-upgrade-fixture', 1);
+    opened.onerror = () => reject(opened.error);
+    opened.onblocked = () => reject(new Error('Fixture database is blocked'));
+    opened.onupgradeneeded = () => opened.result.createObjectStore('state');
+    opened.onsuccess = () => {
+      const database = opened.result;
+      const transaction = database.transaction('state', ${JSON.stringify(write ? 'readwrite' : 'readonly')});
+      const store = transaction.objectStore('state');
+      const request = ${write ? `store.put(${JSON.stringify(indexedState)}, 'fixture')` : "store.get('fixture')"};
+      transaction.oncomplete = () => {
+        database.close();
+        resolve(${write ? 'true' : 'request.result'});
+      };
+      transaction.onabort = transaction.onerror = () => {
+        database.close();
+        reject(transaction.error || new Error('Fixture transaction failed'));
+      };
+    };
+  })`);
   const targetElectron = require('../package.json').devDependencies.electron;
   const launch = async () => {
     const reservation = net.createServer();
@@ -268,6 +292,8 @@ async function main() {
     const originalAddresses = (await rpc('address_list')).items.map((item) => item.address).sort();
     assert(originalAddresses.length > 0);
     await client.evaluate("localStorage.setItem('installed-upgrade-fixture', 'preserve desktop storage'); true");
+    assert.equal(await indexedDBState(true), true);
+    assert.deepEqual(await indexedDBState(), indexedState);
     await client.evaluate(
       "document.cookie = 'upgrade_root_cookie=preserve-root; path=/;'; " +
         "document.cookie = 'upgrade_path_cookie=preserve-path'; true"
@@ -392,6 +418,7 @@ async function main() {
         await client.evaluate("localStorage.getItem('installed-upgrade-fixture')"),
         'preserve desktop storage'
       );
+      assert.deepEqual(await indexedDBState(), indexedState, 'The old Chromium IndexedDB must survive installation');
       assert(await client.evaluate("document.cookie.includes('upgrade_root_cookie=preserve-root')"));
       assert(
         await client.evaluate("document.cookie.includes('upgrade_path_cookie=preserve-path')"),
@@ -423,6 +450,7 @@ async function main() {
         balance: '0.0',
         encryptedWallet: true,
         desktopStoragePreserved: true,
+        indexedDBPreserved: true,
         cookieStorageAndPathPreserved: true,
         rememberedPasswordRecovered: true,
         ...handoff,
