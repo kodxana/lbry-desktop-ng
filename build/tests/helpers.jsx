@@ -8,7 +8,7 @@ export const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 export async function waitFor(predicate, message) {
   const deadline = Date.now() + 10000;
-  while (!predicate()) {
+  while (!(await predicate())) {
     assert(Date.now() < deadline, message);
     await new Promise((resolve) => setTimeout(resolve, 20));
   }

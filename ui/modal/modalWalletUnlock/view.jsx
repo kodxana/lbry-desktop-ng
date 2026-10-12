@@ -3,7 +3,7 @@ import React from 'react';
 import { Form, FormField } from 'component/common/form';
 import { Modal } from 'modal/modal';
 import Button from 'component/button';
-import { getSavedPassword, getPasswordFromCookie, setSavedPassword } from 'util/saved-passwords';
+import { getSavedPasswordState, setSavedPassword } from 'util/saved-passwords';
 
 type Props = {
   quit: () => void,
@@ -21,6 +21,9 @@ type State = {
 };
 
 class ModalWalletUnlock extends React.PureComponent<Props, State> {
+  unmounted = false;
+  saving = false;
+
   state = {
     password: '',
     rememberPassword: false,
@@ -31,9 +34,9 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
   componentDidMount() {
     const { shouldTryWithBlankPassword } = this.props;
 
-    Promise.all([getSavedPassword(), getPasswordFromCookie()]).then(([p, persisted]) => {
+    getSavedPasswordState().then(({ password: p, remembered: rememberPassword }) => {
+      if (this.unmounted || this.state.submittedPassword !== null || this.state.password) return;
       if (p !== null) {
-        const rememberPassword = persisted === p;
         this.setState({ password: p, rememberPassword });
         this.submitPassword(p, rememberPassword);
       } else if (shouldTryWithBlankPassword) {
@@ -41,16 +44,27 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
       }
     });
   }
+  componentWillUnmount() {
+    this.unmounted = true;
+  }
+
   componentDidUpdate(prevProps: Props) {
     const { props } = this;
 
-    if (props.walletUnlockSucceded === true && prevProps.walletUnlockSucceded !== true) {
-      setSavedPassword(this.state.submittedPassword, this.state.submittedRememberPassword);
-      props.closeModal();
+    if (
+      this.state.submittedPassword !== null &&
+      props.walletUnlockSucceded === true &&
+      prevProps.walletUnlockSucceded !== true
+    ) {
+      this.saving = true;
+      setSavedPassword(this.state.submittedPassword, this.state.submittedRememberPassword).then(() => {
+        if (!this.unmounted) props.closeModal();
+      });
     }
   }
 
   submitPassword(password: string, rememberPassword: boolean = this.state.rememberPassword) {
+    if (this.saving) return;
     this.props.unlockWallet(password);
     this.setState({ submittedPassword: password, submittedRememberPassword: rememberPassword });
   }

@@ -29,6 +29,8 @@ type State = {
 const acknowledgementText = __('I Understand');
 
 class ModalWalletEncrypt extends React.PureComponent<Props, State> {
+  saving = false;
+
   state = {
     newPassword: null,
     newPasswordConfirm: null,
@@ -47,9 +49,9 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
 
     if (state.submitted) {
       if (props.walletEncryptSucceded === true && prevProps.walletEncryptSucceded !== true) {
-        setSavedPassword(state.submittedPassword, state.submittedRememberPassword);
-        props.closeModal();
+        this.saving = true;
         props.updateWalletStatus();
+        setSavedPassword(state.submittedPassword, state.submittedRememberPassword).then(() => props.closeModal());
       } else if (props.walletEncryptSucceded === false) {
         // See https://github.com/lbryio/lbry/issues/1307
         this.setState({ failMessage: 'Unable to encrypt wallet.' });
@@ -79,7 +81,7 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
   submitEncryptForm() {
     const { state } = this;
 
-    if (!state.newPassword || (state.submitted && this.props.walletEncryptSucceded == null)) {
+    if (this.saving || !state.newPassword || (state.submitted && this.props.walletEncryptSucceded == null)) {
       return;
     }
 

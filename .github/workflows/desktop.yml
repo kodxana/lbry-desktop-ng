@@ -41,7 +41,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb libgtk-3-0t64 libnss3 libasound2t64 libgbm1 libfuse2t64
+          sudo apt-get install -y xvfb libgtk-3-0t64 libnss3 libasound2t64 libgbm1 libfuse2t64 gnome-keyring libsecret-1-0 dbus-x11
       - name: Configure Electron sandbox helper on the Linux runner
         if: runner.os == 'Linux'
         run: |
@@ -49,6 +49,12 @@ jobs:
           sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
       - name: Setup, sync progress and updater regressions
         run: node build/runDesktopTests.js
+      - name: OS password storage across process restarts (Windows)
+        if: runner.os == 'Windows'
+        run: node build/testPasswordStorage.js --native
+      - name: OS password storage with an isolated Linux keyring
+        if: runner.os == 'Linux'
+        run: dbus-run-session -- xvfb-run -a sh build/tests/passwordKeyring.sh
       - name: Saved-state, documents, file selection and wallet UI (Windows)
         if: runner.os == 'Windows'
         run: node build/testRenderer.js

@@ -2,13 +2,14 @@
 /* eslint space-before-function-paren:0 */
 // Module imports
 import '@babel/polyfill';
-import { app, dialog, ipcMain, session } from 'electron';
+import { app, dialog, ipcMain, session, safeStorage } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';
 import LbryFirstInstance from './LbryFirstInstance';
 import isDev from 'electron-is-dev';
 import createTray from './createTray';
-import createWindow from './createWindow';
+import createWindow, { rendererURL } from './createWindow';
+import { DOMAIN } from 'config';
 import pjson from '../package.json';
 import startSandbox from './startSandbox';
 import installDevtools from './installDevtools';
@@ -19,6 +20,7 @@ import desktopSettings from '../desktop-settings.json';
 const Daemon = require('./Daemon.cjs');
 const { createProfile } = require('./testProfile.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
+const { registerPasswordStorage } = require('./passwordStorage.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
@@ -42,6 +44,20 @@ app.setPath('temp', desktopProfile.temp);
 // Keep a global reference, if you don't, they will be closed automatically when the JavaScript
 // object is garbage collected.
 let rendererWindow;
+registerPasswordStorage({
+  ipcMain,
+  safeStorage,
+  directory: desktopProfile.desktop,
+  getWindow: () => rendererWindow,
+  rendererURL,
+  cookies: {
+    get: (...args) => session.defaultSession.cookies.get(...args),
+    remove: (...args) => session.defaultSession.cookies.remove(...args),
+    flushStore: () => session.defaultSession.cookies.flushStore(),
+  },
+  dialog,
+  domains: [DOMAIN],
+});
 
 let tray; // eslint-disable-line
 let daemon;

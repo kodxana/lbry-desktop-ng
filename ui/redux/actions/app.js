@@ -41,7 +41,7 @@ import { doSyncLoop, doSetPrefsReady, doPreferenceGet, doPopulateSharedUserState
 import { doAuthenticate } from 'redux/actions/user';
 import { lbrySettings as config, version as appVersion } from 'package.json';
 import analytics, { SHARE_INTERNAL } from 'analytics';
-import { doSignOutCleanup } from 'util/saved-passwords';
+import { doSignOutCleanup, getAuthToken } from 'util/saved-passwords';
 import { doNotificationSocketConnect } from 'redux/actions/websocket';
 import { shouldSetSetting } from 'util/sync-settings';
 import { withLocalHubPreference } from 'util/hub-preferences';
@@ -496,20 +496,20 @@ export function doSignIn() {
 }
 
 export function doSignOut() {
-  return () => {
-    Lbryio.call('user', 'signout')
-      .then(doSignOutCleanup)
-      .then(() => {
-        // @if TARGET='web'
-        window.persistor.purge();
-        // @endif
-      })
-      .then(() => {
-        setTimeout(() => {
-          location.reload();
-        });
-      })
-      .catch(() => location.reload());
+  return async () => {
+    // A failed remote sign-out must not skip local password removal. Conversely,
+    // do not reload and report success when the local removal needs a retry.
+    const authToken = Lbryio.authToken || getAuthToken();
+    if (!(await doSignOutCleanup())) return;
+    try {
+      await Lbryio.call('user', 'signout', { auth_token: authToken });
+    } catch (_) {
+      // The local credentials have already been removed, including when offline.
+    }
+    // @if TARGET='web'
+    window.persistor.purge();
+    // @endif
+    setTimeout(() => location.reload());
   };
 }
 

@@ -169,8 +169,7 @@ export default async function wallet(store, history, root) {
   assert.equal(closed, 1, 'Wrong password must keep the modal open');
   drawUnlock(null);
   drawUnlock(true);
-  await tick();
-  assert.equal(closed, 2);
+  await waitFor(() => closed === 2, 'Successful unlock must close after password storage finishes');
   assert.equal(await getSavedPassword(), 'retry-password');
   let saved = false;
   setSavedPassword('retry-password', false).then(() => {

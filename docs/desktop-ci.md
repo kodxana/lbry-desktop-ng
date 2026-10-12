@@ -50,8 +50,9 @@ wallet backup card and encryption/unlock forms with the real store and router:
   controlled SDK transport to check success, false responses and rejected requests.
   The forms cover password confirmation, acknowledgement, retry, session caching,
   stale unlock results, and edits during an encryption request. Remember-password
-  remains opt-in; persistent cookie storage and OS keychain migration are not
-  established by these tests.
+  remains opt-in. Further phases exercise the real cookie shim and password IPC,
+  safe migration, an unavailable secret store, acknowledgement of save failures,
+  Forget retry, account-sync opt-in, and local cleanup when remote sign-out fails.
 
 The SDK isolation suite also encrypts an empty generated wallet, rejects a wrong
 password and decrypt-while-locked, restarts it, and restores an encrypted ZIP into
@@ -67,6 +68,50 @@ introduced. All HTTP(S)/WebSocket requests are blocked in its Electron session.
 The old analytics module attempts to load `analytics.lbry.com/matomo.js`; this is
 blocked explicitly, while attempts to contact an SDK or another service fail the test.
 The suite uses real state and routing code, not mock reducers or in-memory storage.
+
+## Remembered passwords
+
+New remembered passwords use Electron `safeStorage` in the main process. The
+profile's `remembered-password.json` contains ciphertext; session-only passwords
+stay in renderer memory. Windows uses the current user's DPAPI-backed Chromium
+key, macOS uses Keychain, and Linux requires a supported unlocked secret store.
+The Linux hardcoded-key fallback is refused. This protects storage at rest; it
+is not protection against code already running as the user or in the renderer.
+Keep your wallet password separately: a copied desktop profile is not a portable
+password backup, and changing or losing OS keys can make a remembered copy unreadable.
+The wallet itself is not modified by password storage or migration.
+
+Legacy `saved_password` cookies are read from both the Electron cookie shim's
+`__cookieStore__` and Chromium's cookie store for LBRY origins. Migration writes
+and reads back an encrypted record without changing the stored password text.
+The old copy is retained until **the next main-process launch** can decrypt the
+record. Only then is the migration committed and the old password cookie removed;
+other cookies, including the account token, are left alone. Electron 17 can delay
+persisting a new Windows encryption key, so an immediate first-launch crash must
+leave a recovery copy. If copies disagree, the app asks for manual entry instead
+of choosing and deleting one. Unreadable committed records are left intact.
+
+Forgetting, signing out, or successfully submitting a password with Remember
+unchecked first writes a durable opt-out marker and then removes legacy copies.
+This prevents an interrupted cleanup from restoring an old password on restart.
+Forgetting and signing out also clear the session cache. Failed operations show
+a native warning; a failed Forget stays retryable. A successful wallet operation
+is not repeated merely because its password could not be remembered. Cookie
+removal is logical deletion, not secure erasure of old browser database pages.
+
+`node build/testPasswordStorage.js` tests atomic writes, disk and verification
+failures, Unicode/special characters, legacy formats, conflicts, cleanup failures,
+opt-out across restart, serialized requests and rejected IPC senders. The renderer
+suite injects the OS-encryption boundary so storage failures are deterministic;
+it retains the actual forms, cookie shim and IPC implementation.
+
+`node build/testPasswordStorage.js --native` separately uses real Electron and
+fresh processes to test OS encryption, an interrupted migration, recovery,
+restart, and forgetting. Windows runs against DPAPI. Linux CI runs
+`dbus-run-session -- xvfb-run -a sh build/tests/passwordKeyring.sh` with an isolated
+GNOME keyring and also checks refusal of `--password-store=basic`. All passwords,
+keyrings and profiles are disposable fixtures under `dist/password-tests`; none
+are uploaded as artifacts. macOS Keychain is not covered by this matrix.
 
 ## Run locally
 
@@ -123,7 +168,7 @@ lockfile and SDK pin should change only as described by that migration PR.
 
 This is an automated baseline, not complete desktop acceptance. Full media playback
 (HLS, subtitles, seeking, hardware decoding), PDF page rendering/printing, native
-file-picker interaction, persistent password storage, installed old-to-new upgrades,
+file-picker interaction, installed old-to-new upgrades,
 account services and funded transactions still need separate acceptance checks.
 The packaged smoke uses an empty regtest wallet and the unpacked output;
 it does not establish installer behavior, real hub performance or mainnet balance
