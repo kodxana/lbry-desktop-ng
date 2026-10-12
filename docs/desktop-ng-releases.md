@@ -3,7 +3,7 @@
 The first NG installer target is Windows x64. It bundles the SDK pinned in
 [`build/sdk-candidate.json`](../build/sdk-candidate.json), including SDK NG
 PR #27, the updated wallet hubs from PR #29, the header sync improvements from
-PR #30, and the pending PR #28 startup cancellation fix. The executable still
+PR #30, history progress from PR #31, and the pending PR #28 startup cancellation fix. The executable still
 reports SDK `0.114.0rc4`, but the older public rc4
 release is a different binary. Build and startup both verify the pinned SHA-256.
 
@@ -21,10 +21,10 @@ node build/buildDesktop.js
 
 This runs the update tests and real SDK wallet/restart tests, compiles the app,
 and builds an NSIS installer under `dist/ng`. It does not publish or install it.
-The initial version is `0.54.0-rc.1`. Expected release files are:
+The current build version is `0.54.0-rc.2`. Expected release files are:
 
-- `LBRY-Desktop-NG-0.54.0-rc.1-windows-x64.exe`
-- `LBRY-Desktop-NG-0.54.0-rc.1-windows-x64.exe.blockmap`
+- `LBRY-Desktop-NG-0.54.0-rc.2-windows-x64.exe`
+- `LBRY-Desktop-NG-0.54.0-rc.2-windows-x64.exe.blockmap`
 - `latest.yml`
 
 These builds are unsigned. A community signing identity has not been

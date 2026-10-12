@@ -106,7 +106,7 @@ The recovered wallet retains its addresses and zero balance; all seven SDK
 shutdowns complete without forced termination or pending-task destruction.
 No funds or mainnet transactions are needed for these tests.
 
-## Current Windows build, 2026-10-11
+## RC1 Windows build, 2026-10-11
 
 The rebuilt `0.54.0-rc.1` installer includes the header progress and catch-up
 improvements from merged SDK PR #30, the updated wallet hubs from PR #29 and
@@ -142,7 +142,7 @@ does not change the desktop layout or its dark theme.
 
 ## Transaction-history progress, 2026-10-12
 
-The desktop now consumes the separate `status.wallet.history_sync` field proposed
+The desktop now consumes the separate `status.wallet.history_sync` field merged
 in [SDK PR #31](https://github.com/kodxana/lbry-sdk-ng/pull/31). The startup screen
 shows saved history entries as well as header progress, and saved batches reset
 its stalled-progress timer. A changing total is not shown as an overall percentage.
@@ -157,8 +157,8 @@ The notice uses the existing card/help styles and has no animated indicator.
 Focused renderer and polling tests cover growing history, incomplete and
 disconnected states, older SDK responses, zero balances, repeated unchanged
 balances, malformed counts, API failures and concurrent polls. These changes
-require a new SDK bundle with PR #31 in addition to the existing startup fixes.
-The published desktop RC1 and its pinned SDK do not include this feature yet.
+use the RC2 SDK pin, which includes PR #31 in addition to the existing startup
+fixes. The published desktop RC1 and its bundled SDK do not include this feature.
 
 ## Earlier packaged Windows check, 2026-10-11
 

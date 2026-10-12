@@ -29,9 +29,13 @@ baseline. Modernizing the desktop runtime and dependencies is still required.
 The [0.54.0-rc.1 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.1)
 is available for Windows and Linux x64 testing. Download the Windows installer
 or Linux AppImage/tar.gz from its Assets list; see the [Linux instructions](docs/linux-desktop.md).
-the other files provide updater metadata, checksums, SDK source provenance and
+The other files provide updater metadata, checksums, SDK source provenance and
 validation details. Historical upstream binaries do not contain this fork's
 integration changes.
+
+The current source builds `0.54.0-rc.2` with SDK transaction-history progress.
+Balances are marked as provisional while history catches up after account
+import. This feature is not included in the published RC1 packages.
 
 See [build and launch instructions](docs/isolated-desktop-test.md) and the
 [Windows validation record](docs/windows-sdk-validation.md). The validation

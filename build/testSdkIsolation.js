@@ -106,6 +106,25 @@ async function main() {
       'exchange_rate_manager', 'tracker_announcer_component', 'libtorrent_component'],
   }));
   let initialAddresses;
+  async function waitForHistory(daemon) {
+    const deadline = Date.now() + 60000;
+    while (true) {
+      const status = await daemon.rpc('status');
+      const history = status.wallet && status.wallet.history_sync;
+      if (status.is_running && history && history.state === 'complete') {
+        assert.deepEqual(history, {
+          state: 'complete',
+          entries_completed: 0,
+          entries_total: 0,
+          pending_operations: 0,
+          connected: true,
+        });
+        return;
+      }
+      assert(Date.now() < deadline, 'Wallet history did not complete: ' + JSON.stringify(history));
+      await new Promise(resolve => setTimeout(resolve, 200));
+    }
+  }
   try {
     const originalConfig = fs.readFileSync(profile.config);
     const setupDaemon = new Daemon(profile, binary, path.join(root, 'headers-must-not-be-read'));
@@ -125,11 +144,7 @@ async function main() {
       const daemon = new Daemon(profile, binary);
       try {
         await daemon.launch();
-        const deadline = Date.now() + 60000;
-        while (!(await daemon.rpc('status')).is_running) {
-          assert(Date.now() < deadline, 'Wallet startup timed out');
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
+        await waitForHistory(daemon);
         assert.equal((await daemon.rpc('wallet_balance')).total, '0.0');
         const addresses = (await daemon.rpc('address_list')).items.map(item => item.address).sort();
         assert(addresses.length > 0);
@@ -173,11 +188,7 @@ async function main() {
       await selection.scan();
       await selection.checkCustom(workingEndpoint);
       await selection.select(workingEndpoint);
-      const deadline = Date.now() + 60000;
-      while (!(await daemon.rpc('status')).is_running) {
-        assert(Date.now() < deadline, 'Wallet recovery timed out');
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
+      await waitForHistory(daemon);
       assert.deepEqual((await daemon.rpc('settings_get')).lbryum_servers,
         [['127.0.0.1', hub.address().port]]);
       assert.equal((await daemon.rpc('wallet_balance')).total, '0.0');
@@ -197,6 +208,7 @@ async function main() {
   const log = fs.readFileSync(path.join(profile.logs, 'daemon-console.log'), 'utf8');
   assert.equal((log.match(/finished shutting down/g) || []).length, 7);
   assert(!log.includes('Task was destroyed but it is pending!'));
+  console.log('PASS: packaged SDK reports completed, connected history after first start, restart and stalled-hub recovery');
   console.log('PASS: real packaged SDK preserves the empty wallet and completes all seven shutdowns cleanly');
   console.log('Evidence: ' + root);
 }

@@ -44,7 +44,10 @@ Use Linux x64 and Node 16.20.2. Install the checked-in Yarn lock with
 `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`, then
 run `node node_modules/electron/install.js` to install Electron 17.2.0.
 
-Download the release's `lbrynet-linux.zip` and extract `lbrynet`. Import it with
+For the current source, download `lbrynet-linux` from the CI run recorded in
+`build/sdk-candidate.json`, verify its archive SHA-256 against
+`artifacts.linux.archiveSha256`, and extract `lbrynet`. The SDK archived with
+RC1 matches the older RC1 source only. Import the current binary with
 `node build/downloadDaemon.js /absolute/path/to/lbrynet`; the import verifies
 its hash and writes an executable file. `node build/buildDesktop.js` runs setup,
 update-fixture and real SDK isolation checks, compiles the app, then builds the
