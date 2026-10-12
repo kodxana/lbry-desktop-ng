@@ -146,6 +146,19 @@ reducers[ACTIONS.UPGRADE_CANCELLED] = (state) =>
     modal: null,
   });
 
+reducers[ACTIONS.DESKTOP_UPDATE_STATE] = (state, { data }) => ({
+  ...state,
+  isUpgradeAvailable: data.available,
+  remoteVersion: data.version,
+  autoUpdateDownloading: data.state === 'downloading',
+  autoUpdateDownloaded: data.state === 'downloaded',
+  autoUpdateDeclined: data.declined,
+  autoUpdateFailed: data.failed,
+  upgradeInitialized: data.installing,
+  upgradeFailedInstallation: data.installationFailed,
+  downloadProgress: data.percent,
+});
+
 reducers[ACTIONS.AUTO_UPDATE_DOWNLOADING] = (state) =>
   Object.assign({}, state, {
     autoUpdateDownloading: true,

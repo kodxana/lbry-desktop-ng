@@ -8,6 +8,8 @@ import { changeZoomFactor } from 'util/zoomWindow';
 import { ipcRenderer, shell } from 'electron';
 import * as remote from '@electron/remote';
 import { listenForFullscreenExit } from 'util/window-controls';
+import { listenForUpdater } from 'util/updater-events';
+import { requestUpdater } from 'util/updater-client';
 import moment from 'moment';
 import * as MODALS from 'constants/modal_types';
 import React, { Fragment, useState, useEffect } from 'react';
@@ -17,16 +19,9 @@ import * as SETTINGS from 'constants/settings';
 import {
   doDaemonReady,
   doCheckUpgradeAvailable,
-  doAutoUpdate,
   doOpenModal,
   doHideModal,
   doToggle3PAnalytics,
-  doUpdateDownloadProgress,
-  doNotifyUpdateAvailable,
-  doShowUpgradeInstallationError,
-  doAutoUpdateDownloading,
-  doAutoUpdateReset,
-  doAutoUpdateFail,
 } from 'redux/actions/app';
 import { isURIValid } from 'util/lbryURI';
 import { setSearchApi } from 'redux/actions/search';
@@ -55,9 +50,6 @@ import 'scss/all.scss';
 
 const startTime = Date.now();
 analytics.startupEvent();
-
-const { autoUpdater } = remote.require('electron-updater');
-autoUpdater.logger = remote.require('electron-log');
 
 if (LBRY_API_URL) {
   Lbryio.setLocalApi(LBRY_API_URL);
@@ -133,47 +125,6 @@ ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
   handleError();
 });
 
-autoUpdater.on('download-progress', () => {
-  app.store.dispatch(doAutoUpdateDownloading());
-});
-
-autoUpdater.on('checking-for-update', () => {
-  app.store.dispatch(doAutoUpdateReset());
-});
-
-autoUpdater.on('update-available', (e) => {
-  app.store.dispatch(doNotifyUpdateAvailable(e));
-});
-
-autoUpdater.on('update-not-available', () => {
-  app.store.dispatch({ type: ACTIONS.CHECK_UPGRADE_SUCCESS, data: { upgradeAvailable: false } });
-});
-
-autoUpdater.on('update-downloaded', () => {
-  app.store.dispatch(doAutoUpdateReset());
-});
-
-autoUpdater.on('error', () => {
-  app.store.dispatch(doAutoUpdateFail());
-});
-
-ipcRenderer.on('upgrade-installing-error', () => {
-  app.store.dispatch(doShowUpgradeInstallationError());
-});
-
-ipcRenderer.on('download-progress-update', (e, p) => {
-  app.store.dispatch(doUpdateDownloadProgress(Math.round(p.percent * 100)));
-});
-
-ipcRenderer.on('download-update-complete', (e, c) => {
-  app.store.dispatch({
-    type: ACTIONS.UPGRADE_DOWNLOAD_COMPLETED,
-    data: {
-      path: c.path,
-    },
-  });
-});
-
 ipcRenderer.on('language-set', (event, language) => {
   app.store.dispatch(doSetLanguage(language));
 });
@@ -229,6 +180,7 @@ function AppWrapper() {
 
   useEffect(() => {
     if (persistDone) {
+      const stopUpdates = listenForUpdater(store);
       const state = store.getState();
       const enabled = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state);
       let previous = enabled;
@@ -236,35 +188,22 @@ function AppWrapper() {
         const allow = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(store.getState());
         if (allow !== previous) {
           previous = allow;
-          ipcRenderer.send('update-prereleases', allow);
+          requestUpdater('prereleases', allow);
           store.dispatch(doCheckUpgradeAvailable());
         }
       };
-      ipcRenderer.send('update-prereleases', enabled);
-      return store.subscribe(sendPreferences);
+      requestUpdater('prereleases', enabled);
+      const unsubscribe = store.subscribe(sendPreferences);
+      return () => {
+        unsubscribe();
+        stopUpdates();
+      };
     }
   }, [persistDone]);
 
   useEffect(() => {
     // @if TARGET='app'
     moment.locale(remote.app.getLocale());
-
-    autoUpdater.on('error', (error) => {
-      console.error(error.message); // eslint-disable-line no-console
-    });
-
-    if (process.platform === 'win32') {
-      autoUpdater.on('update-available', () => {
-        console.log('Update available'); // eslint-disable-line no-console
-      });
-      autoUpdater.on('update-not-available', () => {
-        console.log('Update not available'); // eslint-disable-line no-console
-      });
-      autoUpdater.on('update-downloaded', () => {
-        console.log('Update downloaded'); // eslint-disable-line no-console
-        app.store.dispatch(doAutoUpdate());
-      });
-    }
     // @endif
   }, []);
 

@@ -2,6 +2,7 @@ import isDev from 'electron-is-dev';
 import desktopSettings from '../../../desktop-settings.json';
 import { ipcRenderer, shell } from 'electron';
 import { quitApplication } from 'util/window-controls';
+import { requestUpdater } from 'util/updater-client';
 import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
 import * as SETTINGS from 'constants/settings';
@@ -80,7 +81,7 @@ export function doSkipUpgrade() {
 }
 
 export function doStartUpgrade() {
-  return () => ipcRenderer.send('autoUpdateAccepted');
+  return () => requestUpdater('accept');
 }
 
 export function doShowUpgradeInstallationError() {
@@ -132,18 +133,20 @@ export function doAutoUpdate() {
 }
 
 export function doAutoUpdateDeclined() {
-  return (dispatch) => {
-    ipcRenderer.send('autoUpdateDeclined');
+  return async (dispatch) => {
+    const result = await requestUpdater('decline');
+    if (!result.ok) return result;
     dispatch(doClearUpgradeTimer());
 
     dispatch({
       type: ACTIONS.AUTO_UPDATE_DECLINED,
     });
+    return result;
   };
 }
 
 export function doCancelUpgrade() {
-  ipcRenderer.send('cancel-download-upgrade');
+  requestUpdater('decline');
   return { type: ACTIONS.UPGRADE_CANCELLED };
 }
 
@@ -164,7 +167,7 @@ export function doCheckUpgradeAvailable() {
       return;
     }
 
-    ipcRenderer.send('check-for-updates', {
+    requestUpdater('check', {
       autoDownload: !disableAutoUpdate,
       allowPrerelease: makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state),
     });

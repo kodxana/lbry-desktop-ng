@@ -63,6 +63,7 @@ app
   .whenReady()
   .then(async () => {
     await require('../testDesktopUpdates')();
+    require('./updater.cjs')(() => activeWindow, require('url').pathToFileURL(path.join(output, 'index.html')).href);
     configureWindow = require('./windowControls.cjs')(
       () => activeWindow,
       require('url').pathToFileURL(path.join(output, 'index.html')).href
@@ -132,6 +133,8 @@ app
       'documents',
       'fileDialogs',
       'windowControls',
+      'updater',
+      'updaterRestart',
       'wallet',
       'passwords',
       'passwordRestart',
