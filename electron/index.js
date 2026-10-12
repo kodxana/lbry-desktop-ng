@@ -2,7 +2,7 @@
 /* eslint space-before-function-paren:0 */
 // Module imports
 import '@babel/polyfill';
-import { app, dialog, ipcMain, session, safeStorage } from 'electron';
+import { app, dialog, ipcMain, session, safeStorage, Menu, clipboard } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';
 import LbryFirstInstance from './LbryFirstInstance';
@@ -24,6 +24,7 @@ const { registerUpdaterIpc } = require('./updaterIpc.cjs');
 const { registerPasswordStorage } = require('./passwordStorage.cjs');
 const { registerFileSelection } = require('./fileSelection.cjs');
 const { registerWindowControls } = require('./windowControls.cjs');
+const { registerContextMenu } = require('./contextMenu.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
@@ -49,6 +50,7 @@ app.setPath('temp', desktopProfile.temp);
 let rendererWindow;
 registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL });
 registerWindowControls({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
+registerContextMenu({ ipcMain, Menu, clipboard, getWindow: () => rendererWindow, rendererURL, isDev });
 registerPasswordStorage({
   ipcMain,
   safeStorage,

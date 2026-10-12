@@ -75,6 +75,17 @@ and router:
   checks command and sender restrictions. Packaged smoke tests use the new Quit
   command and verify clean SDK shutdown; development smoke tests retain native
   window-close coverage. Window-manager behavior still needs desktop acceptance.
+- Context menus use `context-menu` IPC with fixed text, editor, snippet and claim
+  requests. The main process creates the menu and owns native editing commands;
+  no renderer-provided menu templates or callbacks cross IPC. Tests cover request
+  and sender restrictions, read-only fields, selection state, development-only
+  inspection, dismissal, duplicate requests and stale menus after navigation or
+  window destruction. The renderer suite builds real Electron menus and drives
+  CodeMirror's context-menu event, full-document selection and claim actions.
+  Popup selection is controlled at the native boundary. Hosted Windows/Linux CI
+  also checks real clipboard copy/cut/paste in text fields, document selection and
+  CodeMirror. Local runs intercept clipboard operations to preserve the user's
+  clipboard. Native menu mouse/keyboard interaction still needs manual acceptance.
 - Backups use the real UI and ZIP library with invented wallet bytes. Tests read
   the ZIP back, verify its contents and portable filename, and check missing-source
   and unwritable-destination errors. Downloads is redirected inside the fixture
