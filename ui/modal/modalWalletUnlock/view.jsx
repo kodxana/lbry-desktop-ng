@@ -3,7 +3,7 @@ import React from 'react';
 import { Form, FormField } from 'component/common/form';
 import { Modal } from 'modal/modal';
 import Button from 'component/button';
-import { getSavedPassword, setSavedPassword } from 'util/saved-passwords';
+import { getSavedPassword, getPasswordFromCookie, setSavedPassword } from 'util/saved-passwords';
 
 type Props = {
   quit: () => void,
@@ -16,33 +16,43 @@ type Props = {
 type State = {
   password: string,
   rememberPassword: boolean,
+  submittedPassword: ?string,
+  submittedRememberPassword: boolean,
 };
 
 class ModalWalletUnlock extends React.PureComponent<Props, State> {
   state = {
     password: '',
     rememberPassword: false,
+    submittedPassword: null,
+    submittedRememberPassword: false,
   };
 
   componentDidMount() {
-    const { unlockWallet, shouldTryWithBlankPassword } = this.props;
+    const { shouldTryWithBlankPassword } = this.props;
 
-    getSavedPassword().then(p => {
+    Promise.all([getSavedPassword(), getPasswordFromCookie()]).then(([p, persisted]) => {
       if (p !== null) {
-        this.setState({ password: p, rememberPassword: true });
-        unlockWallet(p);
+        const rememberPassword = persisted === p;
+        this.setState({ password: p, rememberPassword });
+        this.submitPassword(p, rememberPassword);
       } else if (shouldTryWithBlankPassword) {
-        unlockWallet('');
+        this.submitPassword('', false);
       }
     });
   }
-  componentDidUpdate() {
+  componentDidUpdate(prevProps: Props) {
     const { props } = this;
 
-    if (props.walletUnlockSucceded === true) {
-      setSavedPassword(this.state.password, this.state.rememberPassword);
+    if (props.walletUnlockSucceded === true && prevProps.walletUnlockSucceded !== true) {
+      setSavedPassword(this.state.submittedPassword, this.state.submittedRememberPassword);
       props.closeModal();
     }
+  }
+
+  submitPassword(password: string, rememberPassword: boolean = this.state.rememberPassword) {
+    this.props.unlockWallet(password);
+    this.setState({ submittedPassword: password, submittedRememberPassword: rememberPassword });
   }
 
   onChangePassword(event: SyntheticInputEvent<*>) {
@@ -54,7 +64,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
   }
 
   render() {
-    const { quit, unlockWallet, walletUnlockSucceded } = this.props;
+    const { quit, walletUnlockSucceded } = this.props;
 
     const { password, rememberPassword } = this.state;
     return (
@@ -66,21 +76,21 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
         shouldCloseOnOverlayClick={false}
         confirmButtonLabel={__('Unlock')}
         abortButtonLabel={__('Exit')}
-        onConfirmed={() => unlockWallet(password)}
+        onConfirmed={() => this.submitPassword(password)}
         onAborted={quit}
       >
         <p>
           {__('Your wallet has been encrypted with a local password. Please enter your wallet password to proceed.')}{' '}
           <Button button="link" label={__('Learn more')} href="https://lbry.com/faq/wallet-encryption" />.
         </p>
-        <Form className="section" onSubmit={() => unlockWallet(password)}>
+        <Form className="section" onSubmit={() => this.submitPassword(password)}>
           <FormField
             autoFocus
             error={walletUnlockSucceded === false ? 'Incorrect Password' : false}
             label={__('Wallet Password')}
             type="password"
             name="wallet-password"
-            onChange={event => this.onChangePassword(event)}
+            onChange={(event) => this.onChangePassword(event)}
             value={password || ''}
           />
           <fieldset-section>
@@ -88,7 +98,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
               label={__('Remember Password')}
               type="checkbox"
               name="wallet-remember-password"
-              onChange={event => this.onChangeRememberPassword(event)}
+              onChange={(event) => this.onChangeRememberPassword(event)}
               checked={rememberPassword}
             />
           </fieldset-section>

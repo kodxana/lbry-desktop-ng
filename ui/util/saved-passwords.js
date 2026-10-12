@@ -69,6 +69,7 @@ function setSavedPassword(value, saveToDisk) {
         deleteSavedPassword();
       }
     }
+    resolve();
   });
 }
 

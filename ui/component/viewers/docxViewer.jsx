@@ -2,6 +2,8 @@
 
 import React from 'react';
 import mammoth from 'mammoth';
+import fs from 'fs';
+import sanitizeDocumentHtml from 'util/document-html';
 import LoadingScreen from 'component/common/loading-screen';
 
 type Props = {
@@ -41,15 +43,20 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
 
     // Parse docx to html
-    mammoth
-      .convertToHtml({ path: source }, options)
-      .then(result => {
-        this.setState({ content: result.value, loading: false });
+    fs.promises
+      .readFile(source)
+      .then((bytes) =>
+        mammoth.convertToHtml(
+          { arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) },
+          options
+        )
+      )
+      .then((result) => {
+        this.setState({ content: sanitizeDocumentHtml(result.value), loading: false });
       })
       .catch(() => {
         this.setState({ error: true, loading: false });
-      })
-      .done();
+      });
   }
 
   render() {

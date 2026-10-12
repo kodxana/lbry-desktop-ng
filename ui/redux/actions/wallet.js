@@ -425,19 +425,23 @@ export function doWalletEncrypt(newPassword) {
       type: ACTIONS.WALLET_ENCRYPT_START,
     });
 
-    Lbry.wallet_encrypt({ new_password: newPassword }).then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_ENCRYPT_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_ENCRYPT_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_encrypt({ new_password: newPassword })
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_ENCRYPT_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_ENCRYPT_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_ENCRYPT_FAILED, result: false });
+      });
   };
 }
 
@@ -447,19 +451,23 @@ export function doWalletUnlock(password) {
       type: ACTIONS.WALLET_UNLOCK_START,
     });
 
-    Lbry.wallet_unlock({ password }).then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_UNLOCK_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_UNLOCK_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_unlock({ password })
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_UNLOCK_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_UNLOCK_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_UNLOCK_FAILED, result: false });
+      });
   };
 }
 
@@ -469,19 +477,23 @@ export function doWalletLock() {
       type: ACTIONS.WALLET_LOCK_START,
     });
 
-    Lbry.wallet_lock().then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_LOCK_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_LOCK_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_lock()
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_LOCK_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_LOCK_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_LOCK_FAILED, result: false });
+      });
   };
 }
 
@@ -571,19 +583,23 @@ export function doWalletDecrypt() {
       type: ACTIONS.WALLET_DECRYPT_START,
     });
 
-    Lbry.wallet_decrypt().then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_DECRYPT_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_DECRYPT_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_decrypt()
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_DECRYPT_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_DECRYPT_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_DECRYPT_FAILED, result: false });
+      });
   };
 }
 

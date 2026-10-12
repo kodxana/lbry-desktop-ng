@@ -509,7 +509,7 @@ export const walletReducer = handleActions(
 
     [ACTIONS.WALLET_LOCK_START]: (state: WalletState) => ({
       ...state,
-      walletLockPending: false,
+      walletLockPending: true,
       walletLockSucceded: null,
       walletLockResult: null,
     }),

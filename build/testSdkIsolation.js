@@ -155,6 +155,8 @@ async function main() {
       assert.equal((await daemon.exited).code, 0);
     }
 
+    await require('./testWalletEncryption.cjs')(profile, binary, waitForHistory, initialAddresses);
+
     // Simulate a hub that stops responding after the setup probe succeeds.
     const stalled = net.createServer(socket => {
       sockets.add(socket);
@@ -206,10 +208,10 @@ async function main() {
   }
   assert.equal(unexpected.size, 0);
   const log = fs.readFileSync(path.join(profile.logs, 'daemon-console.log'), 'utf8');
-  assert.equal((log.match(/finished shutting down/g) || []).length, 7);
+  assert.equal((log.match(/finished shutting down/g) || []).length, 9);
   assert(!log.includes('Task was destroyed but it is pending!'));
   console.log('PASS: packaged SDK reports completed, connected history after first start, restart and stalled-hub recovery');
-  console.log('PASS: real packaged SDK preserves the empty wallet and completes all seven shutdowns cleanly');
+  console.log('PASS: real packaged SDK preserves the empty wallet and completes eleven shutdowns across original and restored profiles cleanly');
   console.log('Evidence: ' + root);
 }
 

@@ -22,6 +22,7 @@ async function run(phase) {
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      plugins: true,
     },
   });
   remote.enable(window.webContents);
@@ -50,6 +51,7 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    require('./native.cjs')(root);
     const blocked = [];
     session.defaultSession.webRequest.onBeforeRequest(
       { urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] },
@@ -58,7 +60,7 @@ app
         callback({ cancel: true });
       }
     );
-    for (const phase of ['fresh', 'legacy', 'restart']) await run(phase);
+    for (const phase of ['fresh', 'legacy', 'restart', 'documents', 'fileDialogs', 'wallet']) await run(phase);
     // The legacy analytics module eagerly loads this script even with analytics disabled.
     // Keep it blocked; any SDK or other service request is outside these tests' scope.
     assert.deepEqual(

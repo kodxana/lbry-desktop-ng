@@ -306,51 +306,7 @@ app.on('before-quit', () => {
 // const file = new File([result.buffer], result.name);
 // NOTE: if path points to a folder, an empty
 // file will be given.
-ipcMain.handle('get-file-from-path', (event, path, readContents = true) => {
-  return new Promise((resolve, reject) => {
-    fs.stat(path, (error, stats) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      // Separate folders considering "\" and "/"
-      // as separators (cross platform)
-      const folders = path.split(/[\\/]/);
-      const name = folders[folders.length - 1];
-      if (stats.isDirectory()) {
-        resolve({
-          name,
-          mime: undefined,
-          path,
-          buffer: new ArrayBuffer(0),
-        });
-        return;
-      }
-      if (!readContents) {
-        resolve({
-          name,
-          mime: mime.getType(name) || undefined,
-          path,
-          buffer: new ArrayBuffer(0),
-        });
-        return;
-      }
-      // Encoding null ensures data results in a Buffer.
-      fs.readFile(path, { encoding: null }, (err, data) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({
-          name,
-          mime: mime.getType(name) || undefined,
-          path,
-          buffer: data,
-        });
-      });
-    });
-  });
-});
+ipcMain.handle('get-file-from-path', require('./fileSelection.cjs').getFileFromPath);
 
 ipcMain.handle('get-file-details-from-path', async (event, path) => {
     const isFfMp4 = (ffprobeResults) => {

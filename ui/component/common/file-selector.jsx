@@ -15,11 +15,14 @@ type Props = {
   error?: string,
   disabled?: boolean,
   autoFocus?: boolean,
-  filters?: Array<{ name: string, extension: string[] }>,
+  filters?: Array<{ name: string, extensions: string[] }>,
   readFile?: boolean,
 };
 
-class FileSelector extends React.PureComponent<Props> {
+type State = { selectionError?: string };
+
+class FileSelector extends React.PureComponent<Props, State> {
+  state = { selectionError: undefined };
   static defaultProps = {
     autoFocus: false,
     type: 'file',
@@ -38,7 +41,7 @@ class FileSelector extends React.PureComponent<Props> {
 
   handleFileInputSelection = () => {
     const { files } = this.fileInput.current;
-    if (!files) {
+    if (!files || !files.length) {
       return;
     }
 
@@ -51,6 +54,7 @@ class FileSelector extends React.PureComponent<Props> {
   };
 
   handleDirectoryInputSelection = () => {
+    this.setState({ selectionError: undefined });
     let defaultPath;
     let properties;
     let isWin = process.platform === 'win32';
@@ -75,7 +79,7 @@ class FileSelector extends React.PureComponent<Props> {
         filters: this.props.filters,
       })
       .then((result) => {
-        const path = result && result.filePaths[0];
+        const path = result && !result.canceled && result.filePaths && result.filePaths[0];
         if (path) {
           return ipcRenderer.invoke('get-file-from-path', path, this.props.readFile);
         }
@@ -88,7 +92,8 @@ class FileSelector extends React.PureComponent<Props> {
           type: result.mime,
         });
         this.props.onFileChosen({ file, path: result.path });
-      });
+      })
+      .catch(() => this.setState({ selectionError: __('The selected file or folder could not be opened.') }));
   };
 
   fileInputButton = () => {
@@ -107,7 +112,7 @@ class FileSelector extends React.PureComponent<Props> {
           label={label}
           webkitdirectory="true"
           className="form-field--with-button"
-          error={error}
+          error={error || this.state.selectionError}
           disabled={disabled}
           type="text"
           readOnly="readonly"
