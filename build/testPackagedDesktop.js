@@ -213,6 +213,19 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
+    // CDP advertises the target URL before its initial navigation has committed.
+    // Wait for the rendered setup page before starting asynchronous IPC checks.
+    await until(async () => {
+      assert(!closed, 'Desktop exited before rendering setup: ' + JSON.stringify(closed));
+      try {
+        return await evaluate(
+          "document.readyState === 'complete' && Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"
+        );
+      } catch (error) {
+        if (error.code === -32000 && error.message === 'Execution context was destroyed.') return false;
+        throw error;
+      }
+    }, 'Hub picker did not render');
     const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
     assert.equal(metadata.ok, true);
     assert.equal(typeof metadata.locale, 'string');
@@ -226,10 +239,6 @@ async function main() {
       await evaluate("require('electron').ipcRenderer.invoke('select-file', {type: 'invalid'})"),
       { ok: false, error: 'invalid' },
       'The file selection handler must recognize the application renderer before validating the request'
-    );
-    await until(
-      () => evaluate("Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"),
-      'Hub picker did not render'
     );
     await until(
       () => evaluate("Boolean(document.querySelector('fieldset') && !document.querySelector('fieldset').disabled)"),
