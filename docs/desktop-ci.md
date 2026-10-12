@@ -16,8 +16,8 @@ Linux SDK requires glibc 2.36 or newer, so it cannot run on Ubuntu 22.04.
 | `test:desktop-package`  | Built application entry points, version, SDK executable hash and provenance; GitHub update destination; installer/AppImage size and SHA-512 metadata; Linux SDK execute permission.                                                                                                                   |
 | `test:packaged-desktop` | Launch the built unpacked application with a disposable NG profile; show the hub picker before creating a wallet; select the fixture hub, finish history sync and close both desktop and SDK cleanly.                                                                                                 |
 
-The renderer suite opens three separate Electron windows against one temporary
-IndexedDB profile: fresh, legacy fixture, and restart. The last phase must retain
+The renderer suite opens separate Electron windows against one temporary
+IndexedDB profile. The fresh, legacy fixture, and restart phases must retain
 settings, subscriptions, collections, playback history/positions and the receive
 address, but discard cached balance, wallet-sync status and daemon readiness.
 The compressed fixture in `build/tests/fixtures/persist-v0.json` was encoded with
@@ -25,6 +25,41 @@ the RC2 dependency lock at commit `7568f7d6`. It contains only invented preferen
 and a deliberately invalid public address, never wallet secrets. Keep the serialized
 fixture unchanged during migrations; regenerating it with new dependencies would
 remove the old-format compatibility check.
+
+Additional renderer phases mount the production document viewers, file selector,
+wallet backup card and encryption/unlock forms with the real store and router:
+
+- Generated DOCX files cover headings, emphasis, tables, safe links, executable
+  link removal and corrupt archives. A separate sanitizer fixture checks active
+  elements, event attributes, local/remote images and embedded raster images.
+- Markdown covers streamed chunks, formatting and unsafe markup/links. Plain text
+  goes through CodeMirror, including literal markup, Unicode, read-only mode,
+  theme changes and missing files. PDF/HTML checks cover local file URL encoding;
+  HTML also retains its empty sandbox. These are not PDF pixel-rendering tests.
+- File selection uses scripted responses at `dialog.showOpenDialog`, the real
+  `@electron/remote` transport, the production `get-file-from-path` IPC handler,
+  and Chromium file inputs populated through CDP. Tests cover filters, cancellation,
+  Unicode paths, directory and metadata-only selection, repeated selection of the
+  same file, disabled controls, read/dialog failures and retry. OS file-picker
+  interaction itself is not automated.
+- Backups use the real UI and ZIP library with invented wallet bytes. Tests read
+  the ZIP back, verify its contents and portable filename, and check missing-source
+  and unwritable-destination errors. Downloads is redirected inside the fixture
+  profile and opening the file manager is intercepted.
+- Encryption, unlock, lock and decrypt actions use the real reducers with a
+  controlled SDK transport to check success, false responses and rejected requests.
+  The forms cover password confirmation, acknowledgement, retry, session caching,
+  stale unlock results, and edits during an encryption request. Remember-password
+  remains opt-in; persistent cookie storage and OS keychain migration are not
+  established by these tests.
+
+The SDK isolation suite also encrypts an empty generated wallet, rejects a wrong
+password and decrypt-while-locked, restarts it, and restores an encrypted ZIP into
+a second fresh profile. It verifies zero balance and identical addresses, seed and
+private key after unlock/decrypt and another restart. Keys are compared only in
+memory and are never included in assertion output. The suite now checks eleven
+clean SDK shutdowns across the original and restored profiles. Wallets and backup
+archives stay in ignored test directories and are not uploaded as CI evidence.
 
 The renderer harness uses the current desktop Node integration settings and remote
 module. It will need to move with the real application when preload isolation is
@@ -86,10 +121,10 @@ For each dependency migration, keep the existing fixture checks, add regressions
 for changed APIs, and require both platform jobs to pass. The application source,
 lockfile and SDK pin should change only as described by that migration PR.
 
-This is an initial automated baseline, not complete desktop acceptance. Full media
-playback (HLS, subtitles, seeking, hardware decoding), document rendering/sanitizing,
-native file dialogs, wallet backup/encryption, installed old-to-new upgrades,
-account services and funded transactions still need separate fixtures or acceptance
-checks. The packaged smoke uses an empty regtest wallet and the unpacked output;
+This is an automated baseline, not complete desktop acceptance. Full media playback
+(HLS, subtitles, seeking, hardware decoding), PDF page rendering/printing, native
+file-picker interaction, persistent password storage, installed old-to-new upgrades,
+account services and funded transactions still need separate acceptance checks.
+The packaged smoke uses an empty regtest wallet and the unpacked output;
 it does not establish installer behavior, real hub performance or mainnet balance
 correctness. No macOS desktop coverage is provided yet.

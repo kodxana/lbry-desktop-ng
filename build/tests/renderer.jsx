@@ -8,9 +8,13 @@ import { ConnectedRouter, push, goBack } from 'connected-react-router';
 import { Route, Link } from 'react-router-dom';
 import * as ACTIONS from 'constants/action_types';
 import fixture from './fixtures/persist-v0.json';
+import * as remote from '@electron/remote';
 
 const phase = new URLSearchParams(window.location.search).get('phase');
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+const reportError = (error) => ipcRenderer.send('regression-result', { phase, error: error.stack || String(error) });
+window.addEventListener('error', (event) => reportError(event.error || event.message));
+window.addEventListener('unhandledrejection', (event) => reportError(event.reason));
 
 async function main() {
   window.i18n_messages = {};
@@ -31,6 +35,19 @@ async function main() {
     });
   });
   assert.equal(localForage.driver(), localForage.INDEXEDDB);
+  if (phase === 'documents' || phase === 'fileDialogs' || phase === 'wallet') {
+    // Follow the desktop component import order to resolve its existing app/router cycle.
+    require('component/app');
+    const tests = {
+      documents: () => require('./documents'),
+      fileDialogs: () => require('./fileDialogs'),
+      wallet: () => require('./wallet'),
+    };
+    const test = tests[phase]().default;
+    const message = await test(store, history, remote.app.getPath('userData'));
+    persistor.pause();
+    return message;
+  }
   let state = store.getState();
   assert.equal(state.wallet.totalBalance, undefined, 'A restart must request a fresh balance');
   assert.equal(state.wallet.syncStatus, null, 'A restart must not reuse completed wallet sync status');
@@ -123,4 +140,4 @@ async function main() {
 
 main()
   .then((message) => ipcRenderer.send('regression-result', { phase, message }))
-  .catch((error) => ipcRenderer.send('regression-result', { phase, error: error.stack || String(error) }));
+  .catch(reportError);

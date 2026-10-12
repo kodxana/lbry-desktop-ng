@@ -20,6 +20,8 @@ type State = {
   understandConfirmed: boolean,
   understandError: boolean,
   submitted: boolean,
+  submittedPassword: ?string,
+  submittedRememberPassword: boolean,
   failMessage: ?string,
   rememberPassword: boolean,
 };
@@ -34,15 +36,18 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
     understandConfirmed: false,
     understandError: false,
     submitted: false, // Prior actions could be marked complete
+    submittedPassword: null,
+    submittedRememberPassword: false,
     failMessage: undefined,
     rememberPassword: false,
   };
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps: Props) {
     const { props, state } = this;
 
     if (state.submitted) {
-      if (props.walletEncryptSucceded === true) {
+      if (props.walletEncryptSucceded === true && prevProps.walletEncryptSucceded !== true) {
+        setSavedPassword(state.submittedPassword, state.submittedRememberPassword);
         props.closeModal();
         props.updateWalletStatus();
       } else if (props.walletEncryptSucceded === false) {
@@ -74,7 +79,7 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
   submitEncryptForm() {
     const { state } = this;
 
-    if (!state.newPassword) {
+    if (!state.newPassword || (state.submitted && this.props.walletEncryptSucceded == null)) {
       return;
     }
 
@@ -94,15 +99,22 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
       return;
     }
 
-    setSavedPassword(state.newPassword, state.rememberPassword);
-    this.setState({ submitted: true });
     this.props.encryptWallet(state.newPassword);
+    this.setState({
+      submitted: true,
+      submittedPassword: state.newPassword,
+      submittedRememberPassword: state.rememberPassword,
+      passwordMismatch: false,
+      understandError: false,
+      failMessage: undefined,
+    });
   }
 
   render() {
     const { closeModal } = this.props;
 
     const { passwordMismatch, understandError, failMessage } = this.state;
+    const pending = this.state.submitted && this.props.walletEncryptSucceded == null;
     return (
       <Modal
         isOpen
@@ -156,7 +168,7 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
             )}
           </div>
           <FormField
-            inputButton={<Submit label={failMessage ? __('Encrypting Wallet') : __('Encrypt wallet')} />}
+            inputButton={<Submit disabled={pending} label={pending ? __('Encrypting Wallet') : __('Encrypt wallet')} />}
             error={
               understandError === true
                 ? __('You must enter "%acknowledgement_text%"', { acknowledgement_text: acknowledgementText })
