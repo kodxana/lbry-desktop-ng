@@ -7,7 +7,8 @@
     { "from": "dist/electron/webpack", "to": "./" },
     { "from": "dist/electron/static", "to": "./" },
     "package.json",
-    "node_modules/**/*"
+    "node_modules/**/*",
+    "!node_modules/electron{,/**/*}"
   ],
   "directories": { "output": "dist/sdk-test" },
   "publish": null,

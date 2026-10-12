@@ -11,8 +11,9 @@ Sass compiler stays at the RC3 lock's 1.53.0; it is passed explicitly to the new
 loader because its older CommonJS export is not recognized by automatic ESM
 discovery. Sass language/output changes are a separate migration.
 
-Electron 17.2.0, React, the SDK pin, electron-builder and electron-updater stay
-at their RC3 versions. Updating build-host Node does not update the Node or
+Electron 17.2.0, React and the SDK pin stay at their RC3 versions. Packaging and
+updater changes are described in [their migration notes](packaging-updater.md).
+Updating build-host Node does not update the Node or
 Chromium embedded in Electron. RC3 remains the published regression baseline;
 these source changes are not part of its packages.
 

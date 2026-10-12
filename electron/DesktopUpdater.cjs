@@ -1,5 +1,6 @@
 const semver = require('semver');
 const source = require('../release-source.json');
+const DesktopGitHubProvider = require('./DesktopGitHubProvider.cjs');
 
 // Keep installation behind SDK shutdown: electron-updater starts NSIS before app.quit().
 class DesktopUpdater {
@@ -14,9 +15,10 @@ class DesktopUpdater {
     this.accepted = false;
     updater.autoDownload = false;
     updater.autoInstallOnAppQuit = false;
+    updater.disableWebInstaller = true;
     updater.allowDowngrade = false;
     updater.allowPrerelease = false;
-    if (enabled) updater.setFeedURL(source);
+    if (enabled) updater.setFeedURL({ ...source, provider: 'custom', updateProvider: DesktopGitHubProvider });
 
     updater.on('update-available', info => {
       this.info = info;

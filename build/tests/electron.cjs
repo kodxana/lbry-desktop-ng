@@ -60,6 +60,7 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    await require('../testDesktopUpdates')();
     require('./native.cjs')(root);
     passwordStore = registerPasswordStorage({
       ipcMain,

@@ -70,6 +70,7 @@ const mainConfig = {
     electron: 'commonjs electron',
     express: 'commonjs express',
     'electron-updater': 'commonjs electron-updater',
+    'electron-updater/out/providers/GitHubProvider': 'commonjs electron-updater/out/providers/GitHubProvider',
   },
 };
 

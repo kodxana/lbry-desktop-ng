@@ -1,6 +1,9 @@
 {
   "appId": "net.lbry.community.desktop",
   "productName": "LBRY Desktop NG",
+  "allowMissingDependencies": false,
+  "detectUpdateChannel": false,
+  "electronUpdaterCompatibility": ">=4.6.5",
   "directories": {
     "output": "dist/ng"
   },
@@ -14,7 +17,8 @@
       "to": "./"
     },
     "package.json",
-    "node_modules/**/*"
+    "node_modules/**/*",
+    "!node_modules/electron{,/**/*}"
   ],
   "extraResources": [
     {
