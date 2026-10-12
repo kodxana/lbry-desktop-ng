@@ -130,3 +130,34 @@ shutdown failure. Profile tests reject mixing the NG and test ZIP identities.
 with an unfunded local test wallet, including restart and address persistence.
 These tests do not establish an installed upgrade through a published GitHub
 release or Windows code-signature verification.
+
+## Installed Windows upgrade acceptance
+
+The `Installed Windows upgrade` workflow runs real NSIS installers on a fresh
+GitHub-hosted Windows runner. `node build/testInstalledUpgrade.js` refuses local
+or self-hosted execution, an existing NG profile, or an existing NG installation.
+It must never be pointed at a personal wallet. The runner's dedicated NG profile
+contains a newly generated, unfunded regtest wallet connected to a loopback hub.
+
+The test installs the published RC3 executable after verifying its recorded
+SHA-256, then performs two upgrades. Temporary versions `0.54.0-rc.4.upgrade-test`
+and `0.54.0-rc.5.upgrade-test` are compiled from the current checkout, packaged
+with the production NSIS configuration, and never published. `package.json` is
+restored after each build. The first hop exercises the released updater; the
+second exercises the current main-process IPC controller.
+
+For each hop, the test holds the actual installer download, declines installation,
+finishes the download and verifies that the app and SDK stay running. Explicit
+acceptance then runs the real installer only after all owned SDK processes have
+exited. It verifies replacement of the installed archive, automatic `--updated`
+restart, the bundled SDK hash, the same wallet keys and addresses, encryption,
+desktop storage, recovery of the OS-protected remembered password, and subsequent
+clean shutdown. Uploaded JSON records contain assertions and hashes, not wallet
+files, browser profiles or passwords.
+
+Two test adaptations are deliberate: a loopback generic update feed supplies the
+private installers and their SHA-512 metadata, and the real updater receives
+silent-install mode so CI needs no wizard operator. Production still requests
+the normal interactive installer. GitHub discovery is covered separately by the
+provider tests. This acceptance does not cover wizard interaction, SmartScreen,
+code signing, machine-wide/elevated installs or Windows accounts with real funds.
