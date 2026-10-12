@@ -263,7 +263,12 @@ async function main() {
     const addressCount = (await rpc('address_list')).items.length;
     assert(addressCount > 0);
     assert(fs.existsSync(path.join(profile.root, 'hub-setup-complete.json')));
-    await evaluate("setTimeout(() => require('@electron/remote').getCurrentWindow().close(), 100); true");
+    // Exercise both shutdown entry points: renderer Quit and native window close.
+    await evaluate(
+      development
+        ? "setTimeout(() => require('@electron/remote').getCurrentWindow().close(), 100); true"
+        : "setTimeout(() => require('electron').ipcRenderer.send('window-control', 'quit'), 100); true"
+    );
     let stopTimer;
     const stopped = await Promise.race([
       exited,

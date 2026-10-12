@@ -22,6 +22,7 @@ const { createProfile } = require('./testProfile.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
 const { registerPasswordStorage } = require('./passwordStorage.cjs');
 const { registerFileSelection } = require('./fileSelection.cjs');
+const { registerWindowControls } = require('./windowControls.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
@@ -46,6 +47,7 @@ app.setPath('temp', desktopProfile.temp);
 // object is garbage collected.
 let rendererWindow;
 registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL });
+registerWindowControls({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
 registerPasswordStorage({
   ipcMain,
   safeStorage,

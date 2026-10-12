@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
+const { createRendererGuard } = require('./rendererGuard.cjs');
 
 async function getFileFromPath(filePath, readContents = true) {
   const stats = await fs.promises.stat(filePath);
@@ -35,31 +36,9 @@ function validRequest(request) {
   );
 }
 
-function documentURL(value) {
-  const url = new URL(value);
-  url.hash = '';
-  url.search = '';
-  return url.href;
-}
-
 function registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL, platform = process.platform }) {
   let pending = false;
-  const expectedURL = documentURL(rendererURL);
-  const allowed = (event, window) => {
-    try {
-      return (
-        window &&
-        window === getWindow() &&
-        !window.isDestroyed() &&
-        !window.webContents.isDestroyed() &&
-        event.sender === window.webContents &&
-        event.senderFrame === window.webContents.mainFrame &&
-        documentURL(event.senderFrame.url) === expectedURL
-      );
-    } catch (_) {
-      return false;
-    }
-  };
+  const allowed = createRendererGuard(getWindow, rendererURL);
 
   ipcMain.handle('select-file', async (event, request) => {
     const window = getWindow();

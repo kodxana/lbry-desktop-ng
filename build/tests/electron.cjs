@@ -12,6 +12,7 @@ let acknowledgeNotice;
 let holdNotice = false;
 let failForget = false;
 let passwordStore;
+let configureWindow;
 
 const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'profile-'));
@@ -34,6 +35,7 @@ async function run(phase) {
     },
   });
   activeWindow = window;
+  if (phase === 'windowControls') configureWindow(window);
   remote.enable(window.webContents);
   try {
     await new Promise((resolve, reject) => {
@@ -61,6 +63,10 @@ app
   .whenReady()
   .then(async () => {
     await require('../testDesktopUpdates')();
+    configureWindow = require('./windowControls.cjs')(
+      () => activeWindow,
+      require('url').pathToFileURL(path.join(output, 'index.html')).href
+    );
     require('./native.cjs')(
       root,
       () => activeWindow,
@@ -125,6 +131,7 @@ app
       'restart',
       'documents',
       'fileDialogs',
+      'windowControls',
       'wallet',
       'passwords',
       'passwordRestart',

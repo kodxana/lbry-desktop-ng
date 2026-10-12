@@ -39,6 +39,7 @@ async function main() {
   if (
     phase === 'documents' ||
     phase === 'fileDialogs' ||
+    phase === 'windowControls' ||
     phase === 'wallet' ||
     phase === 'passwords' ||
     phase === 'passwordRestart'
@@ -48,6 +49,7 @@ async function main() {
     const tests = {
       documents: () => require('./documents'),
       fileDialogs: () => require('./fileDialogs'),
+      windowControls: () => require('./windowControls'),
       wallet: () => require('./wallet'),
       passwords: () => require('./passwords'),
       passwordRestart: () => require('./passwordRestart'),

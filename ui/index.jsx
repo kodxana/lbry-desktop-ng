@@ -7,6 +7,7 @@ import * as ACTIONS from 'constants/action_types';
 import { changeZoomFactor } from 'util/zoomWindow';
 import { ipcRenderer, shell } from 'electron';
 import * as remote from '@electron/remote';
+import { listenForFullscreenExit } from 'util/window-controls';
 import moment from 'moment';
 import * as MODALS from 'constants/modal_types';
 import React, { Fragment, useState, useEffect } from 'react';
@@ -199,11 +200,7 @@ ipcRenderer.on('devtools-is-opened', () => {
   doLogWarningConsoleMessage();
 });
 
-// Force exit mode for html5 fullscreen api
-// See: https://github.com/electron/electron/issues/18188
-remote.getCurrentWindow().on('leave-full-screen', (event) => {
-  document.webkitExitFullscreen();
-});
+listenForFullscreenExit();
 
 document.addEventListener('click', (event) => {
   let { target } = event;

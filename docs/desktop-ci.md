@@ -57,6 +57,16 @@ wallet backup card and encryption/unlock forms with the real store and router:
   Packaged and development smoke tests verify that the handler recognizes each
   renderer's document URL before validating a request. OS file-picker
   interaction itself is not automated.
+- Window controls use `window-control` IPC for header maximization, player Escape
+  and Quit. The main process accepts only these explicit commands from the active
+  application's main frame; native fullscreen exit is forwarded back to the
+  renderer. Tests mount the real header/player and dispatch the real Quit actions,
+  replacing only the native window methods and DOM fullscreen boundary. They cover
+  duplicate fullscreen events, an already-exited document, rejected DOM exits,
+  the legacy WebKit fallback and listener cleanup. `node build/testWindowControls.js`
+  checks command and sender restrictions. Packaged smoke tests use the new Quit
+  command and verify clean SDK shutdown; development smoke tests retain native
+  window-close coverage. Window-manager behavior still needs desktop acceptance.
 - Backups use the real UI and ZIP library with invented wallet bytes. Tests read
   the ZIP back, verify its contents and portable filename, and check missing-source
   and unwritable-destination errors. Downloads is redirected inside the fixture

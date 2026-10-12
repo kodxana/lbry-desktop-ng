@@ -10,6 +10,7 @@ import desktopSettings from '../desktop-settings.json';
 import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
 const remote = require('@electron/remote/main');
+const { forwardFullscreenEvents } = require('./windowControls.cjs');
 const shell = require('electron').shell;
 export const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 function GetAppLangCode() {
@@ -69,6 +70,7 @@ export default appState => {
     window.setTitle(desktopSettings.appName);
   });
   remote.enable(window.webContents);
+  forwardFullscreenEvents(window);
 
   // Let us register listeners on the window, so we can update the state
   // automatically (the listeners will be removed when the window is closed)
