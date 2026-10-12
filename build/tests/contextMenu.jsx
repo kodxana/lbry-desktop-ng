@@ -64,9 +64,19 @@ export default async function contextMenu() {
   );
   for (const property of ['readOnly', 'disabled']) {
     input[property] = true;
+    input.setSelectionRange(2, 3);
     const { pending, state } = await open(invoke);
     assert(!state.items.some(({ id }) => id === 'cut' || id === 'paste'));
-    await fixture('dismiss');
+    if (property === 'readOnly') {
+      await fixture('choose', 'select-all');
+      await waitFor(
+        () => input.selectionStart === 0 && input.selectionEnd === input.value.length,
+        'Read-only fields must still support Select All'
+      );
+    } else {
+      assert(!state.items.some(({ id }) => id === 'select-all'));
+      await fixture('dismiss');
+    }
     await pending;
     input[property] = false;
   }

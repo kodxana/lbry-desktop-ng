@@ -23,7 +23,7 @@ export function openContextMenu(event) {
     isInput && typeof target.selectionStart === 'number' && target.selectionStart !== target.selectionEnd;
   return showMenu(event, {
     kind: 'text',
-    hasText: !!target.value,
+    hasText: isInput && !target.disabled && !!target.value,
     hasSelection: isInput ? inputSelected : window.getSelection().toString().length > 0,
     editable: isInput && !target.readOnly && !target.disabled,
   });

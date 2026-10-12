@@ -72,7 +72,7 @@ function registerContextMenu({ ipcMain, Menu, clipboard, getWindow, rendererURL,
           if (editable && clipboard.readText().length > 0) {
             template.push(item('paste', 'Paste', 'CmdOrCtrl+V', true, () => contents.paste()));
           }
-          if (!editor && hasText && request.editable) {
+          if (!editor && hasText) {
             template.push(item('select-all', 'Select All', 'CmdOrCtrl+A', true, () => contents.selectAll()));
           }
         }
