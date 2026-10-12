@@ -32,10 +32,10 @@ operation is not needed; the SDK uses a light wallet and public wallet servers.
 
 ## Rebuild
 
-Use Node 16.20.2 and the checked-in Yarn 3.2.0. The original desktop runtime is
+Use Node 24.21.0 and the checked-in Yarn 3.2.0. The original desktop runtime is
 Electron 17.2.0; modernizing that runtime is separate restoration work.
 
-1. Install the original lock without postinstall scripts:
+1. Install the checked-in lock without postinstall scripts:
    `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`.
 2. Download the `lbrynet-windows` artifact from
    [CI run 38237985200](https://github.com/kodxana/lbry-sdk-ng/actions/runs/38237985200)

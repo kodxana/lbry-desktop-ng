@@ -1,4 +1,4 @@
-import { version as desktopVersion } from 'package.json';
+import packageInfo from 'package.json';
 import * as ACTIONS from 'constants/action_types';
 import * as SETTINGS from 'constants/settings';
 import moment from 'moment';
@@ -75,7 +75,7 @@ const defaultState = {
     // OS
     [SETTINGS.AUTO_LAUNCH]: true,
     [SETTINGS.TO_TRAY_WHEN_CLOSED]: true,
-    [SETTINGS.ENABLE_PRERELEASE_UPDATES]: desktopVersion.includes('-'),
+    [SETTINGS.ENABLE_PRERELEASE_UPDATES]: packageInfo.version.includes('-'),
   },
 };
 defaultState.clientSettings[SETTINGS.AUTOPLAY_NEXT] = defaultState.clientSettings[SETTINGS.AUTOPLAY_MEDIA];

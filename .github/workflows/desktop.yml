@@ -31,7 +31,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: 16.20.2
+          node-version-file: .node-version
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
         run: node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
@@ -80,6 +80,12 @@ jobs:
       - name: Packaged application startup and shutdown (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a node build/testPackagedDesktop.js
+      - name: Development build, renderer and SDK lifecycle (Windows)
+        if: runner.os == 'Windows'
+        run: node build/testPackagedDesktop.js --development
+      - name: Development build, renderer and SDK lifecycle (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a node build/testPackagedDesktop.js --development
       - name: Confirm the build preserved source and lockfile
         run: git diff --exit-code
       - name: Keep package verification

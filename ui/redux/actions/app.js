@@ -39,7 +39,7 @@ import { selectDaemonSettings, makeSelectClientSetting, selectDisableAutoUpdates
 import { selectUser } from 'redux/selectors/user';
 import { doSyncLoop, doSetPrefsReady, doPreferenceGet, doPopulateSharedUserState } from 'redux/actions/sync';
 import { doAuthenticate } from 'redux/actions/user';
-import { lbrySettings as config, version as appVersion } from 'package.json';
+import packageInfo from 'package.json';
 import analytics, { SHARE_INTERNAL } from 'analytics';
 import { doSignOutCleanup, getAuthToken } from 'util/saved-passwords';
 import { doNotificationSocketConnect } from 'redux/actions/websocket';
@@ -238,7 +238,7 @@ export function doCheckDaemonVersion() {
     Lbry.version().then(({ lbrynet_version: lbrynetVersion }) => {
       // Avoid the incompatible daemon modal if running in dev mode
       // Lets you  run a different daemon than the one specified in package.json
-      if (config.lbrynetDaemonVersion === lbrynetVersion || process.env.NODE_ENV !== 'production') {
+      if (packageInfo.lbrySettings.lbrynetDaemonVersion === lbrynetVersion || process.env.NODE_ENV !== 'production') {
         return dispatch({
           type: ACTIONS.DAEMON_VERSION_MATCH,
         });
@@ -310,7 +310,7 @@ export function doDaemonReady() {
 
     dispatch(
       doAuthenticate(
-        appVersion,
+        packageInfo.version,
         undefined,
         undefined,
         shareUsageData,

@@ -239,7 +239,7 @@ if (!gotSingleInstanceLock) {
     }
     startSandbox();
 
-    if (isDev) {
+      if (isDev && !process.argv.includes('--skip-devtools')) {
       await installDevtools();
     }
     rendererWindow = createWindow(appState);

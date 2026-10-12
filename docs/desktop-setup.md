@@ -82,7 +82,7 @@ not required.
 
 ## Regression checks
 
-Run `yarn test:desktop-setup` with the documented Node 16.20.2 build environment:
+Run `yarn test:desktop-setup` with the documented Node 24.21.0 build environment:
 
 - Real Windows capacity query with spaces, Unicode and shell metacharacters in
   the directory name; missing directories; zero free space; capacity above 4 GiB.

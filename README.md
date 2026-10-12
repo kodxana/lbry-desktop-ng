@@ -24,8 +24,10 @@ automatic selection, a responding hub or a custom address. Startup keeps a
 Windows storage checks use the native
 disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setup.md).
 
-The current build retains Electron 17.2.0 and Node 16.20.2 as the compatibility
-baseline. Modernizing the desktop runtime and dependencies is still required.
+Builds use Node 24.21.0 (pinned in `.node-version`) and Webpack 5. The desktop
+runtime remains Electron 17.2.0; updating the build host does not update the
+Chromium or Node runtime shipped inside Electron. Runtime modernization is
+still required. See [build-tooling migration notes](docs/build-tooling.md).
 The [0.54.0-rc.3 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.3)
 is available for Windows and Linux x64 testing. Download the Windows installer
 or Linux AppImage/tar.gz from its Assets list; see the [Linux instructions](docs/linux-desktop.md).

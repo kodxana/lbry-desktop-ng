@@ -1,30 +1,29 @@
-const config = require('./config');
+// Load desktop defaults before resolving aliases and preprocess-loader conditions.
+require('./config');
 const path = require('path');
 const webpack = require('webpack');
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const baseConfig = require('./webpack.base.config.js');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { DefinePlugin, ProvidePlugin } = require('webpack');
-const { getIfUtils, removeEmpty } = require('webpack-config-utils');
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const STATIC_ROOT = path.resolve(__dirname, 'static/');
 const DIST_ROOT = path.resolve(__dirname, 'dist/');
-const NODE_ENV = process.env.NODE_ENV || 'development';
 
-const desktopSettings = path.resolve(__dirname, process.env.LBRY_DESKTOP_BUILD === 'sdk-test'
-  ? 'sdk-test.json' : 'desktop-settings.json');
+const desktopSettings = path.resolve(
+  __dirname,
+  process.env.LBRY_DESKTOP_BUILD === 'sdk-test' ? 'sdk-test.json' : 'desktop-settings.json'
+);
 
-const { ifProduction } = getIfUtils(NODE_ENV);
-
-let mainConfig = {
+const mainConfig = {
   target: 'electron-main',
   entry: {
     main: './electron/index.js',
   },
   output: {
     filename: '[name].js',
-    path: __dirname + '/dist/electron/webpack',
+    path: path.join(DIST_ROOT, 'electron/webpack'),
+    publicPath: '',
   },
   module: {
     rules: [
@@ -67,30 +66,14 @@ let mainConfig = {
       ],
     }),
   ],
+  externals: {
+    electron: 'commonjs electron',
+    express: 'commonjs express',
+    'electron-updater': 'commonjs electron-updater',
+  },
 };
 
-if (process.env.NODE_ENV === 'production') {
-  // Apply prod overrides
-  mainConfig = merge(mainConfig, {
-    externals: {
-      electron: 'require("electron")',
-      express: 'require("express")',
-      'electron-updater': 'require("electron-updater")',
-    },
-  });
-} else {
-  const nodeExternals = require('webpack-node-externals');
-  // Apply dev overrides
-  mainConfig = merge(mainConfig, {
-    externals: {
-      electron: 'require("electron")',
-      express: 'require("express")',
-      'electron-updater': 'require("electron-updater")',
-    },
-  });
-}
-
-let plugins = [
+const plugins = [
   new webpack.NormalModuleReplacementPlugin(/desktop-settings\.json$/, desktopSettings),
   new DefinePlugin({
     IS_WEB: JSON.stringify(false),
@@ -118,7 +101,8 @@ const renderConfig = {
   },
   output: {
     filename: '[name].js',
-    path: __dirname + '/dist/electron/webpack',
+    path: path.join(DIST_ROOT, 'electron/webpack'),
+    publicPath: '',
   },
   module: {
     rules: [
