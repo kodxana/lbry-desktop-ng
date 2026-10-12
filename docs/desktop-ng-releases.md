@@ -21,10 +21,10 @@ node build/buildDesktop.js
 
 This runs the update tests and real SDK wallet/restart tests, compiles the app,
 and builds an NSIS installer under `dist/ng`. It does not publish or install it.
-The current build version is `0.54.0-rc.2`. Expected release files are:
+The current build version is `0.54.0-rc.3`. Expected release files are:
 
-- `LBRY-Desktop-NG-0.54.0-rc.2-windows-x64.exe`
-- `LBRY-Desktop-NG-0.54.0-rc.2-windows-x64.exe.blockmap`
+- `LBRY-Desktop-NG-0.54.0-rc.3-windows-x64.exe`
+- `LBRY-Desktop-NG-0.54.0-rc.3-windows-x64.exe.blockmap`
 - `latest.yml`
 
 These builds are unsigned. A community signing identity has not been
