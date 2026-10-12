@@ -37,6 +37,9 @@ these source changes are not part of its packages.
 - Development launch waits for both compilations, forwards profile arguments
   to Electron, binds locally, and closes watchers when the application exits.
   `--skip-devtools` avoids downloading developer extensions during smoke tests.
+  It opens the application directory with the corrected package entry point so
+  Electron reads the app version. Launching a bare JavaScript file left Linux
+  with version `0.0`, which the updater rejected during startup.
 - Development translation collection can write to `LBRY_I18N_OUTPUT_FILE`.
   The smoke test seeds this file in its disposable profile so collection still
   runs without changing `static/app-strings.json` in the source checkout.

@@ -213,6 +213,8 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
+    const appVersion = await evaluate("require('@electron/remote').app.getVersion()");
+    assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
     await until(
       () => evaluate("Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"),
       'Hub picker did not render'
@@ -278,6 +280,7 @@ async function main() {
     const evidence = {
       executable: path.basename(executable),
       label,
+      appVersion,
       rendererLoaded: true,
       hubPicker: before,
       walletBalance: '0.0',

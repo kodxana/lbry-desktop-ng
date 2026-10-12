@@ -5,6 +5,7 @@ const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const middleware = require('webpack-dev-middleware');
 const express = require('express');
+const path = require('path');
 const app = express();
 const { spawn } = require('child_process');
 
@@ -63,7 +64,8 @@ Promise.all([ready(mainInstance), ready(renderInstance)]).then((stats) => {
   console.log(chalk.yellow('Spawning electron...'));
 
   const electron = require('electron');
-  const child = spawn(electron, ['./dist/electron/webpack/main.js', ...process.argv.slice(2)], {
+  // Launch the application directory so Electron reads its name and version.
+  const child = spawn(electron, [path.resolve(__dirname, '..'), ...process.argv.slice(2)], {
     stdio: 'inherit',
     windowsHide: true,
   });

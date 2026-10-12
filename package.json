@@ -17,7 +17,7 @@
   "author": {
     "name": "LBRY Inc."
   },
-  "main": "./dist/electron/main.js",
+  "main": "./dist/electron/webpack/main.js",
   "scripts": {
     "test:desktop": "node build/runDesktopTests.js",
     "test:renderer": "node build/testRenderer.js",
