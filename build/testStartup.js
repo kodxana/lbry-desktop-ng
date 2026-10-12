@@ -14,7 +14,7 @@ function load(relativePath, dependencies, globals = {}) {
   });
   const context = {
     exports: {},
-    __: text => text,
+    __: (text, tokens = {}) => text.replace(/%([^%]+)%/g, (match, key) => tokens[key] === undefined ? match : tokens[key]),
     process: { env: { NODE_ENV: 'production' } },
     ...globals,
     require: name => {
@@ -27,7 +27,8 @@ function load(relativePath, dependencies, globals = {}) {
 }
 
 module.exports = async function startupTests() {
-  const { startupProgress } = load('util/startup-progress.js', {});
+  const walletSync = load('util/wallet-sync.js', {});
+  const { startupProgress } = load('util/startup-progress.js', { './wallet-sync': walletSync });
   const connected = { available_servers: 1, connected: 'hub.example:50001', headers_synchronization_progress: 100 };
   assert.equal(startupProgress(null).percent, null);
   assert.equal(startupProgress({ wallet: { ...connected, available_servers: 0 } }).percent, null);
@@ -90,6 +91,22 @@ module.exports = async function startupTests() {
   assert(!splash.state.waitingForProgress, 'Actual progress clears the waiting message');
   assert.equal(ready, 0, 'Partial header sync cannot open the app');
 
+  const history = { state: 'syncing', connected: true, entries_completed: 100, entries_total: 250, pending_operations: 1 };
+  sdk.status = async () => ({ is_running: false, wallet: { ...connected, history_sync: history } });
+  await splash.updateStatus();
+  const historyTimer = splash.timeout;
+  timers.get(historyTimer)();
+  await splash.updateStatus();
+  assert.equal(splash.timeout, historyTimer, 'Polling unchanged history must not hide a stall');
+  history.entries_completed = 200;
+  await splash.updateStatus();
+  assert.notEqual(splash.timeout, historyTimer, 'Saved history batches reset the progress timer');
+  assert(!splash.state.waitingForProgress);
+  const progress = startupProgress(await sdk.status());
+  assert.equal(progress.step, 1);
+  assert.equal(progress.title, 'Syncing transaction history');
+  assert(progress.history.count.includes('200 of 250'));
+
   sdk.status = async () => { throw new Error('SDK temporarily unavailable') };
   await splash.updateStatus();
   assert.equal(timers.size, 2, 'API failures must not duplicate poll timers');
@@ -115,3 +132,5 @@ module.exports = async function startupTests() {
   assert.equal(timers.size, 0);
   console.log('PASS: truthful header progress, stalled progress detection, local hub preferences and stale startup replies');
 };
+
+module.exports.load = load;

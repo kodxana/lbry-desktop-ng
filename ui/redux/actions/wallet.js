@@ -13,40 +13,37 @@ import {
 import { creditsToString } from 'util/format-credits';
 import { selectMyClaimsRaw, selectClaimsById } from 'redux/selectors/claims';
 import { doFetchChannelListMine, doFetchClaimListMine, doClaimSearch } from 'redux/actions/claims';
+import { readWalletSnapshot } from 'util/wallet-sync';
 const FIFTEEN_SECONDS = 15000;
 let walletBalancePromise = null;
 
 export function doUpdateBalance() {
-  return (dispatch, getState) => {
-    const {
-      wallet: { totalBalance: totalInStore },
-    } = getState();
-
+  return (dispatch) => {
     if (walletBalancePromise === null) {
-      walletBalancePromise = Lbry.wallet_balance()
-        .then((response) => {
+      walletBalancePromise = readWalletSnapshot(Lbry)
+        .then(({ balance: response, status }) => {
           walletBalancePromise = null;
 
           const { available, reserved, reserved_subtotals, total } = response;
           const { claims, supports, tips } = reserved_subtotals;
           const totalFloat = parseFloat(total);
 
-          if (totalInStore !== totalFloat) {
-            dispatch({
-              type: ACTIONS.UPDATE_BALANCE,
-              data: {
-                totalBalance: totalFloat,
-                balance: parseFloat(available),
-                reservedBalance: parseFloat(reserved),
-                claimsBalance: parseFloat(claims),
-                supportsBalance: parseFloat(supports),
-                tipsBalance: parseFloat(tips),
-              },
-            });
-          }
+          dispatch({
+            type: ACTIONS.UPDATE_BALANCE,
+            data: {
+              syncStatus: status,
+              totalBalance: totalFloat,
+              balance: parseFloat(available),
+              reservedBalance: parseFloat(reserved),
+              claimsBalance: parseFloat(claims),
+              supportsBalance: parseFloat(supports),
+              tipsBalance: parseFloat(tips),
+            },
+          });
         })
         .catch(() => {
           walletBalancePromise = null;
+          dispatch({ type: ACTIONS.WALLET_SYNC_STATUS_UNAVAILABLE });
         });
     }
 

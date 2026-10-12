@@ -6,6 +6,7 @@ import parseData from 'util/parse-data';
 export const selectState = (state) => state.wallet || {};
 
 export const selectWalletState = selectState;
+export const selectWalletSyncStatus = createSelector(selectState, (state) => state.syncStatus);
 
 export const selectWalletIsEncrypted = createSelector(selectState, (state) => state.walletIsEncrypted);
 

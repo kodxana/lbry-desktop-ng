@@ -140,6 +140,26 @@ observe. Closing and reopening the same test profile checks catch-up from its
 saved state; never delete an existing wallet to repeat this test. This rebuild
 does not change the desktop layout or its dark theme.
 
+## Transaction-history progress, 2026-10-12
+
+The desktop now consumes the separate `status.wallet.history_sync` field proposed
+in [SDK PR #31](https://github.com/kodxana/lbry-sdk-ng/pull/31). The startup screen
+shows saved history entries as well as header progress, and saved batches reset
+its stalled-progress timer. A changing total is not shown as an overall percentage.
+
+After account import, the normal balance poll also reads SDK status. The wallet
+card marks its balance as provisional while discovery/history work is pending;
+an apparent zero does not show the empty-wallet introduction until sync completes.
+The header shows a wallet-sync label instead of an unfinished balance. Missing
+status, a disconnected hub or incomplete work cannot be presented as completion.
+The notice uses the existing card/help styles and has no animated indicator.
+
+Focused renderer and polling tests cover growing history, incomplete and
+disconnected states, older SDK responses, zero balances, repeated unchanged
+balances, malformed counts, API failures and concurrent polls. These changes
+require a new SDK bundle with PR #31 in addition to the existing startup fixes.
+The published desktop RC1 and its pinned SDK do not include this feature yet.
+
 ## Earlier packaged Windows check, 2026-10-11
 
 Before moving hub selection ahead of sync, the local NG installer was built

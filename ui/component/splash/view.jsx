@@ -125,6 +125,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
         wallet && wallet.blocks,
         wallet && wallet.blocks_behind,
         wallet && wallet.headers_synchronization_progress,
+        wallet && wallet.history_sync,
       ])
     );
     this.setState({ status, waitingForUnlock, connectionFailed: false });
@@ -219,6 +220,11 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
                   : __('This measures header sync, not the whole setup.')}
               </p>
             </div>
+          )}
+          {progress.history.count && !connectionFailed && (
+            <p className="help" role="status">
+              {progress.history.count}
+            </p>
           )}
           {progress.hub && !connectionFailed && (
             <p className="wallet-startup__connection help">

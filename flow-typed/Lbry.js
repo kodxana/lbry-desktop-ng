@@ -48,6 +48,13 @@ declare type StatusResponse = {
     is_encrypted: boolean,
     is_locked: boolean,
     headers_synchronization_progress: number,
+    history_sync?: {
+      state: 'idle' | 'syncing' | 'incomplete' | 'complete',
+      connected: boolean,
+      entries_completed: number,
+      entries_total: number,
+      pending_operations: number,
+    },
     available_servers: number,
   },
 };

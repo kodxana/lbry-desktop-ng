@@ -1,5 +1,7 @@
 // @flow
 
+import { walletSyncProgress } from './wallet-sync';
+
 // Header progress is only one part of startup, never an overall completion estimate.
 export function startupProgress(status: ?StatusResponse, locked: boolean = false) {
   const wallet = status && status.wallet;
@@ -7,10 +9,15 @@ export function startupProgress(status: ?StatusResponse, locked: boolean = false
   const value = wallet && wallet.headers_synchronization_progress;
   const percent =
     connected && typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
-  const ready = Boolean(status && (status.is_running || (status.startup_status && status.startup_status.wallet)));
+  const history = walletSyncProgress(status);
+  const historyPending = history.supported && history.pending;
+  const ready =
+    !historyPending &&
+    Boolean(status && (status.is_running || (status.startup_status && status.startup_status.wallet)));
   return {
     step: !connected ? 0 : locked ? 1 : ready ? 2 : 1,
     percent,
+    history,
     hub: connected && wallet ? wallet.connected : null,
     title: locked
       ? __('Unlock your wallet')
@@ -18,6 +25,8 @@ export function startupProgress(status: ?StatusResponse, locked: boolean = false
       ? __('Connecting to a hub')
       : ready
       ? __('Opening your library')
+      : historyPending
+      ? history.title
       : __('Syncing your wallet'),
     detail: locked
       ? __('Enter your password in the wallet dialog to continue.')
@@ -25,6 +34,8 @@ export function startupProgress(status: ?StatusResponse, locked: boolean = false
       ? __('Finding a connection to the LBRY network. You can choose another hub at any time.')
       : ready
       ? __('Your wallet is ready. Checking the connection before opening the app.')
+      : historyPending
+      ? history.detail
       : __('Downloading wallet headers and checking your history. First-time setup can take longer.'),
   };
 }

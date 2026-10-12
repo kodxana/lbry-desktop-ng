@@ -220,5 +220,6 @@ async function main() {
   await protocolTests();
   await selectionTests();
   await require('./testStartup')();
+  await require('./testWalletSync')();
 }
 main().catch(error => { console.error(error); process.exitCode = 1 });
