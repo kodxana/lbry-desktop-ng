@@ -75,6 +75,9 @@ or “Keep browsing” cancels pending installation consent.
 New prerelease profiles enable test releases by default. The existing settings
 let users disable prereleases or automatic downloading. Stable checks use
 GitHub's latest non-prerelease; test-release checks use its release feed.
+On an installed RC, the updater also considers the newest stable release so
+users can graduate from testing without changing their preference. See the
+[packaging/updater migration](packaging-updater.md) for compatibility checks.
 Downgrades are disabled. Missing releases and network/download errors leave the
 desktop running. Help shows the result of the most recent update check.
 Linux uses the GitHub releases page for manual downloads; Linux automatic

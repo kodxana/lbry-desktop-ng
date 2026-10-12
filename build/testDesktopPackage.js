@@ -3,7 +3,7 @@ const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const asar = require('asar');
+const asar = require('@electron/asar');
 const yaml = require('js-yaml');
 const pkg = require('../package.json');
 const candidate = require('./sdk-candidate.json');
@@ -24,6 +24,13 @@ const bundled = JSON.parse(asar.extractFile(archive, 'package.json'));
 assert.equal(bundled.name, pkg.name);
 assert.equal(bundled.version, pkg.version);
 assert.equal(bundled.main, 'main.js');
+const entries = new Set(asar.listPackage(archive).map((entry) => entry.replace(/\\/g, '/')));
+for (const name of ['electron', 'electron-builder', 'electron-updater-legacy', '@electron/asar', 'webpack']) {
+  assert(!entries.has('/node_modules/' + name + '/package.json'), 'Development package shipped: ' + name);
+}
+const packagedUpdater = JSON.parse(asar.extractFile(archive, path.join('node_modules', 'electron-updater', 'package.json')));
+assert.equal(packagedUpdater.version, pkg.dependencies['electron-updater']);
+assert(entries.has('/node_modules/electron-updater/out/providers/GitHubProvider.js'));
 for (const entry of ['main.js', 'ui.js', 'index.html']) {
   assert(asar.extractFile(archive, entry).length > 0, 'Missing packaged entry: ' + entry);
 }
@@ -58,3 +65,14 @@ const evidence = {
 fs.mkdirSync(path.resolve(__dirname, '../dist/ci'), { recursive: true });
 fs.writeFileSync(path.resolve(__dirname, '../dist/ci/package.json'), JSON.stringify(evidence, null, 2) + '\n');
 console.log('PASS: packaged entry points, SDK pin, application identity and updater asset digests');
+if (!linux) {
+  const result = require('child_process').spawnSync(
+    process.execPath,
+    [path.join(__dirname, 'testDesktopUpdates.js'), '--built-metadata'],
+    {
+      stdio: 'inherit',
+    }
+  );
+  if (result.error) throw result.error;
+  assert.equal(result.status, 0, 'Released and current updaters must read the generated metadata');
+}

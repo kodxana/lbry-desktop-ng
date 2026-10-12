@@ -32,7 +32,9 @@ for (const args of [
   ['build/testSdkIsolation.js'],
   ['--max_old_space_size=4096', 'node_modules/webpack/bin/webpack.js', '--config', 'webpack.electron.config.js'],
   [
-    'node_modules/electron-builder/out/cli/cli.js',
+    '.yarn/releases/yarn-3.2.0.cjs',
+    'exec',
+    'electron-builder',
     linux ? '--linux' : '--win',
     '--x64',
     '--publish',
