@@ -1,5 +1,5 @@
 // @flow
-import * as remote from '@electron/remote';
+import { leaveWindowFullscreen } from 'util/window-controls';
 import React from 'react';
 import classnames from 'classnames';
 import * as RENDER_MODES from 'constants/file_render_modes';
@@ -65,7 +65,7 @@ class FileRender extends React.PureComponent<Props> {
   }
 
   exitFullscreen() {
-    remote.getCurrentWindow().setFullScreen(false);
+    leaveWindowFullscreen();
   }
 
   renderViewer() {

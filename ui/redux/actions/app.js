@@ -1,7 +1,7 @@
 import isDev from 'electron-is-dev';
 import desktopSettings from '../../../desktop-settings.json';
 import { ipcRenderer, shell } from 'electron';
-import * as remote from '@electron/remote';
+import { quitApplication } from 'util/window-controls';
 import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
 import * as SETTINGS from 'constants/settings';
@@ -361,7 +361,7 @@ export function doClearCache() {
 export function doQuit() {
   return () => {
     // @if TARGET='app'
-    remote.app.quit();
+    quitApplication();
     // @endif
   };
 }

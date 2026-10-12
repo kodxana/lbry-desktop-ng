@@ -15,7 +15,7 @@ import React from 'react';
 import SkipNavigationButton from 'component/skipNavigationButton';
 import Tooltip from 'component/common/tooltip';
 import WunderBar from 'component/wunderbar';
-import * as remote from '@electron/remote';
+import { maximizeWindow } from 'util/window-controls';
 import { IS_MAC } from 'component/app/view';
 import NavigationButton from 'component/navigationButton';
 import { walletSyncProgress } from 'util/wallet-sync';
@@ -177,9 +177,7 @@ const Header = (props: Props) => {
         'header--minimal': authHeader,
         'header--mac': IS_MAC,
       })}
-      onDoubleClick={(e) => {
-        remote.getCurrentWindow().maximize();
-      }}
+      onDoubleClick={maximizeWindow}
     >
       <div className="card__actions--between header__contents">
         {!authHeader && canBackout ? (
