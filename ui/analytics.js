@@ -11,7 +11,8 @@ import * as Sentry from '@sentry/browser';
 import MatomoTracker from '@datapunt/matomo-tracker-js';
 import { history } from './store';
 import Native from 'native';
-import ElectronCookies from '@meetfranz/electron-cookies';
+import ElectronCookies from 'util/electron-cookies.cjs';
+import { ipcRenderer } from 'electron';
 import { generateInitialUrl } from 'util/url';
 import { MATOMO_ID, MATOMO_URL } from 'config';
 
@@ -22,8 +23,11 @@ export const SHARE_INTERNAL = 'shareInternal';
 const SHARE_THIRD_PARTY = 'shareThirdParty';
 
 if (isProduction) {
+  const application = ipcRenderer.sendSync('cookie-app-path');
+  if (!application || !application.ok) throw new Error('Cookie storage could not determine the application path');
   ElectronCookies.enable({
     origin: 'https://lbry.tv',
+    appPath: application.path,
   });
 }
 

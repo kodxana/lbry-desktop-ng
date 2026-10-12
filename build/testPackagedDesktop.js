@@ -213,7 +213,33 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
-    const appVersion = await evaluate("require('@electron/remote').app.getVersion()");
+    // CDP advertises the target URL before its initial navigation has committed.
+    // Wait for the rendered setup page before starting asynchronous IPC checks.
+    let setupPage;
+    try {
+      await until(async () => {
+        assert(!closed, 'Desktop exited before rendering setup: ' + JSON.stringify(closed));
+        try {
+          setupPage = await evaluate(
+            "({readyState:document.readyState, text:document.body ? document.body.innerText.slice(0, 2000) : ''})"
+          );
+          // A stalled external analytics script can keep readyState interactive.
+          // The actual setup content proves that the application's bundle ran.
+          return setupPage.text.includes('Choose a wallet hub');
+        } catch (error) {
+          if (error.code === -32000 && error.message === 'Execution context was destroyed.') return false;
+          throw error;
+        }
+      }, 'Hub picker did not render');
+    } catch (error) {
+      console.error('Setup page at failure:', setupPage);
+      throw error;
+    }
+    console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
+    const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
+    assert.equal(metadata.ok, true);
+    assert.equal(typeof metadata.locale, 'string');
+    const appVersion = metadata.version;
     assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
     const updateState = await evaluate("require('electron').ipcRenderer.invoke('desktop-updater', 'state')");
     assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
@@ -223,10 +249,6 @@ async function main() {
       await evaluate("require('electron').ipcRenderer.invoke('select-file', {type: 'invalid'})"),
       { ok: false, error: 'invalid' },
       'The file selection handler must recognize the application renderer before validating the request'
-    );
-    await until(
-      () => evaluate("Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"),
-      'Hub picker did not render'
     );
     await until(
       () => evaluate("Boolean(document.querySelector('fieldset') && !document.querySelector('fieldset').disabled)"),
@@ -270,7 +292,7 @@ async function main() {
     // Exercise both shutdown entry points: renderer Quit and native window close.
     await evaluate(
       development
-        ? "setTimeout(() => require('@electron/remote').getCurrentWindow().close(), 100); true"
+        ? 'setTimeout(() => window.close(), 100); true'
         : "setTimeout(() => require('electron').ipcRenderer.send('window-control', 'quit'), 100); true"
     );
     let stopTimer;

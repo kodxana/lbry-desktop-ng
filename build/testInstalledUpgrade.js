@@ -18,6 +18,7 @@ const {
   until,
   request,
   connectRenderer,
+  connectMain,
   listen,
   hubFixture,
   powershell,
@@ -212,14 +213,23 @@ async function main() {
     return value ? [].concat(JSON.parse(value)) : [];
   };
   let client;
+  let mainClient;
   let running;
   const launch = async () => {
     const reservation = net.createServer();
     const port = await listen(reservation);
+    const mainReservation = net.createServer();
+    const mainPort = await listen(mainReservation);
     await new Promise((resolve) => reservation.close(resolve));
+    await new Promise((resolve) => mainReservation.close(resolve));
     running = spawn(
       executable,
-      ['--disable-gpu', '--remote-debugging-port=' + port, '--remote-debugging-address=127.0.0.1'],
+      [
+        '--disable-gpu',
+        '--remote-debugging-port=' + port,
+        '--remote-debugging-address=127.0.0.1',
+        '--inspect=127.0.0.1:' + mainPort,
+      ],
       {
         cwd: installDirectory,
         windowsHide: true,
@@ -231,21 +241,34 @@ async function main() {
     running.stderr.pipe(log, { end: false });
     running.once('close', () => log.end());
     client = await connectRenderer(port);
-    assert.equal(await client.evaluate("require('@electron/remote').app.getPath('userData')"), profile.desktop);
+    mainClient = await connectMain(mainPort);
+    assert.equal(
+      await mainClient.evaluate("process.mainModule.require('electron').app.getPath('userData')"),
+      profile.desktop
+    );
     await waitForWallet();
     await verifyProfile();
   };
   const helperPath = path.join(root, 'build/installedUpgradeMain.cjs');
-  const helper = "require('@electron/remote').require(" + JSON.stringify(helperPath) + ')';
+  // Load the fixture through the test launch's loopback main-process inspector.
+  // No test IPC or renderer-to-main module loader is shipped in the application.
+  const helper = 'process.mainModule.require(' + JSON.stringify(helperPath) + ')';
   let feed;
   const evidence = { published, sourceCommit: process.env.GITHUB_SHA, hops: [] };
   try {
     await launch();
-    assert.equal(await client.evaluate("require('@electron/remote').app.getVersion()"), published.version);
+    assert.equal(
+      await mainClient.evaluate("process.mainModule.require('electron').app.getVersion()"),
+      published.version
+    );
     const originalKeys = keyHash();
     const originalAddresses = (await rpc('address_list')).items.map((item) => item.address).sort();
     assert(originalAddresses.length > 0);
     await client.evaluate("localStorage.setItem('installed-upgrade-fixture', 'preserve desktop storage'); true");
+    await client.evaluate(
+      "document.cookie = 'upgrade_root_cookie=preserve-root; path=/;'; " +
+        "document.cookie = 'upgrade_path_cookie=preserve-path'; true"
+    );
     assert.equal(await rpc('wallet_encrypt', { new_password: password }), true);
     const saved = await client.evaluate(
       "require('electron').ipcRenderer.invoke('remembered-password', 'save', " + JSON.stringify(password) + ')'
@@ -256,7 +279,7 @@ async function main() {
       const legacy = index === 0;
       feed = await updateServer(candidate);
       const handoffFile = path.join(evidenceDirectory, 'handoff-' + index + '.json');
-      const sourceVersion = await client.evaluate(
+      const sourceVersion = await mainClient.evaluate(
         helper +
           '.configure(' +
           JSON.stringify({
@@ -285,7 +308,7 @@ async function main() {
         );
       await command('check', { autoDownload: false, allowPrerelease: true });
       await until(
-        () => client.evaluate(helper + '.status().available'),
+        () => mainClient.evaluate(helper + '.status().available'),
         'Installed updater did not discover the private candidate'
       );
       await command('accept');
@@ -301,16 +324,20 @@ async function main() {
         );
       } else {
         // Flush an IPC round trip after the legacy one-way decline message.
-        await client.evaluate(helper + '.status()');
+        await client.evaluate("require('electron').ipcRenderer.invoke('remembered-password', 'read').then(() => true)");
       }
       feed.release();
       await until(
-        () => client.evaluate(helper + '.status().downloaded'),
+        () => mainClient.evaluate(helper + '.status().downloaded'),
         'Native update download did not finish',
         180000
       );
       await delay(1000);
-      assert.equal((await client.evaluate(helper + '.status()')).handoffs, 0, 'A declined download must not install');
+      assert.equal(
+        (await mainClient.evaluate(helper + '.status()')).handoffs,
+        0,
+        'A declined download must not install'
+      );
       assert(!fs.existsSync(handoffFile));
       await verifyProfile();
       const previousPid = running.pid;
@@ -321,6 +348,8 @@ async function main() {
       );
       client.close();
       client = null;
+      mainClient.close();
+      mainClient = null;
       const restarted = await until(
         () =>
           applicationProcesses(executable).find(
@@ -348,10 +377,18 @@ async function main() {
       );
       await assertPortsAvailable(settings);
       await launch();
-      assert.equal(await client.evaluate("require('@electron/remote').app.getVersion()"), candidate.version);
+      assert.equal(
+        await mainClient.evaluate("process.mainModule.require('electron').app.getVersion()"),
+        candidate.version
+      );
       assert.equal(
         await client.evaluate("localStorage.getItem('installed-upgrade-fixture')"),
         'preserve desktop storage'
+      );
+      assert(await client.evaluate("document.cookie.includes('upgrade_root_cookie=preserve-root')"));
+      assert(
+        await client.evaluate("document.cookie.includes('upgrade_path_cookie=preserve-path')"),
+        'The legacy cookie adapter file-URL mapping must survive an installed upgrade'
       );
       const remembered = await client.evaluate("require('electron').ipcRenderer.invoke('remembered-password', 'read')");
       assert(
@@ -377,6 +414,7 @@ async function main() {
         balance: '0.0',
         encryptedWallet: true,
         desktopStoragePreserved: true,
+        cookieStorageAndPathPreserved: true,
         rememberedPasswordRecovered: true,
         ...handoff,
       });
@@ -393,6 +431,8 @@ async function main() {
     await client.evaluate("require('electron').ipcRenderer.send('window-control', 'quit'); true");
     client.close();
     client = null;
+    mainClient.close();
+    mainClient = null;
     await until(
       () => applicationProcesses(executable).length === 0 && sdkPids().length === 0,
       'Final test application did not exit'
@@ -405,6 +445,7 @@ async function main() {
     fs.writeFileSync(path.join(evidenceDirectory, 'result.json'), JSON.stringify(evidence, null, 2) + '\n');
   } finally {
     if (client) client.close();
+    if (mainClient) mainClient.close();
     if (feed) feed.close();
     // The hosted VM is discarded after the job. Do not use broad taskkill or
     // uninstall commands that could hide a failed lifecycle assertion.

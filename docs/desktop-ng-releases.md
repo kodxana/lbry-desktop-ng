@@ -146,12 +146,20 @@ with the production NSIS configuration, and never published. `package.json` is
 restored after each build. The first hop exercises the released updater; the
 second exercises the current main-process IPC controller.
 
+Manual test launches expose ephemeral loopback renderer and main-process debugger
+ports. The external test helper is loaded through the main-process inspector;
+the application ships no fixture IPC or renderer-to-main module loader. Both
+debugger connections close at installer handoff, and NSIS's automatic restart
+is observed before relaunching for verification. This also works with RC3 without
+requiring `@electron/remote` in the candidate.
+
 For each hop, the test holds the actual installer download, declines installation,
 finishes the download and verifies that the app and SDK stay running. Explicit
 acceptance then runs the real installer only after all owned SDK processes have
 exited. It verifies replacement of the installed archive, automatic `--updated`
 restart, the bundled SDK hash, the same wallet keys and addresses, encryption,
-desktop storage, recovery of the OS-protected remembered password, and subsequent
+desktop storage, root/default-path cookies written by RC3's original adapter,
+recovery of the OS-protected remembered password, and subsequent
 clean shutdown. Uploaded JSON records contain assertions and hashes, not wallet
 files, browser profiles or passwords.
 

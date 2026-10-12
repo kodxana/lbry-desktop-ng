@@ -87,10 +87,20 @@ and router:
   also checks real clipboard copy/cut/paste in text fields, document selection and
   CodeMirror. Local runs intercept clipboard operations to preserve the user's
   clipboard. Native menu mouse/keyboard interaction still needs manual acceptance.
-- Backups use the real UI and ZIP library with invented wallet bytes. Tests read
-  the ZIP back, verify its contents and portable filename, and check missing-source
-  and unwritable-destination errors. Downloads is redirected inside the fixture
-  profile and opening the file manager is intercepted.
+- Backups use the real UI, scoped `desktop-info` IPC and ZIP library with invented
+  wallet bytes. Tests read the ZIP back and verify unchanged contents and portable
+  filenames. Downloads/home/wallet-parent fallback, missing sources, failed writes,
+  IPC failures, retries, duplicate clicks, unmount and switching wallets during
+  a pending lookup are covered. All destinations are inside the fixture profile;
+  opening the file manager is intercepted. Write failures never silently redirect
+  a backup to another directory.
+- Download notifications exercise the real completion action, Redux and IPC with
+  controlled SDK responses. Tests cover notification preferences, missing titles,
+  incomplete/zero-byte downloads, stopped polling after deletion, background counts,
+  foreground completion, click-to-restore/focus, delayed snapshots and cleanup.
+  The main process owns the unread count and resets it on focus on every platform.
+  Native notification popups and window methods are intercepted; macOS dock calls
+  are checked through a fixture, not a macOS runtime.
 - Encryption, unlock, lock and decrypt actions use the real reducers with a
   controlled SDK transport to check success, false responses and rejected requests.
   The forms cover password confirmation, acknowledgement, retry, session caching,
@@ -107,8 +117,16 @@ memory and are never included in assertion output. The suite now checks eleven
 clean SDK shutdowns across the original and restored profiles. Wallets and backup
 archives stay in ignored test directories and are not uploaded as CI evidence.
 
-The renderer harness uses the current desktop Node integration settings and remote
-module. It will need to move with the real application when preload isolation is
+The application and renderer harness no longer use `@electron/remote`. The small
+cookie adapter is maintained locally with its original MIT license, cookie jar,
+storage format and file-URL mapping. A guarded synchronous IPC supplies only the
+application path needed when installing the synchronous `document.cookie` shim.
+Cookie/password migration, account-token persistence across renderer restarts and
+sign-out are covered. Package verification rejects both removed remote dependencies
+and checks that the adapter license is included.
+
+The renderer harness still uses the application's Node integration settings.
+It will need to move with the real application when preload isolation is
 introduced. All HTTP(S)/WebSocket requests are blocked in its Electron session.
 The old analytics module attempts to load `analytics.lbry.com/matomo.js`; this is
 blocked explicitly, while attempts to contact an SDK or another service fail the test.

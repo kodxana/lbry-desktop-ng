@@ -3,6 +3,7 @@ import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
 // @if TARGET='app'
 import { ipcRenderer } from 'electron';
+import { recordDownloadComplete } from 'util/download-notifications';
 // @endif
 import { doOpenModal } from 'redux/actions/app';
 import {
@@ -43,7 +44,7 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
         }
       }, DOWNLOAD_POLL_INTERVAL);
 
-    Lbry.file_list({
+    return Lbry.file_list({
       outpoint,
       full_status: true,
       page: 1,
@@ -66,17 +67,18 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
           },
         });
 
+        recordDownloadComplete();
         // If notifications are disabled(false) just return
         if (!selectosNotificationsEnabled(getState()) || !fileInfo.written_bytes) return;
 
         const notif = new window.Notification(__('LBRY Download Complete'), {
-          body: fileInfo.metadata.title,
+          body: fileInfo.metadata && fileInfo.metadata.title,
           silent: false,
         });
 
         // @if TARGET='app'
         notif.onclick = () => {
-          ipcRenderer.send('focusWindow', 'main');
+          ipcRenderer.send('window-control', 'focus');
         };
         // @ENDIF
       } else {

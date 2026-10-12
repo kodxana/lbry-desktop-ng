@@ -1579,15 +1579,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@electron/remote@npm:^2.0.1":
-  version: 2.0.8
-  resolution: "@electron/remote@npm:2.0.8"
-  peerDependencies:
-    electron: ">= 13.0.0"
-  checksum: d0ef11b3f09d789baf4330c2c021cfc1a997fc5ffdb56e8810ed7fe2fd76cda1a168c0589d2a10284a907fd3829bae14002a58b35c4881473cdd0049f07fbd63
-  languageName: node
-  linkType: hard
-
 "@electron/universal@npm:2.0.3":
   version: 2.0.3
   resolution: "@electron/universal@npm:2.0.3"
@@ -2202,17 +2193,6 @@ __metadata:
   dependencies:
     unist-util-visit: ^1.3.0
   checksum: 4e563a274ae54bfb15f7d12fb711bbfc9579ff2704149cc8dddbc36b3d007a1cdefa993462c767b6b3da5d392b848680e9cc466b282ed9df8f16b23df685062c
-  languageName: node
-  linkType: hard
-
-"@meetfranz/electron-cookies@npm:^3.0.2":
-  version: 3.0.2
-  resolution: "@meetfranz/electron-cookies@npm:3.0.2"
-  dependencies:
-    "@electron/remote": ^2.0.1
-    tough-cookie: ^2.3.1
-    tough-cookie-web-storage-store: ^1.0.0
-  checksum: e80c162e5a3048d126e1b8ba880bd0cdfbb6930bc904c61310b44aec6fb637b0b3c02318900cbeea944556a1d901edccd914f84d9c70495688c0d3c0c7fcb3bd
   languageName: node
   linkType: hard
 
@@ -10912,11 +10892,9 @@ __metadata:
     "@babel/register": ^7.0.0
     "@datapunt/matomo-tracker-js": ^0.1.4
     "@electron/asar": 4.3.1
-    "@electron/remote": ^2.0.1
     "@emotion/react": ^11.10.4
     "@emotion/styled": ^11.10.4
     "@hot-loader/react-dom": ^16.13
-    "@meetfranz/electron-cookies": ^3.0.2
     "@mui/material": ^5.2.1
     "@reach/combobox": ^0.12.1
     "@reach/menu-button": 0.8.6
@@ -11050,6 +11028,8 @@ __metadata:
     tempy: ^0.6.0
     terser-webpack-plugin: 5.6.1
     three-full: ^28.0.2
+    tough-cookie: ^2.3.1
+    tough-cookie-web-storage-store: ^1.0.0
     unist-util-visit: ^2.0.3
     uuid: ^8.3.2
     video.js: ^7.14.3

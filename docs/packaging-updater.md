@@ -69,8 +69,8 @@ failures. The renderer suite also exercises the real connected update modal,
 Redux and IPC: install/decline controls, failed decline acknowledgement, retries,
 late snapshots, listener cleanup and restoring a declined update in a new renderer.
 Packaged and development smoke tests check the production IPC registration and
-confirm that startup never supplies install consent. Other application features
-still use `@electron/remote`; this is one step toward removing it.
+confirm that startup never supplies install consent. The remaining application
+features and test harness have now also moved off `@electron/remote`.
 
 After packaging, `node build/testDesktopPackage.js` checks the archive, updater
 version, SDK pin and asset digests. It rejects bundled development tools, a second

@@ -11,6 +11,10 @@ function fixture(rendererURL = 'file:///fixture/index.html') {
     isDestroyed: () => false,
     webContents: { isDestroyed: () => false, mainFrame: frame, send: (...args) => calls.push(args) },
     maximize: () => calls.push('maximize'),
+    isMinimized: () => true,
+    restore: () => calls.push('restore'),
+    show: () => calls.push('show'),
+    focus: () => calls.push('focus'),
     setFullScreen: (value) => calls.push(['fullscreen', value]),
   });
   const app = { quit: () => calls.push('quit') };
@@ -23,8 +27,12 @@ function fixture(rendererURL = 'file:///fixture/index.html') {
 
 for (const url of ['file:///fixture/index.html', 'http://localhost:9090/']) {
   const f = fixture(url);
-  for (const command of ['maximize', 'leave-fullscreen', 'quit']) f.send(command);
-  assert.deepEqual(f.calls, ['maximize', ['fullscreen', false], 'quit']);
+  for (const command of ['maximize', 'leave-fullscreen', 'focus', 'quit']) f.send(command);
+  assert.deepEqual(f.calls, ['maximize', ['fullscreen', false], 'restore', 'show', 'focus', 'quit']);
+  f.calls.length = 0;
+  f.window.isMinimized = () => false;
+  f.send('focus');
+  assert.deepEqual(f.calls, ['show', 'focus']);
   f.calls.length = 0;
   for (const command of [
     undefined,
@@ -77,7 +85,7 @@ for (const invalidate of [
 ]) {
   const f = fixture();
   invalidate(f);
-  for (const command of ['maximize', 'leave-fullscreen', 'quit']) f.send(command);
+  for (const command of ['maximize', 'leave-fullscreen', 'focus', 'quit']) f.send(command);
   assert.deepEqual(f.calls, [], 'Untrusted or stale windows must not control the application');
 }
 const development = fixture('http://localhost:9090/');

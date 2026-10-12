@@ -9,6 +9,7 @@ for (const file of [
   'testFileSelection.js',
   'testWindowControls.js',
   'testContextMenu.js',
+  'testDesktopInfo.js',
 ]) {
   const result = spawnSync(process.execPath, [path.join(__dirname, file)], { stdio: 'inherit', timeout: 120000 });
   if (result.error) throw result.error;

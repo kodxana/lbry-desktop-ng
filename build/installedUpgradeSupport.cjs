@@ -46,16 +46,16 @@ function request(port, pathname, payload) {
   });
 }
 
-async function connectRenderer(port) {
+async function connectRuntime(port, main = false) {
   const page = await until(async () => {
     try {
-      return (await request(port, '/json/list')).find(
-        (item) => item.type === 'page' && item.url.includes('index.html')
+      return (await request(port, '/json/list')).find((item) =>
+        main ? item.type === 'node' : item.type === 'page' && item.url.includes('index.html')
       );
     } catch (_) {
       return false;
     }
-  }, 'Installed application did not expose its test renderer');
+  }, 'Installed application did not expose its test ' + (main ? 'main process' : 'renderer'));
   const socket = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
     socket.once('open', resolve);
@@ -74,7 +74,7 @@ async function connectRenderer(port) {
   socket.on('close', () => {
     for (const waiting of pending.values()) {
       clearTimeout(waiting.timer);
-      waiting.reject(new Error('Test renderer closed'));
+      waiting.reject(new Error('Test runtime closed'));
     }
     pending.clear();
   });
@@ -85,7 +85,7 @@ async function connectRenderer(port) {
         const id = ++next;
         const timer = setTimeout(() => {
           pending.delete(id);
-          reject(new Error('Renderer evaluation timed out'));
+          reject(new Error('Runtime evaluation timed out'));
         }, 10000);
         pending.set(id, { resolve, reject, timer });
         socket.send(
@@ -98,7 +98,7 @@ async function connectRenderer(port) {
       });
       assert(
         !result.exceptionDetails,
-        'Installed renderer evaluation failed: ' + JSON.stringify(result.exceptionDetails)
+        'Installed runtime evaluation failed: ' + JSON.stringify(result.exceptionDetails)
       );
       return result.result.value;
     },
@@ -206,7 +206,8 @@ module.exports = {
   delay,
   until,
   request,
-  connectRenderer,
+  connectRenderer: (port) => connectRuntime(port),
+  connectMain: (port) => connectRuntime(port, true),
   listen,
   hubFixture,
   powershell,

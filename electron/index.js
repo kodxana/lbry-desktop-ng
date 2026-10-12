@@ -25,15 +25,15 @@ const { registerPasswordStorage } = require('./passwordStorage.cjs');
 const { registerFileSelection } = require('./fileSelection.cjs');
 const { registerWindowControls } = require('./windowControls.cjs');
 const { registerContextMenu } = require('./contextMenu.cjs');
+const { registerDesktopInfo } = require('./desktopInfo.cjs');
+const { registerDownloadNotifications } = require('./downloadNotifications.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
 const mime = require('mime');
-const remote = require('@electron/remote/main');
 const probe = require('ffmpeg-probe');
 const MAX_IPC_SEND_BUFFER_SIZE = 500000000; // large files crash when serialized for ipc message
 
-remote.initialize();
 const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
 const rootArgument = process.argv.find(arg => arg.startsWith(rootFlag));
 const desktopProfile = createProfile(rootArgument
@@ -48,6 +48,10 @@ app.setPath('temp', desktopProfile.temp);
 // Keep a global reference, if you don't, they will be closed automatically when the JavaScript
 // object is garbage collected.
 let rendererWindow;
+registerDesktopInfo({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
+const attachDownloadNotifications = registerDownloadNotifications({
+  ipcMain, app, getWindow: () => rendererWindow, rendererURL,
+});
 registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL });
 registerWindowControls({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
 registerContextMenu({ ipcMain, Menu, clipboard, getWindow: () => rendererWindow, rendererURL, isDev });
@@ -250,6 +254,7 @@ if (!gotSingleInstanceLock) {
       await installDevtools();
     }
     rendererWindow = createWindow(appState);
+    attachDownloadNotifications(rendererWindow);
     tray = createTray(rendererWindow);
 
     if (!isDev) {

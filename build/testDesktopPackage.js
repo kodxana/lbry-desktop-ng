@@ -25,10 +25,19 @@ assert.equal(bundled.name, pkg.name);
 assert.equal(bundled.version, pkg.version);
 assert.equal(bundled.main, 'main.js');
 const entries = new Set(asar.listPackage(archive).map((entry) => entry.replace(/\\/g, '/')));
+assert.deepEqual(
+  asar.extractFile(archive, 'licenses/electron-cookies.LICENSE'),
+  fs.readFileSync(path.join(__dirname, '../ui/util/electron-cookies.LICENSE'))
+);
+for (const name of ['@electron/remote', '@meetfranz/electron-cookies']) {
+  assert(!entries.has('/node_modules/' + name + '/package.json'), 'Removed remote dependency shipped: ' + name);
+}
 for (const name of ['electron', 'electron-builder', 'electron-updater-legacy', '@electron/asar', 'webpack']) {
   assert(!entries.has('/node_modules/' + name + '/package.json'), 'Development package shipped: ' + name);
 }
-const packagedUpdater = JSON.parse(asar.extractFile(archive, path.join('node_modules', 'electron-updater', 'package.json')));
+const packagedUpdater = JSON.parse(
+  asar.extractFile(archive, path.join('node_modules', 'electron-updater', 'package.json'))
+);
 assert.equal(packagedUpdater.version, pkg.dependencies['electron-updater']);
 assert(entries.has('/node_modules/electron-updater/out/providers/GitHubProvider.js'));
 for (const entry of ['main.js', 'ui.js', 'index.html']) {
