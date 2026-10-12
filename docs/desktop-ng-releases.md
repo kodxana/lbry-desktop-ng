@@ -12,7 +12,7 @@ same CI run. See [Linux desktop builds and validation](linux-desktop.md).
 
 ## Build locally
 
-Use Node 16.20.2 and the checked-in Yarn 3.2.0. Follow the dependency and SDK
+Use Node 24.21.0 and the checked-in Yarn 3.2.0. Follow the dependency and SDK
 acquisition steps in [the test build guide](isolated-desktop-test.md), then run:
 
 ```powershell

@@ -15,7 +15,7 @@ window.i18n_messages = window.i18n_messages || {};
 
 // @if TARGET='app'
 function saveMessageDesktop(message) {
-  const messagesFilePath = __static + '/app-strings.json';
+  const messagesFilePath = process.env.LBRY_I18N_OUTPUT_FILE || __static + '/app-strings.json';
 
   if (knownMessages === null) {
     try {

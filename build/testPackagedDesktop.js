@@ -55,14 +55,21 @@ async function until(check, message, timeout = 60000) {
 }
 
 async function main() {
+  const development = process.argv.includes('--development');
   const linux = process.platform === 'linux';
-  const executable = path.join(
-    root,
-    linux ? 'dist/ng-linux/linux-unpacked/lbry-desktop-ng' : 'dist/ng/win-unpacked/LBRY Desktop NG.exe'
-  );
-  const label = process.platform;
+  const executable = development
+    ? process.execPath
+    : path.join(
+        root,
+        linux ? 'dist/ng-linux/linux-unpacked/lbry-desktop-ng' : 'dist/ng/win-unpacked/LBRY Desktop NG.exe'
+      );
+  const label = process.platform + (development ? '-development' : '');
   assert(label && fs.existsSync(executable));
   const profile = createProfile(fs.mkdtempSync(path.join(output, label + '-profile-')), settings);
+  const messagesSource = path.join(root, 'static/app-strings.json');
+  const originalMessages = fs.readFileSync(messagesSource);
+  const messagesOutput = path.join(profile.root, 'app-strings.json');
+  if (development) fs.writeFileSync(messagesOutput, originalMessages);
   await assertPortsAvailable(settings);
   const sockets = new Set();
   const hub = net.createServer((socket) => {
@@ -124,12 +131,21 @@ async function main() {
   const app = spawn(
     executable,
     [
+      ...(development ? [path.join(root, 'electron/devServer.js'), '--skip-devtools'] : []),
       '--disable-gpu',
       '--ng-profile=' + profile.root,
       '--remote-debugging-port=' + debugPort,
       '--remote-debugging-address=127.0.0.1',
     ],
-    { cwd: path.dirname(executable), windowsHide: true }
+    {
+      cwd: development ? root : path.dirname(executable),
+      windowsHide: true,
+      env: {
+        ...process.env,
+        NODE_ENV: development ? 'development' : 'production',
+        ...(development ? { LBRY_I18N_OUTPUT_FILE: messagesOutput } : {}),
+      },
+    }
   );
   app.stdout.pipe(log, { end: false });
   app.stderr.pipe(log, { end: false });
@@ -144,16 +160,22 @@ async function main() {
   exited.catch(() => {});
   let ws;
   try {
-    const page = await until(async () => {
-      assert(!closed, 'Desktop exited before opening its window: ' + JSON.stringify(closed));
-      try {
-        return (await request(debugPort, '/json/list')).find(
-          (item) => item.type === 'page' && item.url.includes('index.html')
-        );
-      } catch (_) {
-        return false;
-      }
-    }, 'No renderer target');
+    const page = await until(
+      async () => {
+        assert(!closed, 'Desktop exited before opening its window: ' + JSON.stringify(closed));
+        try {
+          return (await request(debugPort, '/json/list')).find(
+            (item) =>
+              item.type === 'page' &&
+              (development ? item.url.startsWith('http://localhost:') : item.url.includes('index.html'))
+          );
+        } catch (_) {
+          return false;
+        }
+      },
+      'No renderer target',
+      development ? 240000 : 60000
+    );
     ws = new WebSocket(page.webSocketDebuggerUrl);
     await new Promise((resolve, reject) => {
       ws.once('open', resolve);
@@ -170,7 +192,7 @@ async function main() {
         message.error ? waiting.reject(message.error) : waiting.resolve(message.result);
       }
     });
-    function cdp(method, params) {
+    const cdp = (method, params) => {
       return new Promise((resolve, reject) => {
         const id = ++nextId;
         const timer = setTimeout(() => {
@@ -180,12 +202,12 @@ async function main() {
         pending.set(id, { resolve, reject, timer });
         ws.send(JSON.stringify({ id, method, params }));
       });
-    }
-    async function evaluate(expression) {
+    };
+    const evaluate = async (expression) => {
       const result = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
       assert(!result.exceptionDetails, JSON.stringify(result.exceptionDetails));
       return result.result.value;
-    }
+    };
     const rpc = async (method) => {
       const result = await request(settings.apiPort, '/', { method, params: {} });
       assert(!result.error, JSON.stringify(result.error));
@@ -206,6 +228,9 @@ async function main() {
     );
     assert(before.text.includes(endpoint));
     assert.equal(before.theme, 'dark', 'Hub setup must retain its dark theme');
+    const screenshot = await cdp('Page.captureScreenshot', { format: 'png' });
+    fs.mkdirSync(path.join(root, 'dist/ci'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'dist/ci', label + '-setup.png'), Buffer.from(screenshot.data, 'base64'));
     console.log('PASS: ' + label + ' rendered the hub picker before opening a wallet');
     await evaluate("document.querySelectorAll('input[type=radio]')[1].click()");
     await evaluate(
@@ -245,6 +270,11 @@ async function main() {
     const sdkLog = fs.readFileSync(path.join(profile.logs, 'daemon-console.log'), 'utf8');
     assert.equal((sdkLog.match(/finished shutting down/g) || []).length, 2);
     assert(!sdkLog.includes('Task was destroyed but it is pending!'));
+    assert.deepEqual(fs.readFileSync(messagesSource), originalMessages, 'Smoke test changed source translations');
+    if (development) {
+      const collectedMessages = JSON.parse(fs.readFileSync(messagesOutput, 'utf8'));
+      assert(collectedMessages['Choose a wallet hub'], 'Development translation collection did not run');
+    }
     const evidence = {
       executable: path.basename(executable),
       label,
@@ -256,7 +286,10 @@ async function main() {
       desktopExitCode: 0,
     };
     fs.mkdirSync(path.join(root, 'dist/ci'), { recursive: true });
-    fs.writeFileSync(path.join(root, 'dist/ci/packaged-smoke.json'), JSON.stringify(evidence, null, 2));
+    fs.writeFileSync(
+      path.join(root, 'dist/ci', development ? 'development-smoke.json' : 'packaged-smoke.json'),
+      JSON.stringify(evidence, null, 2)
+    );
     console.log('PASS: ' + label + ' renderer, hub selection, fixture wallet sync and clean desktop/SDK shutdown');
   } finally {
     if (ws) ws.close();

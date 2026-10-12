@@ -48,7 +48,7 @@ profile retains its wallet and downloaded data.
 
 ## Rebuild and verify
 
-Use Linux x64 and Node 16.20.2. Install the checked-in Yarn lock with
+Use Linux x64 and Node 24.21.0. Install the checked-in Yarn lock with
 `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`, then
 run `node node_modules/electron/install.js` to install Electron 17.2.0.
 

@@ -5,7 +5,7 @@ const [, renderer] = require('../../webpack.electron.config');
 module.exports = {
   ...renderer,
   entry: './build/tests/renderer.jsx',
-  output: { path: path.resolve(__dirname, '../../dist/renderer-tests'), filename: 'renderer.js' },
+  output: { ...renderer.output, path: path.resolve(__dirname, '../../dist/renderer-tests'), filename: 'renderer.js' },
   devtool: false,
   optimization: { minimize: false },
 };

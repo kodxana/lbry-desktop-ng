@@ -114,6 +114,7 @@ app
       }
     );
     for (const phase of [
+      'bundling',
       'fresh',
       'legacy',
       'restart',

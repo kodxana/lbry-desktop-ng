@@ -2,8 +2,10 @@
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
-current Node 16.20.2, Yarn 3.2.0 and Electron 17.2.0 baseline. Dependency upgrades
-are separate changes; installing the lockfile must not change it. The pinned
+Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 17.2.0. The
+[build-tooling migration](build-tooling.md) moves compilation to Webpack 5.
+Further dependency upgrades are separate changes; installing the lockfile must
+not change it. The pinned
 Linux SDK requires glibc 2.36 or newer, so it cannot run on Ubuntu 22.04.
 
 ## Checks
@@ -28,6 +30,10 @@ remove the old-format compatibility check.
 
 Additional renderer phases mount the production document viewers, file selector,
 wallet backup card and encryption/unlock forms with the real store and router:
+
+- Bundling checks load the real application styles and verify dark/light themes,
+  primary button colors, RTL layout, emitted image URLs, shader source imports,
+  lazy chunks and Electron's runtime environment access.
 
 - Generated DOCX files cover headings, emphasis, tables, safe links, executable
   link removal and corrupt archives. A separate sanitizer fixture checks active
@@ -115,7 +121,7 @@ are uploaded as artifacts. macOS Keychain is not covered by this matrix.
 
 ## Run locally
 
-From a checkout with Node 16.20.2 on PATH:
+From a checkout with Node 24.21.0 on PATH:
 
 ```text
 node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
@@ -129,6 +135,12 @@ lists the runtime libraries needed on Ubuntu. Ubuntu 24.04's hosted runner also
 requires Electron's `chrome-sandbox` helper to be root-owned with mode 4755;
 CI configures the installed and unpacked test copies on that disposable runner.
 It does not use `--no-sandbox`. Renderer logs are in `dist/ci`.
+
+After importing the SDK candidate, `node build/testPackagedDesktop.js --development`
+tests the real development server and Electron launch with a disposable profile,
+local hub and clean shutdown. Use `xvfb-run -a` on headless Linux. Developer
+extension downloads are skipped. This runs after packaged verification in CI,
+so its development output cannot be included in the already-built packages.
 
 For SDK integration and packaging, import an already verified candidate using
 `node build/downloadDaemon.js /absolute/path/to/lbrynet`, or run

@@ -17,6 +17,7 @@ window.addEventListener('error', (event) => reportError(event.error || event.mes
 window.addEventListener('unhandledrejection', (event) => reportError(event.reason));
 
 async function main() {
+  if (phase === 'bundling') return require('./bundling').default();
   window.i18n_messages = {};
   await localForage.setDriver(localForage.INDEXEDDB);
   if (phase === 'fresh') await localForage.clear();

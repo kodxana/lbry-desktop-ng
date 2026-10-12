@@ -1,6 +1,6 @@
 /* eslint-disable */
 import videojs from 'video.js';
-import { version as VERSION } from './package.json';
+import packageInfo from './package.json';
 import ConcreteButton from './ConcreteButton';
 import ConcreteMenuItem from './ConcreteMenuItem';
 
@@ -260,7 +260,7 @@ const hlsQualitySelector = function (options) {
 registerPlugin('hlsQualitySelector', hlsQualitySelector);
 
 // Include the version number.
-hlsQualitySelector.VERSION = VERSION;
+hlsQualitySelector.VERSION = packageInfo.version;
 
 export default hlsQualitySelector;
 /* eslint-enable */

@@ -1,16 +1,21 @@
 /* eslint no-console:0 */
 const { spawnSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+const nodeVersion = fs.readFileSync(path.join(__dirname, '../.node-version'), 'utf8').trim();
 const prepareDaemon = require('./downloadDaemon');
 const testBuild = process.env.LBRY_DESKTOP_BUILD === 'sdk-test';
 const linux = process.platform === 'linux';
-const configFile = testBuild ? 'electron-builder.sdk-test.json'
-  : linux ? 'electron-builder.linux.json' : 'electron-builder.json';
+const configFile = testBuild
+  ? 'electron-builder.sdk-test.json'
+  : linux
+  ? 'electron-builder.linux.json'
+  : 'electron-builder.json';
 const config = { ...require('../electron-builder.json'), ...require('../' + configFile) };
 const settings = require(testBuild ? '../sdk-test.json' : '../desktop-settings.json');
 
-if (!['win32', 'linux'].includes(process.platform) || process.arch !== 'x64' || process.versions.node !== '16.20.2') {
-  throw new Error('Desktop packaging requires Windows or Linux x64 and Node 16.20.2.');
+if (!['win32', 'linux'].includes(process.platform) || process.arch !== 'x64' || process.versions.node !== nodeVersion) {
+  throw new Error('Desktop packaging requires Windows or Linux x64 and Node ' + nodeVersion + '.');
 }
 if (testBuild && linux) {
   throw new Error('The separate SDK Test ZIP currently requires Windows. Use the NG build on Linux.');
@@ -26,10 +31,19 @@ for (const args of [
   ['build/testPasswordStorage.js'],
   ['build/testSdkIsolation.js'],
   ['--max_old_space_size=4096', 'node_modules/webpack/bin/webpack.js', '--config', 'webpack.electron.config.js'],
-  ['node_modules/electron-builder/out/cli/cli.js', linux ? '--linux' : '--win', '--x64', '--publish', 'never', '--config', configFile],
+  [
+    'node_modules/electron-builder/out/cli/cli.js',
+    linux ? '--linux' : '--win',
+    '--x64',
+    '--publish',
+    'never',
+    '--config',
+    configFile,
+  ],
 ]) {
   const result = spawnSync(process.execPath, args, {
-    stdio: 'inherit', env: { ...process.env, NODE_ENV: 'production', CSC_IDENTITY_AUTO_DISCOVERY: 'false' },
+    stdio: 'inherit',
+    env: { ...process.env, NODE_ENV: 'production', CSC_IDENTITY_AUTO_DISCOVERY: 'false' },
   });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exit(result.status || 1);
