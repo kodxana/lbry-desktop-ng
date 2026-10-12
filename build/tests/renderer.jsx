@@ -8,7 +8,6 @@ import { ConnectedRouter, push, goBack } from 'connected-react-router';
 import { Route, Link } from 'react-router-dom';
 import * as ACTIONS from 'constants/action_types';
 import fixture from './fixtures/persist-v0.json';
-import * as remote from '@electron/remote';
 
 const phase = new URLSearchParams(window.location.search).get('phase');
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -44,6 +43,7 @@ async function main() {
     phase === 'updater' ||
     phase === 'updaterRestart' ||
     phase === 'wallet' ||
+    phase === 'downloadNotifications' ||
     phase === 'passwords' ||
     phase === 'passwordRestart'
   ) {
@@ -57,11 +57,13 @@ async function main() {
       updater: () => require('./updater'),
       updaterRestart: () => require('./updaterRestart'),
       wallet: () => require('./wallet'),
+      downloadNotifications: () => require('./downloadNotifications'),
       passwords: () => require('./passwords'),
       passwordRestart: () => require('./passwordRestart'),
     };
     const test = tests[phase]().default;
-    const message = await test(store, history, remote.app.getPath('userData'));
+    const { root } = await ipcRenderer.invoke('fixture-desktop-info');
+    const message = await test(store, history, root);
     persistor.pause();
     return message;
   }

@@ -6,7 +6,8 @@ import SdkStartup from 'component/sdkStartup';
 import * as ACTIONS from 'constants/action_types';
 import { changeZoomFactor } from 'util/zoomWindow';
 import { ipcRenderer, shell } from 'electron';
-import * as remote from '@electron/remote';
+import { getDesktopInfo } from 'util/desktop-info';
+import { listenForDownloadNotifications } from 'util/download-notifications';
 import { listenForFullscreenExit } from 'util/window-controls';
 import { listenForUpdater } from 'util/updater-events';
 import { requestUpdater } from 'util/updater-client';
@@ -139,14 +140,6 @@ ipcRenderer.on('zoom-window', (event, action) => {
   changeZoomFactor(action);
 });
 
-const { dock } = remote.app;
-
-ipcRenderer.on('window-is-focused', () => {
-  if (!dock) return;
-  app.store.dispatch({ type: ACTIONS.WINDOW_FOCUSED });
-  dock.setBadge('');
-});
-
 ipcRenderer.on('devtools-is-opened', () => {
   doLogWarningConsoleMessage();
 });
@@ -181,6 +174,7 @@ function AppWrapper() {
   useEffect(() => {
     if (persistDone) {
       const stopUpdates = listenForUpdater(store);
+      const stopNotifications = listenForDownloadNotifications(store);
       const state = store.getState();
       const enabled = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state);
       let previous = enabled;
@@ -197,13 +191,22 @@ function AppWrapper() {
       return () => {
         unsubscribe();
         stopUpdates();
+        stopNotifications();
       };
     }
   }, [persistDone]);
 
   useEffect(() => {
     // @if TARGET='app'
-    moment.locale(remote.app.getLocale());
+    let disposed = false;
+    getDesktopInfo('metadata')
+      .then(({ locale }) => {
+        if (!disposed) moment.locale(locale);
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+    };
     // @endif
   }, []);
 

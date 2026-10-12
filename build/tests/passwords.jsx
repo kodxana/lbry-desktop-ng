@@ -203,6 +203,8 @@ export default async function passwords(store, history, root) {
 
   assert(await deleteSavedPassword());
   assert(await setSavedPassword('fixture-restart-password', true));
+  setAuthToken('fixture-restart-auth');
+  document.cookie = 'unrelated_cookie=preserve-me; path=/;';
   let statusRequests = 0;
   render(
     <SettingAccount

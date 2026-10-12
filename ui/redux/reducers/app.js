@@ -1,11 +1,6 @@
 // @flow
 
 import * as ACTIONS from 'constants/action_types';
-import * as remote from '@electron/remote';
-
-// @if TARGET='app'
-const win = remote.BrowserWindow.getFocusedWindow();
-// @endif
 
 const reducers = {};
 
@@ -269,23 +264,7 @@ reducers[ACTIONS.UPGRADE_DOWNLOAD_PROGRESSED] = (state, action) =>
     downloadProgress: action.data.percent,
   });
 
-reducers[ACTIONS.DOWNLOADING_COMPLETED] = (state) => {
-  const { badgeNumber } = state;
-
-  // Don't update the badge number if the window is focused
-  // @if TARGET='app'
-  if (win && win.isFocused()) return Object.assign({}, state);
-  // @endif
-
-  return Object.assign({}, state, {
-    badgeNumber: badgeNumber + 1,
-  });
-};
-
-reducers[ACTIONS.WINDOW_FOCUSED] = (state) =>
-  Object.assign({}, state, {
-    badgeNumber: 0,
-  });
+reducers[ACTIONS.DOWNLOAD_NOTIFICATION_STATE] = (state, { data }) => ({ ...state, badgeNumber: data.badgeNumber });
 
 reducers[ACTIONS.VOLUME_CHANGED] = (state, action) =>
   Object.assign({}, state, {

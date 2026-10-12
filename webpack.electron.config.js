@@ -49,6 +49,10 @@ const mainConfig = {
     new CopyWebpackPlugin({
       patterns: [
         {
+          from: path.resolve(__dirname, 'ui/util/electron-cookies.LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/electron-cookies.LICENSE`,
+        },
+        {
           from: `${STATIC_ROOT}/`,
           to: `${DIST_ROOT}/electron/static/`,
           globOptions: {

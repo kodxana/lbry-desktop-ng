@@ -6,6 +6,11 @@ function registerWindowControls({ ipcMain, app, getWindow, rendererURL }) {
     const window = getWindow();
     if (!allowed(event, window)) return;
     switch (command) {
+      case 'focus':
+        if (window.isMinimized()) window.restore();
+        window.show();
+        window.focus();
+        break;
       case 'maximize':
         window.maximize();
         break;

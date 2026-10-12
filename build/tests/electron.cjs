@@ -3,7 +3,6 @@ const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
 const { app, BrowserWindow, ipcMain, session } = require('electron');
-const remote = require('@electron/remote/main');
 const { registerPasswordStorage } = require('../../electron/passwordStorage.cjs');
 const passwordBackend = require('./passwordBackend.cjs')();
 let activeWindow;
@@ -18,7 +17,6 @@ const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'profile-'));
 app.setPath('userData', root);
 app.disableHardwareAcceleration();
-remote.initialize();
 app.on('window-all-closed', () => {});
 const timer = setTimeout(() => {
   console.error('Renderer regression tests timed out');
@@ -36,7 +34,6 @@ async function run(phase) {
   });
   activeWindow = window;
   if (phase === 'windowControls') configureWindow(window);
-  remote.enable(window.webContents);
   try {
     await new Promise((resolve, reject) => {
       ipcMain.once('regression-result', (event, result) => {
@@ -64,7 +61,15 @@ app
   .then(async () => {
     await require('../testDesktopUpdates')();
     require('./updater.cjs')(() => activeWindow, require('url').pathToFileURL(path.join(output, 'index.html')).href);
-    require('./contextMenu.cjs')(() => activeWindow, require('url').pathToFileURL(path.join(output, 'index.html')).href);
+    require('./contextMenu.cjs')(
+      () => activeWindow,
+      require('url').pathToFileURL(path.join(output, 'index.html')).href
+    );
+    require('./desktopInfo.cjs')(
+      root,
+      () => activeWindow,
+      require('url').pathToFileURL(path.join(output, 'index.html')).href
+    );
     configureWindow = require('./windowControls.cjs')(
       () => activeWindow,
       require('url').pathToFileURL(path.join(output, 'index.html')).href
@@ -138,6 +143,7 @@ app
       'updater',
       'updaterRestart',
       'wallet',
+      'downloadNotifications',
       'passwords',
       'passwordRestart',
     ]) {

@@ -2,8 +2,8 @@ import { strict as assert } from 'assert';
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
-import { shell } from 'electron';
-import * as remote from '@electron/remote';
+import { shell, ipcRenderer } from 'electron';
+
 import AdmZip from 'adm-zip';
 import Lbry from 'lbry';
 import * as actions from 'redux/actions/wallet';
@@ -19,7 +19,8 @@ export default async function wallet(store, history, root) {
   const bytes = Buffer.from('{"fixture":"not a real wallet"}\n');
   fs.writeFileSync(path.join(walletDir, 'wallets', 'default_wallet'), bytes);
   fs.writeFileSync(path.join(walletDir, 'preferences.json'), '{}');
-  const downloads = remote.app.getPath('downloads');
+  const fixture = (mode) => ipcRenderer.invoke('fixture-desktop-info', mode);
+  const { downloads, home } = await fixture('downloads');
   const revealed = [];
   const reveal = shell.showItemInFolder;
   shell.showItemInFolder = (value) => revealed.push(value);
@@ -31,7 +32,7 @@ export default async function wallet(store, history, root) {
   try {
     drawBackup(walletDir);
     backup();
-    assert.equal(revealed.length, 1);
+    await waitFor(() => revealed.length === 1, 'Backup did not finish');
     const archive = revealed[0];
     assert.equal(path.dirname(archive), downloads);
     assert(!path.basename(archive).includes(':'), 'Backup filename must work on Windows');
@@ -46,18 +47,62 @@ export default async function wallet(store, history, root) {
     assert.equal(document.querySelector('.card__message--success').textContent, '');
     drawBackup(path.join(root, 'missing-wallet'));
     backup();
-    assert(document.body.textContent.includes('could not be added'));
+    await waitFor(
+      () => document.body.textContent.includes('could not be added'),
+      'Missing source must report an error'
+    );
     assert.equal(revealed.length, 1, 'Failure must not report or reveal a backup');
-    // A file at the destination directory gives a deterministic write failure even as root.
-    const blocked = path.join(root, 'not-a-directory');
-    fs.writeFileSync(blocked, 'fixture');
-    remote.app.setPath('downloads', blocked);
+    // A file at the destination gives a deterministic write failure, even as root.
+    await fixture('blocked');
     drawBackup(walletDir);
     backup();
-    assert(document.body.textContent.includes('problem writing'));
+    await waitFor(
+      () => document.body.textContent.includes('problem writing'),
+      'Unwritable destination must report an error'
+    );
     assert.equal(revealed.length, 1);
+    for (const [mode, directory] of [
+      ['home', home],
+      ['missing', root],
+    ]) {
+      await fixture(mode);
+      drawBackup(walletDir);
+      const before = revealed.length;
+      backup();
+      await waitFor(() => revealed.length === before + 1, 'Backup fallback did not finish');
+      const archive = revealed[before];
+      assert.equal(path.dirname(archive), directory);
+      assert.deepEqual(new AdmZip(archive).readFile('wallets/default_wallet'), bytes);
+    }
+    const before = revealed.length;
+    await fixture('reject');
+    drawBackup(walletDir);
+    backup();
+    await waitFor(
+      () => document.body.textContent.includes('could not be determined'),
+      'IPC failure must report an error'
+    );
+    assert.equal(revealed.length, before);
+    await fixture('hold');
+    backup();
+    await waitFor(async () => (await fixture()).pending, 'Expected a pending path lookup');
+    const calls = (await fixture()).calls;
+    backup();
+    assert.equal((await fixture()).calls, calls, 'Repeated clicks must not start overlapping backups');
+    await fixture('release');
+    await waitFor(() => revealed.length === before + 1, 'Failed lookup must remain retryable');
+    for (const leave of [() => unmount(), () => drawBackup(path.join(root, 'different-wallet'))]) {
+      await fixture('hold');
+      drawBackup(walletDir);
+      backup();
+      await waitFor(async () => (await fixture()).pending, 'Expected a held backup');
+      leave();
+      await fixture('release');
+      await tick();
+      assert.equal(revealed.length, before + 1, 'Leaving or switching wallets must discard a pending backup');
+    }
   } finally {
-    remote.app.setPath('downloads', downloads);
+    await fixture('downloads');
     shell.showItemInFolder = reveal;
     unmount();
   }

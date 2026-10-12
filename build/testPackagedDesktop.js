@@ -213,7 +213,10 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
-    const appVersion = await evaluate("require('@electron/remote').app.getVersion()");
+    const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
+    assert.equal(metadata.ok, true);
+    assert.equal(typeof metadata.locale, 'string');
+    const appVersion = metadata.version;
     assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
     const updateState = await evaluate("require('electron').ipcRenderer.invoke('desktop-updater', 'state')");
     assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
@@ -270,7 +273,7 @@ async function main() {
     // Exercise both shutdown entry points: renderer Quit and native window close.
     await evaluate(
       development
-        ? "setTimeout(() => require('@electron/remote').getCurrentWindow().close(), 100); true"
+        ? 'setTimeout(() => window.close(), 100); true'
         : "setTimeout(() => require('electron').ipcRenderer.send('window-control', 'quit'), 100); true"
     );
     let stopTimer;
