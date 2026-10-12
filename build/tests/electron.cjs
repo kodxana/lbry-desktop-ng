@@ -71,10 +71,11 @@ app
       dialog: {
         showMessageBox: async (_window, options) => {
           passwordNotices.push(options);
-          if (holdNotice)
+          if (holdNotice) {
             await new Promise((resolve) => {
               acknowledgeNotice = resolve;
             });
+          }
         },
       },
       domains: ['lbry.tv'],
@@ -121,8 +122,9 @@ app
       'wallet',
       'passwords',
       'passwordRestart',
-    ])
+    ]) {
       await run(phase);
+    }
     // The legacy analytics module eagerly loads this script even with analytics disabled.
     // Keep it blocked; any SDK or other service request is outside these tests' scope.
     assert.deepEqual(
