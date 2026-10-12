@@ -2,7 +2,6 @@ import { clipboard, ipcRenderer, shell } from 'electron';
 import { convertToShareLink } from 'util/lbryURI';
 
 async function showMenu(event, request, target = event.target) {
-  event.preventDefault();
   try {
     const result = await ipcRenderer.invoke('context-menu', {
       ...request,
@@ -17,6 +16,7 @@ async function showMenu(event, request, target = event.target) {
 }
 
 export function openContextMenu(event) {
+  event.preventDefault();
   const target = event.target;
   const isInput = target.matches('input[type=text], input[type=number], input:not([type]), textarea');
   const inputSelected =
@@ -30,8 +30,8 @@ export function openContextMenu(event) {
 }
 
 async function openCodeMenu(codeMirror, event, editable) {
-  // The native edit commands act on CodeMirror's focused input.
-  codeMirror.focus();
+  // Let CodeMirror prepare its input for native copy/cut/paste. The enclosing
+  // component's stopContextMenu handler suppresses the browser menu afterward.
   const action = await showMenu(
     event,
     {
@@ -58,6 +58,7 @@ export function openSnippetMenu(codeMirror, event) {
 
 export async function openClaimPreviewMenu(claim, event) {
   // @if TARGET='app'
+  event.preventDefault();
   const action = await showMenu(event, { kind: 'claim', hasClaim: !!claim });
   if (claim && action === 'copy-link') {
     clipboard.writeText(convertToShareLink(claim.canonical_url || claim.permanent_url));

@@ -1,14 +1,22 @@
 import { strict as assert } from 'assert';
 import { clipboard, ipcRenderer, shell } from 'electron';
 import CodeMirror from 'codemirror';
-import { openContextMenu, openEditorMenu, openSnippetMenu, openClaimPreviewMenu } from 'util/context-menu';
+import {
+  openContextMenu,
+  openEditorMenu,
+  openSnippetMenu,
+  openClaimPreviewMenu,
+  stopContextMenu,
+} from 'util/context-menu';
 import { convertToShareLink } from 'util/lbryURI';
 import { waitFor } from './helpers';
 
 export default async function contextMenu() {
   const fixture = (...args) => ipcRenderer.invoke('fixture-context-menu', ...args);
   const { nativeClipboard } = await fixture('configure');
+  assert(document.hasFocus(), 'The hidden fixture must emulate an active document');
   const container = document.getElementById('app');
+  container.addEventListener('contextmenu', stopContextMenu);
   const input = document.createElement('input');
   input.type = 'text';
   input.value = 'Synthetic selection ł';
@@ -98,16 +106,28 @@ export default async function contextMenu() {
   });
   const editorMenu = () => {
     input.focus();
-    const nativeEvent = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 12, clientY: 34 });
-    editor.getWrapperElement().querySelector('.CodeMirror-code').dispatchEvent(nativeEvent);
+    const code = editor.getWrapperElement().querySelector('.CodeMirror-code');
+    const bounds = code.getBoundingClientRect();
+    const nativeEvent = new MouseEvent('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      clientX: bounds.left + 2,
+      clientY: bounds.top + 5,
+    });
+    code.dispatchEvent(nativeEvent);
     assert(nativeEvent.defaultPrevented, 'The custom menu must suppress the browser context menu');
     assert(editor.hasFocus(), 'Right-click must focus the editor for native editing commands');
+    const field = editor.getInputField();
+    if (editor.somethingSelected()) {
+      const nativeSelection = field.value.slice(field.selectionStart, field.selectionEnd);
+      assert.equal(nativeSelection, editor.getSelection(), 'The native input must contain the CodeMirror selection');
+    }
     return editorRequest;
   };
   await choose(editorMenu, 'editor-select-all');
   assert.equal(editor.getSelection(), editor.getValue(), 'Select All must select the full CodeMirror document');
+  await choose(editorMenu, 'copy');
   if (nativeClipboard) {
-    await choose(editorMenu, 'copy');
     await waitFor(
       async () => (await fixture()).clipboard.replace(/\r\n/g, '\n') === editor.getValue(),
       'Native editor Copy failed'
@@ -159,6 +179,7 @@ export default async function contextMenu() {
     clipboard.writeText = writeText;
     shell.openExternal = openExternal;
     editor.toTextArea();
+    container.removeEventListener('contextmenu', stopContextMenu);
     container.textContent = '';
   }
   return (

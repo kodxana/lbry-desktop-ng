@@ -82,6 +82,7 @@ and router:
   inspection, dismissal, duplicate requests and stale menus after navigation or
   window destruction. The renderer suite builds real Electron menus and drives
   CodeMirror's context-menu event, full-document selection and claim actions.
+  Chromium focus emulation lets the hidden editor fixture receive DOM focus events.
   Popup selection is controlled at the native boundary. Hosted Windows/Linux CI
   also checks real clipboard copy/cut/paste in text fields, document selection and
   CodeMirror. Local runs intercept clipboard operations to preserve the user's

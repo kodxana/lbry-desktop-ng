@@ -31,8 +31,13 @@ module.exports = (getWindow, rendererURL) => {
       },
     },
   });
-  ipcMain.handle('fixture-context-menu', (_event, command, value) => {
+  ipcMain.handle('fixture-context-menu', async (_event, command, value) => {
     if (command === 'configure') {
+      // Hidden windows do not receive OS focus. Give Chromium an active document
+      // so CodeMirror receives real DOM focus events and prepares its selection.
+      const debuggerApi = getWindow().webContents.debugger;
+      debuggerApi.attach('1.3');
+      await debuggerApi.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
       for (const name of ['copy', 'cut', 'paste']) {
         const contents = getWindow().webContents;
         const original = contents[name].bind(contents);
