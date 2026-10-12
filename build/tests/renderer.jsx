@@ -40,6 +40,8 @@ async function main() {
     phase === 'documents' ||
     phase === 'fileDialogs' ||
     phase === 'windowControls' ||
+    phase === 'updater' ||
+    phase === 'updaterRestart' ||
     phase === 'wallet' ||
     phase === 'passwords' ||
     phase === 'passwordRestart'
@@ -50,6 +52,8 @@ async function main() {
       documents: () => require('./documents'),
       fileDialogs: () => require('./fileDialogs'),
       windowControls: () => require('./windowControls'),
+      updater: () => require('./updater'),
+      updaterRestart: () => require('./updaterRestart'),
       wallet: () => require('./wallet'),
       passwords: () => require('./passwords'),
       passwordRestart: () => require('./passwordRestart'),

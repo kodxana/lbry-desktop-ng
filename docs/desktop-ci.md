@@ -31,7 +31,8 @@ fixture unchanged during migrations; regenerating it with new dependencies would
 remove the old-format compatibility check.
 
 Additional renderer phases mount the production document viewers, file selector,
-wallet backup card and encryption/unlock forms with the real store and router:
+update prompt, wallet backup card and encryption/unlock forms with the real store
+and router:
 
 - Bundling checks load the real application styles and verify dark/light themes,
   primary button colors, RTL layout, emitted image URLs, shader source imports,
@@ -40,6 +41,13 @@ wallet backup card and encryption/unlock forms with the real store and router:
 - Generated DOCX files cover headings, emphasis, tables, safe links, executable
   link removal and corrupt archives. A separate sanitizer fixture checks active
   elements, event attributes, local/remote images and embedded raster images.
+- Updater tests use the production IPC, Redux listener and connected modal with
+  controlled downloads and SDK shutdown. They cover install/decline choices,
+  duplicate clicks, decline acknowledgement failures, download/shutdown retries,
+  progress, late initial replies and cleanup. A new renderer must recover a
+  declined background download without prompting or installing. Separate tests
+  reach the real NSIS updater's install handoff, intercepting installer launch
+  and app quit; no native installer is executed.
 - Markdown covers streamed chunks, formatting and unsafe markup/links. Plain text
   goes through CodeMirror, including literal markup, Unicode, read-only mode,
   theme changes and missing files. PDF/HTML checks cover local file URL encoding;

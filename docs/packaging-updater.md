@@ -33,6 +33,17 @@ Upstream changes reviewed:
   disabled. Downloading does not imply permission to install. SDK shutdown must
   finish cleanly before `quitAndInstall(false, true)`; ordinary app exit never
   installs an update.
+- The renderer uses the scoped `desktop-updater` IPC commands for status, release
+  preferences, checking, accepting and declining. It no longer loads
+  `electron-updater` or attaches callbacks through `@electron/remote`. The main
+  process sends plain status snapshots, including consent and download progress
+  on its original 0-100 scale. Snapshot revisions prevent a delayed initial reply
+  from overwriting a newer event. A renderer reload recovers the current choice;
+  a full application restart starts a new session without install consent.
+- Declining an update is acknowledged before the prompt closes. A completed
+  background download cannot undo that choice. Users can explicitly accept the
+  cached update later. Download and shutdown failures allow an explicit retry;
+  changing the candidate during shutdown prevents installation.
 - Package inspection uses the maintained `@electron/asar` package. The unused
   legacy notarization dependency and disabled hook are removed. Windows signing
   options remain unchanged; macOS signing/notarization is not validated here.
@@ -51,6 +62,15 @@ runtime. The real new updater's `quitAndInstall` path is exercised after a
 delayed SDK-shutdown callback, including duplicate acceptance and restart flags;
 only the final installer launch and app quit are intercepted. Existing tests
 cover failed SDK shutdown, cancellation and update consent.
+
+`node build/testUpdaterIpc.js` checks command validation, sender restrictions,
+duplicate requests, progress values, delayed checks/downloads and SDK shutdown
+failures. The renderer suite also exercises the real connected update modal,
+Redux and IPC: install/decline controls, failed decline acknowledgement, retries,
+late snapshots, listener cleanup and restoring a declined update in a new renderer.
+Packaged and development smoke tests check the production IPC registration and
+confirm that startup never supplies install consent. Other application features
+still use `@electron/remote`; this is one step toward removing it.
 
 After packaging, `node build/testDesktopPackage.js` checks the archive, updater
 version, SDK pin and asset digests. It rejects bundled development tools, a second

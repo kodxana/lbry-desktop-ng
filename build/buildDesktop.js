@@ -28,6 +28,7 @@ prepareDaemon();
 for (const args of [
   ['build/testDesktopSetup.js'],
   ['build/testDesktopUpdates.js'],
+  ['build/testUpdaterIpc.js'],
   ['build/testPasswordStorage.js'],
   ['build/testFileSelection.js'],
   ['build/testWindowControls.js'],

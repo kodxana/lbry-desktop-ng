@@ -215,6 +215,10 @@ async function main() {
     };
     const appVersion = await evaluate("require('@electron/remote').app.getVersion()");
     assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
+    const updateState = await evaluate("require('electron').ipcRenderer.invoke('desktop-updater', 'state')");
+    assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
+    assert.equal(updateState.state.enabled, !development && process.platform === 'win32');
+    assert.equal(updateState.state.accepted, false, 'Startup must never supply install consent');
     assert.deepEqual(
       await evaluate("require('electron').ipcRenderer.invoke('select-file', {type: 'invalid'})"),
       { ok: false, error: 'invalid' },

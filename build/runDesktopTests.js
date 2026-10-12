@@ -4,6 +4,7 @@ const path = require('path');
 for (const file of [
   'testDesktopSetup.js',
   'testDesktopUpdates.js',
+  'testUpdaterIpc.js',
   'testPasswordStorage.js',
   'testFileSelection.js',
   'testWindowControls.js',

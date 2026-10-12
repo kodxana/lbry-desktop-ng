@@ -13,6 +13,7 @@ const source = require('../release-source.json');
 const { createProfile } = require('../electron/testProfile.cjs');
 const settings = require('../desktop-settings.json');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
+const { ipcFixture } = require('./tests/updaterFixture.cjs');
 
 async function testInstallation() {
   for (const result of [
@@ -315,14 +316,18 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
             resolve();
           };
         });
-      const install = control.accept();
-      await control.accept();
+      const ipc = ipcFixture(control);
+      const install = ipc.invoke('accept');
+      await ipc.invoke('accept');
       assert.deepEqual(events, []);
       finishStop();
       await install;
       await tick();
       assert.deepEqual(events, ['installer', 'quit']);
-      console.log('PASS: real updater install handoff waits for SDK shutdown and requests application restart');
+      ipc.dispose();
+      console.log(
+        'PASS: updater IPC reaches real install handoff only after SDK shutdown and requests application restart'
+      );
     }
     // A fresh repository and offline/error responses must not reject into the IPC handler.
     control.state = 'idle';

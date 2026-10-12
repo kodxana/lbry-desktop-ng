@@ -20,6 +20,7 @@ import desktopSettings from '../desktop-settings.json';
 const Daemon = require('./Daemon.cjs');
 const { createProfile } = require('./testProfile.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
+const { registerUpdaterIpc } = require('./updaterIpc.cjs');
 const { registerPasswordStorage } = require('./passwordStorage.cjs');
 const { registerFileSelection } = require('./fileSelection.cjs');
 const { registerWindowControls } = require('./windowControls.cjs');
@@ -387,6 +388,7 @@ process.on('uncaughtException', async error => {
   try { if (daemon) await daemon.quit(); } finally { app.exit(1) }
 });
 
+autoUpdater.logger = require('electron-log');
 const updates = new DesktopUpdater(autoUpdater, {
   enabled: app.isPackaged && desktopSettings.autoUpdates === true && process.platform === 'win32',
   version: pjson.version,
@@ -409,7 +411,4 @@ const updates = new DesktopUpdater(autoUpdater, {
   },
 });
 
-ipcMain.on('check-for-updates', (event, preferences) => updates.check(preferences));
-ipcMain.on('update-prereleases', (event, allow) => updates.setPrereleases(allow));
-ipcMain.on('autoUpdateAccepted', () => updates.accept());
-ipcMain.on('autoUpdateDeclined', () => updates.decline());
+registerUpdaterIpc({ ipcMain, updates, getWindow: () => rendererWindow, rendererURL });
