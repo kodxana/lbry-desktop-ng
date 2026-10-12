@@ -77,7 +77,7 @@ async function main() {
         const call = JSON.parse(buffer.slice(0, end));
         buffer = buffer.slice(end + 1);
         const replies = {
-          'server.version': ['linux-smoke-fixture', '0.113.0'],
+          'server.version': ['desktop-smoke-fixture', '0.113.0'],
           'server.features': { genesis_hash: GENESIS, protocol_min: '0.113.0', protocol_max: '0.113.0' },
           'server.peers.subscribe': [],
           'server.ping': null,
@@ -196,9 +196,10 @@ async function main() {
     assert.deepEqual((await rpc('status')).startup_status, {});
     assert.equal(fs.readdirSync(profile.wallet).length, 0);
     const before = await evaluate(
-      '({text:document.body.innerText, background:getComputedStyle(document.body).backgroundColor, theme:document.documentElement.dataset.theme})'
+      "({text:document.body.innerText, background:getComputedStyle(document.body).backgroundColor, theme:document.querySelector('.setup-layout').getAttribute('theme')})"
     );
     assert(before.text.includes(endpoint));
+    assert.equal(before.theme, 'dark', 'Hub setup must retain its dark theme');
     console.log('PASS: ' + label + ' rendered the hub picker before opening a wallet');
     await evaluate("document.querySelectorAll('input[type=radio]')[1].click()");
     await evaluate(

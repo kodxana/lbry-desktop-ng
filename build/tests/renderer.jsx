@@ -107,6 +107,8 @@ async function main() {
     },
   });
   assert.equal(store.getState().wallet.totalBalance, 123);
+  store.dispatch({ type: ACTIONS.DAEMON_READY });
+  assert.equal(store.getState().app.daemonReady, true);
   await persistor.flush();
   assert.equal(typeof (await localForage.getItem('persist:v0')), 'string');
   persistor.pause();
