@@ -215,17 +215,27 @@ async function main() {
     };
     // CDP advertises the target URL before its initial navigation has committed.
     // Wait for the rendered setup page before starting asynchronous IPC checks.
-    await until(async () => {
-      assert(!closed, 'Desktop exited before rendering setup: ' + JSON.stringify(closed));
-      try {
-        return await evaluate(
-          "document.readyState === 'complete' && Boolean(document.body && document.body.innerText.includes('Choose a wallet hub'))"
-        );
-      } catch (error) {
-        if (error.code === -32000 && error.message === 'Execution context was destroyed.') return false;
-        throw error;
-      }
-    }, 'Hub picker did not render');
+    let setupPage;
+    try {
+      await until(async () => {
+        assert(!closed, 'Desktop exited before rendering setup: ' + JSON.stringify(closed));
+        try {
+          setupPage = await evaluate(
+            "({readyState:document.readyState, text:document.body ? document.body.innerText.slice(0, 2000) : ''})"
+          );
+          // A stalled external analytics script can keep readyState interactive.
+          // The actual setup content proves that the application's bundle ran.
+          return setupPage.text.includes('Choose a wallet hub');
+        } catch (error) {
+          if (error.code === -32000 && error.message === 'Execution context was destroyed.') return false;
+          throw error;
+        }
+      }, 'Hub picker did not render');
+    } catch (error) {
+      console.error('Setup page at failure:', setupPage);
+      throw error;
+    }
+    console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
     const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
     assert.equal(metadata.ok, true);
     assert.equal(typeof metadata.locale, 'string');
