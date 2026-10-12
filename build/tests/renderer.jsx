@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { strict as assert } from 'assert';
 import { ipcRenderer } from 'electron';
 import localForage from 'localforage';
 import React from 'react';
@@ -112,6 +112,10 @@ async function main() {
   persistor.pause();
   ReactDOM.unmountComponentAtNode(container);
   assert.equal(container.childElementCount, 0);
+  const lastLocation = store.getState().router.location;
+  history.push('/after-unmount');
+  await tick();
+  assert.deepEqual(store.getState().router.location, lastLocation, 'Unmount must remove the router history listener');
   return phase + ': real store rehydration, IndexedDB persistence, React updates and router navigation';
 }
 
