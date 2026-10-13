@@ -129,6 +129,13 @@ app
     docxFixture().writeZip(docx);
     await files.grant(docx);
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
+    assert(documents.legacyCookie.includes('auth_token=fixture-auth-token'));
+    assert(!documents.legacyCookie.includes('expired='));
+    assert(documents.persistedCookie.includes('sandbox_cookie=roundtrip-%20=value'));
+    assert(documents.persistedCookie.includes('saved_password=fixture-%20=value'));
+    console.log(
+      'PASS: modern cookie library reads legacy storage and persists new cookies without renderer Node globals'
+    );
     assert(documents.markdown.includes('<h1>Sandbox ł</h1>'));
     assert(documents.markdown.includes('<strong>Bold</strong>'));
     assert(documents.document.includes('<h1>Document fixture ł</h1>'));

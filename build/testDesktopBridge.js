@@ -2,8 +2,6 @@
 const assert = require('assert').strict;
 const { EventEmitter } = require('events');
 const { createDesktopBridge } = require('../electron/desktopBridge.cjs');
-const { isIP } = require('../ui/util/cookie-ip.cjs');
-const net = require('net');
 const ipc = new EventEmitter();
 const requests = [];
 ipc.invoke = async (...values) => {
@@ -49,20 +47,4 @@ for (const value of [NaN, Infinity, 0, -1, 4, '2']) bridge.setZoom(value);
 assert.equal(zoom, 1);
 bridge.setZoom(1.5);
 assert.equal(zoom, 1.5);
-for (const value of [
-  'lbry.tv',
-  'example.com',
-  '',
-  '127.0.0.1',
-  '127.1',
-  '01.2.3.4',
-  '256.1.1.1',
-  '::1',
-  '2001:db8::1',
-  '::ffff:192.0.2.1',
-  '::g',
-  '[::1]',
-]) {
-  assert.equal(isIP(value), net.isIP(value), 'Preserve cookie host matching for ' + value);
-}
-console.log('PASS: named preload API, event stripping, listener disposal, native-file grants and cookie IP matching');
+console.log('PASS: named preload API, event stripping, listener disposal and native-file grants');

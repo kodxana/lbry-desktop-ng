@@ -10,19 +10,20 @@ function enable(options) {
   cookieURL = options.url;
 
   let cookieStore = new WebStorageCookieStore(global.localStorage);
-  let cookieJar = new ToughCookie.CookieJar(cookieStore);
+  // Keep Secure cookies restricted to HTTPS, including localhost, as in v2.
+  let cookieJar = new ToughCookie.CookieJar(cookieStore, { allowSecureOnLocal: false });
 
   Object.defineProperty(global.document, 'cookie', {
     enumerable: true,
     configurable: true,
     get() {
       let url = _getLocationString();
-      let cookies = cookieJar.getCookiesSync(url);
+      let cookies = cookieJar.getCookiesSync(url, { http: false });
       return cookies.map((cookie) => cookie.cookieString()).join('; ');
     },
     set(cookieString) {
       let url = _getLocationString();
-      cookieJar.setCookieSync(cookieString, url);
+      cookieJar.setCookieSync(cookieString, url, { http: false });
     },
   });
 }

@@ -10945,8 +10945,8 @@ __metadata:
     tempy: ^0.6.0
     terser-webpack-plugin: 5.6.1
     three-full: ^28.0.2
-    tough-cookie: ^2.3.1
-    tough-cookie-web-storage-store: ^1.0.0
+    tough-cookie: 6.0.2
+    tough-cookie-web-storage-store: 1.0.0
     unist-util-visit: 5.1.0
     url: 0.11.0
     util: 0.10.3
@@ -14481,13 +14481,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"psl@npm:^1.1.28":
-  version: 1.9.0
-  resolution: "psl@npm:1.9.0"
-  checksum: 20c4277f640c93d393130673f392618e9a8044c6c7bf61c53917a0fddb4952790f5f362c6c730a9c32b124813e173733f9895add8d26f566ed0ea0654b2e711d
-  languageName: node
-  linkType: hard
-
 "pstree.remy@npm:^1.1.7":
   version: 1.1.8
   resolution: "pstree.remy@npm:1.1.8"
@@ -14533,7 +14526,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"punycode@npm:^2.1.0, punycode@npm:^2.1.1":
+"punycode@npm:^2.1.0":
   version: 2.1.1
   resolution: "punycode@npm:2.1.1"
   checksum: 823bf443c6dd14f669984dea25757b37993f67e8d94698996064035edd43bed8a5a17a9f12e439c2b35df1078c6bec05a6c86e336209eb1061e8025c481168e8
@@ -17281,6 +17274,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tldts-core@npm:^7.4.18":
+  version: 7.4.18
+  resolution: "tldts-core@npm:7.4.18"
+  checksum: fe26be2acf616b1b3d18b5a5e95239fd3a361be8f16b0807a14b42ebc00df563da238d9d41fc2c3dd5ef58274dfbd3946bb17c5063bff0e8b45b28b5c29d4d2c
+  languageName: node
+  linkType: hard
+
+"tldts@npm:^7.0.5":
+  version: 7.4.18
+  resolution: "tldts@npm:7.4.18"
+  dependencies:
+    tldts-core: ^7.4.18
+  bin:
+    tldts: bin/cli.js
+  checksum: 7aa1c5e5924348038e7ade3124cf0a26b2b863ea0340c03ad2e9fd87b8f3d3a3a5e932189aa673eb33006d727e507ead27d2c1a8daba74b4321b402528895710
+  languageName: node
+  linkType: hard
+
 "tmp-promise@npm:^3.0.2":
   version: 3.0.3
   resolution: "tmp-promise@npm:3.0.3"
@@ -17394,7 +17405,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tough-cookie-web-storage-store@npm:^1.0.0":
+"tough-cookie-web-storage-store@npm:1.0.0":
   version: 1.0.0
   resolution: "tough-cookie-web-storage-store@npm:1.0.0"
   dependencies:
@@ -17405,13 +17416,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tough-cookie@npm:^2.3.1":
-  version: 2.5.0
-  resolution: "tough-cookie@npm:2.5.0"
+"tough-cookie-web-storage-store@patch:tough-cookie-web-storage-store@npm:1.0.0#.yarn/patches/tough-cookie-web-storage-store-npm-1.0.0-d9f89f8966.patch::locator=lbry-desktop-ng%40workspace%3A.":
+  version: 1.0.0
+  resolution: "tough-cookie-web-storage-store@patch:tough-cookie-web-storage-store@npm%3A1.0.0#.yarn/patches/tough-cookie-web-storage-store-npm-1.0.0-d9f89f8966.patch::version=1.0.0&hash=0de344&locator=lbry-desktop-ng%40workspace%3A."
   dependencies:
-    psl: ^1.1.28
-    punycode: ^2.1.1
-  checksum: 16a8cd090224dd176eee23837cbe7573ca0fa297d7e468ab5e1c02d49a4e9a97bb05fef11320605eac516f91d54c57838a25864e8680e27b069a5231d8264977
+    lodash: ^4.6.1
+  peerDependencies:
+    tough-cookie: "*"
+  checksum: fa10d41486d563c69d88b1ebb3137ec9baf7d103a3d9153075bfc3bab1fcf6d11d4e5e6d41a4d9ea55afc10368962f90b2e418e563f7759655fbe045e2462619
+  languageName: node
+  linkType: hard
+
+"tough-cookie@npm:6.0.2":
+  version: 6.0.2
+  resolution: "tough-cookie@npm:6.0.2"
+  dependencies:
+    tldts: ^7.0.5
+  checksum: ba5cc434fe8d16f7d7d2a9be6e1e57c0cbe74c6ca1aa8a35da97d343986ca8375fff80a9f34aa156bf4e0a335fbc5f37574e2706e475eb17ab5cdeb6fe3860ca
   languageName: node
   linkType: hard
 

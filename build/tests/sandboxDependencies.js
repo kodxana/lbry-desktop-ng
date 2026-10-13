@@ -6,10 +6,20 @@ import { PassThrough } from 'stream';
 import { deprecate } from 'util';
 import desktop from 'util/desktop';
 import sanitizeDocumentHtml from 'util/document-html';
+import ElectronCookies from 'util/electron-cookies.cjs';
+import legacyCookies from './fixtures/legacy-cookies.json';
 
 // Exercise browser compatibility code with no ambient Node globals. The fixture
 // runner cannot catch a dependency accidentally relying on its own Node process.
 window.probeDependencies = async (docx) => {
+  localStorage.setItem('__cookieStore__', JSON.stringify(legacyCookies));
+  ElectronCookies.enable({ url: 'https://lbry.tv/' });
+  const legacyCookie = window.document.cookie;
+  window.document.cookie = 'sandbox_cookie=roundtrip-%20=value; Path=/; Secure';
+  ElectronCookies.disable();
+  ElectronCookies.enable({ url: 'https://lbry.tv/' });
+  const persistedCookie = window.document.cookie;
+  ElectronCookies.disable();
   const markdown = ReactDOMServer.renderToStaticMarkup(
     markdownProcessor().use(markdownRenderer).processSync('# Sandbox ł\n\n**Bold**').result
   );
@@ -29,6 +39,8 @@ window.probeDependencies = async (docx) => {
     source.end(Buffer.from('Browser stream ł'));
   });
   return {
+    legacyCookie,
+    persistedCookie,
     markdown,
     document: sanitizeDocumentHtml(document.value),
     streamed,
