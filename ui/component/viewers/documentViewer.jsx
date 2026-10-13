@@ -36,11 +36,13 @@ class DocumentViewer extends React.PureComponent<Props, State> {
     this.mounted = true;
     const { source } = this.props;
     if (source && source.file) {
-      source.file().then((bytes) => {
-        if (this.mounted) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
-      }).catch(() => {
-        if (this.mounted) this.setState({ error: true, loading: false });
-      });
+      source.file()
+        .then((bytes) => {
+          if (this.mounted) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
+        })
+        .catch(() => {
+          if (this.mounted) this.setState({ error: true, loading: false });
+        });
     }
   }
 

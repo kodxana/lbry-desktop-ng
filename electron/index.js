@@ -61,11 +61,11 @@ require('./walletBackup.cjs').registerWalletBackup({
 const AutoLaunch = require('auto-launch');
 require('./desktopActions.cjs').registerDesktopActions({
   ipcMain,
-shell,
-profile: desktopProfile,
-launcher: new AutoLaunch({ name: 'lbry', isHidden: true }),
+  shell,
+  profile: desktopProfile,
+  launcher: new AutoLaunch({ name: 'lbry', isHidden: true }),
   getWindow: () => rendererWindow,
-rendererURL,
+  rendererURL,
 });
 if (isDev) {
   const file = process.env.LBRY_I18N_OUTPUT_FILE || path.join(__static, 'app-strings.json');
