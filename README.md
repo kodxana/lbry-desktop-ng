@@ -25,7 +25,8 @@ Windows storage checks use the native
 disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setup.md).
 
 Builds use Node 24.21.0 (pinned in `.node-version`) and Webpack 5. The desktop
-runtime is now pinned to Electron 22.3.27 as an intermediate compatibility step.
+runtime is now pinned to Electron 28.3.3 as an intermediate compatibility step;
+Windows source builds require Windows 10 or later.
 This Electron line is unsupported; reaching a supported runtime and isolating
 the renderer remain outstanding. See [runtime migration notes](docs/electron-runtime.md)
 and [build-tooling migration notes](docs/build-tooling.md).

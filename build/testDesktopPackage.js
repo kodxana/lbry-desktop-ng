@@ -76,6 +76,11 @@ fs.mkdirSync(path.resolve(__dirname, '../dist/ci'), { recursive: true });
 fs.writeFileSync(path.resolve(__dirname, '../dist/ci/package.json'), JSON.stringify(evidence, null, 2) + '\n');
 console.log('PASS: packaged entry points, SDK pin, application identity and updater asset digests');
 if (!linux) {
+  const guard = require('child_process').spawnSync(process.execPath, [path.join(__dirname, 'testInstaller.js')], {
+    stdio: 'inherit',
+  });
+  if (guard.error) throw guard.error;
+  assert.equal(guard.status, 0, 'The installer must reject unsupported Windows before replacing files');
   const result = require('child_process').spawnSync(
     process.execPath,
     [path.join(__dirname, 'testDesktopUpdates.js'), '--built-metadata'],

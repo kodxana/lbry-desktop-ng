@@ -12,6 +12,8 @@ let holdNotice = false;
 let failForget = false;
 let passwordStore;
 let configureWindow;
+let media;
+let activePhase;
 
 const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'profile-'));
@@ -33,6 +35,7 @@ async function run(phase) {
     },
   });
   activeWindow = window;
+  activePhase = phase;
   if (phase === 'windowControls') configureWindow(window);
   try {
     await new Promise((resolve, reject) => {
@@ -126,9 +129,24 @@ app
       };
     });
     const blocked = [];
+    media = await require('./mediaServer.cjs')();
+    ipcMain.handle('fixture-media', (event) => {
+      assert.equal(event.sender, activeWindow.webContents);
+      return { origin: media.origin, requests: media.requests };
+    });
     session.defaultSession.webRequest.onBeforeRequest(
       { urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] },
       (details, callback) => {
+        if (
+          activePhase === 'media' &&
+          activeWindow &&
+          !activeWindow.isDestroyed() &&
+          details.webContentsId === activeWindow.webContents.id &&
+          new URL(details.url).origin === media.origin
+        ) {
+          callback({ cancel: false });
+          return;
+        }
         blocked.push(details.url);
         callback({ cancel: true });
       }
@@ -139,6 +157,7 @@ app
       'legacy',
       'restart',
       'documents',
+      'media',
       'fileDialogs',
       'windowControls',
       'contextMenu',
@@ -159,6 +178,7 @@ app
       'Unexpected renderer requests: ' + JSON.stringify(blocked)
     );
     console.log('PASS: external requests blocked; no SDK calls; disposable IndexedDB profile');
+    await media.close();
     clearTimeout(timer);
     app.exit(0);
   })

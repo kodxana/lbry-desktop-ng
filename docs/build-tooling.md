@@ -13,7 +13,7 @@ discovery. Sass language/output changes are a separate migration.
 
 That build-tooling migration kept Electron 17.2.0, React and the SDK pin at their
 RC3 versions. The [subsequent runtime migration](electron-runtime.md) moves to
-Electron 22.3.27 as an intermediate checkpoint. Packaging and
+Electron 28.3.3 as an intermediate checkpoint. Packaging and
 updater changes are described in [their migration notes](packaging-updater.md).
 Updating build-host Node does not update the Node or
 Chromium embedded in Electron. RC3 remains the published regression baseline;
