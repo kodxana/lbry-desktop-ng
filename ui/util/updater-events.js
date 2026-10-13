@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import * as ACTIONS from 'constants/action_types';
 import { doAutoUpdate, doAutoUpdateFail } from 'redux/actions/app';
 import { requestUpdater } from './updater-client';
@@ -7,7 +7,7 @@ export function listenForUpdater(store) {
   let disposed = false;
   let revision = -1;
   let promptedVersion;
-  const receive = (_event, state) => {
+  const receive = (state) => {
     if (disposed || state.revision <= revision) return;
     revision = state.revision;
     store.dispatch({ type: ACTIONS.DESKTOP_UPDATE_STATE, data: state });
@@ -26,14 +26,14 @@ export function listenForUpdater(store) {
     }
   };
   // Listen before requesting the snapshot; a newer event must win over a late reply.
-  ipcRenderer.on('desktop-updater-state', receive);
+  const unsubscribe = desktop.onUpdater(receive);
   requestUpdater('state').then((result) => {
     if (disposed) return;
-    if (result.ok) receive(null, result.state);
+    if (result.ok) receive(result.state);
     else if (revision < 0) store.dispatch(doAutoUpdateFail());
   });
   return () => {
     disposed = true;
-    ipcRenderer.removeListener('desktop-updater-state', receive);
+    unsubscribe();
   };
 }

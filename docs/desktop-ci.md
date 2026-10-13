@@ -41,7 +41,7 @@ and router:
 
 - Bundling checks load the real application styles and verify dark/light themes,
   primary button colors, RTL layout, emitted image URLs, shader source imports,
-  lazy chunks and Electron's runtime environment access.
+  lazy chunks and platform metadata from the desktop bridge.
 
 - Generated DOCX files cover headings, emphasis, tables, safe links, executable
   link removal and corrupt archives. A separate sanitizer fixture checks active
@@ -53,7 +53,7 @@ and router:
   declined background download without prompting or installing. Separate tests
   reach the real NSIS updater's install handoff, intercepting installer launch
   and app quit; no native installer is executed.
-- Markdown covers streamed chunks, formatting and unsafe markup/links. Plain text
+- Markdown covers asynchronous document bytes, formatting and unsafe markup/links. Plain text
   goes through CodeMirror, including literal markup, Unicode, read-only mode,
   theme changes and missing files. PDF/HTML checks cover local file URL encoding;
   HTML also retains its empty sandbox. The PDF fixture additionally paints a known
@@ -106,7 +106,7 @@ and router:
   cancellation during navigation/destruction covered. Claim links and URI buttons
   use the browser Clipboard API; tests cover delayed success, denial, retry and
   real OS writes on hosted CI.
-- Backups use the real UI, scoped `desktop-info` IPC and ZIP library with invented
+- Backups use the real UI, main-process `wallet-backup` service and ZIP library with invented
   wallet bytes. Tests read the ZIP back and verify unchanged contents and portable
   filenames. Downloads/home/wallet-parent fallback, missing sources, failed writes,
   IPC failures, retries, duplicate clicks, unmount and switching wallets during
@@ -261,3 +261,7 @@ account services and funded transactions still need separate acceptance checks.
 The packaged smoke uses an empty regtest wallet and the unpacked output;
 it does not establish installer behavior, real hub performance or mainnet balance
 correctness. No macOS desktop coverage is provided yet.
+
+The production renderer is sandboxed. The component fixture runner and the separate
+fully sandboxed preload suite have different responsibilities; see
+[renderer isolation](renderer-isolation.md) for the boundary and validation details.

@@ -6,7 +6,7 @@ import { selectCostInfoForUri } from 'lbryinc';
 import { doSetPlayingUri, doPlayUri } from 'redux/actions/content';
 import { doToast } from 'redux/actions/notifications';
 import { doOpenModal, doSetActiveChannel, doSetIncognito, doAnalyticsView } from 'redux/actions/app';
-import fs from 'fs';
+
 import FileActions from './view';
 import { makeSelectFileRenderModeForUri } from 'redux/selectors/content';
 
@@ -34,7 +34,7 @@ const perform = (dispatch) => ({
       dispatch(doSetIncognito(true));
     }
 
-    dispatch(doPrepareEdit(publishData, uri, fileInfo, fs));
+    dispatch(doPrepareEdit(publishData, uri, fileInfo));
   },
   clearPlayingUri: () => dispatch(doSetPlayingUri({ uri: null })),
   doToast: (options) => dispatch(doToast(options)),

@@ -29,8 +29,7 @@ import * as PUBLISH_MODES from 'constants/publish_types';
 import { useHistory } from 'react-router';
 import Spinner from 'component/spinner';
 
-import fs from 'fs';
-import tempy from 'tempy';
+import desktop from 'util/desktop';
 
 type Props = {
   disabled: boolean,
@@ -368,21 +367,7 @@ function PublishForm(props: Props) {
   // @if TARGET='app'
   // Save file changes locally ( desktop )
   function saveFileChanges() {
-    let output;
-    if (!output || output === '') {
-      // Generate a temporary file:
-      output = tempy.file({ name: 'post.md' });
-    }
-    // Create a temporary file and save file changes
-    if (output && output !== '') {
-      // Save file changes
-      return new Promise((resolve, reject) => {
-        fs.writeFile(output, fileText, (error, data) => {
-          // Handle error, cant save changes or create file
-          error ? reject(error) : resolve(output);
-        });
-      });
-    }
+    return desktop.savePost(fileText);
   }
   // @endif
 

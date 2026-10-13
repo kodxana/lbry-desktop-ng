@@ -30,11 +30,20 @@ async function run(phase) {
     show: false,
     webPreferences: {
       nodeIntegration: true,
+      // Fixture code creates files and inspects ZIPs. A separate sandbox suite
+      // exercises the production preload with no renderer Node privileges.
       contextIsolation: false,
+      sandbox: false,
+      preload: path.join(output, 'fixture-preload.js'),
+      additionalArguments: ['--lbry-renderer-url=' + require('url').pathToFileURL(path.join(output, 'index.html')).href],
       plugins: true,
     },
   });
   activeWindow = window;
+  window.webContents.on('preload-error', (_event, file, error) => console.error('Preload failed:', file, error));
+  window.webContents.on('console-message', (event) => {
+    if (event.level === 'error') console.error(event.message);
+  });
   activePhase = phase;
   if (phase === 'windowControls') configureWindow(window);
   try {

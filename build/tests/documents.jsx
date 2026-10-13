@@ -3,7 +3,7 @@ import React from 'react';
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-import { PassThrough } from 'stream';
+import desktop from 'util/desktop';
 import AdmZip from 'adm-zip';
 import { ipcRenderer } from 'electron';
 import DocxViewer from 'component/viewers/docxViewer';
@@ -71,6 +71,7 @@ export default async function documents(store, history, root) {
     )
   );
   zip.writeZip(source);
+  await ipcRenderer.invoke('fixture-grant-file', source);
   render(<DocxViewer source={source} />, store, history);
   await waitFor(() => document.querySelector('.file-render__content'), 'DOCX conversion did not finish');
   assert.equal(document.querySelector('h1').textContent, 'Document fixture ł');
@@ -81,22 +82,23 @@ export default async function documents(store, history, root) {
   unmount();
   const corrupt = path.join(root, 'corrupt.docx');
   fs.writeFileSync(corrupt, 'Not a ZIP');
+  await ipcRenderer.invoke('fixture-grant-file', corrupt);
   render(<DocxViewer source={corrupt} />, store, history);
   await waitFor(() => document.body.textContent.includes("can't load the document"), 'Corrupt DOCX must show an error');
   unmount();
 
-  const stream = new PassThrough();
+  let finish;
+  const bytes = new Promise((resolve) => { finish = resolve; });
   render(
     <DocumentViewer
       theme="dark"
       renderMode={MODES.MARKDOWN}
-      source={{ file: () => stream, contentType: 'text/markdown' }}
+      source={{ file: () => bytes, contentType: 'text/markdown' }}
     />,
     store,
     history
   );
-  stream.write('# Markdown fixture\n\n**Bold** and ');
-  stream.end('[unsafe](javascript:void%280%29)\n\n<script>void(0)</script>');
+  finish(new TextEncoder().encode('# Markdown fixture\n\n**Bold** and [unsafe](javascript:void%280%29)\n\n<script>void(0)</script>'));
   await waitFor(() => document.querySelector('.markdown-preview h1'), 'Chunked Markdown did not render');
   assert.equal(document.querySelector('strong').textContent, 'Bold');
   assert(!document.querySelector('.markdown-preview script, .markdown-preview a[href^="javascript:"]'));
@@ -104,7 +106,8 @@ export default async function documents(store, history, root) {
   const textFile = path.join(root, 'plain ł.txt');
   fs.writeFileSync(textFile, '<script>literal text</script>\nZażółć gęślą');
   let code;
-  const textSource = { file: (encoding) => fs.createReadStream(textFile, { encoding }), contentType: 'text/plain' };
+  await ipcRenderer.invoke('fixture-grant-file', textFile);
+  const textSource = { file: () => desktop.readDocument(textFile), contentType: 'text/plain' };
   render(
     <DocumentViewer
       ref={(value) => {
@@ -137,7 +140,7 @@ export default async function documents(store, history, root) {
   assert.equal(editor.getOption('theme'), 'ttcn');
   assert(code);
   unmount();
-  const missing = { file: () => fs.createReadStream(path.join(root, 'missing.txt')), contentType: 'text/plain' };
+  const missing = { file: () => desktop.readDocument(path.join(root, 'missing.txt')), contentType: 'text/plain' };
   render(<DocumentViewer theme="dark" renderMode={MODES.PLAIN_TEXT} source={missing} />, store, history);
   await waitFor(
     () => document.body.textContent.includes("can't load the document"),

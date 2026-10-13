@@ -3,7 +3,7 @@ import React from 'react';
 import { Modal } from 'modal/modal';
 import { formatFileSystemPath } from 'util/url';
 // @if TARGET='app'
-import { shell } from 'electron';
+import desktop from 'util/desktop';
 // @endif
 
 type Props = {
@@ -21,14 +21,14 @@ function ModalOpenExternalResource(props: Props) {
     openResource();
   }
 
-  function openResource() {
+  async function openResource() {
     // @if TARGET='app'
-    const { openExternal, openPath, showItemInFolder } = shell;
+    const { openExternal, openFile: openPath, revealFile: showItemInFolder } = desktop;
     if (uri) {
       openExternal(uri);
     } else if (path) {
-      const success = openPath(path);
-      if (!success) {
+      const error = await openPath(path);
+      if (error) {
         showItemInFolder(path);
       }
     }

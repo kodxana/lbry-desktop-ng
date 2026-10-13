@@ -5,7 +5,7 @@ import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import * as React from 'react';
 // @if TARGET='app'
-import { shell } from 'electron';
+import desktop from 'util/desktop';
 import WalletBackup from 'component/walletBackup';
 // @endif
 import Lbry from 'lbry';
@@ -87,14 +87,8 @@ class HelpPage extends React.PureComponent<Props, State> {
     });
   }
 
-  openLogFile(userHomeDirectory: string) {
-    const logFileName = 'lbrynet.log';
-    const os = this.state.versionInfo.os_system;
-    if (os === 'Darwin' || os === 'Linux') {
-      shell.openPath(`${userHomeDirectory}/${logFileName}`);
-    } else {
-      shell.openPath(`${userHomeDirectory}\\${logFileName}`);
-    }
+  openLogFile() {
+    desktop.openLogs();
   }
 
   render() {
@@ -207,7 +201,7 @@ class HelpPage extends React.PureComponent<Props, State> {
                 button="secondary"
                 label={__('Open Log Folder')}
                 icon={ICONS.OPEN_LOG_FOLDER}
-                onClick={() => shell.openPath(dataDirectory)}
+                onClick={() => desktop.openData()}
               />
             </div>
           }

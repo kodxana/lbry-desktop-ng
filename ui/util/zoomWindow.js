@@ -1,13 +1,8 @@
-import { webFrame } from 'electron';
+import desktop from 'util/desktop';
 import * as SETTINGS from 'constants/settings';
+import { ZOOM } from 'constants/zoom';
+export { ZOOM } from 'constants/zoom';
 const isDev = process.env.NODE_ENV !== 'production';
-
-export const ZOOM = {
-  INCREMENT: 'INCREMENT',
-  DECREMENT: 'DECREMENT',
-  RESET: 'RESET',
-  LOAD_FROM_LOCAL_STORAGE: 'LOAD_FROM_LOCAL_STORAGE',
-};
 
 function getNextZoomFactor(curFactor, isIncreasing) {
   const zoomTable = [0.25, 0.33, 0.5, 0.67, 0.75, 0.8, 0.9, 1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
@@ -25,7 +20,7 @@ function getNextZoomFactor(curFactor, isIncreasing) {
 
 export function changeZoomFactor(action) {
   const ZOOM_DFLT_FACTOR = 1.0;
-  const curFactor = webFrame.getZoomFactor();
+  const curFactor = desktop.getZoom();
   let newFactor = null;
 
   switch (action) {
@@ -49,6 +44,6 @@ export function changeZoomFactor(action) {
       return;
   }
 
-  webFrame.setZoomFactor(newFactor);
+  desktop.setZoom(newFactor);
   window.localStorage.setItem(SETTINGS.DESKTOP_WINDOW_ZOOM, newFactor);
 }

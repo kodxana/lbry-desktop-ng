@@ -13,7 +13,7 @@ import { sortLanguageMap } from 'util/default-languages';
 // @if TARGET='app'
 // import ErrorText from 'component/common/error-text';
 // import { LbryFirst } from 'lbry-redux';
-// import { ipcRenderer } from 'electron';
+// import desktop from 'util/desktop';
 // @endif
 
 type Props = {

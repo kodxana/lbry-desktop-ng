@@ -331,7 +331,7 @@ async function main() {
                 ', ' +
                 JSON.stringify(value) +
                 '); true'
-            : "require('electron').ipcRenderer.invoke('desktop-updater', " +
+            : "window.lbryDesktop.updater(" +
                 JSON.stringify(name) +
                 ', ' +
                 JSON.stringify(value) +
@@ -349,7 +349,7 @@ async function main() {
         await until(
           () =>
             client.evaluate(
-              "require('electron').ipcRenderer.invoke('desktop-updater', 'state').then(r => r.state.declined)"
+              "window.lbryDesktop.updater('state').then(r => r.state.declined)"
             ),
           'Decline was not recorded'
         );
@@ -409,7 +409,11 @@ async function main() {
       await assertPortsAvailable(settings);
       await launch();
       assert.equal(await mainClient.evaluate('process.versions.electron'), targetElectron);
-      assert.equal(await client.evaluate('process.versions.electron'), targetElectron);
+      assert.equal(await client.evaluate('window.lbryDesktop.electron'), targetElectron);
+      assert.deepEqual(await client.evaluate(`({ node: typeof require, process: typeof process,
+        sandboxed: window.lbryDesktop.sandboxed })`), {
+        node: 'undefined', process: 'undefined', sandboxed: true,
+      });
       assert.equal(
         await mainClient.evaluate("process.mainModule.require('electron').app.getVersion()"),
         candidate.version
@@ -424,7 +428,7 @@ async function main() {
         await client.evaluate("document.cookie.includes('upgrade_path_cookie=preserve-path')"),
         'The legacy cookie adapter file-URL mapping must survive an installed upgrade'
       );
-      const remembered = await client.evaluate("require('electron').ipcRenderer.invoke('remembered-password', 'read')");
+      const remembered = await client.evaluate("window.lbryDesktop.password('read')");
       assert(
         remembered.ok && remembered.password === password,
         'OS-protected password did not survive the installed upgrade'
@@ -465,7 +469,7 @@ async function main() {
       feed.close();
       feed = null;
     }
-    await client.evaluate("require('electron').ipcRenderer.send('window-control', 'quit'); true");
+    await client.evaluate("window.lbryDesktop.windowControl('quit'); true");
     client.close();
     client = null;
     mainClient.close();

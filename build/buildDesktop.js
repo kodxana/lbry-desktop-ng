@@ -35,6 +35,9 @@ for (const args of [
   ['build/testRendererLifecycle.js'],
   ['build/testContextMenu.js'],
   ['build/testDesktopInfo.js'],
+  ['build/testWalletBackup.js'],
+  ['build/testDesktopBridge.js'],
+  ['build/testContentFiles.js'],
   ['build/testSdkIsolation.js'],
   ['--max_old_space_size=4096', 'node_modules/webpack/bin/webpack.js', '--config', 'webpack.electron.config.js'],
   [

@@ -1,27 +1,26 @@
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import * as ACTIONS from 'constants/action_types';
 
 export function recordDownloadComplete() {
-  return ipcRenderer.invoke('download-notifications', 'completed').catch(() => null);
+  return desktop.downloads('completed').catch(() => null);
 }
 
 export function listenForDownloadNotifications(store) {
   let disposed = false;
   let revision = -1;
-  const receive = (_event, state) => {
+  const receive = (state) => {
     if (disposed || !state || state.revision <= revision) return;
     revision = state.revision;
     store.dispatch({ type: ACTIONS.DOWNLOAD_NOTIFICATION_STATE, data: state });
   };
-  ipcRenderer.on('download-notification-state', receive);
-  ipcRenderer
-    .invoke('download-notifications', 'state')
+  const unsubscribe = desktop.onDownloads(receive);
+  desktop.downloads('state')
     .then((result) => {
-      if (result && result.ok) receive(null, result.state);
+      if (result && result.ok) receive(result.state);
     })
     .catch(() => {});
   return () => {
     disposed = true;
-    ipcRenderer.removeListener('download-notification-state', receive);
+    unsubscribe();
   };
 }

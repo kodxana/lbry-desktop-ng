@@ -133,6 +133,7 @@ async function main() {
     [
       ...(development ? [path.join(root, 'electron/devServer.js'), '--skip-devtools'] : []),
       '--disable-gpu',
+      '--enable-logging=stderr',
       '--ng-profile=' + profile.root,
       '--remote-debugging-port=' + debugPort,
       '--remote-debugging-address=127.0.0.1',
@@ -160,6 +161,9 @@ async function main() {
   exited.catch(() => {});
   let ws;
   try {
+    // The target URL appears before its document commits. Attaching DevTools at
+    // that point can create the empty document's contexts before Electron runs
+    // the preload. Wait for our parsed HTML title before attaching the debugger.
     const page = await until(
       async () => {
         assert(!closed, 'Desktop exited before opening its window: ' + JSON.stringify(closed));
@@ -167,6 +171,7 @@ async function main() {
           return (await request(debugPort, '/json/list')).find(
             (item) =>
               item.type === 'page' &&
+              item.title === 'LBRY' &&
               (development ? item.url.startsWith('http://localhost:') : item.url.includes('index.html'))
           );
         } catch (_) {
@@ -183,8 +188,17 @@ async function main() {
     });
     let nextId = 0;
     const pending = new Map();
+    const contexts = new Map();
     ws.on('message', (bytes) => {
       const message = JSON.parse(bytes);
+      if (message.method === 'Runtime.executionContextCreated') {
+        const context = message.params.context;
+        contexts.set(context.id, context);
+      } else if (message.method === 'Runtime.executionContextDestroyed') {
+        contexts.delete(message.params.executionContextId);
+      } else if (message.method === 'Runtime.executionContextsCleared') {
+        contexts.clear();
+      }
       const waiting = pending.get(message.id);
       if (waiting) {
         clearTimeout(waiting.timer);
@@ -203,8 +217,31 @@ async function main() {
         ws.send(JSON.stringify({ id, method, params }));
       });
     };
+    // Observe the real main-world context before sending any page JavaScript.
+    const { frameTree } = await cdp('Page.getFrameTree');
+    await cdp('Runtime.enable');
+    const context = await until(
+      () =>
+        [...contexts.values()].find(
+          (candidate) =>
+            candidate.auxData &&
+            candidate.auxData.isDefault &&
+            candidate.auxData.frameId === frameTree.frame.id &&
+            candidate.origin === (development ? new URL(page.url).origin : 'file://')
+        ),
+      'No application JavaScript context'
+    ).catch(async (error) => {
+      console.error('Contexts:', [...contexts.values()]);
+      console.error('Frame:', JSON.stringify(await cdp('Page.getFrameTree')));
+      throw error;
+    });
     const evaluate = async (expression) => {
-      const result = await cdp('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true });
+      const result = await cdp('Runtime.evaluate', {
+        expression,
+        contextId: context.id,
+        returnByValue: true,
+        awaitPromise: true,
+      });
       assert(!result.exceptionDetails, JSON.stringify(result.exceptionDetails));
       return result.result.value;
     };
@@ -213,8 +250,7 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
-    // CDP advertises the target URL before its initial navigation has committed.
-    // Wait for the rendered setup page before starting asynchronous IPC checks.
+    // Wait for the browser bundle to render before starting asynchronous IPC checks.
     let setupPage;
     try {
       await until(async () => {
@@ -236,20 +272,33 @@ async function main() {
       throw error;
     }
     console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
-    const runtime = await evaluate('process.versions.electron');
+    assert.deepEqual(
+      await evaluate(
+        '({require:typeof require, process:typeof process, Buffer:typeof Buffer, sandboxed:window.lbryDesktop.sandboxed, frozen:Object.isFrozen(window.lbryDesktop)})'
+      ),
+      {
+        require: 'undefined',
+        process: 'undefined',
+        Buffer: 'undefined',
+        sandboxed: true,
+        frozen: true,
+      },
+      'The application renderer must be isolated, sandboxed and have no Node globals'
+    );
+    const runtime = await evaluate('window.lbryDesktop.electron');
     assert.equal(runtime, require(root + '/package.json').devDependencies.electron);
     console.log('PASS: ' + label + ' runs Electron ' + runtime);
-    const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
+    const metadata = await evaluate("window.lbryDesktop.info('metadata')");
     assert.equal(metadata.ok, true);
     assert.equal(typeof metadata.locale, 'string');
     const appVersion = metadata.version;
     assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
-    const updateState = await evaluate("require('electron').ipcRenderer.invoke('desktop-updater', 'state')");
+    const updateState = await evaluate("window.lbryDesktop.updater('state')");
     assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
     assert.equal(updateState.state.enabled, !development && process.platform === 'win32');
     assert.equal(updateState.state.accepted, false, 'Startup must never supply install consent');
     assert.deepEqual(
-      await evaluate("require('electron').ipcRenderer.invoke('select-file', {type: 'invalid'})"),
+      await evaluate("window.lbryDesktop.selectFile({type: 'invalid'})"),
       { ok: false, error: 'invalid' },
       'The file selection handler must recognize the application renderer before validating the request'
     );
@@ -296,7 +345,7 @@ async function main() {
     await evaluate(
       development
         ? 'setTimeout(() => window.close(), 100); true'
-        : "setTimeout(() => require('electron').ipcRenderer.send('window-control', 'quit'), 100); true"
+        : "setTimeout(() => window.lbryDesktop.windowControl('quit'), 100); true"
     );
     let stopTimer;
     const stopped = await Promise.race([

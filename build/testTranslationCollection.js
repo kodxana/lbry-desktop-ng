@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
 const babel = require('@babel/core');
+const { registerTranslationCollection } = require('../electron/translationCollection.cjs');
 
 const output = path.resolve(__dirname, '../dist/translation-tests');
 fs.mkdirSync(output, { recursive: true });
@@ -19,8 +20,27 @@ const { code } = babel.transformFileSync(path.resolve(__dirname, '../ui/i18n.js'
 });
 
 function load(mode = 'development') {
+  let collect;
+  const frame = { url: 'file:///fixture/index.html' };
+  const webContents = { mainFrame: frame, isDestroyed: () => false };
+  const window = { webContents, isDestroyed: () => false };
+  const event = { sender: webContents, senderFrame: frame };
+  registerTranslationCollection({
+    ipcMain: {
+      on: (_channel, handler) => {
+        collect = handler;
+      },
+    },
+    file: messagesFile,
+    getWindow: () => window,
+    rendererURL: frame.url,
+  });
+  collect({ ...event, senderFrame: { url: frame.url } }, 'Subframes must not collect');
   const context = {
-    require,
+    require: (name) => {
+      assert.equal(name, 'util/desktop');
+      return { collectMessage: (message) => collect(event, message) };
+    },
     exports: {},
     process: { env: { NODE_ENV: mode, LBRY_I18N_OUTPUT_FILE: messagesFile } },
     window: { localStorage: { getItem: () => 'en' } },

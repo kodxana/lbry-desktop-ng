@@ -1,6 +1,6 @@
 // @flow
 import * as React from 'react';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import Button from 'component/button';
 import { FormField } from 'component/common/form';
 import { getFilePath } from 'util/file-path';
@@ -74,7 +74,7 @@ class FileSelector extends React.PureComponent<Props, State> {
     this.selecting = true;
     this.setState({ selectionError: undefined, selecting: true });
     try {
-      const result = await ipcRenderer.invoke('select-file', {
+      const result = await desktop.selectFile({
         type: this.props.type,
         filters: this.props.filters,
         readFile: this.props.readFile,

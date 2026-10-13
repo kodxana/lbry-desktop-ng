@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { app, dialog, ipcMain } = require('electron');
 const { registerFileSelection } = require('../../electron/fileSelection.cjs');
+const { registerContentFiles } = require('../../electron/contentFiles.cjs');
 
 module.exports = function configureNativeFixtures(root, getWindow, rendererURL) {
   const downloads = path.join(root, 'fixture-downloads');
@@ -34,7 +35,15 @@ module.exports = function configureNativeFixtures(root, getWindow, rendererURL) 
     if (next.error) throw new Error(next.error);
     return next;
   };
-  registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL });
+  const files = registerContentFiles({ ipcMain, getWindow, rendererURL,
+    profile: { temp: root }, shell: {}, rpc: async () => ({ items: [] }),
+    probe: async () => { throw new Error('Not media'); },
+  });
+  ipcMain.handle('fixture-grant-file', async (_event, file) => {
+    assert(path.resolve(file).startsWith(root + path.sep));
+    await files.grant(file);
+  });
+  registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL, onSelected: files.grant });
   ipcMain.handle('fixture-dialog-release', () => {
     assert(release, 'No held dialog to release');
     release();

@@ -2,7 +2,7 @@
 import * as ACTIONS from 'constants/action_types';
 import * as ABANDON_STATES from 'constants/abandon_states';
 // @if TARGET='app'
-import { shell } from 'electron';
+import desktop from 'util/desktop';
 // @endif
 import Lbry from 'lbry';
 import { selectClaimForUri } from 'redux/selectors/claims';
@@ -25,14 +25,14 @@ type Dispatch = (action: any) => any;
 type GetState = () => { claims: any, file: FileState, content: any };
 export function doOpenFileInFolder(path: string) {
   return () => {
-    shell.showItemInFolder(path);
+    desktop.revealFile(path);
   };
 }
 
 export function doOpenFileInShell(path: string) {
-  return (dispatch: Dispatch) => {
-    const success = shell.openPath(path);
-    if (!success) {
+  return async (dispatch: Dispatch) => {
+    const error = await desktop.openFile(path);
+    if (error) {
       dispatch(doOpenFileInFolder(path));
     }
   };

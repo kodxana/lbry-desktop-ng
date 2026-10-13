@@ -2,7 +2,7 @@
 import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
 // @if TARGET='app'
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import { recordDownloadComplete } from 'util/download-notifications';
 // @endif
 import { doOpenModal } from 'redux/actions/app';
@@ -78,7 +78,7 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
 
         // @if TARGET='app'
         notif.onclick = () => {
-          ipcRenderer.send('window-control', 'focus');
+          desktop.windowControl('focus');
         };
         // @ENDIF
       } else {

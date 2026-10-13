@@ -6,6 +6,7 @@ import SUPPORTED_LANGUAGES from 'constants/supported_languages';
 import { SUPPORTED_SUB_LANGUAGE_CODES, SUB_LANG_CODE_LEN } from 'constants/supported_sub_languages';
 import SUPPORTED_BROWSER_LANGUAGES from 'constants/supported_browser_languages';
 import desktopSettings from '../desktop-settings.json';
+import path from 'path';
 
 import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
@@ -56,8 +57,14 @@ export default appState => {
       // Disable renderer process's webSecurity on development to enable CORS.
       webSecurity: !isDev,
       plugins: true,
-      nodeIntegration: true,
-      contextIsolation: false,
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      additionalArguments: [
+        '--lbry-renderer-url=' + rendererURL,
+        ...(process.env.APPIMAGE ? ['--lbry-appimage'] : []),
+      ],
     },
   };
   const lbryProto = 'lbry://';

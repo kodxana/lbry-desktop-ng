@@ -1,11 +1,8 @@
 // @flow
 import * as React from 'react';
-import { shell } from 'electron';
-import { getDesktopInfo } from 'util/desktop-info';
+import desktop from 'util/desktop';
 import Button from 'component/button';
 import CopyableText from 'component/copyableText';
-import AdmZip from 'adm-zip';
-import path from 'path';
 import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
 
@@ -50,6 +47,13 @@ class WalletBackup extends React.PureComponent<Props, State> {
 
   componentWillUnmount() {
     this.mounted = false;
+    if (this.backupPending) desktop.cancelBackup(this.backupPending);
+  }
+
+  componentDidUpdate(previous) {
+    if (this.backupPending && (previous.daemonSettings || {}).wallet_dir !== (this.props.daemonSettings || {}).wallet_dir) {
+      desktop.cancelBackup(this.backupPending);
+    }
   }
 
   async backupWalletDir(lbryumWalletDir: ?string) {
@@ -59,40 +63,17 @@ class WalletBackup extends React.PureComponent<Props, State> {
       this.showErrorMessage(__('No wallet folder was found.'));
       return;
     }
-    this.backupPending = true;
+    this.backupPending = crypto.randomUUID();
     this.setState({ pending: true });
     try {
-      let directory;
-      try {
-        ({ directory } = await getDesktopInfo('backup-directory'));
-      } catch (_) {
-        if (this.mounted) this.showErrorMessage(__('The backup location could not be determined. Please try again.'));
-        return;
-      }
-      // Do not write a backup after leaving this page or switching wallets.
+      const result = await desktop.backupWallet({ id: this.backupPending, directory: lbryumWalletDir });
       if (!this.mounted || (this.props.daemonSettings || {}).wallet_dir !== lbryumWalletDir) return;
-      const filenameTime = new Date().toISOString().replace(/:/g, '-');
-      const outputFilename = [path.basename(lbryumWalletDir), '-', filenameTime, '.zip'].join('');
-      // Prefer Downloads, then home, then beside the wallet directory. A write
-      // failure is reported at the chosen location, not silently redirected.
-      const outputPath = path.join(directory || path.dirname(lbryumWalletDir), outputFilename);
-      const zip = new AdmZip();
-      try {
-        zip.addLocalFolder(lbryumWalletDir);
-      } catch (err) {
-        console.error(err); // eslint-disable-line no-console
-        this.showErrorMessage(__('The wallet folder could not be added to the zip archive.'));
-        return;
-      }
-      try {
-        zip.writeZip(outputPath);
-      } catch (err) {
-        console.error(err); // eslint-disable-line no-console
-        this.showErrorMessage(__('There was a problem writing the zip archive to disk.'));
-        return;
-      }
-      this.showSuccessMessage(__('Saved zip archive to %outputPath%', { outputPath }));
-      shell.showItemInFolder(outputPath);
+      if (result.ok) this.showSuccessMessage(__('Saved zip archive to %outputPath%', { outputPath: result.path }));
+      else if (result.error === 'archive') this.showErrorMessage(__('The wallet folder could not be added to the zip archive.'));
+      else if (result.error === 'write') this.showErrorMessage(__('There was a problem writing the zip archive to disk.'));
+      else this.showErrorMessage(__('The wallet folder could not be determined. Please try again.'));
+    } catch (_) {
+      if (this.mounted) this.showErrorMessage(__('The wallet folder could not be determined. Please try again.'));
     } finally {
       this.backupPending = false;
       if (this.mounted) this.setState({ pending: false });
@@ -157,7 +138,7 @@ class WalletBackup extends React.PureComponent<Props, State> {
                 disabled={this.state.pending}
                 onClick={() => this.backupWalletDir(lbryumWalletDir)}
               />
-              <Button button="link" label={__('Open Folder')} onClick={() => shell.openPath(lbryumWalletDir)} />
+              <Button button="link" label={__('Open Folder')} onClick={() => desktop.openWalletFolder()} />
             </div>
           </React.Fragment>
         }

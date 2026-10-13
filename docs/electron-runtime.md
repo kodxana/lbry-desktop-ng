@@ -3,7 +3,8 @@
 The source build moves from Electron 34.5.8 to 44.7.0, a supported stable release
 as of October 13, 2026. Embedded Node moves from 20 to 24.21.0 and Chromium to
 152.0.7977.130. The published 0.54.0-rc.3 installers remain on Electron 17.2.0.
-Renderer isolation and other application dependencies still need modernization.
+The source renderer now uses a sandboxed preload; other application dependencies
+still need modernization.
 The SDK binary, wallet format, React, updater and application version are unchanged.
 
 ## Breaking changes reviewed
@@ -89,9 +90,10 @@ Earlier checkpoints covered the following changes:
 The previous 17-to-22 step removed obsolete crash handling and dialog callbacks.
 External links already use `setWindowOpenHandler`; there are no Electron webviews
 or native Node addons. The SDK's native libraries run in a separate process.
-The application still explicitly uses `nodeIntegration: true` and
-`contextIsolation: false`. Moving filesystem work behind a preload boundary
-remains separate work; this step does not claim renderer isolation.
+The application now uses `nodeIntegration: false`, `contextIsolation: true` and
+`sandbox: true`. A bundled preload exposes named desktop operations only to the
+application's main frame. It does not expose Node, raw IPC, Electron event objects
+or a general filesystem API. See [renderer isolation](renderer-isolation.md).
 
 Window failure handling also now consumes the Promise returned by
 `showMessageBox`, replacing an obsolete callback that ignored Quit. Wait and

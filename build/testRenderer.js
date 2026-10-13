@@ -15,6 +15,7 @@ fs.writeFileSync(
 for (const [command, args] of [
   [process.execPath, ['node_modules/webpack/bin/webpack.js', '--config', 'build/tests/webpack.config.js']],
   [require('electron'), ['build/tests/electron.cjs']],
+  [require('electron'), ['build/tests/sandbox.cjs']],
 ]) {
   const env = { ...process.env, NODE_ENV: 'production' };
   delete env.ELECTRON_RUN_AS_NODE;
@@ -27,7 +28,14 @@ for (const [command, args] of [
   });
   const log = (result.stdout || '') + (result.stderr || '');
   fs.writeFileSync(
-    path.resolve('dist/ci', command === process.execPath ? 'renderer-build.log' : 'renderer-tests.log'),
+    path.resolve(
+      'dist/ci',
+      command === process.execPath
+        ? 'renderer-build.log'
+        : args[0].endsWith('sandbox.cjs')
+        ? 'sandbox-tests.log'
+        : 'renderer-tests.log'
+    ),
     log
   );
   process.stdout.write(log);

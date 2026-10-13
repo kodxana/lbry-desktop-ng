@@ -1,9 +1,7 @@
-// @if TARGET='app'
-let fs = require('fs');
-// @endif
+import desktop from 'util/desktop';
 
 const isProduction = process.env.NODE_ENV === 'production';
-let knownMessages = null;
+
 let localStorageAvailable;
 try {
   localStorageAvailable = Boolean(window.localStorage);
@@ -12,30 +10,6 @@ try {
 }
 
 window.i18n_messages = window.i18n_messages || {};
-
-// @if TARGET='app'
-function saveMessageDesktop(message) {
-  const messagesFilePath = process.env.LBRY_I18N_OUTPUT_FILE || __static + '/app-strings.json';
-
-  if (knownMessages === null) {
-    try {
-      knownMessages = JSON.parse(fs.readFileSync(messagesFilePath, 'utf-8'));
-    } catch (err) {
-      throw new Error('Error parsing i18n messages file: ' + messagesFilePath + ' err: ' + err);
-    }
-  }
-
-  if (!knownMessages[message]) {
-    const END = '--end--';
-    delete knownMessages[END];
-    knownMessages[message] = removeContextMetadata(message);
-    knownMessages[END] = END;
-
-    // Development-only collection: finish each write before another message or reload can replace it.
-    fs.writeFileSync(messagesFilePath, JSON.stringify(knownMessages, null, 2) + '\n', 'utf-8');
-  }
-}
-// @endif
 
 /*
  I dislike the below code (and note that it ships all the way to the distributed app),
@@ -76,7 +50,7 @@ export function __(message, tokens) {
     ? window.localStorage.getItem('language') || 'en'
     : window.navigator.language.slice(0, 2) || 'en';
   if (!isProduction) {
-    saveMessageDesktop(message);
+    desktop.collectMessage(message);
   }
 
   let translatedMessage = window.i18n_messages[language] ? window.i18n_messages[language][message] || message : message;

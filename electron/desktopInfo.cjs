@@ -1,4 +1,5 @@
 const { createRendererGuard } = require('./rendererGuard.cjs');
+const path = require('path');
 
 function registerDesktopInfo({ ipcMain, app, getWindow, rendererURL }) {
   const allowed = createRendererGuard(getWindow, rendererURL);
@@ -20,6 +21,21 @@ function registerDesktopInfo({ ipcMain, app, getWindow, rendererURL }) {
   // path during startup to preserve its existing file:// URL mapping.
   ipcMain.on('cookie-app-path', (event) => {
     event.returnValue = allowed(event) ? { ok: true, path: app.getAppPath() } : { ok: false, error: 'sender' };
+  });
+  ipcMain.on('cookie-location', (event) => {
+    if (!allowed(event)) {
+      event.returnValue = { ok: false, error: 'sender' };
+      return;
+    }
+    const location = new URL(event.senderFrame.url);
+    // Preserve the original cookie adapter's OS-specific mapping, including Windows paths.
+    const relativePath = path.relative(app.getAppPath(), decodeURI(location.pathname));
+    event.returnValue = {
+      ok: true,
+      url: location.protocol === 'file:'
+        ? 'https://lbry.tv/' + encodeURI(relativePath) + location.search + location.hash
+        : location.href,
+    };
   });
 }
 

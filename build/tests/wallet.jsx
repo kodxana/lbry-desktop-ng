@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import React from 'react';
 import fs from 'fs';
 import path from 'path';
-import { shell, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 
 import AdmZip from 'adm-zip';
 import Lbry from 'lbry';
@@ -19,11 +19,17 @@ export default async function wallet(store, history, root) {
   const bytes = Buffer.from('{"fixture":"not a real wallet"}\n');
   fs.writeFileSync(path.join(walletDir, 'wallets', 'default_wallet'), bytes);
   fs.writeFileSync(path.join(walletDir, 'preferences.json'), '{}');
-  const fixture = (mode) => ipcRenderer.invoke('fixture-desktop-info', mode);
+  let revealed = [];
+  const fixture = async (mode, directory) => {
+    const result = await ipcRenderer.invoke('fixture-desktop-info', mode, directory);
+    revealed = result.revealed;
+    return result;
+  };
+  const waitForBackups = (count, message) => waitFor(async () => {
+    await fixture();
+    return revealed.length === count;
+  }, message);
   const { downloads, home } = await fixture('downloads');
-  const revealed = [];
-  const reveal = shell.showItemInFolder;
-  shell.showItemInFolder = (value) => revealed.push(value);
   const drawBackup = (directory) => render(<WalletBackup daemonSettings={{ wallet_dir: directory }} />, store, history);
   const backup = () =>
     Array.from(document.querySelectorAll('button'))
@@ -32,7 +38,7 @@ export default async function wallet(store, history, root) {
   try {
     drawBackup(walletDir);
     backup();
-    await waitFor(() => revealed.length === 1, 'Backup did not finish');
+    await waitForBackups(1, 'Backup did not finish');
     const archive = revealed[0];
     assert.equal(path.dirname(archive), downloads);
     assert(!path.basename(archive).includes(':'), 'Backup filename must work on Windows');
@@ -46,6 +52,7 @@ export default async function wallet(store, history, root) {
     assert(document.body.textContent.includes('No wallet folder was found'));
     assert.equal(document.querySelector('.card__message--success').textContent, '');
     drawBackup(path.join(root, 'missing-wallet'));
+    await fixture('downloads', path.join(root, 'missing-wallet'));
     backup();
     await waitFor(
       () => document.body.textContent.includes('could not be added'),
@@ -53,7 +60,7 @@ export default async function wallet(store, history, root) {
     );
     assert.equal(revealed.length, 1, 'Failure must not report or reveal a backup');
     // A file at the destination gives a deterministic write failure, even as root.
-    await fixture('blocked');
+    await fixture('blocked', walletDir);
     drawBackup(walletDir);
     backup();
     await waitFor(
@@ -69,7 +76,7 @@ export default async function wallet(store, history, root) {
       drawBackup(walletDir);
       const before = revealed.length;
       backup();
-      await waitFor(() => revealed.length === before + 1, 'Backup fallback did not finish');
+      await waitForBackups(before + 1, 'Backup fallback did not finish');
       const archive = revealed[before];
       assert.equal(path.dirname(archive), directory);
       assert.deepEqual(new AdmZip(archive).readFile('wallets/default_wallet'), bytes);
@@ -90,7 +97,7 @@ export default async function wallet(store, history, root) {
     backup();
     assert.equal((await fixture()).calls, calls, 'Repeated clicks must not start overlapping backups');
     await fixture('release');
-    await waitFor(() => revealed.length === before + 1, 'Failed lookup must remain retryable');
+    await waitForBackups(before + 1, 'Failed lookup must remain retryable');
     for (const leave of [() => unmount(), () => drawBackup(path.join(root, 'different-wallet'))]) {
       await fixture('hold');
       drawBackup(walletDir);
@@ -99,11 +106,11 @@ export default async function wallet(store, history, root) {
       leave();
       await fixture('release');
       await tick();
+      await fixture();
       assert.equal(revealed.length, before + 1, 'Leaving or switching wallets must discard a pending backup');
     }
   } finally {
     await fixture('downloads');
-    shell.showItemInFolder = reveal;
     unmount();
   }
 

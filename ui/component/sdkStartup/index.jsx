@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import Button from 'component/button';
 import HubSetup from 'component/hubSetup';
 import SplashScreen from 'component/splash';
@@ -14,8 +14,7 @@ export default function SdkStartup({ onReadyToLaunch }: Props) {
 
   React.useEffect(() => {
     let active = true;
-    ipcRenderer
-      .invoke('hub-startup-state')
+    desktop.startupState()
       .then((state) => {
         if (active) setPhase(state.settingsOnly ? 'choose' : 'sync');
       })
@@ -32,7 +31,7 @@ export default function SdkStartup({ onReadyToLaunch }: Props) {
     setPhase('loading');
     setError('');
     try {
-      await ipcRenderer.invoke('hub-servers-prepare');
+      await desktop.prepareHubs();
       setPhase('choose');
     } catch (_) {
       setError(__('Could not prepare hub selection. You can retry or close the app and check the SDK logs.'));

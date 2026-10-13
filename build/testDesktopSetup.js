@@ -17,7 +17,7 @@ async function hostingTests() {
   const label = props => React.createElement('label', null, props.label, props.helper);
   const dependencies = {
     react: React,
-    electron: { ipcRenderer: { send() {} } },
+    'util/desktop': { requestDiskSpace() {} },
     'component/button': label,
     'component/common/form-components/form-field': { FormField: label },
     'component/common/form-components/form': { Form: props => { submit = props.onSubmit; return props.children } },

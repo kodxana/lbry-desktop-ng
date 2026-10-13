@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import Lbry from 'lbry';
 import * as ACTIONS from 'constants/action_types';
 import { doUpdateLoadStatus } from 'redux/actions/content';
@@ -12,7 +13,6 @@ export default async function downloadNotifications(store) {
   const state = () => ipcRenderer.invoke('download-notifications', 'state');
   await control('configure');
   assert.equal((await getDesktopInfo('metadata')).locale, 'pl-PL');
-  const beforeListeners = ipcRenderer.listenerCount('download-notification-state');
   let stop = listenForDownloadNotifications(store);
   const notifications = [];
   const OriginalNotification = window.Notification;
@@ -90,19 +90,19 @@ export default async function downloadNotifications(store) {
 
     // A delayed initial snapshot must not undo newer completion or focus events.
     stop();
-    const invoke = ipcRenderer.invoke;
+    const downloads = desktop.downloads;
     let resolveSnapshot;
     const old = await state();
     try {
-      ipcRenderer.invoke = (channel, ...args) =>
-        channel === 'download-notifications' && args[0] === 'state'
+      desktop.downloads = (command) =>
+        command === 'state'
           ? new Promise((resolve) => {
               resolveSnapshot = resolve;
             })
-          : invoke.call(ipcRenderer, channel, ...args);
+          : downloads(command);
       stop = listenForDownloadNotifications(store);
     } finally {
-      ipcRenderer.invoke = invoke;
+      desktop.downloads = downloads;
     }
     await control('blur');
     await complete(true);
@@ -113,7 +113,6 @@ export default async function downloadNotifications(store) {
     await control('focus');
     await waitFor(() => store.getState().app.badgeNumber === 0, 'Focus must reset the count');
     stop();
-    assert.equal(ipcRenderer.listenerCount('download-notification-state'), beforeListeners);
     await control('blur');
     await complete(false);
     await tick();

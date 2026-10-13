@@ -5,7 +5,7 @@ import SnackBar from 'component/snackBar';
 import SdkStartup from 'component/sdkStartup';
 import * as ACTIONS from 'constants/action_types';
 import { changeZoomFactor } from 'util/zoomWindow';
-import { ipcRenderer, shell } from 'electron';
+import desktop from 'util/desktop';
 import { getDesktopInfo } from 'util/desktop-info';
 import { listenForDownloadNotifications } from 'util/download-notifications';
 import { listenForFullscreenExit } from 'util/window-controls';
@@ -91,7 +91,7 @@ rewards.setCallback('claimRewardSuccess', (reward) => {
   }
 });
 
-ipcRenderer.on('send-disk-space', (event, result) => {
+desktop.onDiskSpace((result) => {
   if (result.error) {
     console.log(`disk space error: ${result.error}`);
   }
@@ -101,7 +101,7 @@ ipcRenderer.on('send-disk-space', (event, result) => {
   });
 });
 
-ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
+desktop.onOpenUri((url) => {
   function handleError() {
     app.store.dispatch(
       doToast({
@@ -126,21 +126,21 @@ ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
   handleError();
 });
 
-ipcRenderer.on('language-set', (event, language) => {
+desktop.onLanguage((language) => {
   app.store.dispatch(doSetLanguage(language));
 });
 
-ipcRenderer.on('open-menu', (event, uri) => {
+desktop.onMenu((uri) => {
   if (uri && uri.startsWith('/help')) {
     app.store.dispatch(push('/$/help'));
   }
 });
 
-ipcRenderer.on('zoom-window', (event, action) => {
+desktop.onZoom((action) => {
   changeZoomFactor(action);
 });
 
-ipcRenderer.on('devtools-is-opened', () => {
+desktop.onDevtools(() => {
   doLogWarningConsoleMessage();
 });
 
@@ -152,7 +152,7 @@ document.addEventListener('click', (event) => {
   while (target && target !== document) {
     if (target.matches('a[href^="http"]') || target.matches('a[href^="mailto"]')) {
       event.preventDefault();
-      shell.openExternal(target.href);
+      desktop.openExternal(target.href);
       return;
     }
     target = target.parentNode;

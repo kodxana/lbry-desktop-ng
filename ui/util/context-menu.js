@@ -1,9 +1,9 @@
-import { ipcRenderer, shell } from 'electron';
+import desktop from 'util/desktop';
 import { convertToShareLink } from 'util/lbryURI';
 
 async function showMenu(event, request, target = event.target) {
   try {
-    const result = await ipcRenderer.invoke('context-menu', {
+    const result = await desktop.contextMenu({
       ...request,
       x: Math.max(0, Math.round(event.clientX)),
       y: Math.max(0, Math.round(event.clientY)),
@@ -67,7 +67,7 @@ export async function openClaimPreviewMenu(claim, event) {
       return false;
     }
   } else if (claim && action === 'report') {
-    await shell.openExternal(`https://lbry.com/dmca/${claim.claim_id}`);
+    await desktop.openExternal(`https://lbry.com/dmca/${claim.claim_id}`);
   }
   // @endif
 }
