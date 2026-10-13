@@ -272,6 +272,40 @@ async function main() {
       throw error;
     }
     console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
+    if (development) {
+      const worker = await fetch(new URL('/webworkers/worker-bundle.js', page.url), {
+        signal: AbortSignal.timeout(10000),
+      });
+      assert.equal(worker.status, 200);
+      assert.match(worker.headers.get('content-type'), /^text\/javascript\b/);
+      assert.deepEqual(
+        Buffer.from(await worker.arrayBuffer()),
+        fs.readFileSync(path.join(root, 'static/webworkers/worker-bundle.js')),
+        'Express must serve the original static worker bytes'
+      );
+      const missing = await fetch(new URL('/missing-development-fixture', page.url), {
+        signal: AbortSignal.timeout(10000),
+      });
+      assert.equal(missing.status, 404);
+      await missing.arrayBuffer();
+      const hot = await evaluate(`new Promise((resolve, reject) => {
+        const events = new EventSource('/__webpack_hmr');
+        const timer = setTimeout(() => {
+          events.close(); reject(new Error('No hot-reload connection'));
+        }, 8000);
+        events.onmessage = (message) => {
+          if (!message.data.trim()) return;
+          const update = JSON.parse(message.data);
+          if (update.action !== 'sync') return;
+          clearTimeout(timer); events.close(); resolve(update);
+        };
+      })`);
+      assert.equal(hot.action, 'sync');
+      assert.equal(typeof hot.hash, 'string');
+      assert(hot.hash.length > 0);
+      assert.deepEqual(hot.errors, []);
+      console.log('PASS: Express static worker bytes/MIME, missing assets and the real hot-reload event stream');
+    }
     assert.deepEqual(
       await evaluate(
         '({require:typeof require, process:typeof process, Buffer:typeof Buffer, sandboxed:window.lbryDesktop.sandboxed, frozen:Object.isFrozen(window.lbryDesktop)})'

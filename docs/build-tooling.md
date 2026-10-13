@@ -49,6 +49,27 @@ these source changes are not part of its packages.
 
 ## Validation
 
+### Express development server
+
+The development server now pins Express 5.3.0 (previously 4.18.1). Express is
+a development dependency because the packaged app loads local files and does
+not start this server. Package verification checks that Express is absent.
+
+The [Express 5 migration guide](https://expressjs.com/en/guide/migrating-5/)
+changes listener failures to callback errors. Startup now waits for a successful
+listen as well as both Webpack compilations. An occupied port reports the error,
+closes the middleware/watchers and exits unsuccessfully without launching
+Electron. `node build/testDevServer.js` exercises this with a real Express
+listener, both before and after the simulated compilers finish.
+
+The app uses no Express route patterns, query/body parsing, removed response
+methods or static MIME helper. Those migration changes require no caller edits.
+Static dotfiles stay hidden. The development smoke test checks the real worker
+file's bytes and updated JavaScript MIME type, a missing asset's 404, and the
+hot-reload event stream before exercising setup, the wallet and shutdown.
+
+### Application regressions
+
 The existing Windows/Linux regression matrix remains mandatory. The renderer
 suite now also imports the actual application styles and checks the dark/light
 theme colors, primary button styling, RTL margins and padding, stylesheet image

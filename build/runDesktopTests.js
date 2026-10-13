@@ -7,6 +7,7 @@ for (const file of [
   'testUpdaterIpc.js',
   'testPasswordStorage.js',
   'testCookies.js',
+  'testDevServer.js',
   'testFileSelection.js',
   'testWindowControls.js',
   'testRendererLifecycle.js',
