@@ -17,7 +17,7 @@ import markdown from './markdown';
 import { render, unmount, waitFor } from './helpers';
 
 export default async function documents(store, history, root) {
-  markdown(store, history);
+  await markdown(store, history);
   documentHtml();
   for (const strict of [false, true]) {
     const source = path.join(root, `document ł #${strict ? 'strict' : 'transitional'}.docx`);

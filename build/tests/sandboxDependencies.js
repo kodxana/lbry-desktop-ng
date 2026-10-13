@@ -1,5 +1,5 @@
 import remark from 'remark';
-import reactRenderer from 'remark-react';
+import markdownRenderer from 'util/markdown-renderer';
 import ReactDOMServer from 'react-dom/server';
 import mammoth from 'mammoth';
 import { PassThrough } from 'stream';
@@ -11,7 +11,7 @@ import sanitizeDocumentHtml from 'util/document-html';
 // runner cannot catch a dependency accidentally relying on its own Node process.
 window.probeDependencies = async (docx) => {
   const markdown = ReactDOMServer.renderToStaticMarkup(
-    remark().use(reactRenderer).processSync('# Sandbox ł\n\n**Bold**').contents
+    remark().use(markdownRenderer).processSync('# Sandbox ł\n\n**Bold**').contents
   );
   const bytes = await desktop.readDocument(docx);
   const document = await mammoth.convertToHtml(

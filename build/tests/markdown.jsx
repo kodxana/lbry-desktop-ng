@@ -1,9 +1,12 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import ReactDOMServer from 'react-dom/server';
+import remark from 'remark';
+import markdownRenderer from 'util/markdown-renderer';
 import MarkdownPreview from 'component/common/markdown-preview';
-import { render, unmount } from './helpers';
+import { render, unmount, waitFor } from './helpers';
 
-export default function markdown(store, history) {
+export default async function markdown(store, history) {
   const cases = [
     ['double quotes', '<iframe src="lbry://fixture"></iframe>', ['lbry://fixture']],
     ['single quotes', "<iframe src='lbry://fixture'></iframe>", ['lbry://fixture']],
@@ -11,6 +14,7 @@ export default function markdown(store, history) {
     ['named entities', '<iframe src="lbry&colon;&sol;&sol;fixture"></iframe>', ['lbry://fixture']],
     ['Unicode', '<iframe src="lbry://za%C5%BC%C3%B3%C5%82%C4%87"></iframe>', ['lbry://zażółć']],
     ['claim IDs', '<iframe src="lbry://@fixture#abc/video#def"></iframe>', ['lbry://@fixture#abc/video#def']],
+    ['colon claim IDs', '[Video](lbry://@fixture:abc/video:def)', ['lbry://@fixture:abc/video:def']],
     ['whitespace', '<iframe\n src="lbry://fixture" ></iframe>', ['lbry://fixture']],
     ['extra attributes', '<iframe src="lbry://fixture" onload="void(0)"></iframe>', ['lbry://fixture']],
     [
@@ -94,4 +98,104 @@ export default function markdown(store, history) {
   assert.equal(document.querySelector('.markdown-preview').textContent, 'Bold and External');
   assert(!document.querySelector('.markdown-preview strong, .markdown-preview a'));
   unmount();
+
+  render(
+    <MarkdownPreview
+      content={
+        '| Left | Centre | Right |\n| :--- | :---: | ---: |\n| One | Two | Three |\n\n- [x] Done\n- [ ] Pending\n\n```js\nconst text = "<tag>";\n```'
+      }
+      noDataStore
+      disableTimestamps
+    />,
+    store,
+    history
+  );
+  assert.deepEqual(
+    Array.from(document.querySelectorAll('td'), (node) => node.style.textAlign),
+    ['left', 'center', 'right']
+  );
+  assert.deepEqual(
+    Array.from(document.querySelectorAll('input'), (node) => [node.checked, node.disabled]),
+    [
+      [true, true],
+      [false, true],
+    ]
+  );
+  assert.equal(document.querySelector('pre code').textContent, 'const text = "<tag>";\n');
+  assert(!document.querySelector('pre tag'));
+  unmount();
+
+  // Serialize images without attaching them: the tests must not fetch CDN assets.
+  const images = document.createElement('template');
+  images.innerHTML = ReactDOMServer.renderToStaticMarkup(
+    <MarkdownPreview
+      content={'![Picture](https://example.invalid/picture.png "Caption")\n\n:ALIEN: :smile:'}
+      noDataStore
+    />
+  );
+  assert.equal(
+    images.content.querySelector('img[alt="Picture"]').getAttribute('src'),
+    'https://example.invalid/picture.png'
+  );
+  assert.equal(images.content.querySelector('img[alt="Picture"]').title, 'Caption');
+  assert.equal(
+    images.content.querySelector('img[title=":ALIEN:"]').getAttribute('src'),
+    'https://static.odycdn.com/emoticons/48%20px/Alien%402x.png'
+  );
+  assert(images.content.textContent.includes('😄'), 'Standard emoji must still render');
+
+  // Exercise the application link component too, including its single-child
+  // contract. A labelled website link must not start claim resolution.
+  for (const label of ['Read this', '**Read this**']) {
+    const url = 'https://odysee.com/@fixture:abc/video:def';
+    render(<MarkdownPreview content={'[' + label + '](' + url + ')'} />, store, history);
+    const link = document.querySelector('.markdown-preview a');
+    assert(link, 'A labelled website link must remain external');
+    assert.equal(link.getAttribute('href'), url);
+    assert(link.textContent.includes('Read this'));
+    unmount();
+  }
+  const location = { ...history.location };
+  render(<MarkdownPreview content="[Video](lbry://@fixture:abc/video:def)" simpleLinks />, store, history);
+  const link = document.querySelector('.markdown-preview a');
+  assert(link.getAttribute('href').includes('/@fixture:abc/video:def'));
+  link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 }));
+  await waitFor(() => history.location.pathname === '/@fixture:abc/video:def', 'LBRY links must navigate in the app');
+  unmount();
+  history.replace(location);
+
+  const previousPlayer = window.player;
+  let seek;
+  window.player = {
+    currentTime: (value) => {
+      seek = value;
+    },
+  };
+  try {
+    render(<MarkdownPreview content="Seek 1:23" />, store, history);
+    document.querySelector('.markdown-preview button').click();
+    assert.equal(seek, 83, 'Timestamp clicks must reach the player');
+    unmount();
+  } finally {
+    window.player = previousPlayer;
+  }
+
+  // Sanitization runs after plugins attach HTML properties and before React
+  // creates elements. Test that boundary without broadening Markdown syntax.
+  const unsafe = document.createElement('template');
+  const result = remark()
+    .use(function unsafeProperties() {
+      return (tree) => {
+        tree.children[0].data = {
+          hName: 'a',
+          hProperties: { href: 'javascript:void(0)', onClick: 'void(0)', style: 'display:none', id: 'location' },
+        };
+      };
+    })
+    .use(markdownRenderer)
+    .processSync('Keep text').contents;
+  unsafe.innerHTML = ReactDOMServer.renderToStaticMarkup(result);
+  assert.equal(unsafe.content.textContent, 'Keep text');
+  assert(!unsafe.content.querySelector('[href], [onclick], [style]'));
+  assert.equal(unsafe.content.querySelector('a').id, 'user-content-location');
 }

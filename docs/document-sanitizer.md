@@ -27,18 +27,13 @@ address through the standard `URL` serializer could discard `@` or reject a
 claim ID as an invalid port. LBRY links now preserve the address after normalizing
 the scheme. HTTP, HTTPS and mailto links still use the standard URL parser.
 
-## Markdown remains a separate migration
+## Markdown
 
-`remark-react` 8 still uses hast-util-sanitize 3 internally. Its schema is loaded
-from the explicitly pinned `hast-util-sanitize-legacy` alias so that upgrading
-DOCX cannot silently change the schema passed to the old Markdown sanitizer.
-This alias is temporary: remove it when replacing that Markdown rendering path.
-There is no global dependency override or disabled sanitization.
-
-The Markdown schema clones the arrays it extends for LBRY links, rather than
-modifying the imported defaults. Regression fixtures cover formatting, tables,
-newlines, timestamps, stripped previews, links and legacy embeds. The remark
-parser and its custom LBRY/emote/timestamp plugins are still on their old versions.
+The DOCX upgrade initially retained a pinned legacy alias for remark-react's
+internal version 3 sanitizer. The subsequent [Markdown renderer migration](markdown-renderer.md)
+removed both that renderer and the alias. Markdown now also uses sanitizer 5.0.2
+with its own schema; it does not inherit the DOCX-specific URL and image rules.
+The remark parser and custom LBRY/emote/timestamp plugins remain separate work.
 
 ## Validation
 

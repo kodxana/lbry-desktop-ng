@@ -7,10 +7,9 @@ import * as ICONS from 'constants/icons';
 import * as React from 'react';
 import Button from 'component/button';
 import classnames from 'classnames';
-import defaultSchema from 'hast-util-sanitize-legacy/lib/github.json';
 import MarkdownLink from 'component/markdownLink';
 import OptimizedImage from 'component/optimizedImage';
-import reactRenderer from 'remark-react';
+import markdownRenderer from 'util/markdown-renderer';
 import remark from 'remark';
 import remarkAttr from 'remark-attr';
 import remarkBreaks from 'remark-breaks';
@@ -128,14 +127,6 @@ const SimpleImageLink = (props: ImageLinkProps) => {
 // ****************************************************************************
 // ****************************************************************************
 
-// Keep the schema compatible with remark-react's internal version 3 sanitizer.
-// Extend LBRY links without mutating the imported defaults.
-const schema = {
-  ...defaultSchema,
-  protocols: { ...defaultSchema.protocols, href: [...defaultSchema.protocols.href, 'lbry'] },
-  attributes: { ...defaultSchema.attributes, a: [...defaultSchema.attributes.a, 'embed'] },
-};
-
 const REPLACE_REGEX = /(<iframe\s+src=["'])(.*?(?=))(["']\s*><\/iframe>)/g;
 
 // ****************************************************************************
@@ -180,9 +171,7 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
     : '';
 
   const remarkOptions: Object = {
-    sanitize: schema,
-    fragment: React.Fragment,
-    remarkReactComponents: {
+    components: {
       a: noDataStore
         ? SimpleLink
         : (linkProps) => (
@@ -194,8 +183,6 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
               allowPreview={isStakeEnoughForPreview(stakedLevel)}
             />
           ),
-      // Workaraund of remarkOptions.Fragment
-      div: React.Fragment,
       img: (imgProps) =>
         noDataStore ? (
           <div className="file-viewer file-viewer--document">
@@ -219,14 +206,14 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
   // Strip all content and just render text
   if (strip) {
     // Remove new lines and extra space
-    remarkOptions.remarkReactComponents.p = SimpleText;
+    remarkOptions.components.p = SimpleText;
     return (
       <span dir="auto" className="markdown-preview">
         {
           remark()
             .use(remarkStrip)
             .use(remarkFrontMatter, ['yaml'])
-            .use(reactRenderer, remarkOptions)
+            .use(markdownRenderer, remarkOptions)
             .processSync(content).contents
         }
       </span>
@@ -251,7 +238,7 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
           // Render new lines without needing spaces.
           .use(remarkBreaks)
           .use(remarkFrontMatter, ['yaml'])
-          .use(reactRenderer, remarkOptions)
+          .use(markdownRenderer, remarkOptions)
           .processSync(strippedContent).contents
       }
     </div>
