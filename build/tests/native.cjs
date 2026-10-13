@@ -59,4 +59,32 @@ module.exports = function configureNativeFixtures(root, getWindow, rendererURL) 
       debuggerApi.detach();
     }
   });
+  ipcMain.handle('fixture-file-drop', async (event, files) => {
+    assert.equal(event.sender, getWindow().webContents);
+    for (const file of files) assert(path.resolve(file).startsWith(root + path.sep));
+    const debuggerApi = event.sender.debugger;
+    debuggerApi.attach('1.3');
+    try {
+      for (const type of ['dragEnter', 'dragOver', 'drop']) {
+        await debuggerApi.sendCommand('Input.dispatchDragEvent', {
+          type,
+          x: 200,
+          y: 200,
+          data: { items: [], files, dragOperationsMask: 1 },
+        });
+      }
+    } finally {
+      debuggerApi.detach();
+    }
+  });
+  ipcMain.handle('fixture-file-focus', async (event) => {
+    assert.equal(event.sender, getWindow().webContents);
+    const debuggerApi = event.sender.debugger;
+    debuggerApi.attach('1.3');
+    try {
+      await debuggerApi.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
+    } finally {
+      debuggerApi.detach();
+    }
+  });
 };

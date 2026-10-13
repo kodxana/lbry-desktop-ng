@@ -3,6 +3,7 @@ import * as React from 'react';
 import { ipcRenderer } from 'electron';
 import Button from 'component/button';
 import { FormField } from 'component/common/form';
+import { getFilePath } from 'util/file-path';
 
 type Props = {
   type: string,
@@ -56,10 +57,16 @@ class FileSelector extends React.PureComponent<Props, State> {
 
     const file = files[0];
 
-    if (this.props.onFileChosen) {
-      this.props.onFileChosen({ file, path: file.path || file.name });
+    try {
+      const path = getFilePath(file);
+      if (!path) throw new Error('The selected file has no local path');
+      this.setState({ selectionError: undefined });
+      if (this.props.onFileChosen) this.props.onFileChosen({ file, path });
+    } catch (_) {
+      this.setState({ selectionError: __('The selected file or folder could not be opened.') });
+    } finally {
+      this.fileInput.current.value = ''; // Allow choosing the same file again.
     }
-    this.fileInput.current.value = null; // clear the file input
   };
 
   handleDirectoryInputSelection = async () => {

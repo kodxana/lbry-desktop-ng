@@ -1,19 +1,46 @@
 # Electron runtime migration
 
-The source build moves from Electron 22.3.27 to 28.3.3. This is an intermediate
-checkpoint, not a supported-runtime release. Electron 28 is end-of-life. Continue
+The source build moves from Electron 28.3.3 to 34.5.8. This is an intermediate
+checkpoint, not a supported-runtime release. Electron 34 is end-of-life. Continue
 the migration to a supported version before treating runtime modernization as
 complete. The published 0.54.0-rc.3 installers remain on Electron 17.2.0.
 
-This step moves the embedded Node runtime from 16 to 18.18.2 and Chromium to
-120.0.6099.291. It adds offline playback tests before crossing further media
-and runtime changes. The SDK binary, wallet format, React, updater and application
+This step moves the embedded Node runtime from 18 to 20.19.1 and Chromium to
+132.0.6834.210. It replaces the removed native `File.path` API with
+`webUtils.getPathForFile` for file inputs and publishing drops. The SDK binary,
+wallet format, React, updater and application
 version are unchanged.
 
 ## Breaking changes reviewed
 
-References: [Electron 28.3.3 runtime versions](https://releases.electronjs.org/release/v28.3.3)
-and [the pinned release's migration notes](https://github.com/electron/electron/blob/v28.3.3/docs/breaking-changes.md).
+References: [Electron 34.5.8 runtime versions](https://releases.electronjs.org/release/v34.5.8)
+and [the pinned release's migration notes](https://github.com/electron/electron/blob/v34.5.8/docs/breaking-changes.md).
+
+- Electron 32 removes native `File.path`. Browser-picked files, drag-and-drop
+  publishing and thumbnail selection resolve the native path with `webUtils`.
+  Files created only in JavaScript have no local path and are rejected instead
+  of treating their filename as one. Native file-dialog IPC still supplies its
+  explicit `FileWithPath` wrapper; thumbnail confirmation consumes that wrapper.
+  The web build retains its existing filename/File behavior.
+- Electron 31 removes WebSQL and Electron 32 removes Chromium's `databases`
+  directory. The app uses localForage/IndexedDB; no explicit WebSQL driver or
+  `openDatabase` call is configured. The hosted upgrade test carries real
+  IndexedDB data from RC3 through both installs. SDK data and wallet directories
+  are siblings of the desktop browser profile, outside `databases`; wallet
+  backup/restore and installed-upgrade tests still verify their preservation.
+- Electron 29 removes legacy crash events; production already uses
+  `render-process-gone`. Changes to contextBridge IPC exposure, BrowserView,
+  WebContents navigation and custom file-protocol registration have no affected
+  call sites. Existing IPC guards reject missing/stale sender frames, including
+  after asynchronous work. Native clipboard tests cover editing commands on
+  both hosted operating systems.
+- Electron 33 requires macOS 11 and C++20 for native addons. There are no bundled
+  Node addons; the SDK is a separate executable. macOS remains unvalidated.
+- Electron 34 hides the Windows menu bar in fullscreen. Native fullscreen
+  presentation remains a manual acceptance item; IPC and player exit behavior
+  remain covered by the existing regression tests.
+
+Earlier checkpoints also reviewed these changes:
 
 - Electron 23 drops Windows 7, 8 and 8.1. Windows 10 or later is required.
   The NSIS initialization guard rejects older Windows before replacing files,
@@ -21,8 +48,6 @@ and [the pinned release's migration notes](https://github.com/electron/electron/
   and the pinned builder does not expose that field for Windows. An old client
   can still offer and download the update, but the installer leaves its existing
   files intact. Portable ZIP builds have no installer guard.
-- Electron 27 drops macOS 10.13 and 10.14. A future macOS build needs 10.15 or
-  later, but this project currently validates Windows and Linux only.
 - Removed scroll-touch events, WebContents capturer-count APIs, `getPrinters`,
   appearance notifications, traffic-light positioning and `sendTo`/sender IDs
   are not used. Deprecated protocol registration/interception and changed
@@ -54,6 +79,10 @@ shutdown and clean renderer exits do not show a crash notice.
 - The existing renderer tests run backup ZIP round-trips, destination fallbacks,
   errors/cancellation, wallet encryption controls, document rendering, file
   selection, saved state, passwords, notifications and updater consent.
+- Chromium supplies real disk-backed files through CDP file inputs and native
+  drop events. Tests cover repeated drops without replay, choosing between
+  identical filenames in different directories, cancel/accept, missing native
+  paths, delayed navigation on unmount, and thumbnail upload confirmation.
 - Production Video.js tests use small generated H.264/AAC fixtures served only
   on loopback. They cover MP4 ranges, the real HEAD/redirect path into HLS and
   MediaSource, audio, decoded frames, pause, seek, end-of-playback and disposal.
@@ -69,7 +98,7 @@ shutdown and clean renderer exits do not show a crash notice.
   in `dist`. The unsupported case exits with 1633 without reaching that action.
   This checks the guard, not actual installation on a Windows 7 virtual machine.
 - The hosted Windows installed-upgrade test moves the checksum-pinned RC3
-  (Electron 17) to the private Electron 28 candidate, then to a second candidate.
+  (Electron 17) to the private Electron 34 candidate, then to a second candidate.
   It asserts both main and renderer runtime versions, install/decline choices,
   SDK exit before NSIS, automatic restart, unchanged wallet keys/addresses,
   encryption, remembered passwords and cookie/localStorage persistence. An

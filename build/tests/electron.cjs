@@ -159,6 +159,7 @@ app
       'documents',
       'media',
       'fileDialogs',
+      'fileUploads',
       'windowControls',
       'contextMenu',
       'updater',

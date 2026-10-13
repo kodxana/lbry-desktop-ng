@@ -49,7 +49,7 @@ export default async function fileDialogs(store, history, root) {
   assert.equal(chosen[2].file.type, 'text/plain');
   unmount();
 
-  // Chromium provides an actual disk-backed File, exercising Electron's File.path contract.
+  // Chromium provides an actual disk-backed File with no legacy File.path property.
   render(<FileSelector onFileChosen={onFileChosen} />, store, history);
   document.querySelector('input[type=file]').dispatchEvent(new Event('change', { bubbles: true }));
   assert.equal(chosen.length, 3, 'An empty file input must be treated as cancellation');
@@ -57,9 +57,16 @@ export default async function fileDialogs(store, history, root) {
     await ipcRenderer.invoke('fixture-file-input', selected);
     await waitFor(() => chosen.length === count, 'File input must allow choosing the same file again');
     assert.equal(chosen[count - 1].path, selected);
+    assert.equal(chosen[count - 1].file.path, undefined);
     assert.equal(await chosen[count - 1].file.text(), contents);
     assert.equal(document.querySelector('input[type=file]').value, '');
   }
+  const transfer = new DataTransfer();
+  transfer.items.add(new File(['memory only'], 'unavailable.txt'));
+  document.querySelector('input[type=file]').files = transfer.files;
+  document.querySelector('input[type=file]').dispatchEvent(new Event('change', { bubbles: true }));
+  assert.equal(chosen.length, 5, 'A synthetic File must not become a guessed local path');
+  assert(document.body.textContent.includes('could not be opened'));
   unmount();
   render(<FileSelector type="openFile" disabled onFileChosen={onFileChosen} />, store, history);
   calls = await ipcRenderer.invoke('fixture-dialog', null);
@@ -111,5 +118,5 @@ export default async function fileDialogs(store, history, root) {
   await waitFor(() => chosen.length === 7, 'A new form must be able to select after the previous form unmounts');
   assert(!document.body.textContent.includes('could not be opened'));
   unmount();
-  return 'native dialog options/cancel/errors/retry, scoped file IPC, metadata-only folders/files, File.path, repeat selection, pending dialogs and unmounted selectors';
+  return 'native dialog options/cancel/errors/retry, scoped file IPC, metadata-only folders/files, webUtils paths, repeat selection, missing paths, pending dialogs and unmounted selectors';
 }
