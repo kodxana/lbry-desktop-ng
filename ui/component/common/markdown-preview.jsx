@@ -162,7 +162,7 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
 
   const strippedContent = content
     ? content.replace(REPLACE_REGEX, (iframeHtml) => {
-        // Let the browser try to create an iframe to see if the markup is valid
+        // Read the legacy embed source without creating an iframe in the page.
         let lbrySrc;
         try {
           let p = parse(iframeHtml);
