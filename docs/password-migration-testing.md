@@ -56,4 +56,4 @@ process restarts, migration recovery and failures, Forget/opt-out/sign-out,
 wallet encryption and backup restoration with disposable wallets, and packaged
 startup/shutdown. Installed old-to-new upgrades and different Linux desktop
 keyrings still need tester feedback. Published RC3 builds retain Electron 17;
-current source builds use the [Electron 28 compatibility checkpoint](electron-runtime.md).
+current source builds use the [Electron 34 compatibility checkpoint](electron-runtime.md).

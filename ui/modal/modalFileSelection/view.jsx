@@ -7,6 +7,7 @@ import { withRouter } from 'react-router';
 import Card from 'component/common/card';
 import Button from 'component/button';
 import FileList from 'component/common/file-list';
+import { getFilePath } from 'util/file-path';
 
 type Props = {
   files: Array<File>,
@@ -38,9 +39,13 @@ const ModalFileSelection = (props: Props) => {
   }
 
   function handleSubmit() {
-    updatePublishForm({ filePath: selectedFile });
-    handleCloseModal();
+    if (!selectedFile) return;
+    const filePath = IS_WEB ? selectedFile : getFilePath(selectedFile);
+    if (!filePath) return;
+    // Navigate before assigning the selection: entering Publish resets its form.
     navigateToPublish();
+    updatePublishForm({ filePath });
+    handleCloseModal();
   }
 
   const handleFileChange = (file?: File) => {
@@ -61,7 +66,7 @@ const ModalFileSelection = (props: Props) => {
             </div>
             <div className="section__actions">
               <Button
-                disabled={!selectedFile || !files || !files.length}
+                disabled={!selectedFile || !files || !files.length || (!IS_WEB && !getFilePath(selectedFile))}
                 button="primary"
                 label={__('Accept')}
                 onClick={handleSubmit}

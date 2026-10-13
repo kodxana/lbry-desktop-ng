@@ -3126,12 +3126,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^18.11.18":
-  version: 18.19.130
-  resolution: "@types/node@npm:18.19.130"
+"@types/node@npm:^20.9.0":
+  version: 20.19.43
+  resolution: "@types/node@npm:20.19.43"
   dependencies:
-    undici-types: ~5.26.4
-  checksum: b7032363581c416e721a88cffdc2b47662337cacd20f8294f5619a1abf79615c7fef1521964c2aa9d36ed6aae733e1a03e8c704661bd5a0c2f34b390f41ea395
+    undici-types: ~6.21.0
+  checksum: c959b5d256b073da95aa1892acb071b487c2f652f98b2cb75e92657d51b99bd691aa811023fb13acd6752bc1bcb75dc579db02190a4da70926cf6f372011bc4e
   languageName: node
   linkType: hard
 
@@ -7006,16 +7006,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:28.3.3":
-  version: 28.3.3
-  resolution: "electron@npm:28.3.3"
+"electron@npm:34.5.8":
+  version: 34.5.8
+  resolution: "electron@npm:34.5.8"
   dependencies:
     "@electron/get": ^2.0.0
-    "@types/node": ^18.11.18
+    "@types/node": ^20.9.0
     extract-zip: ^2.0.1
   bin:
     electron: cli.js
-  checksum: 87a27def565817626bbb6c153fc8a731d5d0caf6470260652f4514a592c796bc947f4a7c11b27d26b50230e91b20bb0c2904b49a11793a89b90c3d432def2613
+  checksum: cbd6f8153b664003e73f489597dfc71611608633d5bb3f4aa5a341bc731bd56f2b9df79209a39027dac3711590f4f96c10dece74e65c50cee828293185dbd202
   languageName: node
   linkType: hard
 
@@ -10826,7 +10826,7 @@ __metadata:
     devtron: ^1.4.0
     dotenv-defaults: ^2.0.1
     dotenv-webpack: 9.0.0
-    electron: 28.3.3
+    electron: 34.5.8
     electron-builder: 26.17.0
     electron-devtools-installer: ^3.1.1
     electron-dl: ^3.2.0
@@ -17142,10 +17142,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici-types@npm:~5.26.4":
-  version: 5.26.5
-  resolution: "undici-types@npm:5.26.5"
-  checksum: 3192ef6f3fd5df652f2dc1cd782b49d6ff14dc98e5dced492aa8a8c65425227da5da6aafe22523c67f035a272c599bb89cfe803c1db6311e44bed3042fc25487
+"undici-types@npm:~6.21.0":
+  version: 6.21.0
+  resolution: "undici-types@npm:6.21.0"
+  checksum: 46331c7d6016bf85b3e8f20c159d62f5ae471aba1eb3dc52fff35a0259d58dcc7d592d4cc4f00c5f9243fa738a11cfa48bd20203040d4a9e6bc25e807fab7ab3
   languageName: node
   linkType: hard
 

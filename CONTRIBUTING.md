@@ -8,7 +8,7 @@ Historical LBRY Inc. bounty and paid-contribution programs do not apply here.
 ## Development baseline
 
 Start with [the isolated Windows build](docs/isolated-desktop-test.md).
-It uses the checked-in Yarn lock, Node 24.21.0 and Electron 17.2.0. Runtime and
+It uses the checked-in Yarn lock, Node 24.21.0 and Electron 34.5.8. Runtime and
 dependency upgrades should be separate, reviewable changes with evidence that
 wallet persistence and SDK lifecycle behavior still work.
 

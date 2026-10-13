@@ -39,6 +39,7 @@ async function main() {
     phase === 'documents' ||
     phase === 'media' ||
     phase === 'fileDialogs' ||
+    phase === 'fileUploads' ||
     phase === 'windowControls' ||
     phase === 'contextMenu' ||
     phase === 'updater' ||
@@ -54,6 +55,7 @@ async function main() {
       documents: () => require('./documents'),
       media: () => require('./media'),
       fileDialogs: () => require('./fileDialogs'),
+      fileUploads: () => require('./fileUploads'),
       windowControls: () => require('./windowControls'),
       contextMenu: () => require('./contextMenu'),
       updater: () => require('./updater'),

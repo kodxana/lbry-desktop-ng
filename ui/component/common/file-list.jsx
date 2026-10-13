@@ -22,49 +22,17 @@ const ForwardedRadio = React.forwardRef((props: RadioProps, ref) => (
 
 function FileList(props: Props) {
   const { files, onChange } = props;
-  const radio = useRadioState();
-
-  const getFile = (value?: string) => {
-    if (files && files.length) {
-      return files.find((file: File) => file.name === value);
-    }
-  };
+  const radio = useRadioState({ state: '0' });
 
   React.useEffect(() => {
-    if (radio.items.length) {
-      if (!radio.currentId) {
-        radio.first();
-      } else {
-        const first = radio.items[0].ref.current;
-        // First auto-selection
-        if (first && first.id === radio.currentId && !radio.state) {
-          const file = getFile(first.value);
-          // Update state and select new file
-          onChange(file);
-          radio.setState(first.value);
-        }
-
-        if (radio.state) {
-          // Find selected element
-          const stop = radio.items.find((item) => item.id === radio.currentId);
-          const element = stop && stop.ref.current;
-          // Only update state if new item is selected
-          if (element && element.value !== radio.state) {
-            const file = getFile(element.value);
-            // Select new file and update state
-            onChange(file);
-            radio.setState(element.value);
-          }
-        }
-      }
-    }
-  }, [radio, onChange]);
+    onChange(files && files[Number(radio.state)]);
+  }, [radio.state, files, onChange]);
 
   return (
     <div className={'file-list'}>
       <RadioGroup {...radio} aria-label="files">
-        {files.map(({ name }) => {
-          return <Radio key={name} {...radio} value={name} label={name} as={ForwardedRadio} />;
+        {files.map(({ name }, index) => {
+          return <Radio key={index} {...radio} value={String(index)} label={name} as={ForwardedRadio} />;
         })}
       </RadioGroup>
     </div>

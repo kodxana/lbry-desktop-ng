@@ -50,7 +50,7 @@ profile retains its wallet and downloaded data.
 
 Use Linux x64 and Node 24.21.0. Install the checked-in Yarn lock with
 `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`, then
-run `node node_modules/electron/install.js` to install the pinned Electron 28.3.3.
+run `node node_modules/electron/install.js` to install the pinned Electron 34.5.8.
 
 For the current source, download `lbrynet-linux` from the CI run recorded in
 `build/sdk-candidate.json`, verify its archive SHA-256 against
