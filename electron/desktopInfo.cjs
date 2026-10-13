@@ -30,10 +30,12 @@ function registerDesktopInfo({ ipcMain, app, getWindow, rendererURL }) {
     const location = new URL(event.senderFrame.url);
     // Preserve the original cookie adapter's OS-specific mapping, including Windows paths.
     const relativePath = path.relative(app.getAppPath(), decodeURI(location.pathname));
-    event.returnValue = { ok: true,
-url: location.protocol === 'file:'
-      ? 'https://lbry.tv/' + encodeURI(relativePath) + location.search + location.hash
-      : location.href };
+    event.returnValue = {
+      ok: true,
+      url: location.protocol === 'file:'
+        ? 'https://lbry.tv/' + encodeURI(relativePath) + location.search + location.hash
+        : location.href,
+    };
   });
 }
 
