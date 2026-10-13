@@ -3,6 +3,7 @@ const assert = require('assert').strict;
 const { EventEmitter } = require('events');
 const { registerContextMenu } = require('../electron/contextMenu.cjs');
 const request = { kind: 'text', x: 23, y: 41, hasText: true, hasSelection: true, editable: true };
+const tick = () => new Promise((resolve) => setImmediate(resolve));
 
 function fixture(isDev = false) {
   const contents = new EventEmitter();
@@ -37,7 +38,12 @@ function fixture(isDev = false) {
         return menu;
       },
     },
-    clipboard: { readText: () => f.clipboard },
+    clipboard: {
+      readText: async () => {
+        if (f.failRead) throw new Error('Synthetic clipboard failure');
+        return f.clipboard;
+      },
+    },
     getWindow: () => f.current,
     rendererURL: 'file:///fixture/index.html',
     isDev,
@@ -64,6 +70,7 @@ async function run() {
   ]) {
     const f = fixture();
     const pending = f.invoke();
+    await tick();
     assert(!f.menu().items.some((item) => item.id === 'inspect'));
     f.click(id);
     f.click(id);
@@ -78,6 +85,7 @@ async function run() {
   ]) {
     const f = fixture();
     const pending = f.invoke(value);
+    await tick();
     assert(!f.menu().items.some((item) => ['cut', 'paste'].includes(item.id)));
     f.menu().dismiss();
     assert.deepEqual(await pending, { ok: true, action: null });
@@ -87,6 +95,7 @@ async function run() {
   const empty = fixture();
   empty.clipboard = '';
   const emptyMenu = empty.invoke({ ...request, hasSelection: false, hasText: false });
+  await tick();
   assert.deepEqual(
     empty.menu().items.map(({ id, enabled }) => ({ id, enabled })),
     [{ id: 'copy', enabled: false }]
@@ -98,6 +107,7 @@ async function run() {
 
   const editor = fixture();
   const select = editor.invoke({ kind: 'editor', x: 0, y: 0, hasText: true, hasSelection: true });
+  await tick();
   editor.menu().dismiss();
   editor.click('editor-select-all');
   assert.deepEqual(await select, { ok: true, action: 'editor-select-all' }, 'Closing must not swallow the click');
@@ -113,6 +123,7 @@ async function run() {
 
   const dev = fixture(true);
   const inspect = dev.invoke();
+  await tick();
   dev.click('inspect');
   await inspect;
   assert.deepEqual(dev.calls, [['inspectElement', 23, 41]], 'Inspect uses content coordinates, not screen coordinates');
@@ -157,6 +168,7 @@ async function run() {
   ]) {
     const f = fixture();
     const pending = f.invoke();
+    await tick();
     change(f);
     f.click('cut');
     assert.deepEqual(await pending, { ok: false, error: 'sender' });
@@ -165,21 +177,44 @@ async function run() {
   }
   const busy = fixture();
   const first = busy.invoke();
+  await tick();
   assert.deepEqual(await busy.invoke(), { ok: false, error: 'busy' });
   busy.window.webContents.emit('did-start-navigation', {}, 'about:blank', false, false);
   assert.equal(busy.closed, undefined, 'Subframe navigation must not dismiss the app menu');
   busy.menu().dismiss();
   await first;
-  for (const failure of ['failBuild', 'failPopup']) {
+  for (const failure of ['failBuild', 'failPopup', 'failRead']) {
     busy[failure] = true;
     assert.deepEqual(await busy.invoke(), { ok: false, error: 'menu' });
     busy[failure] = false;
     busy.clean();
   }
   const retry = busy.invoke();
+  await tick();
   busy.click('copy');
   await retry;
   busy.clean();
+
+  for (const navigate of [false, true]) {
+    const held = fixture();
+    let resolveRead;
+    held.clipboard = new Promise((resolve) => {
+      resolveRead = resolve;
+    });
+    const pending = held.invoke();
+    assert.equal(held.menus.length, 0, 'Do not show a menu before clipboard access completes');
+    assert.deepEqual(await held.invoke(), { ok: false, error: 'busy' });
+    if (navigate) {
+      held.window.webContents.emit('did-start-navigation', {}, 'about:blank', false, true);
+    } else {
+      held.window.webContents.emit('destroyed');
+    }
+    assert.deepEqual(await pending, { ok: false, error: 'sender' });
+    resolveRead('Late clipboard contents');
+    await tick();
+    assert.equal(held.menus.length, 0, 'A canceled read must not open a stale menu');
+    held.clean();
+  }
   console.log(
     'PASS: context-menu commands, read-only state, development inspection, cancellation/retry and stale/sender checks'
   );

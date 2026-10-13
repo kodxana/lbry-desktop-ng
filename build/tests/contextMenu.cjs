@@ -15,7 +15,7 @@ module.exports = (getWindow, rendererURL) => {
     getWindow,
     rendererURL,
     isDev: false,
-    clipboard: { readText: () => 'Synthetic paste ł' },
+    clipboard: nativeClipboard ? clipboard : { readText: async () => 'Synthetic paste ł' },
     Menu: {
       buildFromTemplate: (template) => {
         requests++;
@@ -46,17 +46,17 @@ module.exports = (getWindow, rendererURL) => {
           if (nativeClipboard) original();
         };
       }
-      if (nativeClipboard) clipboard.writeText('Synthetic paste ł');
+      if (nativeClipboard) await clipboard.writeText('Synthetic paste ł');
     } else if (command === 'choose') {
       const item = menu.getMenuItemById(value);
       assert(item && item.enabled, 'Selected menu item must exist and be enabled: ' + value);
       dismiss();
       item.click({}, getWindow(), getWindow().webContents);
     } else if (command === 'dismiss') dismiss();
-    else if (command === 'paste-fixture' && nativeClipboard) clipboard.writeText('Synthetic paste ł');
+    else if (command === 'paste-fixture' && nativeClipboard) await clipboard.writeText('Synthetic paste ł');
     return {
       nativeClipboard,
-      clipboard: nativeClipboard ? clipboard.readText() : null,
+      clipboard: nativeClipboard ? await clipboard.readText() : null,
       commands,
       requests,
       items: menu ? menu.items.map(({ id, label, enabled, type }) => ({ id, label, enabled, type })) : [],

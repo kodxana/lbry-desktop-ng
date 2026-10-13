@@ -25,10 +25,10 @@ Windows storage checks use the native
 disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setup.md).
 
 Builds use Node 24.21.0 (pinned in `.node-version`) and Webpack 5. The desktop
-runtime is now pinned to Electron 34.5.8 as an intermediate compatibility step;
+runtime is now pinned to the supported Electron 44.7.0 release;
 Windows source builds require Windows 10 or later.
-This Electron line is unsupported; reaching a supported runtime and isolating
-the renderer remain outstanding. See [runtime migration notes](docs/electron-runtime.md)
+Renderer isolation and remaining application dependency upgrades are still
+outstanding. See [runtime migration notes](docs/electron-runtime.md)
 and [build-tooling migration notes](docs/build-tooling.md).
 The [0.54.0-rc.3 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.3)
 is available for Windows and Linux x64 testing and still contains Electron 17.2.0.

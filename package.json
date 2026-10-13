@@ -122,7 +122,7 @@
     "devtron": "^1.4.0",
     "dotenv-defaults": "^2.0.1",
     "dotenv-webpack": "9.0.0",
-    "electron": "34.5.8",
+    "electron": "44.7.0",
     "electron-builder": "26.17.0",
     "electron-devtools-installer": "^3.1.1",
     "electron-is-dev": "^0.3.0",

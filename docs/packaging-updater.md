@@ -4,7 +4,7 @@ The build now pins electron-builder 26.17.0, electron-updater 6.8.10 and the
 host-side archive reader @electron/asar 4.3.1. These use the stable v26 release
 line; the v27/updater v7 prereleases are a separate migration. React, the SDK
 candidate and the application version are unchanged. The subsequent
-[runtime migration](electron-runtime.md) moves Electron from 17.2.0 to 34.5.8.
+[runtime migration](electron-runtime.md) moves Electron from 17.2.0 to 44.7.0.
 Published RC3 packages still contain the old dependencies.
 
 Upstream changes reviewed:
@@ -34,7 +34,7 @@ Upstream changes reviewed:
   disabled. Downloading does not imply permission to install. SDK shutdown must
   finish cleanly before `quitAndInstall(false, true)`; ordinary app exit never
   installs an update.
-- Electron 34 builds require Windows 10 or later. NSIS rejects unsupported
+- Electron 44 builds require Windows 10 or later. NSIS rejects unsupported
   systems before replacing files, including updates from RC1–RC3. Those older
   clients can still offer/download an update; rejection happens at installation.
   Package tests run a harmless compiled fixture through supported, unsupported

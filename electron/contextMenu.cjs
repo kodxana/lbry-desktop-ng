@@ -56,46 +56,53 @@ function registerContextMenu({ ipcMain, Menu, clipboard, getWindow, rendererURL,
           }
         },
       });
-      try {
-        const { kind, hasText, hasSelection } = request;
-        const template = [];
-        if (kind === 'claim') {
-          if (request.hasClaim) {
-            template.push(item('copy-link', 'Copy link'), { type: 'separator' }, item('report', 'Report content'));
+      const show = async () => {
+        try {
+          const { kind, hasText, hasSelection } = request;
+          const template = [];
+          if (kind === 'claim') {
+            if (request.hasClaim) {
+              template.push(item('copy-link', 'Copy link'), { type: 'separator' }, item('report', 'Report content'));
+            }
+          } else {
+            const editor = kind === 'editor' || kind === 'snippet';
+            const editable = kind === 'editor' || (kind === 'text' && request.editable);
+            if (editor) template.push(item('editor-select-all', 'Select All', 'CmdOrCtrl+A', hasText));
+            template.push(item('copy', 'Copy', 'CmdOrCtrl+C', hasSelection, () => contents.copy()));
+            if (editable && hasSelection) template.push(item('cut', 'Cut', 'CmdOrCtrl+X', true, () => contents.cut()));
+            if (editable && (await clipboard.readText()).length > 0) {
+              template.push(item('paste', 'Paste', 'CmdOrCtrl+V', true, () => contents.paste()));
+            }
+            if (!editor && hasText) {
+              template.push(item('select-all', 'Select All', 'CmdOrCtrl+A', true, () => contents.selectAll()));
+            }
           }
-        } else {
-          const editor = kind === 'editor' || kind === 'snippet';
-          const editable = kind === 'editor' || (kind === 'text' && request.editable);
-          if (editor) template.push(item('editor-select-all', 'Select All', 'CmdOrCtrl+A', hasText));
-          template.push(item('copy', 'Copy', 'CmdOrCtrl+C', hasSelection, () => contents.copy()));
-          if (editable && hasSelection) template.push(item('cut', 'Cut', 'CmdOrCtrl+X', true, () => contents.cut()));
-          if (editable && clipboard.readText().length > 0) {
-            template.push(item('paste', 'Paste', 'CmdOrCtrl+V', true, () => contents.paste()));
+          if (isDev) {
+            if (template.length) template.push({ type: 'separator' });
+            template.push(
+              item('inspect', 'Inspect element', 'CmdOrCtrl+Shift+I', true, () =>
+                contents.inspectElement(request.x, request.y)
+              )
+            );
           }
-          if (!editor && hasText) {
-            template.push(item('select-all', 'Select All', 'CmdOrCtrl+A', true, () => contents.selectAll()));
-          }
+          if (!template.length) return finish({ ok: true, action: null });
+          // Clipboard access is asynchronous. Navigation or shutdown may have
+          // canceled this request while the OS was reading its contents.
+          if (settled) return;
+          if (!allowed(event, window)) return cancel();
+          menu = Menu.buildFromTemplate(template);
+          menu.popup({
+            window,
+            // Let a selected item's click run before resolving a dismissed menu.
+            callback: () => setImmediate(() => finish({ ok: true, action: null })),
+          });
+        } catch (_) {
+          finish({ ok: false, error: 'menu' });
         }
-        if (isDev) {
-          if (template.length) template.push({ type: 'separator' });
-          template.push(
-            item('inspect', 'Inspect element', 'CmdOrCtrl+Shift+I', true, () =>
-              contents.inspectElement(request.x, request.y)
-            )
-          );
-        }
-        if (!template.length) return finish({ ok: true, action: null });
-        menu = Menu.buildFromTemplate(template);
-        contents.on('did-start-navigation', navigating);
-        contents.once('destroyed', cancel);
-        menu.popup({
-          window,
-          // Let a selected item's click run before resolving a dismissed menu.
-          callback: () => setImmediate(() => finish({ ok: true, action: null })),
-        });
-      } catch (_) {
-        finish({ ok: false, error: 'menu' });
-      }
+      };
+      contents.on('did-start-navigation', navigating);
+      contents.once('destroyed', cancel);
+      show();
     });
   });
 }

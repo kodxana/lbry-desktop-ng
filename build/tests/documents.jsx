@@ -5,6 +5,7 @@ import path from 'path';
 import { pathToFileURL } from 'url';
 import { PassThrough } from 'stream';
 import AdmZip from 'adm-zip';
+import { ipcRenderer } from 'electron';
 import DocxViewer from 'component/viewers/docxViewer';
 import DocumentViewer from 'component/viewers/documentViewer';
 import PdfViewer from 'component/viewers/pdfViewer';
@@ -144,13 +145,19 @@ export default async function documents(store, history, root) {
   );
   unmount();
 
-  // URL/sandbox contracts are observable without relying on Chromium's PDF plugin internals.
+  // Electron 41 moved PDF rendering into out-of-process frames. Check the
+  // rendered page, without depending on the built-in viewer's private DOM.
   const pdf = path.join(root, 'preview ł #1.pdf');
   fs.writeFileSync(pdf, pdfFixture());
   render(<PdfViewer source={pdf} />, store, history);
   const frame = document.querySelector('iframe');
   assert.equal(frame.src, pathToFileURL(pdf).href, 'Local document paths must preserve # and Unicode');
-  // PDF uses Chromium's built-in viewer; HTML below has an explicit empty sandbox.
+  frame.style.width = '600px';
+  frame.style.height = '500px';
+  await waitFor(
+    async () => (await ipcRenderer.invoke('fixture-pdf-pixels')) > 1000,
+    'The PDF viewer must paint the generated page, not just load an iframe URL'
+  );
   unmount();
   const html = path.join(root, 'preview ł #1.html');
   fs.writeFileSync(html, '<!doctype html><h1>HTML fixture</h1><script>document.title="script-ran"</script>');
@@ -159,5 +166,5 @@ export default async function documents(store, history, root) {
   assert.equal(document.querySelector('iframe').getAttribute('sandbox'), '');
   await waitFor(() => !document.querySelector('iframe').hidden, 'Sandboxed HTML must become visible after loading');
   unmount();
-  return 'DOCX conversion/errors, Markdown sanitizing, read-only text/theme, document URL and sandbox contracts';
+  return 'DOCX conversion/errors, Markdown sanitizing, read-only text/theme, PDF page pixels, document URL and sandbox contracts';
 }

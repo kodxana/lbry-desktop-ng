@@ -41,7 +41,7 @@ jobs:
       - name: Install locked dependencies without lifecycle scripts
         run: node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
       - name: Install Electron
-        run: node node_modules/electron/install.js
+        run: node .yarn/releases/yarn-3.2.0.cjs exec install-electron
       - name: Fetch and verify the pinned SDK
         env:
           GITHUB_TOKEN: ${{ github.token }}

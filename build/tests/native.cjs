@@ -87,4 +87,15 @@ module.exports = function configureNativeFixtures(root, getWindow, rendererURL) 
       debuggerApi.detach();
     }
   });
+  ipcMain.handle('fixture-pdf-pixels', async (event) => {
+    assert.equal(event.sender, getWindow().webContents);
+    const snapshot = await event.sender.capturePage(undefined, { stayHidden: true, stayAwake: true });
+    const pixels = snapshot.toBitmap();
+    let green = 0;
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i] < 40 && pixels[i + 1] > 210 && pixels[i + 2] < 40 && pixels[i + 3] > 240) green++;
+    }
+    if (green > 1000) fs.writeFileSync(path.join(root, '../../ci/pdf-preview.png'), snapshot.toPNG());
+    return green;
+  });
 };

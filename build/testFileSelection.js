@@ -73,7 +73,28 @@ async function run() {
   assert.deepEqual(fixture.calls[0], { properties: ['openFile'], filters, defaultPath: root });
   const linux = service('linux');
   await linux.invoke();
-  assert(!Object.hasOwn(linux.calls[0], 'defaultPath'), 'Keep the native remembered directory on Linux');
+  assert(!Object.hasOwn(linux.calls[0], 'defaultPath'), 'The first Linux picker uses the Electron default');
+  const nested = path.join(root, 'another folder ł');
+  fs.mkdirSync(nested);
+  const nestedFile = path.join(nested, 'chosen.txt');
+  fs.writeFileSync(nestedFile, 'Nested selection');
+  linux.response = { canceled: false, filePaths: [nestedFile] };
+  await linux.invoke();
+  assert.equal(linux.calls[1].defaultPath, root);
+  linux.response = cancel;
+  await linux.invoke();
+  assert.equal(linux.calls[2].defaultPath, nested);
+  linux.response = new Error('Synthetic selection failure');
+  await linux.invoke();
+  assert.equal(linux.calls[3].defaultPath, nested, 'Cancel must preserve the previous directory');
+  linux.response = { canceled: false, filePaths: [nested] };
+  await linux.invoke({ type: 'openDirectory' });
+  assert(!Object.hasOwn(linux.calls[4], 'defaultPath'), 'Folder selection has its own last directory');
+  linux.response = cancel;
+  await linux.invoke({ type: 'openDirectory' });
+  assert.equal(linux.calls[5].defaultPath, nested);
+  await linux.invoke();
+  assert.equal(linux.calls[6].defaultPath, nested, 'A failed file selection must preserve the previous directory');
 
   // Cancellation and metadata-only selections must not read file contents.
   const readFile = fs.promises.readFile;
