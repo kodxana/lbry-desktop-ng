@@ -3504,7 +3504,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@xmldom/xmldom@npm:^0.8.8":
+"@xmldom/xmldom@npm:^0.8.6, @xmldom/xmldom@npm:^0.8.8":
   version: 0.8.15
   resolution: "@xmldom/xmldom@npm:0.8.15"
   checksum: efeb17d041ed73adb54c903fe959254a3b2155f820b127dbf0b5390a2b1436143bb34fab58c3f82e58aa910d0c5d4f1e205cd9370d39f098ec1ce8c6daf0424e
@@ -4507,13 +4507,6 @@ __metadata:
     readable-stream: ^2.3.5
     safe-buffer: ^5.1.1
   checksum: 123f097989ce2fa9087ce761cd41176aaaec864e28f7dfe5c7dab8ae16d66d9844f849c3ad688eb357e3c5e4f49b573e3c0780bb8bc937206735a3b6f8569a5f
-  languageName: node
-  linkType: hard
-
-"bluebird@npm:~3.4.0":
-  version: 3.4.7
-  resolution: "bluebird@npm:3.4.7"
-  checksum: bffa9dee7d3a41ab15c4f3f24687b49959b4e64e55c058a062176feb8ccefc2163414fb4e1a0f3053bf187600936509660c3ebd168fd9f0e48c7eba23b019466
   languageName: node
   linkType: hard
 
@@ -10855,7 +10848,7 @@ __metadata:
     lint-staged: ^7.0.2
     localforage: ^1.7.1
     lodash-es: ^4.17.21
-    mammoth: ^1.4.16
+    mammoth: 1.13.0
     match-sorter: ^6.3.0
     mime: ^3.0.0
     moment: ^2.29.2
@@ -11325,14 +11318,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lop@npm:^0.4.1":
-  version: 0.4.1
-  resolution: "lop@npm:0.4.1"
+"lop@npm:^0.4.2":
+  version: 0.4.2
+  resolution: "lop@npm:0.4.2"
   dependencies:
     duck: ^0.1.12
     option: ~0.2.1
     underscore: ^1.13.1
-  checksum: 0586a2601a6cc709664b40e69266fb684136d9f4041a97d76413030846f0c03f36c6a262873efbcf6ab8e5a584449e24b18722b8a7e5d58e5326359f0be08439
+  checksum: 4a21fa77b8f040d032805940ef10c025b1a8a62ce4b0cd87e10bc2ef9cf2f86dca7e62790c3d1ce0b23365c1fd9e9209b75df7581c2f6576b85a1d5559c906e6
   languageName: node
   linkType: hard
 
@@ -11464,22 +11457,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mammoth@npm:^1.4.16":
-  version: 1.4.21
-  resolution: "mammoth@npm:1.4.21"
+"mammoth@npm:1.13.0":
+  version: 1.13.0
+  resolution: "mammoth@npm:1.13.0"
   dependencies:
+    "@xmldom/xmldom": ^0.8.6
     argparse: ~1.0.3
-    bluebird: ~3.4.0
+    base64-js: ^1.5.1
     dingbat-to-unicode: ^1.0.1
     jszip: ^3.7.1
-    lop: ^0.4.1
-    path-is-absolute: ^1.0.0
-    sax: ~1.1.1
+    lop: ^0.4.2
     underscore: ^1.13.1
     xmlbuilder: ^10.0.0
   bin:
     mammoth: bin/mammoth
-  checksum: a5abb48fc36102116b355f00b4a21e4a528dbb3863e62b2ccea67b789d5df20bf5b37f2fa86b939108baccc791d4a4f0db0494e04870c8ebab1edaac835bb706
+  checksum: 5e0ff5504802b4e9383da79e4d34d676b616c7aad22e3af8a51383fe5ccdd4abfae5cfa34d476e97240bc136d2e0f10bb17d7456c7a13cb6e19097cf8cc04065
   languageName: node
   linkType: hard
 
@@ -15460,13 +15452,6 @@ __metadata:
   version: 1.2.4
   resolution: "sax@npm:1.2.4"
   checksum: d3df7d32b897a2c2f28e941f732c71ba90e27c24f62ee918bd4d9a8cfb3553f2f81e5493c7f0be94a11c1911b643a9108f231dd6f60df3fa9586b5d2e3e9e1fe
-  languageName: node
-  linkType: hard
-
-"sax@npm:~1.1.1":
-  version: 1.1.6
-  resolution: "sax@npm:1.1.6"
-  checksum: 879f18483d00f4630580fb4dc95da7d06046b1d71af1f27e33425f81d82751ab66a84eb584a462aa610f7a94de8d87416e03c708530ba76b1aa381b6828bfc9e
   languageName: node
   linkType: hard
 

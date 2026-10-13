@@ -31,6 +31,7 @@ class DocxViewer extends React.PureComponent<Props, State> {
 
     // Overwrite element and styles
     const options = {
+      externalFileAccess: false,
       styleMap: [
         "p[style-name='Title'] => h1:fresh",
         "p[style-name='Heading 1'] => h1:fresh",
@@ -44,7 +45,8 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
 
     // Parse docx to html
-    desktop.readDocument(source)
+    desktop
+      .readDocument(source)
       .then((bytes) =>
         mammoth.convertToHtml(
           { arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) },

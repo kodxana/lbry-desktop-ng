@@ -29,7 +29,8 @@ runtime is now pinned to the supported Electron 44.7.0 release;
 Windows source builds require Windows 10 or later.
 The renderer now runs with Node integration disabled and the Chromium sandbox
 enabled; see [renderer isolation](docs/renderer-isolation.md). Application
-dependency upgrades continue with the [wallet ZIP library](docs/wallet-archives.md).
+dependency upgrades include the [wallet ZIP library](docs/wallet-archives.md)
+and [Word document renderer](docs/docx-renderer.md).
 See also [runtime migration notes](docs/electron-runtime.md)
 and [build-tooling migration notes](docs/build-tooling.md).
 The [0.54.0-rc.3 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.3)

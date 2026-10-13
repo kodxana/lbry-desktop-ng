@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const AdmZip = require('adm-zip');
+const docxFixture = require('./fixtures/docx.cjs');
 const { app, BrowserWindow, ipcMain } = require('electron');
 const { registerWalletBackup } = require('../../electron/walletBackup.cjs');
 const { registerPasswordStorage } = require('../../electron/passwordStorage.cjs');
@@ -125,31 +126,19 @@ app
     const contents = await call('readDocument', selected);
     assert.equal(Buffer.from(contents).toString(), 'Selected document');
     const docx = path.join(root, 'sandbox.docx');
-    const zip = new AdmZip();
-    zip.addFile(
-      '[Content_Types].xml',
-      Buffer.from(
-        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'
-      )
-    );
-    zip.addFile(
-      '_rels/.rels',
-      Buffer.from(
-        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'
-      )
-    );
-    zip.addFile(
-      'word/document.xml',
-      Buffer.from(
-        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Sandbox DOCX ł</w:t></w:r></w:p></w:body></w:document>'
-      )
-    );
-    zip.writeZip(docx);
+    docxFixture().writeZip(docx);
     await files.grant(docx);
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
     assert(documents.markdown.includes('<h1>Sandbox ł</h1>'));
     assert(documents.markdown.includes('<strong>Bold</strong>'));
-    assert.equal(documents.document, '<p>Sandbox DOCX ł</p>');
+    assert(documents.document.includes('<h1>Document fixture ł</h1>'));
+    assert(documents.document.includes('data:image/png;base64,' + docxFixture.png));
+    assert(documents.document.includes('Footnote text'));
+    assert(documents.document.includes('Moved revision'));
+    assert(!documents.document.includes('Old revision'));
+    assert(!documents.document.includes('javascript:'));
+    assert(!documents.document.includes('linked.png'));
+    assert(!documents.document.includes('remote.png'));
     assert.equal(documents.streamed, 'Browser stream ł');
     assert.equal(documents.deprecated, 'supported');
     const backup = await call('backupWallet', { id: 'sandbox-backup', directory: wallet });
