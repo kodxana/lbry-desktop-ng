@@ -7,7 +7,7 @@ import * as ICONS from 'constants/icons';
 import * as React from 'react';
 import Button from 'component/button';
 import classnames from 'classnames';
-import defaultSchema from 'hast-util-sanitize/lib/github.json';
+import defaultSchema from 'hast-util-sanitize-legacy/lib/github.json';
 import MarkdownLink from 'component/markdownLink';
 import OptimizedImage from 'component/optimizedImage';
 import reactRenderer from 'remark-react';
@@ -128,12 +128,13 @@ const SimpleImageLink = (props: ImageLinkProps) => {
 // ****************************************************************************
 // ****************************************************************************
 
-// Use github sanitation schema
-const schema = { ...defaultSchema };
-
-// Extend sanitation schema to support lbry protocol
-schema.protocols.href.push('lbry');
-schema.attributes.a.push('embed');
+// Keep the schema compatible with remark-react's internal version 3 sanitizer.
+// Extend LBRY links without mutating the imported defaults.
+const schema = {
+  ...defaultSchema,
+  protocols: { ...defaultSchema.protocols, href: [...defaultSchema.protocols.href, 'lbry'] },
+  attributes: { ...defaultSchema.attributes, a: [...defaultSchema.attributes.a, 'embed'] },
+};
 
 const REPLACE_REGEX = /(<iframe\s+src=["'])(.*?(?=))(["']\s*><\/iframe>)/g;
 

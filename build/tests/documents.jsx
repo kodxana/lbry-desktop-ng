@@ -10,7 +10,7 @@ import DocumentViewer from 'component/viewers/documentViewer';
 import PdfViewer from 'component/viewers/pdfViewer';
 import HtmlViewer from 'component/viewers/htmlViewer';
 import * as MODES from 'constants/file_render_modes';
-import sanitizeDocumentHtml from 'util/document-html';
+import documentHtml from './documentHtml';
 import pdfFixture from './fixtures/pdf.cjs';
 import docxFixture from './fixtures/docx.cjs';
 import markdown from './markdown';
@@ -18,19 +18,7 @@ import { render, unmount, waitFor } from './helpers';
 
 export default async function documents(store, history, root) {
   markdown(store, history);
-  const inert = document.createElement('template');
-  inert.innerHTML = sanitizeDocumentHtml(
-    '<script>void(0)</script><svg onload="void(0)"></svg><iframe src="file:///fixture"></iframe>' +
-      '<a href="java&#x73;cript:void(0)" onclick="void(0)">unsafe</a>' +
-      '<a href="file:///fixture">local</a><img src="file:///fixture" onerror="void(0)">' +
-      '<img src="https://example.invalid/tracker"><img src="data:image/svg+xml;base64,PHN2Zy8+">' +
-      '<img alt="embedded" src="data:image/png;base64,iVBORw0KGgo=">'
-  );
-  assert(
-    !inert.content.querySelector('script, svg, iframe, [onclick], [onload], [onerror], a[href]'),
-    'Document sanitizer must remove active content and unsafe links'
-  );
-  assert.equal(inert.content.querySelectorAll('img[src]').length, 1, 'Only embedded raster images may load');
+  documentHtml();
   for (const strict of [false, true]) {
     const source = path.join(root, `document ł #${strict ? 'strict' : 'transitional'}.docx`);
     docxFixture(strict).writeZip(source);
@@ -49,6 +37,8 @@ export default async function documents(store, history, root) {
     assert(!content.textContent.includes('Old revision'));
     assert(!content.querySelector('a[href^="javascript:"]'), 'DOCX must not retain executable hyperlinks');
     assert(content.querySelector('a[href="https://example.invalid/document"]'));
+    assert(content.querySelector('a[href="lbry://@fixture:abc/document:def"]'));
+    assert(content.querySelector('a[href="lbry://@fixture#abc/document#def"]'));
     assert(content.querySelector('a[href="#user-content-section"]'), 'Internal links must retain their destination');
     assert.equal(content.querySelectorAll('a[href^="#"]').length, 3, 'Keep the bookmark and both footnote links');
     for (const anchor of content.querySelectorAll('a[href^="#"]')) {
@@ -169,5 +159,5 @@ export default async function documents(store, history, root) {
   assert.equal(document.querySelector('iframe').getAttribute('sandbox'), '');
   await waitFor(() => !document.querySelector('iframe').hidden, 'Sandboxed HTML must become visible after loading');
   unmount();
-  return 'DOCX transitional/strict XML, images, lists, revisions, footnotes, sanitizing/errors; Markdown legacy embeds/entities, text, PDF pixels and sandbox contracts';
+  return 'DOCX formatting, LBRY links, images, footnotes, sanitizing/errors; Markdown formatting, timestamps, embeds/entities, text, PDF pixels and sandbox contracts';
 }

@@ -34,6 +34,8 @@ module.exports = function docxFixture(strict = false) {
       <w:p><w:hyperlink w:anchor="section"><w:r><w:t>Internal link</w:t></w:r></w:hyperlink></w:p>
       <w:p><w:hyperlink r:id="unsafe"><w:r><w:t>Unsafe link</w:t></w:r></w:hyperlink></w:p>
       <w:p><w:hyperlink r:id="safe"><w:r><w:t>Safe link</w:t></w:r></w:hyperlink></w:p>
+      <w:p><w:hyperlink r:id="lbry"><w:r><w:t>LBRY channel claim</w:t></w:r></w:hyperlink></w:p>
+      <w:p><w:hyperlink r:id="lbryLegacy"><w:r><w:t>Legacy LBRY channel claim</w:t></w:r></w:hyperlink></w:p>
       <w:p><w:r><w:footnoteReference w:id="1"/></w:r></w:p>
       <w:moveFrom><w:p><w:r><w:t>Old revision</w:t></w:r></w:p></w:moveFrom>
       <w:moveTo><w:p><w:r><w:t>Moved revision</w:t></w:r></w:p></w:moveTo>
@@ -53,6 +55,8 @@ module.exports = function docxFixture(strict = false) {
       <Relationship Id="footnotes" Type="${relationships}/footnotes" Target="footnotes.xml"/>
       <Relationship Id="unsafe" Type="${relationships}/hyperlink" Target="javascript:void(0)" TargetMode="External"/>
       <Relationship Id="safe" Type="${relationships}/hyperlink" Target="https://example.invalid/document" TargetMode="External"/>
+      <Relationship Id="lbry" Type="${relationships}/hyperlink" Target="lbry://@fixture:abc/document:def" TargetMode="External"/>
+      <Relationship Id="lbryLegacy" Type="${relationships}/hyperlink" Target="lbry://@fixture#abc/document#def" TargetMode="External"/>
       <Relationship Id="embedded" Type="${relationships}/image" Target="media/pixel.png"/>
       <Relationship Id="linked" Type="${relationships}/image" Target="linked.png" TargetMode="External"/>
       <Relationship Id="remote" Type="${relationships}/image" Target="https://example.invalid/remote.png" TargetMode="External"/>

@@ -3048,6 +3048,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/hast@npm:^3.0.0":
+  version: 3.0.5
+  resolution: "@types/hast@npm:3.0.5"
+  dependencies:
+    "@types/unist": "*"
+  checksum: 5fbeafe4b4cceebe4f1d0be1927febb4c59b6dc66f375cbcb2586524b9bd8b8d44119a498f493d51bdf91e559cca1b23e26fa904135da07f449e95331806f3b6
+  languageName: node
+  linkType: hard
+
 "@types/hoist-non-react-statics@npm:^3.3.0":
   version: 3.3.1
   resolution: "@types/hoist-non-react-statics@npm:3.3.1"
@@ -3267,6 +3276,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/unist@npm:^3.0.0":
+  version: 3.0.3
+  resolution: "@types/unist@npm:3.0.3"
+  checksum: 96e6453da9e075aaef1dc22482463898198acdc1eeb99b465e65e34303e2ec1e3b1ed4469a9118275ec284dc98019f63c3f5d49422f0e4ac707e5ab90fb3b71a
+  languageName: node
+  linkType: hard
+
 "@types/warning@npm:^3.0.0":
   version: 3.0.0
   resolution: "@types/warning@npm:3.0.0"
@@ -3278,6 +3294,13 @@ __metadata:
   version: 0.2.1
   resolution: "@ungap/from-entries@npm:0.2.1"
   checksum: b40f7902ecd5bf3c50bfe3c02e17ab2c868be3732c5b6b02cb04b15f1382919ffff88bd389879d6ddc131e5b19b3a9a20951433b4320229c3ecc9f0f305d287e
+  languageName: node
+  linkType: hard
+
+"@ungap/structured-clone@npm:^1.0.0":
+  version: 1.4.0
+  resolution: "@ungap/structured-clone@npm:1.4.0"
+  checksum: 2a69d69c54600b0e7acd1755cfd4f80e2bf5a57f999d4c3f4023ef69d94ca8a86520e3369edb635f0925c67af87c7f0b6f1a7177a682e8bbb66fb7973180102d
   languageName: node
   linkType: hard
 
@@ -9140,12 +9163,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hast-util-sanitize@npm:^3.0.0, hast-util-sanitize@npm:^3.0.2":
+"hast-util-sanitize-legacy@npm:hast-util-sanitize@3.0.2, hast-util-sanitize@npm:^3.0.0":
   version: 3.0.2
   resolution: "hast-util-sanitize@npm:3.0.2"
   dependencies:
     xtend: ^4.0.0
   checksum: b02f5dc902e6ad626219bf63e6ca94dbe4cb456300210a25c7401b5e754dbea01e2cafeb1bf965b9b777e464b26723d788336965f3c2bc4b7138f24ea4809a9c
+  languageName: node
+  linkType: hard
+
+"hast-util-sanitize@npm:5.0.2":
+  version: 5.0.2
+  resolution: "hast-util-sanitize@npm:5.0.2"
+  dependencies:
+    "@types/hast": ^3.0.0
+    "@ungap/structured-clone": ^1.0.0
+    unist-util-position: ^5.0.0
+  checksum: 2ab506b847e0ef799dafabae764893bd6ee43dfdf10e65154436c3ded5210abcc637d8e630354f2efd0aa771cd9de78624e2ed9a82c7054029f2b9e18ca7bb70
   languageName: node
   linkType: hard
 
@@ -10843,7 +10877,8 @@ __metadata:
     flow-bin: ^0.97.0
     flow-typed: ^3.7.0
     formik: ^0.10.4
-    hast-util-sanitize: ^3.0.2
+    hast-util-sanitize: 5.0.2
+    hast-util-sanitize-legacy: "npm:hast-util-sanitize@3.0.2"
     history: ^4.9.0
     humanize-duration: ^3.27.0
     husky: ^3.1.0
@@ -17305,6 +17340,15 @@ __metadata:
   version: 3.1.0
   resolution: "unist-util-position@npm:3.1.0"
   checksum: 10b3952e32a1ffabbecad41c3946237f7059f5bb6436796da05531a285f50b97e4f37cfc2f7164676d041063f40fe1ad92fbb8ca38d3ae8747328ebe738d738f
+  languageName: node
+  linkType: hard
+
+"unist-util-position@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "unist-util-position@npm:5.0.0"
+  dependencies:
+    "@types/unist": ^3.0.0
+  checksum: f89b27989b19f07878de9579cd8db2aa0194c8360db69e2c99bd2124a480d79c08f04b73a64daf01a8fb3af7cba65ff4b45a0b978ca243226084ad5f5d441dde
   languageName: node
   linkType: hard
 
