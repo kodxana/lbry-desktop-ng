@@ -68,7 +68,7 @@ launcher: new AutoLaunch({ name: 'lbry', isHidden: true }),
 rendererURL,
 });
 if (isDev) {
-  const file = process.env.LBRY_I18N_OUTPUT_FILE || path.join(desktopProfile.temp, 'app-strings.json');
+  const file = process.env.LBRY_I18N_OUTPUT_FILE || path.join(__static, 'app-strings.json');
   if (!fs.existsSync(file)) fs.copyFileSync(path.join(__static, 'app-strings.json'), file);
   require('./translationCollection.cjs').registerTranslationCollection({
     ipcMain, file, getWindow: () => rendererWindow, rendererURL,
