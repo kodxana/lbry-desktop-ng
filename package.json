@@ -214,9 +214,9 @@
     "url": "0.11.0",
     "util": "0.10.3",
     "uuid": "^8.3.2",
-    "video.js": "^7.14.3",
-    "videojs-contrib-quality-levels": "^2.0.9",
-    "videojs-event-tracking": "^1.0.1",
+    "video.js": "8.24.1",
+    "videojs-contrib-quality-levels": "4.1.0",
+    "videojs-event-tracking": "1.0.3",
     "villain-react": "^1.0.9",
     "webpack": "5.111.1",
     "webpack-cli": "7.2.3",
@@ -227,6 +227,9 @@
     "ws": "8.22.0",
     "yarnhook": "^0.2.0",
     "yauzl": "3.4.0"
+  },
+  "resolutions": {
+    "video.js": "8.24.1"
   },
   "engines": {
     "node": "24.x",
