@@ -5,6 +5,7 @@ import mammoth from 'mammoth';
 import { PassThrough } from 'stream';
 import { deprecate } from 'util';
 import desktop from 'util/desktop';
+import sanitizeDocumentHtml from 'util/document-html';
 
 // Exercise browser compatibility code with no ambient Node globals. The fixture
 // runner cannot catch a dependency accidentally relying on its own Node process.
@@ -13,9 +14,10 @@ window.probeDependencies = async (docx) => {
     remark().use(reactRenderer).processSync('# Sandbox ł\n\n**Bold**').contents
   );
   const bytes = await desktop.readDocument(docx);
-  const document = await mammoth.convertToHtml({
-    arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
-  });
+  const document = await mammoth.convertToHtml(
+    { arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) },
+    { externalFileAccess: false }
+  );
   const streamed = await new Promise((resolve, reject) => {
     const source = new PassThrough();
     const target = new PassThrough();
@@ -28,7 +30,7 @@ window.probeDependencies = async (docx) => {
   });
   return {
     markdown,
-    document: document.value,
+    document: sanitizeDocumentHtml(document.value),
     streamed,
     deprecated: deprecate(() => 'supported', 'Fixture warning')(),
   };

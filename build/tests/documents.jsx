@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
 import desktop from 'util/desktop';
-import AdmZip from 'adm-zip';
 import { ipcRenderer } from 'electron';
 import DocxViewer from 'component/viewers/docxViewer';
 import DocumentViewer from 'component/viewers/documentViewer';
@@ -13,6 +12,7 @@ import HtmlViewer from 'component/viewers/htmlViewer';
 import * as MODES from 'constants/file_render_modes';
 import sanitizeDocumentHtml from 'util/document-html';
 import pdfFixture from './fixtures/pdf.cjs';
+import docxFixture from './fixtures/docx.cjs';
 import { render, unmount, waitFor } from './helpers';
 
 export default async function documents(store, history, root) {
@@ -29,66 +29,60 @@ export default async function documents(store, history, root) {
     'Document sanitizer must remove active content and unsafe links'
   );
   assert.equal(inert.content.querySelectorAll('img[src]').length, 1, 'Only embedded raster images may load');
-  const source = path.join(root, 'document ł #1.docx');
-  const zip = new AdmZip();
-  zip.addFile(
-    '[Content_Types].xml',
-    Buffer.from(
-      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'
-    )
-  );
-  zip.addFile(
-    '_rels/.rels',
-    Buffer.from(
-      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'
-    )
-  );
-  zip.addFile(
+  for (const strict of [false, true]) {
+    const source = path.join(root, `document ł #${strict ? 'strict' : 'transitional'}.docx`);
+    docxFixture(strict).writeZip(source);
+    await ipcRenderer.invoke('fixture-grant-file', source);
+    render(<DocxViewer source={source} />, store, history);
+    await waitFor(() => document.querySelector('.file-render__content'), 'DOCX conversion did not finish');
+    assert.equal(document.querySelector('h1').textContent, 'Document fixture ł');
+    assert.equal(document.querySelector('strong').textContent, 'Bold text');
+    assert.equal(document.querySelector('td').textContent, 'Table cell');
+    assert.equal(document.querySelector('ul li').textContent, 'List item');
+    const content = document.querySelector('.file-render__content');
+    assert(content.textContent.includes('Escaped & <literal> 文書'));
+    assert(content.textContent.includes('Footnote text'));
+    assert(content.textContent.includes('Moved revision'));
+    assert(content.textContent.includes('Custom XML text'));
+    assert(!content.textContent.includes('Old revision'));
+    assert(!content.querySelector('a[href^="javascript:"]'), 'DOCX must not retain executable hyperlinks');
+    assert(content.querySelector('a[href="https://example.invalid/document"]'));
+    assert(content.querySelector('a[href="#user-content-section"]'), 'Internal links must retain their destination');
+    assert.equal(content.querySelectorAll('a[href^="#"]').length, 3, 'Keep the bookmark and both footnote links');
+    for (const anchor of content.querySelectorAll('a[href^="#"]')) {
+      assert(document.getElementById(anchor.hash.slice(1)), 'Sanitized bookmarks and footnotes must resolve');
+    }
+    const image = content.querySelector('img');
+    assert.equal(image.src, 'data:image/png;base64,' + docxFixture.png);
+    assert.equal(image.alt, 'embedded');
+    await waitFor(() => image.complete && image.naturalWidth === 1, 'Embedded DOCX image must decode');
+    assert.equal(content.querySelectorAll('img').length, 1, 'Linked local and remote images must be omitted');
+    unmount();
+  }
+  const noBody = docxFixture();
+  noBody.updateFile(
     'word/document.xml',
-    Buffer.from(
-      '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>' +
-        '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Document fixture ł</w:t></w:r></w:p>' +
-        '<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>Bold text</w:t></w:r></w:p>' +
-        '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>Table cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl>' +
-        '<w:p><w:hyperlink r:id="unsafe"><w:r><w:t>Unsafe link</w:t></w:r></w:hyperlink></w:p>' +
-        '<w:p><w:hyperlink r:id="safe"><w:r><w:t>Safe link</w:t></w:r></w:hyperlink></w:p>' +
-        '</w:body></w:document>'
-    )
+    Buffer.from('<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>')
   );
-  zip.addFile(
-    'word/styles.xml',
-    Buffer.from(
-      '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="Heading 1"/></w:style></w:styles>'
-    )
-  );
-  zip.addFile(
-    'word/_rels/document.xml.rels',
-    Buffer.from(
-      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-        '<Relationship Id="unsafe" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="javascript:void(0)" TargetMode="External"/>' +
-        '<Relationship Id="safe" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.invalid/document" TargetMode="External"/>' +
-        '</Relationships>'
-    )
-  );
-  zip.writeZip(source);
-  await ipcRenderer.invoke('fixture-grant-file', source);
-  render(<DocxViewer source={source} />, store, history);
-  await waitFor(() => document.querySelector('.file-render__content'), 'DOCX conversion did not finish');
-  assert.equal(document.querySelector('h1').textContent, 'Document fixture ł');
-  assert.equal(document.querySelector('strong').textContent, 'Bold text');
-  assert.equal(document.querySelector('td').textContent, 'Table cell');
-  assert(!document.querySelector('a[href^="javascript:"]'), 'DOCX must not retain executable hyperlinks');
-  assert(document.querySelector('a[href="https://example.invalid/document"]'));
-  unmount();
-  const corrupt = path.join(root, 'corrupt.docx');
-  fs.writeFileSync(corrupt, 'Not a ZIP');
-  await ipcRenderer.invoke('fixture-grant-file', corrupt);
-  render(<DocxViewer source={corrupt} />, store, history);
-  await waitFor(() => document.body.textContent.includes("can't load the document"), 'Corrupt DOCX must show an error');
-  unmount();
+  for (const [name, bytes] of [
+    ['corrupt', Buffer.from('Not a ZIP')],
+    ['no-body', noBody.toBuffer()],
+  ]) {
+    const source = path.join(root, name + '.docx');
+    fs.writeFileSync(source, bytes);
+    await ipcRenderer.invoke('fixture-grant-file', source);
+    render(<DocxViewer source={source} />, store, history);
+    await waitFor(
+      () => document.body.textContent.includes("can't load the document"),
+      name + ' DOCX must show an error'
+    );
+    unmount();
+  }
 
   let finish;
-  const bytes = new Promise((resolve) => { finish = resolve; });
+  const bytes = new Promise((resolve) => {
+    finish = resolve;
+  });
   render(
     <DocumentViewer
       theme="dark"
@@ -98,7 +92,11 @@ export default async function documents(store, history, root) {
     store,
     history
   );
-  finish(new TextEncoder().encode('# Markdown fixture\n\n**Bold** and [unsafe](javascript:void%280%29)\n\n<script>void(0)</script>'));
+  finish(
+    new TextEncoder().encode(
+      '# Markdown fixture\n\n**Bold** and [unsafe](javascript:void%280%29)\n\n<script>void(0)</script>'
+    )
+  );
   await waitFor(() => document.querySelector('.markdown-preview h1'), 'Chunked Markdown did not render');
   assert.equal(document.querySelector('strong').textContent, 'Bold');
   assert(!document.querySelector('.markdown-preview script, .markdown-preview a[href^="javascript:"]'));
@@ -169,5 +167,5 @@ export default async function documents(store, history, root) {
   assert.equal(document.querySelector('iframe').getAttribute('sandbox'), '');
   await waitFor(() => !document.querySelector('iframe').hidden, 'Sandboxed HTML must become visible after loading');
   unmount();
-  return 'DOCX conversion/errors, Markdown sanitizing, read-only text/theme, PDF page pixels, document URL and sandbox contracts';
+  return 'DOCX transitional/strict XML, images, lists, revisions, footnotes, sanitizing/errors; Markdown, text, PDF pixels and sandbox contracts';
 }
