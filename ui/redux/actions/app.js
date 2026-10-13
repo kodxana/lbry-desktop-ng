@@ -1,6 +1,5 @@
-import isDev from 'electron-is-dev';
 import desktopSettings from '../../../desktop-settings.json';
-import { ipcRenderer, shell } from 'electron';
+import desktop from 'util/desktop';
 import { quitApplication } from 'util/window-controls';
 import { requestUpdater } from 'util/updater-client';
 import * as ACTIONS from 'constants/action_types';
@@ -46,6 +45,7 @@ import { doSignOutCleanup, getAuthToken } from 'util/saved-passwords';
 import { doNotificationSocketConnect } from 'redux/actions/websocket';
 import { shouldSetSetting } from 'util/sync-settings';
 import { withLocalHubPreference } from 'util/hub-preferences';
+const isDev = process.env.NODE_ENV !== 'production';
 
 const CHECK_UPGRADE_INTERVAL = 10 * 60 * 1000;
 
@@ -92,7 +92,7 @@ export function doShowUpgradeInstallationError() {
 
 export function doDownloadUpgrade() {
   return (dispatch, getState) => {
-    shell.openExternal(selectUpdateUrl(getState()));
+    desktop.openExternal(selectUpdateUrl(getState()));
     dispatch(doHideModal());
   };
 }
@@ -344,7 +344,7 @@ export function doDaemonReady() {
       dispatch(doCheckUpgradeAvailable());
     }
     dispatch(doCheckUpgradeSubscribe());
-    ipcRenderer.send('get-disk-space');
+    desktop.requestDiskSpace();
   };
 }
 
@@ -556,7 +556,7 @@ export function doGetAndPopulatePreferences() {
     preferenceKey = syncEnabled && hasVerifiedEmail ? 'shared' : 'local';
 
     async function successCb(savedPreferences) {
-      const localHubs = await ipcRenderer.invoke('hub-servers-config');
+      const localHubs = await desktop.hubConfig();
       savedPreferences = withLocalHubPreference(savedPreferences, localHubs);
       const successState = getState();
       const daemonSettings = selectDaemonSettings(successState);

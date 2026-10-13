@@ -4,12 +4,11 @@
 const ToughCookie = require('tough-cookie');
 const WebStorageCookieStore = require('tough-cookie-web-storage-store');
 
-const path = require('path');
-let appPath;
+let cookieURL;
 
 function enable(options) {
-  appPath = options.appPath;
-  let origin = options ? options.origin : null;
+  cookieURL = options.url;
+
   let cookieStore = new WebStorageCookieStore(global.localStorage);
   let cookieJar = new ToughCookie.CookieJar(cookieStore);
 
@@ -17,25 +16,19 @@ function enable(options) {
     enumerable: true,
     configurable: true,
     get() {
-      let url = _getLocationString(origin);
+      let url = _getLocationString();
       let cookies = cookieJar.getCookiesSync(url);
       return cookies.map((cookie) => cookie.cookieString()).join('; ');
     },
     set(cookieString) {
-      let url = _getLocationString(origin);
+      let url = _getLocationString();
       cookieJar.setCookieSync(cookieString, url);
     },
   });
 }
 
-function _getLocationString(origin) {
-  let location = global.location;
-  if (!origin || location.protocol !== 'file:') {
-    return location.toString();
-  }
-
-  let relativePath = path.relative(appPath, decodeURI(location.pathname));
-  return `${origin}/${encodeURI(relativePath)}${location.search}${location.hash}`;
+function _getLocationString() {
+  return cookieURL;
 }
 
 function disable() {

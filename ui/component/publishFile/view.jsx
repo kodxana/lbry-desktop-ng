@@ -2,7 +2,7 @@
 import type { Node } from 'react';
 import * as ICONS from 'constants/icons';
 import React, { useState, useEffect } from 'react';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import { regexInvalidURI } from 'util/lbryURI';
 import PostEditor from 'component/postEditor';
 import FileSelector from 'component/common/file-selector';
@@ -14,7 +14,7 @@ import I18nMessage from 'component/i18nMessage';
 import usePersistedState from 'effects/use-persisted-state';
 import * as PUBLISH_MODES from 'constants/publish_types';
 import PublishName from 'component/publishName';
-import path from 'path';
+import path from 'util/file-name';
 type Props = {
   uri: ?string,
   mode: ?string,
@@ -102,7 +102,7 @@ function PublishFile(props: Props) {
     async function readSelectedFileDetails() {
       // Read the file to get the file's duration (if possible)
       // and offer transcoding it.
-      const result = await ipcRenderer.invoke('get-file-details-from-path', filePath);
+      const result = await desktop.fileDetails(filePath);
       let file;
       if (result.buffer) {
         file = new File([result.buffer], result.name, {

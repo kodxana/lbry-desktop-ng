@@ -3,6 +3,7 @@ const path = require('path');
 const { app, ipcMain } = require('electron');
 const { registerDesktopInfo } = require('../../electron/desktopInfo.cjs');
 const { registerDownloadNotifications } = require('../../electron/downloadNotifications.cjs');
+const { registerWalletBackup } = require('../../electron/walletBackup.cjs');
 
 module.exports = (root, getWindow, rendererURL) => {
   const downloads = path.join(root, 'fixture-downloads');
@@ -14,45 +15,54 @@ module.exports = (root, getWindow, rendererURL) => {
   let release;
   let pending = false;
   let calls = 0;
+  const revealed = [];
+  let walletDir = path.join(root, 'synthetic-wallet ł');
+  const fixtureApp = {
+    getAppPath: () => app.getAppPath(),
+    getVersion: () => app.getVersion(),
+    getLocale: () => 'pl-PL',
+    getPath: (name) => {
+      if (mode === 'missing') throw new Error('OS folders unavailable');
+      if (name === 'home') return home;
+      if (mode === 'home') return '';
+      return mode === 'blocked' ? blocked : downloads;
+    },
+  };
   registerDesktopInfo({
-    ipcMain: {
-      on: (...args) => ipcMain.on(...args),
-      handle: (channel, handler) =>
-        ipcMain.handle(channel, async (event, command) => {
-          if (command === 'backup-directory') {
-            calls++;
-            if (mode === 'reject') throw new Error('Synthetic information failure');
-            if (mode === 'hold') {
-              pending = true;
-              await new Promise((resolve) => {
-                release = resolve;
-              });
-              pending = false;
-            }
-          }
-          return handler(event, command);
-        }),
-    },
-    app: {
-      getAppPath: () => app.getAppPath(),
-      getVersion: () => app.getVersion(),
-      getLocale: () => 'pl-PL',
-      getPath: (name) => {
-        if (mode === 'missing') throw new Error('OS folders unavailable');
-        if (name === 'home') return home;
-        if (mode === 'home') return '';
-        return mode === 'blocked' ? blocked : downloads;
-      },
-    },
+    ipcMain,
+    app: fixtureApp,
     getWindow,
     rendererURL,
   });
-  ipcMain.handle('fixture-desktop-info', (_event, command) => {
+  registerWalletBackup({
+    ipcMain,
+    app: fixtureApp,
+    getWindow,
+    rendererURL,
+    shell: { showItemInFolder: (file) => revealed.push(file), openPath: async () => '' },
+    rpc: async () => {
+      calls++;
+      if (mode === 'reject') throw new Error('Synthetic information failure');
+      if (mode === 'hold') {
+        pending = true;
+        await new Promise((resolve) => {
+          release = resolve;
+        });
+        pending = false;
+      }
+      return { wallet_dir: walletDir };
+    },
+  });
+  ipcMain.handle('fixture-desktop-info', (_event, command, directory) => {
+    if (directory) {
+      if (!path.resolve(directory).startsWith(root + path.sep)) throw new Error('Outside fixture');
+      walletDir = directory;
+    }
     if (command === 'release') {
       mode = 'downloads';
       release();
     } else if (command) mode = command;
-    return { root, downloads, home, pending, calls };
+    return { root, downloads, home, pending, calls, revealed };
   });
   const badges = [];
   const attach = registerDownloadNotifications({

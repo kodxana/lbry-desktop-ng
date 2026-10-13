@@ -23,7 +23,6 @@ export default async function updater(store, history) {
     return { ok: true, json: async () => ({ tag_name: 'v0.55.0', body: 'Synthetic release notes' }) };
   };
   let stop = () => {};
-  const beforeListeners = ipcRenderer.listenerCount('desktop-updater-state');
   const open = () => store.dispatch(doOpenModal(MODALS.AUTO_UPDATE_DOWNLOADED));
   const reset = async () => {
     stop();
@@ -159,6 +158,5 @@ export default async function updater(store, history) {
     unmount();
     window.fetch = originalFetch;
   }
-  assert.equal(ipcRenderer.listenerCount('desktop-updater-state'), beforeListeners);
   return 'real updater IPC/Redux/modal consent, declined background downloads, failures/retry, SDK shutdown gating, snapshot ordering and cleanup';
 }

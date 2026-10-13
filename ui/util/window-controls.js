@@ -1,8 +1,8 @@
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 
-export const maximizeWindow = () => ipcRenderer.send('window-control', 'maximize');
-export const leaveWindowFullscreen = () => ipcRenderer.send('window-control', 'leave-fullscreen');
-export const quitApplication = () => ipcRenderer.send('window-control', 'quit');
+export const maximizeWindow = () => desktop.windowControl('maximize');
+export const leaveWindowFullscreen = () => desktop.windowControl('leave-fullscreen');
+export const quitApplication = () => desktop.windowControl('quit');
 
 // Native fullscreen can end through Escape or the application menu. Keep the
 // HTML fullscreen state in sync without exposing a BrowserWindow to the renderer.
@@ -23,6 +23,5 @@ export function listenForFullscreenExit(target = document) {
       exiting = false;
     }
   };
-  ipcRenderer.on('window-left-fullscreen', leave);
-  return () => ipcRenderer.removeListener('window-left-fullscreen', leave);
+  return desktop.onFullscreenExit(leave);
 }

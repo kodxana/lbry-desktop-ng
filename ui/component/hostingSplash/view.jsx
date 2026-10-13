@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import Button from 'component/button';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
 import { withRouter } from 'react-router-dom';
@@ -48,7 +48,7 @@ function HostingSplash(props: Props) {
 
   const [hostingChoice, setHostingChoice] = React.useState('MANAGED');
   React.useEffect(() => {
-    ipcRenderer.send('get-disk-space');
+    desktop.requestDiskSpace();
   }, []);
   function handleSubmit() {
     if (hostingChoice === 'CUSTOM') {
@@ -145,7 +145,7 @@ function HostingSplash(props: Props) {
               />
             </fieldset>
             {!diskSpace && (
-              <Button button="link" label={__('Retry storage check')} onClick={() => ipcRenderer.send('get-disk-space')} />
+              <Button button="link" label={__('Retry storage check')} onClick={() => desktop.requestDiskSpace()} />
             )}
           </div>
           <Form onSubmit={handleSubmit} className="section__body">

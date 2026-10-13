@@ -41,7 +41,7 @@ const packagedUpdater = JSON.parse(
 );
 assert.equal(packagedUpdater.version, pkg.dependencies['electron-updater']);
 assert(entries.has('/node_modules/electron-updater/out/providers/GitHubProvider.js'));
-for (const entry of ['main.js', 'ui.js', 'index.html']) {
+for (const entry of ['main.js', 'preload.js', 'ui.js', 'index.html']) {
   assert(asar.extractFile(archive, entry).length > 0, 'Missing packaged entry: ' + entry);
 }
 // Windows uses electron-updater. Linux updates are manual, so its unpacked

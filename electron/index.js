@@ -2,7 +2,7 @@
 /* eslint space-before-function-paren:0 */
 // Module imports
 import '@babel/polyfill';
-import { app, dialog, ipcMain, session, safeStorage, Menu, clipboard } from 'electron';
+import { app, dialog, ipcMain, session, safeStorage, Menu, clipboard, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';
 import LbryFirstInstance from './LbryFirstInstance';
@@ -30,9 +30,7 @@ const { registerDownloadNotifications } = require('./downloadNotifications.cjs')
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseServer } = require('./hubServers.cjs');
 const yaml = require('js-yaml');
-const mime = require('mime');
 const probe = require('ffmpeg-probe');
-const MAX_IPC_SEND_BUFFER_SIZE = 500000000; // large files crash when serialized for ipc message
 
 const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
 const rootArgument = process.argv.find(arg => arg.startsWith(rootFlag));
@@ -48,11 +46,39 @@ app.setPath('temp', desktopProfile.temp);
 // Keep a global reference, if you don't, they will be closed automatically when the JavaScript
 // object is garbage collected.
 let rendererWindow;
+const { createRendererGuard } = require('./rendererGuard.cjs');
+const allowed = createRendererGuard(() => rendererWindow, rendererURL);
+const rpc = (method, params = {}) => {
+  if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
+  return daemon.rpc(method, params);
+};
+const contentFiles = require('./contentFiles.cjs').registerContentFiles({
+  ipcMain, shell, rpc, profile: desktopProfile, probe, getWindow: () => rendererWindow, rendererURL,
+});
+require('./walletBackup.cjs').registerWalletBackup({
+  ipcMain, app, shell, rpc, getWindow: () => rendererWindow, rendererURL,
+});
+const AutoLaunch = require('auto-launch');
+require('./desktopActions.cjs').registerDesktopActions({
+  ipcMain,
+shell,
+profile: desktopProfile,
+launcher: new AutoLaunch({ name: 'lbry', isHidden: true }),
+  getWindow: () => rendererWindow,
+rendererURL,
+});
+if (isDev) {
+  const file = process.env.LBRY_I18N_OUTPUT_FILE || path.join(desktopProfile.temp, 'app-strings.json');
+  if (!fs.existsSync(file)) fs.copyFileSync(path.join(__static, 'app-strings.json'), file);
+  require('./translationCollection.cjs').registerTranslationCollection({
+    ipcMain, file, getWindow: () => rendererWindow, rendererURL,
+  });
+}
 registerDesktopInfo({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
 const attachDownloadNotifications = registerDownloadNotifications({
   ipcMain, app, getWindow: () => rendererWindow, rendererURL,
 });
-registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL });
+registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL, onSelected: contentFiles.grant });
 registerWindowControls({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
 registerContextMenu({ ipcMain, Menu, clipboard, getWindow: () => rendererWindow, rendererURL, isDev });
 registerPasswordStorage({
@@ -130,27 +156,27 @@ const hubs = new HubSelection({
 });
 
 ipcMain.handle('hub-servers-scan', event => {
-  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.scan();
 });
 ipcMain.handle('hub-servers-select', (event, endpoint) => {
-  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.select(endpoint);
 });
 ipcMain.handle('hub-startup-state', event => {
-  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  if (!allowed(event)) throw new Error('Unknown window.');
   return { settingsOnly: hubs.settingsOnly };
 });
 ipcMain.handle('hub-servers-prepare', event => {
-  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.prepare();
 });
 ipcMain.handle('hub-servers-check', (event, endpoint) => {
-  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.checkCustom(endpoint);
 });
 ipcMain.handle('hub-servers-config', event => {
-  if (!rendererWindow || event.sender !== rendererWindow.webContents) throw new Error('Unknown window.');
+  if (!allowed(event)) throw new Error('Unknown window.');
   return readHubConfig();
 });
 
@@ -327,59 +353,25 @@ app.on('before-quit', () => {
   appState.isQuitting = true;
 });
 
-ipcMain.handle('get-file-details-from-path', async (event, path) => {
-    const isFfMp4 = (ffprobeResults) => {
-      return ffprobeResults &&
-      ffprobeResults.format &&
-      ffprobeResults.format.format_name &&
-      ffprobeResults.format.format_name.includes('mp4');
-    };
-    const folders = path.split(/[\\/]/);
-    const name = folders[folders.length - 1];
-    let duration = 0, size = 0, mimeType;
-    try {
-      await fs.promises.stat(path);
-      let ffprobeResults;
-      try {
-        ffprobeResults = await probe(path);
-        duration = ffprobeResults.format.duration;
-        size = ffprobeResults.format.size;
-      } catch (e) {
-      }
-      let fileReadResult;
-      if (size < MAX_IPC_SEND_BUFFER_SIZE) {
-        try {
-          fileReadResult = await fs.promises.readFile(path);
-        } catch (e) {
-
-        }
-      }
-      // TODO: use mmmagic to inspect file and get mime type
-      mimeType = isFfMp4(ffprobeResults) ? 'video/mp4' : mime.getType(name);
-      const fileData = {name, mime: mimeType || undefined, path, duration: duration, size, buffer: fileReadResult };
-      return fileData;
-    } catch (e) {
-      // no stat
-      return { error: 'no file' };
-    }
-});
-
 ipcMain.on('get-disk-space', async (event) => {
+  if (!allowed(event)) return;
   try {
     const { data_dir } = await Lbry.settings_get();
     const diskSpace = await getDiskSpace(path.join(data_dir, 'blobfiles'));
-    if (!event.sender.isDestroyed()) event.reply('send-disk-space', { diskSpace });
+    if (allowed(event)) event.reply('send-disk-space', { diskSpace });
   } catch (e) {
-    if (!event.sender.isDestroyed()) event.reply('send-disk-space', { error: e.message || e });
+    if (allowed(event)) event.reply('send-disk-space', { error: e.message || e });
     console.log('Failed to get disk space', e);
   }
 });
 
 ipcMain.on('version-info-requested', event => {
+  if (!allowed(event)) return;
   event.reply('version-info-received', updates.versionInfo());
 });
 
-ipcMain.on('launch-lbry-first', async () => {
+ipcMain.on('launch-lbry-first', async (event) => {
+  if (!allowed(event)) return;
   try {
     await startLbryFirst();
   } catch (e) {
@@ -419,3 +411,8 @@ const updates = new DesktopUpdater(autoUpdater, {
 });
 
 registerUpdaterIpc({ ipcMain, updates, getWindow: () => rendererWindow, rendererURL });
+
+ipcMain.handle('desktop-versions', event => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return updates.versionInfo();
+});

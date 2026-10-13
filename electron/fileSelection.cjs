@@ -36,7 +36,7 @@ function validRequest(request) {
   );
 }
 
-function registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL, platform = process.platform }) {
+function registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL, onSelected, platform = process.platform }) {
   let pending = false;
   const lastDirectories = {};
   const allowed = createRendererGuard(getWindow, rendererURL);
@@ -59,6 +59,8 @@ function registerFileSelection({ ipcMain, app, dialog, getWindow, rendererURL, p
       if (result.canceled || !result.filePaths.length) return { ok: true, file: null };
       // Read only the path returned by the native picker, never a renderer-supplied path.
       const file = await getFileFromPath(result.filePaths[0], request.readFile);
+      if (!allowed(event, window)) return { ok: false, error: 'sender' };
+      if (onSelected) await onSelected(file.path);
       if (!allowed(event, window)) return { ok: false, error: 'sender' };
       // Electron 43 no longer lets the OS remember a dialog's last directory.
       // Remember successful selections separately for file and folder pickers.

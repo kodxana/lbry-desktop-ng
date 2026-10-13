@@ -6,7 +6,7 @@ import * as RENDER_MODES from 'constants/file_render_modes';
 import * as KEYCODES from 'constants/keycodes';
 import VideoViewer from 'component/viewers/videoViewer';
 import { withRouter } from 'react-router-dom';
-import fs from 'fs';
+import desktop from 'util/desktop';
 import analytics from 'analytics';
 
 import DocumentViewer from 'component/viewers/documentViewer';
@@ -102,7 +102,7 @@ class FileRender extends React.PureComponent<Props> {
           <DocumentViewer
             source={{
               // @if TARGET='app'
-              file: (options) => fs.createReadStream(downloadPath, options),
+              file: () => desktop.readDocument(downloadPath),
               // @endif
               stream: source,
               fileExtension,
@@ -131,7 +131,7 @@ class FileRender extends React.PureComponent<Props> {
           <ComicBookViewer
             source={{
               // @if TARGET='app'
-              file: (options) => fs.createReadStream(downloadPath, options),
+              file: () => desktop.readDocument(downloadPath),
               // @endif
               stream: source,
             }}

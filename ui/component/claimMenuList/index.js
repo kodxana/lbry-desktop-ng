@@ -32,7 +32,6 @@ import { selectIsSubscribedForUri } from 'redux/selectors/subscriptions';
 import { selectListShuffle } from 'redux/selectors/content';
 import { doToggleLoopList, doToggleShuffleList } from 'redux/actions/content';
 import ClaimPreview from './view';
-import fs from 'fs';
 
 const select = (state, props) => {
   const claim = selectClaimForUri(state, props.uri, false); // @KP test no repost!
@@ -94,7 +93,7 @@ const perform = (dispatch) => ({
       dispatch(doSetIncognito(true));
     }
 
-    dispatch(doPrepareEdit(publishData, uri, fileInfo, fs));
+    dispatch(doPrepareEdit(publishData, uri, fileInfo));
   },
   doToast: (props) => dispatch(doToast(props)),
   openModal: (modal, props) => dispatch(doOpenModal(modal, props)),

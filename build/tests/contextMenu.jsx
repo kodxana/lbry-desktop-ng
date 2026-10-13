@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
-import { ipcRenderer, shell } from 'electron';
+import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import CodeMirror from 'codemirror';
 import React from 'react';
 import ClaimUri from 'component/claimUri/view';
@@ -165,10 +166,10 @@ export default async function contextMenu(store, history) {
   // Capture the two renderer-owned claim actions without opening a browser or
   // replacing the user's clipboard. Claim URLs keep their existing formatting.
   const writeText = navigator.clipboard.writeText;
-  const openExternal = shell.openExternal;
+  const openExternal = desktop.openExternal;
   const actions = [];
   navigator.clipboard.writeText = async (text) => actions.push(['copy', text]);
-  shell.openExternal = async (url) => actions.push(['report', url]);
+  desktop.openExternal = async (url) => actions.push(['report', url]);
   try {
     const claim = { claim_id: 'a'.repeat(40), permanent_url: 'lbry://fixture#' + 'a'.repeat(40) };
     for (const id of ['copy-link', 'report']) {
@@ -195,7 +196,7 @@ export default async function contextMenu(store, history) {
     assert.equal(await rejected.pending, false, 'A denied copy must settle without an unhandled rejection');
   } finally {
     navigator.clipboard.writeText = writeText;
-    shell.openExternal = openExternal;
+    desktop.openExternal = openExternal;
     editor.toTextArea();
     container.removeEventListener('contextmenu', stopContextMenu);
     container.textContent = '';

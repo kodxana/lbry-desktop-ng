@@ -2,7 +2,7 @@
 
 import React from 'react';
 import mammoth from 'mammoth';
-import fs from 'fs';
+import desktop from 'util/desktop';
 import sanitizeDocumentHtml from 'util/document-html';
 import LoadingScreen from 'component/common/loading-screen';
 
@@ -26,6 +26,7 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
   }
   componentDidMount() {
+    this.mounted = true;
     const { source } = this.props;
 
     // Overwrite element and styles
@@ -43,8 +44,7 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
 
     // Parse docx to html
-    fs.promises
-      .readFile(source)
+    desktop.readDocument(source)
       .then((bytes) =>
         mammoth.convertToHtml(
           { arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) },
@@ -52,11 +52,15 @@ class DocxViewer extends React.PureComponent<Props, State> {
         )
       )
       .then((result) => {
-        this.setState({ content: sanitizeDocumentHtml(result.value), loading: false });
+        if (this.mounted) this.setState({ content: sanitizeDocumentHtml(result.value), loading: false });
       })
       .catch(() => {
-        this.setState({ error: true, loading: false });
+        if (this.mounted) this.setState({ error: true, loading: false });
       });
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
   }
 
   render() {

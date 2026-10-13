@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import Button from 'component/button';
 import SetupLayout from 'component/setupLayout';
 import { FormField } from 'component/common/form-components/form-field';
@@ -25,7 +25,7 @@ export default function HubSetup({ handleNextPage }: Props) {
     setScanning(true);
     setError('');
     try {
-      const result = await ipcRenderer.invoke('hub-servers-scan');
+      const result = await desktop.scanHubs();
       if (mounted.current) {
         setServers(result.servers);
         setSelected(null);
@@ -48,7 +48,7 @@ export default function HubSetup({ handleNextPage }: Props) {
     setScanning(true);
     setError('');
     try {
-      const server = await ipcRenderer.invoke('hub-servers-check', customAddress.trim());
+      const server = await desktop.checkHub(customAddress.trim());
       if (mounted.current) {
         setServers((previous) => [server, ...previous.filter((item) => item.endpoint !== server.endpoint)]);
         if (!server.error) setSelected(server.endpoint);
@@ -65,7 +65,7 @@ export default function HubSetup({ handleNextPage }: Props) {
     setSaving(true);
     setError('');
     try {
-      await ipcRenderer.invoke('hub-servers-select', selected);
+      await desktop.selectHub(selected);
       if (mounted.current) handleNextPage();
     } catch (error) {
       if (mounted.current) setError(errorMessage(error));

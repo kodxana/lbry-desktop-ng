@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import classnames from 'classnames';
 
 type Props = {};
@@ -21,14 +21,14 @@ class StatusBar extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    ipcRenderer.on('update-target-url', this.handleUrlChange);
+    this.unsubscribe = desktop.onTargetUrl(this.handleUrlChange);
   }
 
   componentWillUnmount() {
-    ipcRenderer.removeListener('update-target-url', this.handleUrlChange);
+    this.unsubscribe();
   }
 
-  handleUrlChange(event: any, url: string) {
+  handleUrlChange(url: string) {
     // We want to retain the previous URL so that it can fade out
     // without the component collapsing.
     if (url === '') {

@@ -33,24 +33,19 @@ class DocumentViewer extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
+    this.mounted = true;
     const { source } = this.props;
     if (source && source.file) {
-      const stream = source.file('utf8');
-
-      let data = '';
-
-      stream.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      stream.on('end', () => {
-        this.setState({ content: data, loading: false });
-      });
-
-      stream.on('error', () => {
-        this.setState({ error: true, loading: false });
+      source.file().then((bytes) => {
+        if (this.mounted) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
+      }).catch(() => {
+        if (this.mounted) this.setState({ error: true, loading: false });
       });
     }
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
   }
 
   renderDocument() {
@@ -67,7 +62,7 @@ class DocumentViewer extends React.PureComponent<Props, State> {
 
   render() {
     const { error, content } = this.state;
-    const isReady = content && !error;
+    const isReady = content !== null && !error;
     const errorMessage = __("Sorry, looks like we can't load the document.");
 
     return (

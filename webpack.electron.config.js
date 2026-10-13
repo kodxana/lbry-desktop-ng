@@ -19,6 +19,7 @@ const mainConfig = {
   target: 'electron-main',
   entry: {
     main: './electron/index.js',
+    preload: './electron/preload.cjs',
   },
   output: {
     filename: '[name].js',
@@ -100,7 +101,19 @@ const plugins = [
 // }
 
 const renderConfig = {
-  target: 'electron-renderer',
+  target: 'web',
+  resolve: {
+    alias: { config: path.resolve(__dirname, 'configValues.js') },
+    fallback: {
+      path: require.resolve('path-browserify'),
+      url: require.resolve('url/'),
+      util: require.resolve('util/'),
+      buffer: require.resolve('buffer/'),
+      stream: require.resolve('stream-browserify'),
+      assert: require.resolve('assert/'),
+      net: path.resolve(__dirname, 'ui/util/cookie-ip.cjs'),
+    },
+  },
   entry: {
     ui: ['./ui/index.jsx'],
   },
@@ -127,7 +140,19 @@ const renderConfig = {
       },
     ],
   },
-  plugins,
+  plugins: [
+    ...plugins,
+    new ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+      process: 'process/browser',
+      'global.process': 'process/browser',
+    }),
+    new DefinePlugin({
+      'process.platform': 'window.lbryDesktop.platform',
+      'process.env.APPIMAGE': '(window.lbryDesktop.appImage ? "AppImage" : undefined)',
+      'process.env': '{}',
+    }),
+  ],
 };
 
 module.exports = [merge(baseConfig, mainConfig), merge(baseConfig, renderConfig)];

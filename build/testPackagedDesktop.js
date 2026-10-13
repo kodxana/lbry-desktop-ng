@@ -236,20 +236,23 @@ async function main() {
       throw error;
     }
     console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
-    const runtime = await evaluate('process.versions.electron');
+    assert.deepEqual(await evaluate('({require:typeof require, process:typeof process, Buffer:typeof Buffer, sandboxed:window.lbryDesktop.sandboxed, frozen:Object.isFrozen(window.lbryDesktop)})'), {
+      require: 'undefined', process: 'undefined', Buffer: 'undefined', sandboxed: true, frozen: true,
+    }, 'The application renderer must be isolated, sandboxed and have no Node globals');
+    const runtime = await evaluate('window.lbryDesktop.electron');
     assert.equal(runtime, require(root + '/package.json').devDependencies.electron);
     console.log('PASS: ' + label + ' runs Electron ' + runtime);
-    const metadata = await evaluate("require('electron').ipcRenderer.invoke('desktop-info', 'metadata')");
+    const metadata = await evaluate("window.lbryDesktop.info('metadata')");
     assert.equal(metadata.ok, true);
     assert.equal(typeof metadata.locale, 'string');
     const appVersion = metadata.version;
     assert.equal(appVersion, require(root + '/package.json').version, 'Electron must load the application metadata');
-    const updateState = await evaluate("require('electron').ipcRenderer.invoke('desktop-updater', 'state')");
+    const updateState = await evaluate("window.lbryDesktop.updater('state')");
     assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
     assert.equal(updateState.state.enabled, !development && process.platform === 'win32');
     assert.equal(updateState.state.accepted, false, 'Startup must never supply install consent');
     assert.deepEqual(
-      await evaluate("require('electron').ipcRenderer.invoke('select-file', {type: 'invalid'})"),
+      await evaluate("window.lbryDesktop.selectFile({type: 'invalid'})"),
       { ok: false, error: 'invalid' },
       'The file selection handler must recognize the application renderer before validating the request'
     );
@@ -296,7 +299,7 @@ async function main() {
     await evaluate(
       development
         ? 'setTimeout(() => window.close(), 100); true'
-        : "setTimeout(() => require('electron').ipcRenderer.send('window-control', 'quit'), 100); true"
+        : "setTimeout(() => window.lbryDesktop.windowControl('quit'), 100); true"
     );
     let stopTimer;
     const stopped = await Promise.race([

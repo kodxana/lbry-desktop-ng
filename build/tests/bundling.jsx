@@ -35,6 +35,6 @@ export default async function testBundling() {
   assert.equal(img.naturalWidth, 8);
   assert(shader.includes('gl_FragColor'), 'Shader imports must remain source strings');
   assert.equal((await import('./fixtures/build-lazy')).default, 'lazy module loaded');
-  assert.equal(typeof process.env, 'object', 'Keep Electron runtime environment access');
+  assert.equal(typeof window.lbryDesktop.platform, 'string', 'Platform metadata comes from the desktop bridge');
   return 'production styles, dark/light themes, RTL, emitted images, shader strings and lazy chunks';
 }

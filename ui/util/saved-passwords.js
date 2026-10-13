@@ -1,6 +1,6 @@
-const { DOMAIN } = require('../../config.js');
+import desktop from 'util/desktop';
+const { DOMAIN } = require('config');
 const AUTH_TOKEN = 'auth_token';
-const { ipcRenderer } = require('electron');
 const { createPasswordClient, legacyPasswordCookies } = require('./password-storage.cjs');
 const domain =
   typeof window === 'object' && window.location.hostname.includes('localhost') ? window.location.hostname : DOMAIN;
@@ -8,7 +8,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 const maxExpiration = 2147483647;
 const passwords = createPasswordClient(async (operation, value) => {
   try {
-    const result = await ipcRenderer.invoke('remembered-password', operation, value);
+    const result = await desktop.password(operation, value);
     if (operation === 'notice' && (!result || !result.ok)) throw new Error('Storage notice failed');
     return result;
   } catch (error) {
