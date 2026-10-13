@@ -13,7 +13,46 @@ const source = require('../release-source.json');
 const { createProfile } = require('../electron/testProfile.cjs');
 const settings = require('../desktop-settings.json');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
-const { ipcFixture } = require('./tests/updaterFixture.cjs');
+const { ipcFixture, updaterFixture } = require('./tests/updaterFixture.cjs');
+
+async function testVersionPolicy() {
+  const cases = [
+    ['0.54.0-rc.9', '0.54.0-rc.10', true, true],
+    ['0.54.0-rc.10', '0.54.0-rc.9', true, false],
+    ['0.54.0-rc.9', '0.54.0-rc.10', false, false],
+    ['0.54.0-rc.9', '0.54.0', false, true],
+    ['0.54.0', '0.54.0-rc.10', true, false],
+    ['0.54.0', '0.55.0-rc.1', false, false],
+    ['0.54.0', '0.55.0-rc.1', true, true],
+    ['0.54.0+old', '0.54.0+new', true, false],
+    ['0.54.0-rc.9+old', '0.54.0-rc.9+new', true, false],
+    ['0.54.0', '0.53.9', true, false],
+    ['0.54.0', 'v0.54.1', false, true],
+  ];
+  for (const invalid of [
+    null, undefined, 55, {}, [], '', '0.55', '^0.55.0',
+    ' 0.55.0', '0.55.0 ', '\t0.55.0', '0.55.0\n',
+    '0.055.0', '0.55.0-rc.01', '9007199254740992.0.0', '0.55.0-' + 'a'.repeat(1000),
+  ]) cases.push(['0.54.0', invalid, true, false]);
+
+  for (const [local, remote, prereleases, expected] of cases) {
+    const { library, updates, calls } = updaterFixture();
+    updates.version = local;
+    updates.setPrereleases(prereleases);
+    library.emit('update-available', { version: remote });
+    assert.equal(updates.versionInfo().upgradeAvailable, expected, JSON.stringify({ local, remote, prereleases }));
+    assert.equal(updates.snapshot().available, expected);
+    assert.equal(library.allowDowngrade, false);
+    if (!expected) {
+      await updates.accept();
+      library.emit('update-downloaded', { version: remote });
+      await updates.accept();
+      assert.equal(updates.accepted, false);
+      assert.deepEqual(calls, { checks: 0, downloads: 0, stops: 0, installs: 0, errors: [] });
+    }
+  }
+  console.log('PASS: numeric RC ordering, stable graduation, metadata equality, downgrade prevention and invalid versions');
+}
 
 async function testInstallation() {
   for (const result of [
@@ -227,6 +266,19 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
     assert.equal(control.versionInfo().remoteVersion, '0.55.0-rc.1');
     assert(requested.includes(base + '/download/v0.55.0-rc.1/latest.yml'));
 
+    if (!legacy) {
+      entries = ['0.54.9-rc.2', '0.54.10'];
+      stableTag = 'v0.54.10';
+      await control.check({ allowPrerelease: true });
+      assert.equal(control.versionInfo().remoteVersion, '0.54.10', 'A newer stable release must beat the RC feed');
+      entries = ['0.54.10-rc.10', '0.54.9'];
+      stableTag = 'v0.54.9';
+      await control.check({ allowPrerelease: true });
+      assert.equal(control.versionInfo().remoteVersion, '0.54.10-rc.10', 'An opted-in newer RC must beat stable');
+      assert.equal(assetRequests, 0, 'Comparing channels must not download an installer');
+      stableTag = 'v0.54.0';
+    }
+
     entries = ['0.54.0', '0.54.0-rc.2'];
     await control.check({ allowPrerelease: true });
     assert.equal(control.versionInfo().remoteVersion, '0.54.0', 'RC users must be offered the newer stable release');
@@ -368,6 +420,7 @@ async function main() {
   assert.deepEqual(builder.publish, [source]);
   assert.equal(require('../electron-builder.sdk-test.json').publish, null);
   console.log('PASS: independent NG/test profile ownership and matching build/update identities');
+  await testVersionPolicy();
   await testInstallation();
   const builtMetadata = process.argv.includes('--built-metadata')
     ? { raw: fs.readFileSync(path.resolve(__dirname, '../dist/ng/latest.yml'), 'utf8') }

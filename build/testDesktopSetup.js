@@ -1,6 +1,5 @@
 /* eslint no-console:0 */
 const assert = require('assert').strict;
-const fs = require('fs');
 const path = require('path');
 const net = require('net');
 const diskTests = require('./testDiskSpace');
@@ -70,6 +69,7 @@ async function protocolTests() {
   for (const value of ['host:0', 'host:65536', 'host:abc', 'host:1:2', 'x\n:1', null]) assert.throws(() => parseServer(value));
   const sockets = new Set();
   let mode = 'valid';
+  let protocol = '0.113.0';
   const methods = [];
   const server = net.createServer(socket => {
     sockets.add(socket);
@@ -87,7 +87,7 @@ async function protocolTests() {
         if (mode === 'close') { socket.end(); continue }
         if (mode === 'garbage') { socket.write('not json\n'); continue }
         if (mode === 'oversize') { socket.write('x'.repeat(70000)); continue }
-        const result = request.id === 1 ? ['fixture', mode === 'old' ? '0.1.0' : '0.113.0']
+        const result = request.id === 1 ? ['fixture', mode === 'old' ? '0.1.0' : protocol]
           : { genesis_hash: mode === 'wrong-network' ? '0'.repeat(64) : GENESIS };
         const response = JSON.stringify({ id: mode === 'wrong-id' ? 90 : request.id, result }) + '\n';
         socket.write(response.slice(0, 8));
@@ -102,6 +102,22 @@ async function protocolTests() {
     assert.equal(valid.error, null);
     assert(valid.latency > 0);
     assert.deepEqual(methods, ['server.version', 'server.features']);
+    for (const [version, compatible] of [
+      ['0.64.999', false], ['0.65.0-rc.1', false], ['0.65.0', true], ['0.65.0+build.1', true],
+      ['0.113.0-rc.1', true], ['v0.113.0', true], ['0.113', false], ['^0.113.0', false],
+      ['0.0113.0', false], ['0.113.0-rc.01', false],
+      [' 0.113.0', false], ['0.113.0 ', false], ['\t0.113.0', false], ['0.113.0\n', false],
+      ['9007199254740992.0.0', false], ['0.113.0-' + 'a'.repeat(1000), false],
+      [null, false], [113, false], [{}, false], [[], false],
+    ]) {
+      protocol = version;
+      methods.length = 0;
+      const checked = await probeHub(endpoint);
+      assert.equal(checked.error, compatible ? null : 'Incompatible protocol', JSON.stringify(version));
+      assert.deepEqual(methods, compatible ? ['server.version', 'server.features'] : ['server.version']);
+    }
+    protocol = '0.113.0';
+    console.log('PASS: hub protocol threshold, prerelease/build metadata and malformed version rejection before features');
     for (const [testMode, expected] of [['old', 'Incompatible protocol'], ['wrong-network', 'Wrong network'],
       ['wrong-id', 'Invalid response'], ['garbage', 'Invalid response'], ['oversize', 'Invalid response'],
       ['timeout', 'Timed out'], ['close', 'Connection closed']]) {

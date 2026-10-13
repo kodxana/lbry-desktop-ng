@@ -56,12 +56,26 @@ Upstream changes reviewed:
 
 ## Validation
 
+The app's direct `semver` dependency is pinned to 7.8.5, replacing 5.7.1.
+The updater and hub handshake retain the existing minimum-version, prerelease
+and downgrade rules. Version 7 trims surrounding whitespace during validation;
+the callers explicitly reject it to preserve strict handling of remote versions.
+The app uses only `valid`, `gt`, `lt` and `prerelease`, so the intervening changes
+to range parsing and coercion do not affect these callers. See the
+[upstream changelog](https://github.com/npm/node-semver/blob/v7.8.5/CHANGELOG.md).
+Dependencies retain their own compatible semver versions; there is no global
+resolution override.
+
 `node build/testDesktopUpdates.js` runs genuine NSIS updaters 6.8.10 and 4.6.5
 against a local HTTP fixture. It covers RC/stable selection, prerelease opt-out,
 newer stable releases, RC-only repositories, missing releases, corrupt and
 interrupted downloads, retry, cache reuse across updater instances and recovery
 from a corrupted cached installer. The new updater also exercises full-download
 fallback after a missing blockmap. Fixture payloads are inert text.
+Version-policy cases cover numeric RC ordering, graduation to stable, build
+metadata equality and malformed versions that must not trigger a download or
+installation. `node build/testDesktopSetup.js` checks protocol boundaries and
+malformed versions over a real local TCP handshake before requesting hub features.
 
 `node build/testRenderer.js` repeats these checks inside Electron's embedded
 runtime. The real new updater's `quitAndInstall` path is exercised after a

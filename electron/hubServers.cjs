@@ -48,7 +48,8 @@ function probeHub(endpoint, timeout = 4000) {
           if (!reply || reply.id !== expected || reply.error) return finish('Invalid response');
           if (expected === 1) {
             const version = Array.isArray(reply.result) && reply.result[1];
-            if (!semver.valid(version) || semver.lt(version, '0.65.0')) return finish('Incompatible protocol');
+            if (typeof version !== 'string' || version !== version.trim() ||
+              !semver.valid(version) || semver.lt(version, '0.65.0')) return finish('Incompatible protocol');
             expected = 2;
             send(2, 'server.features', []);
           } else {
