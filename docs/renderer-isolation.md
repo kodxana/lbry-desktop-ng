@@ -49,6 +49,9 @@ while the real SDK syncs a disposable wallet against a fixture hub. Hosted Windo
 CI performs actual RC3-to-candidate-to-candidate installations, checking wallet
 keys, encryption, saved passwords, cookies, IndexedDB and clean SDK shutdown.
 Native password tests also cover Windows DPAPI and an isolated Linux keyring.
+The SDK encryption test creates an archive through the production backup service
+while the fixture wallet is running, restores it into a second disposable profile,
+and verifies decryption, unchanged keys and addresses after restart.
 
 This boundary removes direct renderer Node privileges. It does not redesign SDK
 RPC authorization: the application still talks to its local wallet API. The file

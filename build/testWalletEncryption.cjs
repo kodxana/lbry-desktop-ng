@@ -4,12 +4,14 @@ const path = require('path');
 const AdmZip = require('adm-zip');
 const Daemon = require('../electron/Daemon.cjs');
 const { createProfile } = require('../electron/testProfile.cjs');
+const { registerWalletBackup } = require('../electron/walletBackup.cjs');
 
 // Called only with the disposable regtest profile owned by testSdkIsolation.
 module.exports = async function testWalletEncryption(profile, binary, waitForHistory, addresses) {
   const walletPath = path.join(profile.wallet, 'wallets/default_wallet');
   const original = JSON.parse(fs.readFileSync(walletPath, 'utf8'));
   const password = 'Disposable regression password ł';
+  let archive;
   async function withDaemon(target, check) {
     const daemon = new Daemon(target, binary);
     try {
@@ -51,15 +53,36 @@ module.exports = async function testWalletEncryption(profile, binary, waitForHis
     await assert.rejects(daemon.rpc('wallet_decrypt'), /locked wallet/);
     assert.equal(await daemon.rpc('wallet_unlock', { password }), true);
     await status(daemon, true, false);
+    const frame = { url: 'file:///backup-fixture/index.html' };
+    const window = { isDestroyed: () => false, webContents: { mainFrame: frame, isDestroyed: () => false } };
+    let backup;
+    registerWalletBackup({
+      ipcMain: {
+        on: () => {},
+        handle: (name, handler) => {
+          if (name === 'wallet-backup') backup = handler;
+        },
+      },
+      app: { getPath: () => profile.downloads },
+      shell: { showItemInFolder: () => {} },
+      rpc: (method, params) => daemon.rpc(method, params),
+      getWindow: () => window,
+      rendererURL: frame.url,
+    });
+    const result = await backup(
+      { sender: window.webContents, senderFrame: frame },
+      {
+        id: 'encrypted-wallet-fixture',
+        directory: profile.wallet,
+      }
+    );
+    assert.equal(result.ok, true, 'The main-process backup must work against the running SDK');
+    archive = result.path;
+    assert(new AdmZip(archive).readFile('wallets/default_wallet').equals(fs.readFileSync(walletPath)));
   });
 
-  // The UI uses AdmZip.addLocalFolder/writeZip. Keep encrypted bytes intact in a backup,
-  // then restore only into another newly created test profile while both SDKs are stopped.
-  const archive = path.join(profile.root, 'encrypted-wallet-backup.zip');
-  const zip = new AdmZip();
-  zip.addLocalFolder(profile.wallet);
-  zip.writeZip(archive);
-  assert(new AdmZip(archive).readFile('wallets/default_wallet').equals(fs.readFileSync(walletPath)));
+  // Restore the archive produced by the desktop service only into a new test
+  // profile, while both SDKs are stopped.
   await withDaemon(profile, async (daemon) => {
     await status(daemon, true, true);
     assert.equal(await daemon.rpc('wallet_unlock', { password }), true);
