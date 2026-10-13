@@ -7,11 +7,11 @@ content and stripped previews use this path.
 
 ## Compatibility
 
-`ui/util/markdown-renderer.js` adapts remark 9's `Compiler` interface to the
-maintained tree utilities. The parser, attribute plugin and custom LBRY,
-timestamp and emote tokenizers remain on their existing versions. Updating those
-is a separate migration; this change removes the obsolete rendering and
-sanitization dependencies without rewriting Markdown recognition at the same time.
+`ui/util/markdown-renderer.js` implements the parser's compiler interface using
+the maintained tree utilities. The renderer migration initially retained remark
+9; the subsequent [parser migration](markdown-parser.md) moves to remark 15 and
+ports the custom syntax to micromark. React elements are returned through the
+processed file's `result` field.
 
 The [JSX tree renderer](https://github.com/syntax-tree/hast-util-to-jsx-runtime)
 accepts the automatic React runtime, which is already available in the pinned

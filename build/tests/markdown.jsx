@@ -1,12 +1,14 @@
 import { strict as assert } from 'assert';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
-import remark from 'remark';
+import { remark } from 'remark';
 import markdownRenderer from 'util/markdown-renderer';
 import MarkdownPreview from 'component/common/markdown-preview';
+import parserRegression from './markdownParser';
 import { render, unmount, waitFor } from './helpers';
 
 export default async function markdown(store, history) {
+  parserRegression();
   const cases = [
     ['double quotes', '<iframe src="lbry://fixture"></iframe>', ['lbry://fixture']],
     ['single quotes', "<iframe src='lbry://fixture'></iframe>", ['lbry://fixture']],
@@ -193,7 +195,7 @@ export default async function markdown(store, history) {
       };
     })
     .use(markdownRenderer)
-    .processSync('Keep text').contents;
+    .processSync('Keep text').result;
   unsafe.innerHTML = ReactDOMServer.renderToStaticMarkup(result);
   assert.equal(unsafe.content.textContent, 'Keep text');
   assert(!unsafe.content.querySelector('[href], [onclick], [style]'));
