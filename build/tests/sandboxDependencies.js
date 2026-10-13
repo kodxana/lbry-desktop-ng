@@ -20,6 +20,27 @@ window.probeDependencies = async (docx) => {
   ElectronCookies.enable({ url: 'https://lbry.tv/' });
   const persistedCookie = window.document.cookie;
   ElectronCookies.disable();
+  const mappedPath = '/C:/Users/fixture/LBRY%20Desktop%20NG/resources/app.asar';
+  const mappedCookies = {
+    'lbry.tv': {
+      [mappedPath]: {
+        old_path: {
+          ...legacyCookies['lbry.tv']['/'].unrelated_cookie,
+          key: 'old_path',
+          value: 'preserve-path',
+          path: mappedPath,
+        },
+      },
+    },
+  };
+  localStorage.setItem('__cookieStore__', JSON.stringify(mappedCookies));
+  ElectronCookies.enable({
+    url: 'https://lbry.tv/C:%5CUsers%5Cfixture%5CLBRY%20Desktop%20NG%5Cresources%5Capp.asar%5Cindex.html',
+  });
+  const mappedCookie = window.document.cookie;
+  window.document.cookie = 'new_path=preserve-path';
+  const mappedCookiePath = JSON.parse(localStorage.getItem('__cookieStore__'))['lbry.tv'][mappedPath].new_path.path;
+  ElectronCookies.disable();
   const markdown = ReactDOMServer.renderToStaticMarkup(
     markdownProcessor().use(markdownRenderer).processSync('# Sandbox ł\n\n**Bold**').result
   );
@@ -41,6 +62,8 @@ window.probeDependencies = async (docx) => {
   return {
     legacyCookie,
     persistedCookie,
+    mappedCookie,
+    mappedCookiePath,
     markdown,
     document: sanitizeDocumentHtml(document.value),
     streamed,

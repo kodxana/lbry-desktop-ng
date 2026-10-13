@@ -133,6 +133,8 @@ app
     assert(!documents.legacyCookie.includes('expired='));
     assert(documents.persistedCookie.includes('sandbox_cookie=roundtrip-%20=value'));
     assert(documents.persistedCookie.includes('saved_password=fixture-%20=value'));
+    assert(documents.mappedCookie.includes('old_path=preserve-path'));
+    assert.equal(documents.mappedCookiePath, '/C:/Users/fixture/LBRY%20Desktop%20NG/resources/app.asar');
     console.log(
       'PASS: modern cookie library reads legacy storage and persists new cookies without renderer Node globals'
     );

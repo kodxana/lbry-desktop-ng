@@ -22,7 +22,7 @@ function fixture(url, initial = null) {
     },
   };
   const document = {};
-  const context = { exports: {}, require, global: { document, localStorage } };
+  const context = { exports: {}, require, URL, global: { document, localStorage } };
   vm.runInNewContext(source, context);
   const shim = context.exports;
   shim.enable({ url });
@@ -50,6 +50,40 @@ assert(saved.document.cookie.includes('unrelated_cookie=preserve-me'));
 assert.equal(saved.jar.getCookieStringSync('https://example.com/'), 'saved_password=unrelated');
 assert.equal(legacyPasswordCookies(saved.localStorage, ['lbry.tv']).read().length, 2);
 console.log('PASS: v2 cookie fixture, auth refresh/reopen/sign-out and legacy password/domain preservation');
+
+// v2 decoded the mapped file URL before parsing it: backslashes became slashes,
+// spaces were escaped again, and dot segments were retained in the stored path.
+for (const [mapped, cookiePath] of [
+  [
+    'https://lbry.tv/C:%5CUsers%5Cfixture%5CLBRY%20Desktop%20NG%5Cresources%5Capp.asar%5Cindex.html',
+    '/C:/Users/fixture/LBRY%20Desktop%20NG/resources/app.asar',
+  ],
+  ['https://lbry.tv/..%5Capp.asar%5Cindex.html', '/../app.asar'],
+  ['https://lbry.tv/za%C5%BC%C3%B3%C5%82%C4%87/index.html', '/zażółć'],
+  ['https://lbry.tv/malformed%20%/index.html', '/malformed%20%'],
+]) {
+  const data = {
+    'lbry.tv': {
+      [cookiePath]: {
+        old_path: {
+          ...legacy['lbry.tv']['/'].unrelated_cookie,
+          key: 'old_path',
+          value: 'preserve-path',
+          path: cookiePath,
+        },
+      },
+    },
+  };
+  const mappedCookie = fixture(mapped, JSON.stringify(data));
+  assert(
+    mappedCookie.document.cookie.includes('old_path=preserve-path'),
+    'Retain the v2 mapped cookie path: ' + cookiePath
+  );
+  mappedCookie.document.cookie = 'new_path=preserve-path';
+  const stored = JSON.parse(mappedCookie.localStorage.getItem('__cookieStore__'));
+  assert.equal(stored['lbry.tv'][cookiePath].new_path.path, cookiePath, 'New writes must keep the old default path');
+}
+console.log('PASS: legacy mapped file URLs preserve Windows separators, spaces, dot segments and Unicode paths');
 
 const scoped = fixture('https://lbry.tv/old/view');
 scoped.document.cookie = 'host=private; Path=/';
