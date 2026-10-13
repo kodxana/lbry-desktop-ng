@@ -133,6 +133,7 @@ async function main() {
     [
       ...(development ? [path.join(root, 'electron/devServer.js'), '--skip-devtools'] : []),
       '--disable-gpu',
+      '--enable-logging=stderr',
       '--ng-profile=' + profile.root,
       '--remote-debugging-port=' + debugPort,
       '--remote-debugging-address=127.0.0.1',
@@ -160,6 +161,9 @@ async function main() {
   exited.catch(() => {});
   let ws;
   try {
+    // The target URL appears before its document commits. Attaching DevTools at
+    // that point can create the empty document's contexts before Electron runs
+    // the preload. Wait for our parsed HTML title before attaching the debugger.
     const page = await until(
       async () => {
         assert(!closed, 'Desktop exited before opening its window: ' + JSON.stringify(closed));
@@ -167,6 +171,7 @@ async function main() {
           return (await request(debugPort, '/json/list')).find(
             (item) =>
               item.type === 'page' &&
+              item.title === 'LBRY' &&
               (development ? item.url.startsWith('http://localhost:') : item.url.includes('index.html'))
           );
         } catch (_) {
@@ -212,8 +217,6 @@ async function main() {
         ws.send(JSON.stringify({ id, method, params }));
       });
     };
-    // The target URL is advertised before navigation commits. Evaluating in that
-    // initial document can create its context before the preload sees the app URL.
     // Observe the real main-world context before sending any page JavaScript.
     const { frameTree } = await cdp('Page.getFrameTree');
     await cdp('Runtime.enable');
@@ -227,7 +230,11 @@ async function main() {
             candidate.origin === (development ? new URL(page.url).origin : 'file://')
         ),
       'No application JavaScript context'
-    );
+    ).catch(async (error) => {
+      console.error('Contexts:', [...contexts.values()]);
+      console.error('Frame:', JSON.stringify(await cdp('Page.getFrameTree')));
+      throw error;
+    });
     const evaluate = async (expression) => {
       const result = await cdp('Runtime.evaluate', {
         expression,
