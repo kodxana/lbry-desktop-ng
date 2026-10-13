@@ -1,8 +1,22 @@
-import sanitize from 'hast-util-sanitize';
-import defaultSchema from 'hast-util-sanitize/lib/github.json';
+import { sanitize, defaultSchema } from 'hast-util-sanitize';
 
 const schema = {
   ...defaultSchema,
+  // Keep document formatting supported before the version 5 schema changes.
+  tagNames: [
+    ...defaultSchema.tagNames,
+    'abbr',
+    'bdo',
+    'caption',
+    'cite',
+    'dfn',
+    'figcaption',
+    'figure',
+    'mark',
+    'small',
+    'time',
+    'wbr',
+  ],
   protocols: { href: ['http', 'https', 'mailto', 'lbry'], src: ['data'] },
   attributes: {
     '*': ['id', 'title'],
@@ -15,7 +29,7 @@ const schema = {
 };
 const names = { colspan: 'colSpan', rowspan: 'rowSpan' };
 
-// Parse in an inert template, then apply the same HAST sanitizer used by Markdown.
+// Parse in an inert template, then apply the document's HAST schema.
 // Rebuild from the sanitized tree instead of removing unsafe substrings from HTML.
 export default function sanitizeDocumentHtml(html) {
   const template = document.createElement('template');
@@ -29,6 +43,9 @@ export default function sanitizeDocumentHtml(html) {
       if (name === 'href') {
         if (attribute.value.startsWith('#')) {
           properties.href = '#user-content-' + attribute.value.slice(1);
+        } else if (/^lbry:\/\//i.test(attribute.value)) {
+          // LBRY channel names and claim IDs are not URL credentials or ports.
+          properties.href = 'lbry://' + attribute.value.slice(7);
         } else {
           try {
             const url = new URL(attribute.value);
