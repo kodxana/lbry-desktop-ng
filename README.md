@@ -27,8 +27,10 @@ disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setu
 Builds use Node 24.21.0 (pinned in `.node-version`) and Webpack 5. The desktop
 runtime is now pinned to the supported Electron 44.7.0 release;
 Windows source builds require Windows 10 or later.
-Renderer isolation and remaining application dependency upgrades are still
-outstanding. See [runtime migration notes](docs/electron-runtime.md)
+The renderer now runs with Node integration disabled and the Chromium sandbox
+enabled; see [renderer isolation](docs/renderer-isolation.md). Application
+dependency upgrades continue with the [wallet ZIP library](docs/wallet-archives.md).
+See also [runtime migration notes](docs/electron-runtime.md)
 and [build-tooling migration notes](docs/build-tooling.md).
 The [0.54.0-rc.3 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.3)
 is available for Windows and Linux x64 testing and still contains Electron 17.2.0.

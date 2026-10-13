@@ -2,10 +2,38 @@
 const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const AdmZip = require('adm-zip');
 const { registerWalletBackup } = require('../electron/walletBackup.cjs');
+const readBackup = require('./tests/readBackup.cjs');
+const legacyDirectory = path.join(__dirname, 'tests/fixtures/wallet-backup');
+const legacy = require('./tests/fixtures/wallet-backup/manifest.json');
 const output = path.resolve(__dirname, '../dist/backup-tests');
 fs.mkdirSync(output, { recursive: true });
+
+function testLegacyBackup() {
+  const bytes = fs.readFileSync(path.join(legacyDirectory, 'adm-zip-0.4.16.zip'));
+  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'), legacy.sha256);
+  const zip = new AdmZip(bytes);
+  assert.deepEqual(
+    zip
+      .getEntries()
+      .map((entry) => entry.entryName)
+      .sort(),
+    [...legacy.directories, ...Object.keys(legacy.files)].sort()
+  );
+  const restored = fs.mkdtempSync(path.join(output, 'legacy-'));
+  zip.extractAllTo(restored, false);
+  for (const directory of legacy.directories) {
+    assert(zip.getEntry(directory).isDirectory);
+    assert(fs.statSync(path.join(restored, directory)).isDirectory());
+  }
+  for (const [name, base64] of Object.entries(legacy.files)) {
+    const expected = Buffer.from(base64, 'base64');
+    assert.deepEqual(zip.readFile(name), expected, name);
+    assert.deepEqual(fs.readFileSync(path.join(restored, name)), expected, name);
+  }
+}
 
 function fixture(filesystem = fs) {
   const root = fs.mkdtempSync(path.join(output, 'wallet-'));
@@ -47,10 +75,11 @@ function fixture(filesystem = fs) {
     rpc: async (method) => {
       assert.equal(method, 'settings_get');
       state.rpcCalls++;
-      if (state.hold)
+      if (state.hold) {
         await new Promise((resolve) => {
           state.release = resolve;
         });
+      }
       return { wallet_dir: state.wallet };
     },
     getWindow: () => window,
@@ -64,7 +93,14 @@ function fixture(filesystem = fs) {
 }
 
 async function main() {
+  testLegacyBackup();
   const f = fixture();
+  for (const directory of legacy.directories) {
+    fs.mkdirSync(path.join(f.wallet, directory), { recursive: true });
+  }
+  for (const [name, base64] of Object.entries(legacy.files)) {
+    fs.writeFileSync(path.join(f.wallet, name), Buffer.from(base64, 'base64'));
+  }
   for (const request of [null, {}, { id: {}, directory: f.wallet }, { id: 'fixture', directory: '../wallet' }]) {
     assert.equal((await f.backup(request)).ok, false);
   }
@@ -80,6 +116,20 @@ async function main() {
   assert.equal(path.dirname(result.path), f.downloads);
   assert.deepEqual(new AdmZip(result.path).readFile('default_wallet'), f.bytes);
   assert.equal(new AdmZip(result.path).getEntry('empty/').isDirectory, true);
+  const contents = await readBackup(result.path);
+  assert.deepEqual(
+    [...contents.keys()].sort(),
+    [...legacy.directories, ...Object.keys(legacy.files), 'default_wallet'].sort()
+  );
+  assert.deepEqual(contents.get('default_wallet'), f.bytes);
+  for (const directory of legacy.directories) {
+    assert.equal(contents.get(directory), null);
+  }
+  for (const [name, base64] of Object.entries(legacy.files)) {
+    const expected = Buffer.from(base64, 'base64');
+    assert.deepEqual(contents.get(name), expected, name);
+    assert.deepEqual(fs.readFileSync(path.join(f.wallet, name)), expected, 'Backup must not modify its source');
+  }
   assert.deepEqual(fs.readFileSync(path.join(f.wallet, 'default_wallet')), f.bytes);
   assert.deepEqual(f.revealed, [result.path]);
   await f.open();
@@ -142,7 +192,7 @@ async function main() {
   assert.equal((await existing.backup()).error, 'write');
   assert.equal(fs.readFileSync(collision, 'utf8'), 'existing backup', 'Never overwrite or remove an older backup');
   console.log(
-    'PASS: main-process wallet backup ZIP, unchanged wallet bytes, destinations, failures, cancellation and sender checks'
+    'PASS: legacy wallet ZIP restore, independent backup reader, unchanged bytes, destinations, failures, cancellation and sender checks'
   );
 }
 main().catch((error) => {

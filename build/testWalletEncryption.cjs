@@ -5,6 +5,7 @@ const AdmZip = require('adm-zip');
 const Daemon = require('../electron/Daemon.cjs');
 const { createProfile } = require('../electron/testProfile.cjs');
 const { registerWalletBackup } = require('../electron/walletBackup.cjs');
+const readBackup = require('./tests/readBackup.cjs');
 
 // Called only with the disposable regtest profile owned by testSdkIsolation.
 module.exports = async function testWalletEncryption(profile, binary, waitForHistory, addresses) {
@@ -78,7 +79,11 @@ module.exports = async function testWalletEncryption(profile, binary, waitForHis
     );
     assert.equal(result.ok, true, 'The main-process backup must work against the running SDK');
     archive = result.path;
-    assert(new AdmZip(archive).readFile('wallets/default_wallet').equals(fs.readFileSync(walletPath)));
+    const contents = await readBackup(archive);
+    assert(
+      contents.get('wallets/default_wallet').equals(fs.readFileSync(walletPath)),
+      'Backup must preserve wallet bytes'
+    );
   });
 
   // Restore the archive produced by the desktop service only into a new test

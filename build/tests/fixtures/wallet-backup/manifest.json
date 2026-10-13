@@ -1,0 +1,17 @@
+{
+  "writer": "adm-zip@0.4.16",
+  "sha256": "7e1de90a93d1db43f665379450aa23b37fbd7267f4ec7c76f1d6848d4941fb6e",
+  "directories": [
+    "archive/",
+    "empty/",
+    "wallets/"
+  ],
+  "files": {
+    "wallets/default_wallet": "eyJmaXh0dXJlIjoic3ludGhldGljIHdhbGxldDsgbm8ga2V5cyBvciBmdW5kcyJ9Cg==",
+    "wallets/żółć.json": "eyJmaXh0dXJlIjoiVW5pY29kZSBmaWxlbmFtZSBhbmQgY29udGVudDogxbzDs8WCxIcifQo=",
+    "archive/default_wallet": "QW5vdGhlciBmaWxlIHdpdGggdGhlIHNhbWUgYmFzZW5hbWUK",
+    ".metadata": "U3ludGhldGljIGhpZGRlbiBmaWxlCg==",
+    "headers": "AP8KDYBBAA==",
+    "empty-file": ""
+  }
+}

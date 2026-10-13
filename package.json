@@ -98,7 +98,7 @@
     "@sentry/browser": "^5.12.1",
     "@sentry/webpack-plugin": "^1.10.0",
     "@types/three": "^0.103.2",
-    "adm-zip": "^0.4.13",
+    "adm-zip": "0.6.1",
     "assert": "1.5.0",
     "babel-eslint": "^10.0.1",
     "babel-loader": "10.1.1",
@@ -223,7 +223,8 @@
     "webpack-hot-middleware": "2.26.1",
     "webpack-merge": "6.0.1",
     "ws": "8.22.0",
-    "yarnhook": "^0.2.0"
+    "yarnhook": "^0.2.0",
+    "yauzl": "3.4.0"
   },
   "engines": {
     "node": "24.x",
