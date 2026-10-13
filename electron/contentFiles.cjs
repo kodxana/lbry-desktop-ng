@@ -102,8 +102,9 @@ function registerContentFiles({ ipcMain, shell, rpc, profile, probe, getWindow, 
     if (
       !OPEN_EXTENSIONS.has(path.extname(filename).toLowerCase()) ||
       (process.platform !== 'win32' && stat.mode & 0o111)
-    )
-      { return 'Open this file from its folder.' }
+    ) {
+      return 'Open this file from its folder.';
+    }
     if (!current()) throw new Error('Renderer changed');
     return shell.openPath(filename);
   });

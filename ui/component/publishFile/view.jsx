@@ -80,6 +80,7 @@ function PublishFile(props: Props) {
   const ffmpegAvail = ffmpegStatus.available;
   const currentFile = filePath;
   const [currentFileType, setCurrentFileType] = useState(null);
+  const [fileReadError, setFileReadError] = useState(false);
   const [optimizeAvail, setOptimizeAvail] = useState(false);
   const [userOptimize, setUserOptimize] = usePersistedState('publish-file-user-optimize', false);
 
@@ -99,6 +100,8 @@ function PublishFile(props: Props) {
     if (!filePath) {
       return;
     }
+    let current = true;
+    setFileReadError(false);
     async function readSelectedFileDetails() {
       // Read the file to get the file's duration (if possible)
       // and offer transcoding it.
@@ -117,9 +120,22 @@ function PublishFile(props: Props) {
         duration: result.duration,
         file: file,
       };
-      processSelectedFile(fileData);
+      if (current) {
+        processSelectedFile(fileData);
+      }
     }
-    readSelectedFileDetails();
+    readSelectedFileDetails().catch(() => {
+      if (!current) {
+        return;
+      }
+      setFileReadError(true);
+      // A restored draft must ask for a new selection; persisted renderer paths
+      // cannot authorize filesystem access. Keep its title and other metadata.
+      updatePublishForm({ filePath: '', fileDur: 0, fileSize: 0, fileVid: false });
+    });
+    return () => {
+      current = false;
+    };
   }, [filePath]);
 
   useEffect(() => {
@@ -322,6 +338,11 @@ function PublishFile(props: Props) {
       subtitle={subtitle || (isStillEditing && __('You are currently editing your upload.'))}
       actions={
         <React.Fragment>
+          {fileReadError && (
+            <p className="help--warning" role="alert">
+              {__('The selected file could not be read. Please choose it again.')}
+            </p>
+          )}
           <PublishName uri={uri} />
           <FormField
             type="text"

@@ -9,6 +9,8 @@ import FileDrop from 'component/fileDrop/view';
 import ModalFileSelection from 'modal/modalFileSelection/view';
 import SelectThumbnail from 'component/selectThumbnail/view';
 import ModalConfirmThumbnailUpload from 'modal/modalConfirmThumbnailUpload/view';
+import PublishFile from 'component/publishFile/view';
+import * as PUBLISH_MODES from 'constants/publish_types';
 import { render, unmount, waitFor, tick } from './helpers';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -179,5 +181,32 @@ export default async function fileUploads(store, history, root) {
   unmount();
   document.removeEventListener('dragover', preventDefault);
   document.removeEventListener('drop', preventDefault);
-  return 'native single/repeated/multiple file drops, duplicate filenames, chooser cancel/accept, pending navigation cleanup and thumbnail confirmation paths';
+  const draft = path.join(root, 'restored-draft.mp4');
+  fs.writeFileSync(draft, 'Synthetic draft file');
+  const draftUpdates = [];
+  const mountDraft = (filePath) => render(
+    <PublishFile
+      filePath={filePath}
+      mode={PUBLISH_MODES.FILE}
+      name="restored-draft"
+      title="Keep my title"
+      updatePublishForm={(value) => draftUpdates.push(value)}
+      setPublishMode={() => {}}
+      setPrevFileText={() => {}}
+      balance={1}
+    />,
+    store,
+    history
+  );
+  mountDraft(draft);
+  await waitFor(() => document.querySelector('[role=alert]'), 'A draft must explain that its file needs selecting again');
+  assert(draftUpdates.some((value) => value.filePath === ''));
+  assert(!draftUpdates.some((value) => 'title' in value || 'name' in value), 'Keep draft metadata after denied file access');
+  mountDraft('');
+  await ipcRenderer.invoke('fixture-grant-file', draft);
+  mountDraft(draft);
+  await waitFor(() => draftUpdates.some((value) => value.fileSize === fs.statSync(draft).size), 'A newly selected draft file must load');
+  assert.equal(document.querySelector('[role=alert]'), null);
+  unmount();
+  return 'native file drops, duplicate filenames, chooser cancel/accept, pending navigation cleanup, thumbnails and restored draft file selection';
 }

@@ -27,6 +27,8 @@ directory does not grant access to its descendants. Documents are limited to
 500 MB, and post writes to 16 MiB in a new directory inside the profile's temp
 folder. Unknown file types and Unix executable files open in their folder rather
 than being launched through the renderer's file API.
+File grants last for the app session. Restored publishing drafts ask users to
+select their file again while keeping the title and other draft metadata.
 
 Password encryption and migration keep the existing main-process password store
 and OS keyring. The cookie adapter's OS-specific file-URL mapping is calculated

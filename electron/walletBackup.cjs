@@ -54,8 +54,9 @@ function registerWalletBackup({ ipcMain, app, shell, rpc, getWindow, rendererURL
         for (const entry of filesystem.readdirSync(directory)) {
           const filename = path.join(directory, entry);
           const stat = filesystem.lstatSync(filename);
-          if (stat.isSymbolicLink() || (!stat.isFile() && !stat.isDirectory()))
-            { throw new Error('Unsupported wallet entry') }
+          if (stat.isSymbolicLink() || (!stat.isFile() && !stat.isDirectory())) {
+            throw new Error('Unsupported wallet entry');
+          }
           if (stat.isDirectory()) {
             archive.addFile(prefix + entry + '/', Buffer.alloc(0));
             addDirectory(filename, prefix + entry + '/');
