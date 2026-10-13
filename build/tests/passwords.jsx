@@ -21,6 +21,7 @@ import {
   setAuthToken,
 } from 'util/saved-passwords';
 import { render, unmount, waitFor, tick, input, submit } from './helpers';
+import legacyCookies from './fixtures/legacy-cookies.json';
 
 const control = (operation) => ipcRenderer.invoke('test-password-storage', operation);
 const click = (label) =>
@@ -30,11 +31,9 @@ const click = (label) =>
 
 export default async function passwords(store, history, root) {
   await control('reset');
-  // Use the production Electron cookie shim, including a host-only cookie and a
-  // path/domain variant. The auth token must survive password migration.
-  document.cookie = 'saved_password=fixture-%20=value; path=/;';
-  document.cookie = 'saved_password=fixture-%20=value; domain=lbry.tv; path=/old; Secure';
-  setAuthToken('fixture-auth-token');
+  // Generated with tough-cookie 2.5.0: preserve both password variants and the account token.
+  localStorage.setItem('__cookieStore__', JSON.stringify(legacyCookies));
+  assert.equal(getAuthToken(), 'fixture-auth-token', 'The upgraded shim must read the legacy account token');
   const initial = await getSavedPasswordState();
   assert(initial.password === 'fixture-%20=value' && initial.remembered, 'Migrate the real legacy cookie jar');
   assert(

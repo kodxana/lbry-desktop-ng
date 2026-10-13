@@ -3,32 +3,38 @@
 
 const ToughCookie = require('tough-cookie');
 const WebStorageCookieStore = require('tough-cookie-web-storage-store');
-
-let cookieURL;
+const { parse } = require('url/');
 
 function enable(options) {
-  cookieURL = options.url;
+  const location = new URL(options.url);
+  let decoded = options.url;
+  try {
+    decoded = decodeURI(decoded);
+  } catch (_) {
+    // v2 matched malformed percent-encoding verbatim.
+  }
+  // Retain v2's stored file-URL paths without decoding the URL's authority.
+  const cookieURL = {
+    hostname: location.hostname,
+    protocol: location.protocol,
+    pathname: parse(decoded).pathname,
+  };
 
   let cookieStore = new WebStorageCookieStore(global.localStorage);
-  let cookieJar = new ToughCookie.CookieJar(cookieStore);
+  // Keep Secure cookies restricted to HTTPS, including localhost, as in v2.
+  let cookieJar = new ToughCookie.CookieJar(cookieStore, { allowSecureOnLocal: false });
 
   Object.defineProperty(global.document, 'cookie', {
     enumerable: true,
     configurable: true,
     get() {
-      let url = _getLocationString();
-      let cookies = cookieJar.getCookiesSync(url);
+      let cookies = cookieJar.getCookiesSync(cookieURL, { http: false });
       return cookies.map((cookie) => cookie.cookieString()).join('; ');
     },
     set(cookieString) {
-      let url = _getLocationString();
-      cookieJar.setCookieSync(cookieString, url);
+      cookieJar.setCookieSync(cookieString, cookieURL, { http: false });
     },
   });
-}
-
-function _getLocationString() {
-  return cookieURL;
 }
 
 function disable() {

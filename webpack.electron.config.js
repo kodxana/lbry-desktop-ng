@@ -111,7 +111,6 @@ const renderConfig = {
       buffer: require.resolve('buffer/'),
       stream: require.resolve('stream-browserify'),
       assert: require.resolve('assert/'),
-      net: path.resolve(__dirname, 'ui/util/cookie-ip.cjs'),
     },
   },
   entry: {
