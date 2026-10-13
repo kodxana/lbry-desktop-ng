@@ -1,6 +1,8 @@
 import { strict as assert } from 'assert';
-import { clipboard, ipcRenderer, shell } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import CodeMirror from 'codemirror';
+import React from 'react';
+import ClaimUri from 'component/claimUri/view';
 import {
   openContextMenu,
   openEditorMenu,
@@ -9,9 +11,9 @@ import {
   stopContextMenu,
 } from 'util/context-menu';
 import { convertToShareLink } from 'util/lbryURI';
-import { waitFor } from './helpers';
+import { render, unmount, waitFor, tick } from './helpers';
 
-export default async function contextMenu() {
+export default async function contextMenu(store, history) {
   const fixture = (...args) => ipcRenderer.invoke('fixture-context-menu', ...args);
   const { nativeClipboard } = await fixture('configure');
   assert(document.hasFocus(), 'The hidden fixture must emulate an active document');
@@ -162,10 +164,10 @@ export default async function contextMenu() {
 
   // Capture the two renderer-owned claim actions without opening a browser or
   // replacing the user's clipboard. Claim URLs keep their existing formatting.
-  const writeText = clipboard.writeText;
+  const writeText = navigator.clipboard.writeText;
   const openExternal = shell.openExternal;
   const actions = [];
-  clipboard.writeText = (text) => actions.push(['copy', text]);
+  navigator.clipboard.writeText = async (text) => actions.push(['copy', text]);
   shell.openExternal = async (url) => actions.push(['report', url]);
   try {
     const claim = { claim_id: 'a'.repeat(40), permanent_url: 'lbry://fixture#' + 'a'.repeat(40) };
@@ -185,12 +187,63 @@ export default async function contextMenu() {
     await stale.pending;
     await openClaimPreviewMenu(null, event(input));
     assert.equal(actions.length, 2, 'Dismissed, removed and absent claims must not trigger actions');
+    navigator.clipboard.writeText = async () => {
+      throw new Error('Synthetic clipboard denial');
+    };
+    const rejected = await open(() => openClaimPreviewMenu(claim, event(input)));
+    await fixture('choose', 'copy-link');
+    assert.equal(await rejected.pending, false, 'A denied copy must settle without an unhandled rejection');
   } finally {
-    clipboard.writeText = writeText;
+    navigator.clipboard.writeText = writeText;
     shell.openExternal = openExternal;
     editor.toTextArea();
     container.removeEventListener('contextmenu', stopContextMenu);
     container.textContent = '';
+  }
+  const toasts = [];
+  const copied = [];
+  const uri = 'lbry://clipboard-fixture#' + 'b'.repeat(40);
+  const shortUrl = 'lbry://clipboard-fixture#b';
+  const mount = (short) =>
+    render(<ClaimUri uri={uri} shortUrl={short} doToast={(value) => toasts.push(value)} />, store, history);
+  try {
+    let release;
+    navigator.clipboard.writeText = (text) => {
+      copied.push(text);
+      return new Promise((resolve) => {
+        release = resolve;
+      });
+    };
+    mount(shortUrl);
+    document.querySelector('button').click();
+    assert.deepEqual(copied, [shortUrl]);
+    assert.equal(toasts.length, 0, 'Do not report Copied until the write succeeds');
+    release();
+    await tick();
+    assert.deepEqual(toasts, [{ message: 'Copied' }]);
+    navigator.clipboard.writeText = async () => {
+      throw new Error('Synthetic clipboard denial');
+    };
+    document.querySelector('button').click();
+    await tick();
+    assert.deepEqual(toasts[1], { message: 'Failed to copy.', isError: true });
+    mount(null);
+    navigator.clipboard.writeText = async (text) => copied.push(text);
+    document.querySelector('button').click();
+    await tick();
+    assert.deepEqual(copied, [shortUrl, uri]);
+    assert.deepEqual(toasts[2], { message: 'Copied' }, 'Copy must be retryable after denial');
+    if (nativeClipboard) {
+      navigator.clipboard.writeText = writeText;
+      document.querySelector('button').click();
+      await waitFor(
+        async () => (await fixture()).clipboard === uri,
+        'Browser Clipboard API must write the actual claim URI'
+      );
+    }
+  } finally {
+    navigator.clipboard.writeText = writeText;
+    unmount();
   }
   return (
     'context menus: real IPC/native Menu, text/document selection, CodeMirror, read-only fields, claims and dismissal' +

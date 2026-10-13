@@ -1,20 +1,53 @@
 # Electron runtime migration
 
-The source build moves from Electron 28.3.3 to 34.5.8. This is an intermediate
-checkpoint, not a supported-runtime release. Electron 34 is end-of-life. Continue
-the migration to a supported version before treating runtime modernization as
-complete. The published 0.54.0-rc.3 installers remain on Electron 17.2.0.
-
-This step moves the embedded Node runtime from 18 to 20.19.1 and Chromium to
-132.0.6834.210. It replaces the removed native `File.path` API with
-`webUtils.getPathForFile` for file inputs and publishing drops. The SDK binary,
-wallet format, React, updater and application
-version are unchanged.
+The source build moves from Electron 34.5.8 to 44.7.0, a supported stable release
+as of October 13, 2026. Embedded Node moves from 20 to 24.21.0 and Chromium to
+152.0.7977.130. The published 0.54.0-rc.3 installers remain on Electron 17.2.0.
+Renderer isolation and other application dependencies still need modernization.
+The SDK binary, wallet format, React, updater and application version are unchanged.
 
 ## Breaking changes reviewed
 
-References: [Electron 34.5.8 runtime versions](https://releases.electronjs.org/release/v34.5.8)
-and [the pinned release's migration notes](https://github.com/electron/electron/blob/v34.5.8/docs/breaking-changes.md).
+References: [Electron 44.7.0 runtime versions](https://releases.electronjs.org/release/v44.7.0)
+and [the pinned release's migration notes](https://github.com/electron/electron/blob/v44.7.0/docs/breaking-changes.md).
+
+- Electron 44 removes renderer access to `clipboard` and makes main-process
+  clipboard reads/writes asynchronous. Claim links and URI buttons now use
+  `navigator.clipboard.writeText`; a URI button reports success only after the
+  write resolves and reports a denied write. Context-menu creation awaits the OS
+  clipboard and cancels pending reads on navigation or destruction. Existing
+  text, Markdown and document editing still use native WebContents commands.
+- Electron 42 removes automatic binary downloads during package installation.
+  CI and build instructions explicitly run the pinned `install-electron` command
+  after installing the immutable lock without dependency lifecycle scripts.
+  Electron's npm package now needs Node >=22.12; the build host is pinned to 24.
+- Electron 43 defaults dialogs to Downloads instead of restoring the OS's last
+  directory. The picker remembers successful file/folder directories separately
+  for the current app session. Cancellation, failed reads and rejected senders
+  do not replace them. Windows retains Home for the first selection. Linux
+  portals older than version 4 may ignore `defaultPath` (Electron 35 change).
+- Electron 41 renders PDFs in out-of-process frames within the same WebContents.
+  The app does not track PDF guest WebContents. A generated page with a known
+  colored rectangle is now rendered through the production viewer and checked
+  through captured pixels, in addition to URL encoding and HTML sandbox checks.
+  Cookie change-event cause names also changed; the app does not consume them.
+- Electron 36 defaults to GTK 4 on GNOME; Electron 38 defaults to native Wayland
+  in Wayland sessions. CI installs GTK 3 and 4 and uses Xvfb/X11. Native Wayland
+  remains manual acceptance; `--ozone-platform=x11` can select XWayland when
+  necessary. No global fallback flag is forced on users.
+- Electron 43 changes Linux frameless window decorations; the app uses a normal
+  framed window. Electron 44's ANGLE libraries are statically linked; this build
+  neither replaces nor separately packages those libraries. Builds already target
+  x64, so removal of 32-bit release artifacts does not change the supported targets.
+- Changes to worker/subframe Node integration, DevTools extension preloads,
+  utility processes, custom protocol sessions, client-certificate events,
+  WebUSB/Serial, offscreen rendering, bitmap color spaces, storage quotas and
+  WebRequest filters with empty URL lists have no affected production call sites.
+  Popup creation is already denied or sent to the external browser.
+- Electron 44 requires macOS 13; Electron 42 notifications also require a signed
+  macOS application. macOS remains outside this project's validation matrix.
+
+Earlier checkpoints covered the following changes:
 
 - Electron 32 removes native `File.path`. Browser-picked files, drag-and-drop
   publishing and thumbnail selection resolve the native path with `webUtils`.
@@ -39,8 +72,6 @@ and [the pinned release's migration notes](https://github.com/electron/electron/
 - Electron 34 hides the Windows menu bar in fullscreen. Native fullscreen
   presentation remains a manual acceptance item; IPC and player exit behavior
   remain covered by the existing regression tests.
-
-Earlier checkpoints also reviewed these changes:
 
 - Electron 23 drops Windows 7, 8 and 8.1. Windows 10 or later is required.
   The NSIS initialization guard rejects older Windows before replacing files,
@@ -87,6 +118,11 @@ shutdown and clean renderer exits do not show a crash notice.
   on loopback. They cover MP4 ranges, the real HEAD/redirect path into HLS and
   MediaSource, audio, decoded frames, pause, seek, end-of-playback and disposal.
   External requests remain blocked. See the fixture README for regeneration.
+- PDF tests capture the generated page from a hidden window and save
+  `dist/ci/pdf-preview.png`. Clipboard tests cover asynchronous read failures,
+  canceled reads, successful/denied URI copies and retry. Hosted CI exercises
+  the real browser Clipboard API and native clipboard, while local runs preserve
+  the user's clipboard. File-dialog tests cover remembered locations.
 - Native password tests exercise OS storage across process restarts, including
   Windows DPAPI and an isolated Linux GNOME keyring. Real SDK tests restore an
   encrypted backup and compare the generated unfunded wallet's keys/addresses.
@@ -98,7 +134,7 @@ shutdown and clean renderer exits do not show a crash notice.
   in `dist`. The unsupported case exits with 1633 without reaching that action.
   This checks the guard, not actual installation on a Windows 7 virtual machine.
 - The hosted Windows installed-upgrade test moves the checksum-pinned RC3
-  (Electron 17) to the private Electron 34 candidate, then to a second candidate.
+  (Electron 17) to the private Electron 44 candidate, then to a second candidate.
   It asserts both main and renderer runtime versions, install/decline choices,
   SDK exit before NSIS, automatic restart, unchanged wallet keys/addresses,
   encryption, remembered passwords and cookie/localStorage persistence. An
@@ -108,5 +144,5 @@ shutdown and clean renderer exits do not show a crash notice.
 All wallet tests use disposable, unfunded fixtures. Installed upgrades run only
 on fresh GitHub-hosted Windows runners and publish no releases. Linux updates
 remain manual. Hardware video decoding, audible output, subtitles and the full
-player controls, PDF page rendering/printing, native dialog presentation and
-notification popups still need manual acceptance on the upgraded runtime.
+player controls, complex PDFs and printing, native dialog presentation, Wayland
+and notification popups still need manual acceptance on the upgraded runtime.

@@ -2,7 +2,7 @@
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
-Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 34.5.8. The
+Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 44.7.0. The
 [build-tooling migration](build-tooling.md) moves compilation to Webpack 5.
 The [packaging/updater migration](packaging-updater.md) adds old-client metadata
 compatibility, cache recovery, interrupted downloads and install-handoff checks.
@@ -56,13 +56,18 @@ and router:
 - Markdown covers streamed chunks, formatting and unsafe markup/links. Plain text
   goes through CodeMirror, including literal markup, Unicode, read-only mode,
   theme changes and missing files. PDF/HTML checks cover local file URL encoding;
-  HTML also retains its empty sandbox. These are not PDF pixel-rendering tests.
+  HTML also retains its empty sandbox. The PDF fixture additionally paints a known
+  rectangle through Chromium's built-in viewer; captured pixels verify rendering
+  and `dist/ci/pdf-preview.png` provides visual evidence. Complex PDFs and printing
+  still need manual acceptance.
 - File selection uses scripted responses at `dialog.showOpenDialog`, the production
   `select-file` IPC handler (without `@electron/remote`),
   and Chromium file inputs populated through CDP. Tests cover filters, cancellation,
   Unicode paths, directory and metadata-only selection, repeated selection of the
   same file, disabled controls, read/dialog failures, retry, duplicate requests
   and unmounting while a dialog is open. Dialogs belong to the app window.
+  Successful selections preserve separate file/folder locations for the session;
+  cancellation, failed reads and rejected requests do not replace them.
   `node build/testFileSelection.js` also checks request validation, main-frame
   sender restrictions, cancellation without disk access, and discarding results
   when the window is closed, replaced or navigated away. The handler reads only
@@ -97,6 +102,10 @@ and router:
   also checks real clipboard copy/cut/paste in text fields, document selection and
   CodeMirror. Local runs intercept clipboard operations to preserve the user's
   clipboard. Native menu mouse/keyboard interaction still needs manual acceptance.
+  Electron 44 uses asynchronous main-process clipboard reads, with failures and
+  cancellation during navigation/destruction covered. Claim links and URI buttons
+  use the browser Clipboard API; tests cover delayed success, denial, retry and
+  real OS writes on hosted CI.
 - Backups use the real UI, scoped `desktop-info` IPC and ZIP library with invented
   wallet bytes. Tests read the ZIP back and verify unchanged contents and portable
   filenames. Downloads/home/wallet-parent fallback, missing sources, failed writes,
@@ -192,7 +201,7 @@ From a checkout with Node 24.21.0 on PATH:
 
 ```text
 node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
-node node_modules/electron/install.js
+node .yarn/releases/yarn-3.2.0.cjs exec install-electron
 node build/runDesktopTests.js
 node build/testRenderer.js
 ```
@@ -246,7 +255,7 @@ for changed APIs, and require both platform jobs to pass. The application source
 lockfile and SDK pin should change only as described by that migration PR.
 
 This is an automated baseline, not complete desktop acceptance. Full media playback
-(HLS, subtitles, seeking, hardware decoding), PDF page rendering/printing, native
+(HLS, subtitles, seeking, hardware decoding), complex PDFs and printing, native
 file-picker interaction, installed old-to-new upgrades,
 account services and funded transactions still need separate acceptance checks.
 The packaged smoke uses an empty regtest wallet and the unpacked output;

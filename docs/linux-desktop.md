@@ -50,7 +50,12 @@ profile retains its wallet and downloaded data.
 
 Use Linux x64 and Node 24.21.0. Install the checked-in Yarn lock with
 `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`, then
-run `node node_modules/electron/install.js` to install the pinned Electron 34.5.8.
+run `node .yarn/releases/yarn-3.2.0.cjs exec install-electron` to install the pinned Electron 44.7.0.
+
+Current source builds also need GTK 4 on GNOME (`libgtk-4-1` on Ubuntu 24.04).
+Electron now uses native Wayland in Wayland sessions. CI validates X11 with Xvfb;
+Wayland still needs desktop acceptance. If necessary, `--ozone-platform=x11`
+selects XWayland without changing the profile.
 
 For the current source, download `lbrynet-linux` from the CI run recorded in
 `build/sdk-candidate.json`, verify its archive SHA-256 against

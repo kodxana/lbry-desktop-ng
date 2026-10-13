@@ -28,8 +28,8 @@ The current build version is `0.54.0-rc.3`. Expected release files are:
 - `latest.yml`
 
 These builds are unsigned. A community signing identity has not been
-configured. Source builds use Electron 34.5.8 as an unsupported intermediate
-checkpoint; the published RC3 still uses Electron 17.2.0. See the
+configured. Source builds use the supported Electron 44.7.0 release;
+the published RC3 still uses Electron 17.2.0. See the
 [runtime migration](electron-runtime.md) for scope and installed-upgrade coverage.
 Current Windows source builds require Windows 10 or later. The installer rejects
 older versions before replacing an existing installation; the published RC3 is

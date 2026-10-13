@@ -1,7 +1,6 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import { clipboard } from 'electron';
 import Button from 'component/button';
 
 type Props = {
@@ -20,11 +19,13 @@ function ClaimUri(props: Props) {
       button="link"
       className={classnames('media__uri', { 'media__uri--inline': inline })}
       label={noShortUrl ? uri : shortUrl || uri}
-      onClick={() => {
-        clipboard.writeText(shortUrl || uri);
-        doToast({
-          message: __('Copied'),
-        });
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(shortUrl || uri);
+          doToast({ message: __('Copied') });
+        } catch (_) {
+          doToast({ message: __('Failed to copy.'), isError: true });
+        }
       }}
     />
   );

@@ -1,6 +1,6 @@
 // A generated one-page PDF. Offsets are calculated so the fixture needs no PDF toolchain.
 module.exports = function pdfFixture() {
-  const text = 'BT /F1 18 Tf 40 150 Td (Desktop document fixture) Tj ET';
+  const text = 'q 0 1 0 rg 40 40 220 80 re f Q\nBT /F1 18 Tf 40 150 Td (Desktop document fixture) Tj ET';
   const objects = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',

@@ -1,4 +1,4 @@
-import { clipboard, ipcRenderer, shell } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import { convertToShareLink } from 'util/lbryURI';
 
 async function showMenu(event, request, target = event.target) {
@@ -61,7 +61,11 @@ export async function openClaimPreviewMenu(claim, event) {
   event.preventDefault();
   const action = await showMenu(event, { kind: 'claim', hasClaim: !!claim });
   if (claim && action === 'copy-link') {
-    clipboard.writeText(convertToShareLink(claim.canonical_url || claim.permanent_url));
+    try {
+      await navigator.clipboard.writeText(convertToShareLink(claim.canonical_url || claim.permanent_url));
+    } catch (_) {
+      return false;
+    }
   } else if (claim && action === 'report') {
     await shell.openExternal(`https://lbry.com/dmca/${claim.claim_id}`);
   }

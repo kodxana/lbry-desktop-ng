@@ -33,8 +33,8 @@ operation is not needed; the SDK uses a light wallet and public wallet servers.
 ## Rebuild
 
 Use Node 24.21.0 and the checked-in Yarn 3.2.0. The original desktop runtime is
-Electron 17.2.0. Current source builds use Electron 34.5.8 as an intermediate
-checkpoint; see [runtime migration notes](electron-runtime.md).
+Electron 17.2.0. Current source builds use Electron 44.7.0;
+see [runtime migration notes](electron-runtime.md).
 These source builds require Windows 10 or later, including the portable test ZIP.
 
 1. Install the checked-in lock without postinstall scripts:
@@ -48,7 +48,7 @@ These source builds require Windows 10 or later, including the portable test ZIP
 3. Run `node build/downloadDaemon.js "path\to\lbrynet.exe"`.
    This verifies SHA-256 before replacing the cached executable. A failed import
    preserves the existing cached file.
-4. Run `node node_modules/electron/install.js`, then `node build/buildSdkTest.js`.
+4. Run `node .yarn/releases/yarn-3.2.0.cjs exec install-electron`, then `node build/buildSdkTest.js`.
    It runs update and isolation/restart tests, compiles both bundles and creates a ZIP under
    `dist/sdk-test`. It does not publish or sign the build.
 
