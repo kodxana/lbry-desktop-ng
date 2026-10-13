@@ -3,7 +3,7 @@ const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
 const net = require('net');
-const { getDiskSpace, parseWindowsSpace, parsePosixSpace } = require('../electron/diskSpace.cjs');
+const diskTests = require('./testDiskSpace');
 const { GENESIS, parseServer, probeHub, probeHubs, HubSelection } = require('../electron/hubServers.cjs');
 
 async function hostingTests() {
@@ -12,7 +12,7 @@ async function hostingTests() {
   const { transformFileSync } = require('@babel/core');
   const vm = require('vm');
   let submit;
-  let changed = false;
+  const changed = [];
   let finished = false;
   const label = props => React.createElement('label', null, props.label, props.helper);
   const dependencies = {
@@ -23,7 +23,7 @@ async function hostingTests() {
     'component/common/form-components/form': { Form: props => { submit = props.onSubmit; return props.children } },
     'react-router-dom': { withRouter: component => component },
     'static/img/yrblhappy.svg': '',
-    'constants/daemon_settings': {},
+    'constants/daemon_settings': { BLOB_STORAGE_LIMIT_MB: 'blob_storage_limit', NETWORK_STORAGE_LIMIT_MB: 'network_storage_limit' },
   };
   const { code } = transformFileSync(path.join(__dirname, '../ui/component/hostingSplash/view.jsx'), {
     babelrc: false,
@@ -46,42 +46,23 @@ autoHostingLimit: 0,
 viewBlobSpace: 0,
 autoBlobSpace: 0,
 saveBlobs: true,
-    setDaemonSetting: () => { changed = true },
+    setDaemonSetting: (name, value) => { changed.push([name, value]) },
 handleDone: () => { finished = true },
   };
   const unavailable = renderToStaticMarkup(React.createElement(Component, props));
   assert(unavailable.includes('Storage information is unavailable'));
   assert(!unavailable.includes('disk is almost full'));
   await submit();
-  assert(finished && !changed, 'Unknown storage must not change hosting limits');
+  assert(finished && changed.length === 0, 'Unknown storage must not change hosting limits');
   const full = renderToStaticMarkup(React.createElement(Component, { ...props, diskSpace: { total: 1073741824, free: 0 } }));
   assert(full.includes('disk is almost full'));
-  console.log('PASS: unknown storage differs from a full drive; continuing preserves hosting settings');
-}
-
-async function diskTests() {
-  assert.deepEqual(parseWindowsSpace('{"total":1099511627776,"free":0}'), { total: 1073741824, free: 0 });
-  for (const value of ['{}', 'null', '{"total":1000,"free":2000}', '{"total":0,"free":0}', '{"total":"4096","free":0}']) {
-    assert.throws(() => parseWindowsSpace(value));
-  }
-  assert.deepEqual(parsePosixSpace('Filesystem 1024-blocks Used Available Capacity Mounted on\n/dev/test 10000 7500 2500 75% /with space\n'),
-    { total: 10000, free: 2500 });
-  assert.deepEqual(parsePosixSpace('Filesystem blocks used avail capacity mount\nVolume name 10000 10001 -1 100% /\n'),
-    { total: 10000, free: 0 });
-  assert.throws(() => parsePosixSpace('df: failed'));
-  const runs = path.resolve(__dirname, '../dist/setup-tests');
-  fs.mkdirSync(runs, { recursive: true });
-  const directory = fs.mkdtempSync(path.join(runs, "disk ł ' $(); & "));
-  try {
-    const result = await getDiskSpace(directory);
-    assert(result.total > 4 * 1024 * 1024, 'Capacity must not truncate to 32-bit bytes');
-    assert(result.free >= 0 && result.free <= result.total);
-    const parent = await getDiskSpace(runs);
-    assert.equal(result.total, parent.total);
-    assert(Math.abs(result.free - parent.free) < 1024 * 1024);
-    await assert.rejects(getDiskSpace(path.join(directory, 'missing')), /ENOENT/);
-    console.log('PASS: native disk capacity, literal Unicode paths, missing directory, zero free space and df parsing');
-  } finally { fs.rmdirSync(directory) }
+  await submit();
+  assert.equal(changed.length, 0, 'A full drive must not increase hosting limits');
+  renderToStaticMarkup(React.createElement(Component, { ...props, diskSpace: { total: 1073741824, free: 268435456 } }));
+  await submit();
+  assert.deepEqual(changed, [['blob_storage_limit', 94208], ['network_storage_limit', 10240]],
+    'A 1 TiB drive with 256 GiB available must produce MiB hosting limits from KiB readings');
+  console.log('PASS: unknown/full storage preserves settings; known capacity produces the expected hosting limits');
 }
 
 async function protocolTests() {

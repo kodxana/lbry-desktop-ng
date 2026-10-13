@@ -62,32 +62,38 @@ session and probes them again. Remembering an address does not bypass its check
 or change the saved wallet configuration. The custom-address option remains
 available, including when no listed hub responds.
 
-## Windows storage
+## Storage capacity
 
-The original desktop ran `wmic logicaldisk`; that executable is absent on the
-Windows machine used for this validation. The replacement calls
-[`GetDiskFreeSpaceExW`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getdiskfreespaceexw)
-through hidden Windows PowerShell, querying the SDK's actual `blobfiles`
-directory. Paths go through standard input, not shell interpolation. Available
-space respects the caller's quota, retains 64-bit values, and is converted to
-the KiB units expected by the UI. The Unix path uses `df -kP` with a separate
-path argument. The Linux package tests exercise that path with real directories;
-macOS execution remains unvalidated.
+The desktop queries the SDK's actual `blobfiles` directory using Node's
+[`fs.promises.statfs`](https://nodejs.org/docs/latest-v24.x/api/fs.html#fspromisesstatfspath-options),
+available in the upgraded Electron runtime. This replaces the Windows
+PowerShell helper and Unix `df` subprocess. Directory links are resolved before
+the query. Caller-available blocks respect quotas and reserved space; BigInt
+arithmetic converts allocation units to the KiB integers expected by the UI.
+Invalid or unsafe capacities are rejected, and negative available blocks count
+as zero free space.
 
 A failed check clears stale capacity readings and offers a retry. Setup treats
 unknown capacity separately from a full drive, and continuing with unknown
-capacity does not change hosting limits. PowerShell policy restrictions or an
-unavailable storage directory can still prevent a reading; installing WMIC is
-not required.
+capacity does not change hosting limits. Missing directories, permission errors
+and failed filesystem queries remain errors rather than zero-capacity readings.
+The check reports a timeout after ten seconds, including path resolution; the
+underlying OS request cannot be cancelled and may finish later. Neither WMIC nor
+PowerShell is required for this check. macOS and real quota-limited/network
+volumes remain unvalidated.
 
 ## Regression checks
 
 Run `yarn test:desktop-setup` with the documented Node 24.21.0 build environment:
 
-- Real Windows capacity query with spaces, Unicode and shell metacharacters in
-  the directory name; missing directories; zero free space; capacity above 4 GiB.
+- Native capacity queries with spaces, Unicode and shell metacharacters in the
+  directory name; directory links, missing paths and non-directory paths.
+- Simulated quotas/reserved space, zero free space, allocation units, capacities
+  above the exact byte range of Number, invalid results, filesystem errors and
+  timeouts with late failures and successful retries.
 - Rendering and submission of the hosting screen with unknown capacity versus
-  a full drive; unknown capacity preserves hosting settings.
+  a full drive; neither changes hosting settings. Known KiB readings produce the
+  expected MiB hosting limits.
 - Local TCP hub fixtures: fragmented JSON, incompatible protocol, wrong network,
   invalid/oversized replies, refused connections, timeouts and concurrency limits.
 - SDK host/port tuple normalization, duplicate choices, a failed second probe,
@@ -105,6 +111,10 @@ that stops responding after its probe can be replaced before sync finishes.
 The recovered wallet retains its addresses and zero balance; all seven SDK
 shutdowns complete without forced termination or pending-task destruction.
 No funds or mainnet transactions are needed for these tests.
+
+The packaged and development desktop smoke tests also request storage capacity
+through the production preload bridge and main-process handler, comparing the
+result with the disposable SDK profile's blob directory.
 
 ## RC1 Windows build, 2026-10-11
 

@@ -341,6 +341,24 @@ async function main() {
     const addressCount = (await rpc('address_list')).items.length;
     assert(addressCount > 0);
     assert(fs.existsSync(path.join(profile.root, 'hub-setup-complete.json')));
+    const storage = await evaluate(`new Promise((resolve, reject) => {
+      const timer = setTimeout(() => { unsubscribe(); reject(new Error('No storage IPC reply')); }, 15000);
+      const unsubscribe = window.lbryDesktop.onDiskSpace(result => {
+        clearTimeout(timer);
+        unsubscribe();
+        resolve(result);
+      });
+      window.lbryDesktop.requestDiskSpace();
+    })`);
+    assert(!storage.error, storage.error);
+    const volume = await fs.promises.statfs(path.join(profile.data, 'blobfiles'), { bigint: true });
+    const blockSize = volume.frsize || volume.bsize;
+    assert.equal(storage.diskSpace.total, Number((volume.blocks * blockSize) / 1024n));
+    assert(Number.isSafeInteger(storage.diskSpace.free) && storage.diskSpace.free >= 0);
+    assert(storage.diskSpace.free <= storage.diskSpace.total);
+    const available = Number(((volume.bavail < 0n ? 0n : volume.bavail) * blockSize) / 1024n);
+    assert(Math.abs(storage.diskSpace.free - available) < 1024 * 1024, 'IPC must return available space in KiB');
+    console.log('PASS: ' + label + ' storage IPC reads the SDK blob directory through the native filesystem API');
     // Exercise both shutdown entry points: renderer Quit and native window close.
     await evaluate(
       development
