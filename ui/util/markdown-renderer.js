@@ -9,8 +9,7 @@ const schema = {
   attributes: { ...defaultSchema.attributes, a: [...defaultSchema.attributes.a, 'embed'] },
 };
 
-// Adapt the current remark parser's compiler interface. Conversion and rendering
-// use the maintained tree utilities; sanitization always runs before components.
+// Sanitization always runs after syntax plugins and before React components.
 export default function markdownRenderer({ components } = {}) {
-  this.Compiler = (tree) => toJsxRuntime(sanitize(toHast(tree), schema), { Fragment, jsx, jsxs, components });
+  this.compiler = (tree) => toJsxRuntime(sanitize(toHast(tree), schema), { Fragment, jsx, jsxs, components });
 }

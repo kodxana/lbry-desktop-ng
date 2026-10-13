@@ -32,6 +32,7 @@ enabled; see [renderer isolation](docs/renderer-isolation.md). Application
 dependency upgrades include the [wallet ZIP library](docs/wallet-archives.md),
 [Word document renderer](docs/docx-renderer.md),
 [Markdown HTML parser](docs/markdown-html-parser.md),
+[Markdown syntax parser](docs/markdown-parser.md),
 [Markdown renderer](docs/markdown-renderer.md), and
 [document sanitizer](docs/document-sanitizer.md).
 See also [runtime migration notes](docs/electron-runtime.md)

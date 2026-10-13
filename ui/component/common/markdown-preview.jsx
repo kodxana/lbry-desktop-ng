@@ -1,8 +1,5 @@
 // @flow
 import { CHANNEL_STAKED_LEVEL_VIDEO_COMMENTS } from 'config';
-import { formattedLinks, inlineLinks } from 'util/remark-lbry';
-import { formattedTimestamp, inlineTimestamp } from 'util/remark-timestamp';
-import { formattedEmote, inlineEmote } from 'util/remark-emote';
 import * as ICONS from 'constants/icons';
 import * as React from 'react';
 import Button from 'component/button';
@@ -10,12 +7,7 @@ import classnames from 'classnames';
 import MarkdownLink from 'component/markdownLink';
 import OptimizedImage from 'component/optimizedImage';
 import markdownRenderer from 'util/markdown-renderer';
-import remark from 'remark';
-import remarkAttr from 'remark-attr';
-import remarkBreaks from 'remark-breaks';
-import remarkEmoji from 'remark-emoji';
-import remarkFrontMatter from 'remark-frontmatter';
-import remarkStrip from 'strip-markdown';
+import markdownProcessor from 'util/markdown-processor';
 import ZoomableImage from 'component/zoomableImage';
 import { parse } from 'node-html-parser';
 
@@ -196,13 +188,6 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
     },
   };
 
-  const remarkAttrOpts = {
-    scope: 'extended',
-    elements: ['link'],
-    extend: { link: ['embed'] },
-    defaultValue: true,
-  };
-
   // Strip all content and just render text
   if (strip) {
     // Remove new lines and extra space
@@ -210,11 +195,9 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
     return (
       <span dir="auto" className="markdown-preview">
         {
-          remark()
-            .use(remarkStrip)
-            .use(remarkFrontMatter, ['yaml'])
+          markdownProcessor({ strip: true })
             .use(markdownRenderer, remarkOptions)
-            .processSync(content).contents
+            .processSync(content || '').result
         }
       </span>
     );
@@ -223,23 +206,9 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
   return (
     <div dir="auto" className={classnames('markdown-preview', className)}>
       {
-        remark()
-          .use(remarkAttr, remarkAttrOpts)
-          // Remark plugins for lbry urls
-          // Note: The order is important
-          .use(formattedLinks)
-          .use(inlineLinks)
-          .use(disableTimestamps || isMarkdownPost ? null : inlineTimestamp)
-          .use(disableTimestamps || isMarkdownPost ? null : formattedTimestamp)
-          // Emojis
-          .use(inlineEmote)
-          .use(formattedEmote)
-          .use(remarkEmoji)
-          // Render new lines without needing spaces.
-          .use(remarkBreaks)
-          .use(remarkFrontMatter, ['yaml'])
+        markdownProcessor({ disableTimestamps: disableTimestamps || isMarkdownPost })
           .use(markdownRenderer, remarkOptions)
-          .processSync(strippedContent).contents
+          .processSync(strippedContent).result
       }
     </div>
   );
