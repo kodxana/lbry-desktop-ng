@@ -33,7 +33,8 @@ dependency upgrades include the [wallet ZIP library](docs/wallet-archives.md),
 [Word document renderer](docs/docx-renderer.md),
 [Markdown HTML parser](docs/markdown-html-parser.md),
 [Markdown syntax parser](docs/markdown-parser.md),
-[Markdown renderer](docs/markdown-renderer.md), and
+[Markdown renderer](docs/markdown-renderer.md),
+[media player](docs/media-player.md), and
 [document sanitizer](docs/document-sanitizer.md).
 See also [runtime migration notes](docs/electron-runtime.md)
 and [build-tooling migration notes](docs/build-tooling.md).

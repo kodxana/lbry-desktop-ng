@@ -219,10 +219,14 @@ export default React.memo<Props>(function VideoJs(props: Props) {
   /** instantiate videoJS and dispose of it when done with code **/
   // This lifecycle hook is only called once (on mount), or when `isAudio` or `source` changes.
   useEffect(() => {
+    let cancelled = false;
     const vjsElement = createVideoPlayerDOM(containerRef.current);
+    const wrapper = vjsElement && vjsElement.parentNode;
+    const handleKeyDown = curried_function(playerRef, containerRef);
 
     // Detect source file type via pre-fetch (async)
     detectFileType().then(() => {
+      if (cancelled) return;
       // Initialize Video.js
       const vjsPlayer = initializeVideoPlayer(vjsElement);
 
@@ -232,25 +236,30 @@ export default React.memo<Props>(function VideoJs(props: Props) {
       // Set reference in component state
       playerRef.current = vjsPlayer;
 
-      window.addEventListener('keydown', curried_function(playerRef, containerRef));
+      window.addEventListener('keydown', handleKeyDown);
     });
 
     // Cleanup
     return () => {
-      window.removeEventListener('keydown', curried_function);
+      cancelled = true;
+      window.removeEventListener('keydown', handleKeyDown);
 
       const player = playerRef.current;
       if (player) {
         player.dispose();
-        window.player = undefined;
+        if (window.player === player) window.player = undefined;
       }
+      playerRef.current = undefined;
+      if (wrapper) wrapper.remove();
     };
   }, [isAudio, source]);
 
   // Update video player and reload when source URL changes
   useEffect(() => {
+    let cancelled = false;
     // For some reason the video player is responsible for detecting content type this way
     fetch(source, { method: 'HEAD', cache: 'no-store' }).then((response) => {
+      if (cancelled) return;
       let finalType = sourceType;
       let finalSource = source;
 
@@ -279,6 +288,9 @@ export default React.memo<Props>(function VideoJs(props: Props) {
         player.bigPlayButton.hide();
       }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [source, reload]);
 
   return (

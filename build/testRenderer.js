@@ -2,8 +2,17 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const assert = require('assert').strict;
 
 process.chdir(path.resolve(__dirname, '..'));
+// Player components and plugins must share constructors and the plugin registry.
+for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels', 'videojs-event-tracking']) {
+  assert.equal(
+    require.resolve('video.js', { paths: [path.dirname(require.resolve(plugin))] }),
+    require.resolve('video.js'),
+    plugin + ' must use the application Video.js instance'
+  );
+}
 const output = path.resolve('dist/renderer-tests');
 fs.mkdirSync(output, { recursive: true });
 fs.mkdirSync(path.resolve('dist/ci'), { recursive: true });
