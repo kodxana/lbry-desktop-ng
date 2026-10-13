@@ -33,7 +33,14 @@ assert.deepEqual(
 for (const name of ['@electron/remote', '@meetfranz/electron-cookies']) {
   assert(!entries.has('/node_modules/' + name + '/package.json'), 'Removed remote dependency shipped: ' + name);
 }
-for (const name of ['electron', 'electron-builder', 'electron-updater-legacy', '@electron/asar', 'webpack']) {
+for (const name of [
+  'electron',
+  'electron-builder',
+  'electron-updater-legacy',
+  '@electron/asar',
+  'webpack',
+  'express',
+]) {
   assert(!entries.has('/node_modules/' + name + '/package.json'), 'Development package shipped: ' + name);
 }
 const packagedUpdater = JSON.parse(
