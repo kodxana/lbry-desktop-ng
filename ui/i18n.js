@@ -31,11 +31,8 @@ function saveMessageDesktop(message) {
     knownMessages[message] = removeContextMetadata(message);
     knownMessages[END] = END;
 
-    fs.writeFile(messagesFilePath, JSON.stringify(knownMessages, null, 2) + '\n', 'utf-8', (err) => {
-      if (err) {
-        throw err;
-      }
-    });
+    // Development-only collection: finish each write before another message or reload can replace it.
+    fs.writeFileSync(messagesFilePath, JSON.stringify(knownMessages, null, 2) + '\n', 'utf-8');
   }
 }
 // @endif

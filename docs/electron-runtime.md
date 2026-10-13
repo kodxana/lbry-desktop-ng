@@ -129,6 +129,9 @@ shutdown and clean renderer exits do not show a crash notice.
 - Packaged and development smoke tests assert the running Electron version,
   complete local hub sync and verify clean SDK shutdown. Package inspection
   rejects unexpected native addons and verifies the SDK and update digests.
+  Development translation collection finishes each write before another message
+  or renderer reload can replace it. A rapid-message/reload regression checks
+  valid JSON, retained messages and unchanged source translations.
 - A compiled NSIS fixture runs the production guard with supported,
   unsupported and native OS detection; its only install action writes a marker
   in `dist`. The unsupported case exits with 1633 without reaching that action.
