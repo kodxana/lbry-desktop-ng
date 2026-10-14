@@ -14,7 +14,7 @@ import ClaimSupportButton from 'component/claimSupportButton';
 import ClaimCollectionAddButton from 'component/claimCollectionAddButton';
 import { useHistory } from 'react-router';
 import FileReactions from 'component/fileReactions';
-import { Menu, MenuButton, MenuList, MenuItem } from '@reach/menu-button';
+import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 import ClaimRepostButton from 'component/claimRepostButton';
 
@@ -34,18 +34,8 @@ type Props = {
 };
 
 function FileActions(props: Props) {
-  const {
-    fileInfo,
-    uri,
-    openModal,
-    claimIsMine,
-    claim,
-    costInfo,
-    renderMode,
-    prepareEdit,
-    hasChannels,
-    hideRepost,
-  } = props;
+  const { fileInfo, uri, openModal, claimIsMine, claim, costInfo, renderMode, prepareEdit, hasChannels, hideRepost } =
+    props;
   const {
     push,
     location: { search },
@@ -121,7 +111,6 @@ function FileActions(props: Props) {
             className="button--file-action--menu"
             onClick={(e) => {
               e.stopPropagation();
-              e.preventDefault();
             }}
           >
             <Icon size={20} icon={ICONS.MORE} />
@@ -129,7 +118,7 @@ function FileActions(props: Props) {
           <MenuList className="menu__list">
             <MenuItem
               className="comment__menu-option"
-              onSelect={() => push(`/$/${PAGES.REPORT_CONTENT}?claimId=${claimId}`)}
+              onClick={() => push(`/$/${PAGES.REPORT_CONTENT}?claimId=${claimId}`)}
             >
               <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.REPORT} />

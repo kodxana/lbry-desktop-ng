@@ -1,5 +1,11 @@
 // @flow
-import { Combobox, ComboboxInput, ComboboxPopover, ComboboxList, ComboboxOption } from '@reach/combobox';
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxPopover,
+  ComboboxList,
+  ComboboxOption,
+} from 'component/common/search-combobox';
 import { matchSorter } from 'match-sorter';
 import React from 'react';
 import classnames from 'classnames';
@@ -154,7 +160,6 @@ function SearchList(props: LsbProps) {
   const { list, placeholder, formatter, onResultsUpdated } = props;
   const [term, setTerm] = React.useState('');
   const results = useAuthorMatch(term, list);
-  const handleChange = (event) => setTerm(event.target.value);
   const handleSelect = (e) => setTerm(e);
 
   React.useEffect(() => {
@@ -166,11 +171,16 @@ function SearchList(props: LsbProps) {
   return (
     <div className="wunderbar__wrapper">
       <label>{__('Search blocked channel name')}</label>
-      <Combobox className="wunderbar" onSelect={handleSelect}>
+      <Combobox className="wunderbar" onSelect={handleSelect} value={term} setValue={setTerm}>
         <Icon icon={ICONS.SEARCH} />
-        <ComboboxInput selectOnClick className="wunderbar__input" onChange={handleChange} placeholder={placeholder} />
+        <ComboboxInput
+          aria-label={__('Search blocked channel name')}
+          selectOnClick
+          className="wunderbar__input"
+          placeholder={placeholder}
+        />
         {results && (
-          <ComboboxPopover className="wunderbar__suggestions" portal={false}>
+          <ComboboxPopover className="wunderbar__suggestions">
             {results.length > 0 ? (
               <ComboboxList>
                 {results.slice(0, 10).map((result, index) => (

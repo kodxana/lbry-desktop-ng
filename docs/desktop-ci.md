@@ -20,8 +20,9 @@ compressed playback-state preservation across installed Windows upgrades.
 The [shared UI upgrade](ui-components.md) adds QR pixel decoding, pagination,
 dialog focus, update progress, floating-player dragging and thumbnail checks.
 
-The [menus, tabs and search upgrade](accessible-controls.md) adds keyboard/focus,
-tab indicator geometry, menu routing/dismissal and search selection checks.
+The [Reach replacement](accessible-controls.md) checks Ariakit keyboard/focus,
+tab indicator geometry and retained drafts, menu routing/dismissal, search selection,
+RTL and dark/light menu captures.
 
 The [forms and dates upgrade](forms-and-dates.md) adds send confirmation/retry,
 publish date editing, timed blocks, locale and duration formatting checks.

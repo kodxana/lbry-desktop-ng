@@ -1,8 +1,7 @@
 // @flow
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';
-import { useRect } from '@reach/rect';
 
 const COLLAPSED_HEIGHT = 120;
 
@@ -14,8 +13,14 @@ export default function Expandable(props: Props) {
   const [expanded, setExpanded] = useState(false);
   const { children } = props;
   const ref = useRef();
-  const rect = useRect(ref);
-  const canExpand = rect && rect.height > COLLAPSED_HEIGHT;
+  const [canExpand, setCanExpand] = useState(false);
+  useLayoutEffect(() => {
+    const measure = () => setCanExpand(ref.current.getBoundingClientRect().height > COLLAPSED_HEIGHT);
+    const observer = new ResizeObserver(measure);
+    observer.observe(ref.current);
+    measure();
+    return () => observer.disconnect();
+  }, []);
 
   function handleClick() {
     setExpanded(!expanded);

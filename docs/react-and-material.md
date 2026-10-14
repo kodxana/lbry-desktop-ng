@@ -3,7 +3,8 @@
 This compatibility step moves the renderer from React 16.14 to 17.0.2 and
 Material UI 5.8.7 to 9.5.0. Emotion moves to 11.14.0 (`react`) and 11.14.1
 (`styled`). React DOM, `react-is` and the React type definitions use the same
-React major. Reach and Reakit still constrain the next React upgrade.
+React major. Reakit still constrains the next React upgrade; Reach has since been
+[replaced with Ariakit](accessible-controls.md).
 
 ## Compatibility
 

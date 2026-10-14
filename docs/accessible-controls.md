@@ -1,60 +1,57 @@
 # Menus, tabs and search controls
 
-This batch aligns the active Reach components and updates both local search
-consumers while retaining React 16.14 and the application's existing styles.
-
-| Package | Previous lock | Updated |
-| --- | --- | --- |
-| `@reach/combobox` | 0.12.1 | 0.18.0 |
-| `@reach/menu-button` | 0.8.6 | 0.18.0 |
-| `@reach/rect` | 0.16.0 | 0.18.0 |
-| `@reach/tabs` | 0.1.6 | 0.18.0 |
-| `match-sorter` | 6.3.1 | 8.3.0 |
-
-`react-is` 16.13.1 explicitly satisfies the new menu package's peer dependency.
-The unused direct `@reach/utils` dependency and unused Reach tooltip package/CSS
-are removed. The app's tooltip wrapper already uses Material UI. Reach's internal
-utilities, portals and descendants now resolve together at 0.18.0.
+The application now uses Ariakit 0.4.42 for menus, tabs and search comboboxes.
+It supports React 17 through 19 and leaves styling to the application. The four
+direct Reach dependencies and their transitive utilities are removed. React stays
+at 17 in this change; other dependencies still need migration before React 18/19.
 
 ## Compatibility
 
-Reach 0.18 removes default exports and changes its module output. All application
-imports already use named exports; the Webpack 5 build supports the new modules.
-The older tabs package injected `isSelected` into its children. The shared tab
-wrapper now reads `useTabsContext`, with explicit indexes at each of its three
-callers, and uses the `useRect` options object to observe only the selected tab.
-This retains the animated underline when selection, layout or label width changes.
-Expandable comments now measure a stable inner content element instead of sharing
-one ref between the outer wrapper and its clipped child. Measuring the collapsed
-height could remove the expand button and cause repeated layout changes. Tests
-cover short/long content, collapse/expand and content size changes.
+The shared menu wrapper retains portal positioning, keyboard navigation and
+the app's dark/light theme styles. Menu actions use `onClick`; router links use
+Ariakit's `render` prop. The simulated mousedown workaround is removed because
+Ariakit opens menus on click. Collection and notification triggers now sit outside
+their navigation links. Popup events do not activate an enclosing claim card,
+and menu links do not reload the renderer. Disabled actions remain inert.
 
-Menus retain their `as={Link}` router integration and existing styling. Comboboxes
-retain the blocked-channel substring threshold and the search bar's text, tag and
-LBRY URL actions. Match-sorter 7 introduced typo matching and 8 reverted it; this
-upgrade does not enable that broad matching behavior. Comment suggestions retain
-their filtering, selection and surrounding text.
+Tabs retain their existing indexed API at all three callers. Each group has
+distinct tab/panel IDs, automatic arrow-key selection and RTL navigation. Disabled
+tabs are skipped. Hidden panels remain mounted so changing tabs does not discard
+unsaved form fields. Native ResizeObserver measurements keep the underline aligned
+when selection, labels or layout change; expandable comments use the same browser
+API instead of Reach's rectangle polling.
+
+Both search consumers use controlled input state. Selection runs once, including
+repeated selections of the same command. Home/End move the text caret; Escape
+clears the search state and dismisses suggestions, then blurs an empty search.
+Search actions no longer contain nested buttons. Blocked-channel substring and
+accent matching, LBRY URL navigation, tag search and the remote-search debounce
+remain unchanged. Comment suggestions and Material UI tooltips are unchanged.
 
 ## Validation
 
-`build/tests/accessibleControls.jsx` runs the production components in Electron
-with actual styles and a disposable Redux/IndexedDB profile. It covers tab/panel
-ARIA associations, focus, disabled tabs, editor submit prevention, underline
-geometry and resizing; independent menu IDs, keyboard and mouse actions, dismissal,
-focus restoration and routing; blocked-channel matching and clearing; search and
-LBRY navigation; comment emoji insertion; and measured expandable comments.
-Search service responses are controlled at the transport boundary and external
-requests remain blocked. Chromium focus emulation lets the hidden test window
-receive real DOM focus events without taking over the user's desktop.
+`build/tests/accessibleControls.jsx` exercises production components and styles
+in Electron with a disposable Redux/IndexedDB profile. It checks:
 
-The existing Windows/Linux wallet backup, encryption, saved-password migration,
-sandbox, packaging and startup checks remain required, together with the hosted
-Windows installed-upgrade workflow. No user wallet is used.
+- Tab/panel associations, selection, keyboard focus, disabled tabs, RTL, independent
+  groups, form submit prevention, retained drafts and underline geometry/resizing.
+- Menu keyboard/mouse actions, independent IDs, dismissal and focus restoration,
+  router links, nested card links, disabled actions and native Tab navigation.
+- Search selection, text caret movement, input-method composition, Escape,
+  blocked-channel matching, tag actions and LBRY navigation.
+- Existing comment suggestions, tooltips and expandable content.
 
-Reach 0.18 is an interim compatibility pin, not a maintained long-term UI stack.
-Its peer range stops at React 17; replacing it belongs with the later React
-migration. Screen-reader and manual desktop acceptance are not automated here.
+Dark/light menu captures are saved as `dist/ci/controls-dark.png` and
+`controls-light.png`. Chromium focus emulation permits real focus and native
+key events without showing the fixture window. External requests remain blocked;
+search responses are controlled at the transport boundary.
 
-References: [Reach tabs API](https://reach.tech/tabs/),
-[Reach source and release notes](https://github.com/reach/reach-ui),
-[match-sorter 8 migration](https://github.com/kentcdodds/match-sorter/releases/tag/v8.0.0).
+The Windows/Linux wallet backup, encryption, saved-password migration, sandbox,
+packaging and startup checks remain required, along with the hosted Windows
+installed-upgrade workflow. No user wallet is used. Screen-reader acceptance and
+macOS behavior still need manual testing.
+
+References: [Ariakit menus](https://ariakit.com/reference/menu),
+[tabs](https://ariakit.com/reference/tab),
+[comboboxes](https://ariakit.com/reference/combobox), and
+[package peer dependencies](https://www.npmjs.com/package/@ariakit/react/v/0.4.42).
