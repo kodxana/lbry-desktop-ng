@@ -18,14 +18,13 @@ type Props = {
 
 type State = {
   hasError: boolean,
-  sentryEventId: ?string,
   desktopErrorReported: boolean,
 };
 
 class ErrorBoundary extends React.Component<Props, State> {
   constructor() {
     super();
-    this.state = { hasError: false, sentryEventId: undefined, desktopErrorReported: false };
+    this.state = { hasError: false, desktopErrorReported: false };
 
     (this: any).refresh = this.refresh.bind(this);
   }

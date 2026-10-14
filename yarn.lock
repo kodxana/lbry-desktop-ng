@@ -1294,10 +1294,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@datapunt/matomo-tracker-js@npm:^0.1.4":
-  version: 0.1.5
-  resolution: "@datapunt/matomo-tracker-js@npm:0.1.5"
-  checksum: dd9a6f89193b0b1d040bf10ba8c1ead7c02f67da12d180e18356e43d06ef088584871fd63728bf8c38ba520e4f1eccdf811082168c45e52688efa2d989b28541
+"@datapunt/matomo-tracker-js@npm:0.5.1":
+  version: 0.5.1
+  resolution: "@datapunt/matomo-tracker-js@npm:0.5.1"
+  checksum: b6ed7f9120c896a93c342a3e8c53eec7cd5fcf85106f2b206fff33aa3144a9b008de79d922024db8b376be0c135e06e51b7da0699dbdd37f53c1cff27eb85cd3
+  languageName: node
+  linkType: hard
+
+"@datapunt/matomo-tracker-js@patch:@datapunt/matomo-tracker-js@npm:0.5.1#.yarn/patches/matomo-tracker-js-npm-0.5.1.patch::locator=lbry-desktop-ng%40workspace%3A.":
+  version: 0.5.1
+  resolution: "@datapunt/matomo-tracker-js@patch:@datapunt/matomo-tracker-js@npm%3A0.5.1#.yarn/patches/matomo-tracker-js-npm-0.5.1.patch::version=0.5.1&hash=1a7c42&locator=lbry-desktop-ng%40workspace%3A."
+  checksum: 0326500fd6e903ecf55a1ad20ffc67305bfc9c3e3166507b6e5b7f577973e8d50adecdfc229f229499e455461fb9caa4c9d5e629450970ee84f5dee331c2c650
   languageName: node
   linkType: hard
 
@@ -2631,96 +2638,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentry/browser@npm:^5.12.1":
-  version: 5.30.0
-  resolution: "@sentry/browser@npm:5.30.0"
-  dependencies:
-    "@sentry/core": 5.30.0
-    "@sentry/types": 5.30.0
-    "@sentry/utils": 5.30.0
-    tslib: ^1.9.3
-  checksum: 7fc154075c8f7da2ec54970cc0033555e4aa9ef88d2fc7fcfb2a0c206be5dca778914d5a25ddf06c5f8da8acffa9158a3ee2216b2efb848b75a3f11d281784db
-  languageName: node
-  linkType: hard
-
-"@sentry/cli@npm:^1.74.4":
-  version: 1.74.4
-  resolution: "@sentry/cli@npm:1.74.4"
-  dependencies:
-    https-proxy-agent: ^5.0.0
-    mkdirp: ^0.5.5
-    node-fetch: ^2.6.7
-    npmlog: ^4.1.2
-    progress: ^2.0.3
-    proxy-from-env: ^1.1.0
-    which: ^2.0.2
-  bin:
-    sentry-cli: bin/sentry-cli
-  checksum: 6fe63095edbb0f8c250ad813e24fddd65b3266763fbf628cfd865d2f68f7248ec38e600f220d6530a54ebf1a10cc51e1b5fbf203e28fab223d80a5afd4d5dfb2
-  languageName: node
-  linkType: hard
-
-"@sentry/core@npm:5.30.0":
-  version: 5.30.0
-  resolution: "@sentry/core@npm:5.30.0"
-  dependencies:
-    "@sentry/hub": 5.30.0
-    "@sentry/minimal": 5.30.0
-    "@sentry/types": 5.30.0
-    "@sentry/utils": 5.30.0
-    tslib: ^1.9.3
-  checksum: 8a2b22687e70d76fa4381bce215d770b6c08561c5ff5d6afe39c8c3c509c18ee7384ad0be3aee18d3a858a3c88e1d2821cf10eb5e05646376a33200903b56da2
-  languageName: node
-  linkType: hard
-
-"@sentry/hub@npm:5.30.0":
-  version: 5.30.0
-  resolution: "@sentry/hub@npm:5.30.0"
-  dependencies:
-    "@sentry/types": 5.30.0
-    "@sentry/utils": 5.30.0
-    tslib: ^1.9.3
-  checksum: 09f778cc78765213f1e35a3ee6da3a8e02a706e8a7e5b7f84614707f4b665c7297b700a1849ab2ca1f02ede5884fd9ae893e58dc65f04f35ccdfee17e99ee93d
-  languageName: node
-  linkType: hard
-
-"@sentry/minimal@npm:5.30.0":
-  version: 5.30.0
-  resolution: "@sentry/minimal@npm:5.30.0"
-  dependencies:
-    "@sentry/hub": 5.30.0
-    "@sentry/types": 5.30.0
-    tslib: ^1.9.3
-  checksum: 934650f6989ce51f425c7c4b4d4d9bfecface8162a36d21df8a241f780ab1716dd47b81e2170e4cc624797ed1eebe10f71e4876c1e25b787860daaef75ca7a0c
-  languageName: node
-  linkType: hard
-
-"@sentry/types@npm:5.30.0":
-  version: 5.30.0
-  resolution: "@sentry/types@npm:5.30.0"
-  checksum: de7df777824c8e311f143c6fd7de220b24f25b5018312fe8f67d93bebf0f3cdd32bbca9f155846f5c31441d940eebe27c8338000321559a743264c7e41dda560
-  languageName: node
-  linkType: hard
-
-"@sentry/utils@npm:5.30.0":
-  version: 5.30.0
-  resolution: "@sentry/utils@npm:5.30.0"
-  dependencies:
-    "@sentry/types": 5.30.0
-    tslib: ^1.9.3
-  checksum: 27b259a136c664427641dd32ee3dc490553f3b5e92986accfa829d14063ebc69b191e92209ac9c40fbc367f74cfa17dc93b4c40981d666711fd57b4d51a82062
-  languageName: node
-  linkType: hard
-
-"@sentry/webpack-plugin@npm:^1.10.0":
-  version: 1.18.9
-  resolution: "@sentry/webpack-plugin@npm:1.18.9"
-  dependencies:
-    "@sentry/cli": ^1.74.4
-  checksum: ff6edfebddd45a9d77686fe118661428ad309207b0ea6d579e38ea7edd0c390e7c84deb9e755bb0b5b118d628890e5be2146ace8c8ae72444d9d054c9c032a6d
-  languageName: node
-  linkType: hard
-
 "@sindresorhus/is@npm:^4.0.0, @sindresorhus/is@npm:^4.6.0":
   version: 4.6.0
   resolution: "@sindresorhus/is@npm:4.6.0"
@@ -3657,13 +3574,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aproba@npm:^1.0.3":
-  version: 1.2.0
-  resolution: "aproba@npm:1.2.0"
-  checksum: 0fca141966559d195072ed047658b6e6c4fe92428c385dd38e288eacfc55807e7b4989322f030faff32c0f46bb0bc10f1e0ac32ec22d25315a1e5bbc0ebb76dc
-  languageName: node
-  linkType: hard
-
 "aproba@npm:^1.0.3 || ^2.0.0":
   version: 2.0.0
   resolution: "aproba@npm:2.0.0"
@@ -3678,16 +3588,6 @@ __metadata:
     delegates: ^1.0.0
     readable-stream: ^3.6.0
   checksum: 348edfdd931b0b50868b55402c01c3f64df1d4c229ab6f063539a5025fd6c5f5bb8a0cab409bbed8d75d34762d22aa91b7c20b4204eb8177063158d9ba792981
-  languageName: node
-  linkType: hard
-
-"are-we-there-yet@npm:~1.1.2":
-  version: 1.1.7
-  resolution: "are-we-there-yet@npm:1.1.7"
-  dependencies:
-    delegates: ^1.0.0
-    readable-stream: ^2.0.6
-  checksum: 70d251719c969b2745bfe5ddf3ebaefa846a636e90a6d5212573676af5d6670e15457761d4725731e19cbebdce42c4ab0cbedf23ab047f2a08274985aa10a3c7
   languageName: node
   linkType: hard
 
@@ -5252,7 +5152,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"console-control-strings@npm:^1.0.0, console-control-strings@npm:^1.1.0, console-control-strings@npm:~1.1.0":
+"console-control-strings@npm:^1.1.0":
   version: 1.1.0
   resolution: "console-control-strings@npm:1.1.0"
   checksum: 8755d76787f94e6cf79ce4666f0c5519906d7f5b02d4b884cf41e11dcd759ed69c57da0670afd9236d229a46e0f9cf519db0cd829c6dca820bb5a5c3def584ed
@@ -7988,22 +7888,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gauge@npm:~2.7.3":
-  version: 2.7.4
-  resolution: "gauge@npm:2.7.4"
-  dependencies:
-    aproba: ^1.0.3
-    console-control-strings: ^1.0.0
-    has-unicode: ^2.0.0
-    object-assign: ^4.1.0
-    signal-exit: ^3.0.0
-    string-width: ^1.0.1
-    strip-ansi: ^3.0.1
-    wide-align: ^1.1.0
-  checksum: a89b53cee65579b46832e050b5f3a79a832cc422c190de79c6b8e2e15296ab92faddde6ddf2d376875cbba2b043efa99b9e1ed8124e7365f61b04e3cee9d40ee
-  languageName: node
-  linkType: hard
-
 "generator-function@npm:^2.0.0":
   version: 2.0.1
   resolution: "generator-function@npm:2.0.1"
@@ -8442,7 +8326,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"has-unicode@npm:^2.0.0, has-unicode@npm:^2.0.1":
+"has-unicode@npm:^2.0.1":
   version: 2.0.1
   resolution: "has-unicode@npm:2.0.1"
   checksum: 1eab07a7436512db0be40a710b29b5dc21fa04880b7f63c9980b706683127e3c1b57cb80ea96d47991bdae2dfe479604f6a1ba410106ee1046a41d1bd0814400
@@ -10009,7 +9893,7 @@ __metadata:
     "@babel/preset-react": 7.29.7
     "@babel/register": 7.29.7
     "@babel/runtime": 7.29.10
-    "@datapunt/matomo-tracker-js": ^0.1.4
+    "@datapunt/matomo-tracker-js": 0.5.1
     "@electron/asar": 4.3.1
     "@emotion/react": 11.14.0
     "@emotion/styled": 11.14.1
@@ -10019,8 +9903,6 @@ __metadata:
     "@reach/menu-button": 0.18.0
     "@reach/rect": 0.18.0
     "@reach/tabs": 0.18.0
-    "@sentry/browser": ^5.12.1
-    "@sentry/webpack-plugin": ^1.10.0
     "@types/react": 17.0.93
     "@types/three": ^0.103.2
     "@ungap/from-entries": ^0.2.1
@@ -11730,7 +11612,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"mkdirp@npm:^0.5.1, mkdirp@npm:^0.5.5":
+"mkdirp@npm:^0.5.1":
   version: 0.5.6
   resolution: "mkdirp@npm:0.5.6"
   dependencies:
@@ -12176,18 +12058,6 @@ __metadata:
   bin:
     npm-which: bin/npm-which.js
   checksum: fba486416171b0eed12db418fb71878de97aa3623da2f907ca9201dbb193f990690a75d15a80388aa769cfb0fa3e48e363237a2806e19223a423c34d4a3cc05a
-  languageName: node
-  linkType: hard
-
-"npmlog@npm:^4.1.2":
-  version: 4.1.2
-  resolution: "npmlog@npm:4.1.2"
-  dependencies:
-    are-we-there-yet: ~1.1.2
-    console-control-strings: ~1.1.0
-    gauge: ~2.7.3
-    set-blocking: ~2.0.0
-  checksum: edbda9f95ec20957a892de1839afc6fb735054c3accf6fbefe767bac9a639fd5cea2baeac6bd2bcd50a85cb54924d57d9886c81c7fbc2332c2ddd19227504192
   languageName: node
   linkType: hard
 
@@ -13170,13 +13040,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"proxy-from-env@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "proxy-from-env@npm:1.1.0"
-  checksum: ed7fcc2ba0a33404958e34d95d18638249a68c430e30fcb6c478497d72739ba64ce9810a24f53a7d921d0c065e5b78e3822759800698167256b04659366ca4d4
-  languageName: node
-  linkType: hard
-
 "proxy-polyfill@npm:0.1.6":
   version: 0.1.6
   resolution: "proxy-polyfill@npm:0.1.6"
@@ -13851,7 +13714,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^2.0.2, readable-stream@npm:^2.0.6, readable-stream@npm:^2.3.0, readable-stream@npm:^2.3.3, readable-stream@npm:^2.3.5, readable-stream@npm:^2.3.6, readable-stream@npm:~2.3.6":
+"readable-stream@npm:^2.0.2, readable-stream@npm:^2.3.0, readable-stream@npm:^2.3.3, readable-stream@npm:^2.3.5, readable-stream@npm:^2.3.6, readable-stream@npm:~2.3.6":
   version: 2.3.7
   resolution: "readable-stream@npm:2.3.7"
   dependencies:
@@ -14831,7 +14694,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"set-blocking@npm:^2.0.0, set-blocking@npm:~2.0.0":
+"set-blocking@npm:^2.0.0":
   version: 2.0.0
   resolution: "set-blocking@npm:2.0.0"
   checksum: 6e65a05f7cf7ebdf8b7c75b101e18c0b7e3dff4940d480efed8aad3a36a4005140b660fa1d804cb8bce911cac290441dc728084a30504d3516ac2ff7ad607b02
@@ -16181,7 +16044,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^1.9.0, tslib@npm:^1.9.3":
+"tslib@npm:^1.9.0":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: dbe628ef87f66691d5d2959b3e41b9ca0045c3ee3c7c7b906cc1e328b39f199bb1ad9e671c39025bd56122ac57dfbf7385a94843b1cc07c60a4db74795829acd
@@ -17129,7 +16992,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"wide-align@npm:^1.1.0, wide-align@npm:^1.1.5":
+"wide-align@npm:^1.1.5":
   version: 1.1.5
   resolution: "wide-align@npm:1.1.5"
   dependencies:

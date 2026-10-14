@@ -7,7 +7,6 @@
  */
 
 import { Lbryio } from 'lbryinc';
-import * as Sentry from '@sentry/browser';
 import MatomoTracker from '@datapunt/matomo-tracker-js';
 import { history } from './store';
 import Native from 'native';
@@ -32,7 +31,6 @@ if (isProduction) {
 
 type Analytics = {
   error: (string) => Promise<any>,
-  sentryError: ({} | string, {}) => Promise<any>,
   pageView: (string, ?string) => void,
   setUser: (Object) => void,
   toggleInternal: (boolean, ?boolean) => void,
@@ -74,6 +72,22 @@ type LogPublishParams = {
 
 let internalAnalyticsEnabled: boolean = false;
 if (window.localStorage.getItem(SHARE_INTERNAL) === 'true') internalAnalyticsEnabled = true;
+let matomo;
+
+function getMatomo() {
+  if (!internalAnalyticsEnabled || !MATOMO_URL || !MATOMO_ID) return null;
+  if (!matomo) {
+    matomo = new MatomoTracker({
+      urlBase: MATOMO_URL,
+      siteId: MATOMO_ID,
+      configurations: { requireConsent: [] },
+      heartBeat: { active: false },
+      linkTracking: false,
+    });
+    matomo.pushInstruction('setConsentGiven');
+  }
+  return matomo;
+}
 
 const analytics: Analytics = {
   // receive buffer events from tracking plugin and save buffer amounts and times for backend call
@@ -103,21 +117,9 @@ const analytics: Analytics = {
       }
     });
   },
-  sentryError: (error, errorInfo) => {
-    return new Promise((resolve) => {
-      if (internalAnalyticsEnabled && isProduction) {
-        Sentry.withScope((scope) => {
-          scope.setExtras(errorInfo);
-          const eventId = Sentry.captureException(error);
-          resolve(eventId);
-        });
-      } else {
-        resolve(null);
-      }
-    });
-  },
   pageView: (path, search) => {
-    if (internalAnalyticsEnabled) {
+    const tracker = getMatomo();
+    if (tracker) {
       const params: { href: string, customDimensions?: Array<{ id: number, value: ?string }> } = { href: `${path}` };
       const dimensions = [];
       const searchParams = search && new URLSearchParams(search);
@@ -128,18 +130,27 @@ const analytics: Analytics = {
       if (dimensions.length) {
         params['customDimensions'] = dimensions;
       }
-      MatomoInstance.trackPageView(params);
+      tracker.trackPageView(params);
     }
   },
   setUser: (userId) => {
-    if (internalAnalyticsEnabled && userId) {
-      window._paq.push(['setUserId', String(userId)]);
+    const tracker = getMatomo();
+    if (tracker && userId) {
+      tracker.pushInstruction('setUserId', String(userId));
       Native.getAppVersionInfo().then(({ localVersion }) => {
         sendMatomoEvent('Version', 'Desktop-Version', localVersion);
       });
     }
   },
   toggleInternal: (enabled: boolean): void => {
+    if (matomo && internalAnalyticsEnabled !== enabled) {
+      if (!enabled && Array.isArray(window._paq)) {
+        // A slow script must not replay queued activity after consent is withdrawn.
+        window._paq = window._paq.filter(([name]) => ['setTrackerUrl', 'setSiteId', 'requireConsent'].includes(name));
+      }
+      matomo.pushInstruction(enabled ? 'setConsentGiven' : 'forgetConsentGiven');
+      if (!enabled) matomo.pushInstruction('resetUserId');
+    }
     internalAnalyticsEnabled = enabled;
     window.localStorage.setItem(SHARE_INTERNAL, enabled);
   },
@@ -248,16 +259,12 @@ const analytics: Analytics = {
 };
 
 function sendMatomoEvent(category, action, name, value) {
-  if (internalAnalyticsEnabled) {
+  const tracker = getMatomo();
+  if (tracker) {
     const event = { category, action, name, value };
-    MatomoInstance.trackEvent(event);
+    tracker.trackEvent(event);
   }
 }
-
-const MatomoInstance = new MatomoTracker({
-  urlBase: MATOMO_URL,
-  siteId: MATOMO_ID, // optional, default value: `1`
-});
 
 analytics.pageView(generateInitialUrl(window.location.hash));
 
