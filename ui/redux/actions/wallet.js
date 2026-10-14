@@ -13,40 +13,37 @@ import {
 import { creditsToString } from 'util/format-credits';
 import { selectMyClaimsRaw, selectClaimsById } from 'redux/selectors/claims';
 import { doFetchChannelListMine, doFetchClaimListMine, doClaimSearch } from 'redux/actions/claims';
+import { readWalletSnapshot } from 'util/wallet-sync';
 const FIFTEEN_SECONDS = 15000;
 let walletBalancePromise = null;
 
 export function doUpdateBalance() {
-  return (dispatch, getState) => {
-    const {
-      wallet: { totalBalance: totalInStore },
-    } = getState();
-
+  return (dispatch) => {
     if (walletBalancePromise === null) {
-      walletBalancePromise = Lbry.wallet_balance()
-        .then((response) => {
+      walletBalancePromise = readWalletSnapshot(Lbry)
+        .then(({ balance: response, status }) => {
           walletBalancePromise = null;
 
           const { available, reserved, reserved_subtotals, total } = response;
           const { claims, supports, tips } = reserved_subtotals;
           const totalFloat = parseFloat(total);
 
-          if (totalInStore !== totalFloat) {
-            dispatch({
-              type: ACTIONS.UPDATE_BALANCE,
-              data: {
-                totalBalance: totalFloat,
-                balance: parseFloat(available),
-                reservedBalance: parseFloat(reserved),
-                claimsBalance: parseFloat(claims),
-                supportsBalance: parseFloat(supports),
-                tipsBalance: parseFloat(tips),
-              },
-            });
-          }
+          dispatch({
+            type: ACTIONS.UPDATE_BALANCE,
+            data: {
+              syncStatus: status,
+              totalBalance: totalFloat,
+              balance: parseFloat(available),
+              reservedBalance: parseFloat(reserved),
+              claimsBalance: parseFloat(claims),
+              supportsBalance: parseFloat(supports),
+              tipsBalance: parseFloat(tips),
+            },
+          });
         })
         .catch(() => {
           walletBalancePromise = null;
+          dispatch({ type: ACTIONS.WALLET_SYNC_STATUS_UNAVAILABLE });
         });
     }
 
@@ -428,19 +425,23 @@ export function doWalletEncrypt(newPassword) {
       type: ACTIONS.WALLET_ENCRYPT_START,
     });
 
-    Lbry.wallet_encrypt({ new_password: newPassword }).then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_ENCRYPT_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_ENCRYPT_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_encrypt({ new_password: newPassword })
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_ENCRYPT_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_ENCRYPT_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_ENCRYPT_FAILED, result: false });
+      });
   };
 }
 
@@ -450,19 +451,23 @@ export function doWalletUnlock(password) {
       type: ACTIONS.WALLET_UNLOCK_START,
     });
 
-    Lbry.wallet_unlock({ password }).then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_UNLOCK_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_UNLOCK_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_unlock({ password })
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_UNLOCK_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_UNLOCK_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_UNLOCK_FAILED, result: false });
+      });
   };
 }
 
@@ -472,19 +477,23 @@ export function doWalletLock() {
       type: ACTIONS.WALLET_LOCK_START,
     });
 
-    Lbry.wallet_lock().then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_LOCK_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_LOCK_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_lock()
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_LOCK_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_LOCK_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_LOCK_FAILED, result: false });
+      });
   };
 }
 
@@ -574,19 +583,23 @@ export function doWalletDecrypt() {
       type: ACTIONS.WALLET_DECRYPT_START,
     });
 
-    Lbry.wallet_decrypt().then((result) => {
-      if (result === true) {
-        dispatch({
-          type: ACTIONS.WALLET_DECRYPT_COMPLETED,
-          result,
-        });
-      } else {
-        dispatch({
-          type: ACTIONS.WALLET_DECRYPT_FAILED,
-          result,
-        });
-      }
-    });
+    return Lbry.wallet_decrypt()
+      .then((result) => {
+        if (result === true) {
+          dispatch({
+            type: ACTIONS.WALLET_DECRYPT_COMPLETED,
+            result,
+          });
+        } else {
+          dispatch({
+            type: ACTIONS.WALLET_DECRYPT_FAILED,
+            result,
+          });
+        }
+      })
+      .catch(() => {
+        dispatch({ type: ACTIONS.WALLET_DECRYPT_FAILED, result: false });
+      });
   };
 }
 

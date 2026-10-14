@@ -6,8 +6,10 @@ import * as MODALS from 'constants/modal_types';
 import classnames from 'classnames';
 import useDragDrop from 'effects/use-drag-drop';
 import { getTree } from 'util/web-file-system';
+import { getFilePath } from 'util/file-path';
 import { withRouter } from 'react-router';
 import Icon from 'component/common/icon';
+import Button from 'component/button';
 
 type Props = {
   modal: { id: string, modalProps: {} },
@@ -28,7 +30,6 @@ type Props = {
 };
 
 const HIDE_TIME_OUT = 600;
-const TARGET_TIME_OUT = 300;
 const NAVIGATE_TIME_OUT = 400;
 const PUBLISH_URL = `/$/${PAGES.UPLOAD}`;
 
@@ -39,8 +40,9 @@ function FileDrop(props: Props) {
   const [error, setError] = React.useState(false);
   const [target, setTarget] = React.useState<?File>(null);
   const hideTimer = React.useRef(null);
-  const targetTimer = React.useRef(null);
   const navigationTimer = React.useRef(null);
+  const handledDrop = React.useRef(null);
+  const choosingFile = modal && modal.id === MODALS.FILE_SELECTION;
 
   // Gets respective icon given a mimetype
   const getFileIcon = (type) => {
@@ -68,9 +70,17 @@ function FileDrop(props: Props) {
   // Handle file selection
   const handleFileSelected = React.useCallback(
     (selectedFile) => {
+      const filePath = getFilePath(selectedFile);
+      if (!filePath) {
+        setError(true);
+        setFiles([]);
+        setTarget(null);
+        return;
+      }
       // Delay hide and navigation for a smooth transition
       hideTimer.current = setTimeout(() => {
         setFiles([]);
+        setTarget(null);
         // Navigate to publish area
         navigationTimer.current = setTimeout(() => {
           // Navigate first, THEN assign filePath, otherwise
@@ -79,7 +89,7 @@ function FileDrop(props: Props) {
           // publish a file, the pathFile value gets reset to undefined)
           navigateToPublish();
           updatePublishForm({
-            filePath: selectedFile.path || selectedFile.name,
+            filePath,
           });
         }, NAVIGATE_TIME_OUT);
       }, HIDE_TIME_OUT);
@@ -94,10 +104,6 @@ function FileDrop(props: Props) {
       if (hideTimer.current) {
         clearTimeout(hideTimer.current);
       }
-      // Clear target timer
-      if (targetTimer.current) {
-        clearTimeout(targetTimer.current);
-      }
       // Clear navigation timer
       if (navigationTimer.current) {
         clearTimeout(navigationTimer.current);
@@ -105,56 +111,53 @@ function FileDrop(props: Props) {
     };
   }, []);
 
-  // Clear selected file after modal closed
-  React.useEffect(() => {
-    if ((target && !files) || !files.length) {
-      // Small delay for a better transition
-      targetTimer.current = setTimeout(() => {
-        setTarget(null);
-      }, TARGET_TIME_OUT);
-    }
-  }, [files, target]);
-
   // Handle file drop...
   React.useEffect(() => {
-    if (dropData && !files.length && (!modal || modal.id !== MODALS.FILE_SELECTION)) {
+    let active = true;
+    if (dropData && dropData !== handledDrop.current && !choosingFile) {
+      handledDrop.current = dropData;
+      setError(false);
+      setFiles([]);
+      setTarget(null);
+      clearTimeout(hideTimer.current);
+      clearTimeout(navigationTimer.current);
       getTree(dropData)
         .then((entries) => {
-          if (entries && entries.length) {
+          if (!active || !entries) return;
+          if (entries.length > 1) {
+            openModal(MODALS.FILE_SELECTION, { files: entries });
+          } else if (entries.length === 1) {
             setFiles(entries);
+            setTarget(entries[0]);
+            handleFileSelected(entries[0]);
           }
         })
         .catch((error) => {
-          setError(error || true);
+          if (active) setError(error || true);
         });
     }
-  }, [dropData, files, modal]);
-
-  // File(s) or directory dropped
-  React.useEffect(() => {
-    if (!drag && files.length) {
-      // Handle multiple files selection
-      if (files.length > 1) {
-        openModal(MODALS.FILE_SELECTION, { files: files });
-        setFiles([]);
-      } else if (files.length === 1) {
-        // Handle single file selection
-        setTarget(files[0]);
-        handleFileSelected(files[0]);
-      }
-    }
-  }, [drag, files, error, openModal, handleFileSelected]);
+    return () => {
+      active = false;
+    };
+  }, [dropData, choosingFile, openModal, handleFileSelected]);
 
   // Show icon based on file type
   const icon = target ? getFileIcon(target.type) : ICONS.PUBLISH;
   // Show drop area when files are dragged over or processing dropped file
-  const show = files.length === 1 || (!target && drag && (!modal || modal.id !== MODALS.FILE_SELECTION));
+  const show = error || files.length === 1 || (!target && drag && (!modal || modal.id !== MODALS.FILE_SELECTION));
 
   return (
     <div aria-hidden={!show} className={classnames('file-drop', show && 'file-drop--show')}>
       <div className={classnames('card', 'file-drop__area')}>
         <Icon size={64} icon={icon} className={'main-icon'} />
-        <p>{target ? target.name : __(`Drop here to publish!`)} </p>
+        {error ? (
+          <>
+            <p role="alert">{__('The selected file or folder could not be opened.')}</p>
+            <Button button="primary" label={__('Dismiss')} onClick={() => setError(false)} />
+          </>
+        ) : (
+          <p>{target ? target.name : __(`Drop here to publish!`)} </p>
+        )}
       </div>
     </div>
   );

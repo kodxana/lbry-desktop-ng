@@ -5,12 +5,15 @@ import windowStateKeeper from 'electron-window-state';
 import SUPPORTED_LANGUAGES from 'constants/supported_languages';
 import { SUPPORTED_SUB_LANGUAGE_CODES, SUB_LANG_CODE_LEN } from 'constants/supported_sub_languages';
 import SUPPORTED_BROWSER_LANGUAGES from 'constants/supported_browser_languages';
-import { TO_TRAY_WHEN_CLOSED } from 'constants/settings';
+import desktopSettings from '../desktop-settings.json';
+import path from 'path';
 
 import setupBarMenu from './menu/setupBarMenu';
 import * as PAGES from 'constants/pages';
-const remote = require('@electron/remote/main');
+const { forwardFullscreenEvents } = require('./windowControls.cjs');
+const { watchRenderer } = require('./rendererLifecycle.cjs');
 const shell = require('electron').shell;
+export const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 function GetAppLangCode() {
   // https://www.electronjs.org/docs/api/locales
   // 1. Gets the user locale.
@@ -54,17 +57,26 @@ export default appState => {
       // Disable renderer process's webSecurity on development to enable CORS.
       webSecurity: !isDev,
       plugins: true,
-      nodeIntegration: true,
-      contextIsolation: false,
-      enableRemoteModule: true, // see about removing this
+      preload: path.join(__dirname, 'preload.js'),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+      additionalArguments: [
+        '--lbry-renderer-url=' + rendererURL,
+        ...(process.env.APPIMAGE ? ['--lbry-appimage'] : []),
+      ],
     },
   };
   const lbryProto = 'lbry://';
   const lbryProtoQ = 'lbry://?';
-  const rendererURL = isDev ? `http://localhost:${WEBPACK_ELECTRON_PORT}` : `file://${__dirname}/index.html`;
 
-  let window = new BrowserWindow(windowConfiguration);
-  remote.enable(window.webContents);
+  const window = new BrowserWindow(windowConfiguration);
+  watchRenderer({ window, app, dialog, appState });
+  window.on('page-title-updated', event => {
+    event.preventDefault();
+    window.setTitle(desktopSettings.appName);
+  });
+  forwardFullscreenEvents(window);
 
   // Let us register listeners on the window, so we can update the state
   // automatically (the listeners will be removed when the window is closed)
@@ -118,48 +130,8 @@ export default appState => {
       return;
     }
 
-    if (!appState.autoUpdateAccepted) {
-      event.preventDefault();
-      if (window.isFullScreen()) {
-        window.once('leave-full-screen', () => {
-          window.hide();
-        });
-        window.setFullScreen(false);
-      } else {
-        window.hide();
-      }
-    }
-
-    const getToTrayWhenClosedSetting = window.webContents.executeJavaScript(`localStorage.getItem('${TO_TRAY_WHEN_CLOSED}')`);
-
-    getToTrayWhenClosedSetting.then(toTrayWhenClosedSetting => {
-      const closeApp = toTrayWhenClosedSetting === 'false';
-
-      if (closeApp) {
-        app.quit();
-      }
-    });
-  });
-
-  window.on('focus', () => {
-    window.webContents.send('window-is-focused', null);
-  });
-
-  window.on('unresponsive', () => {
-    dialog.showMessageBox(
-      window,
-      {
-        type: 'warning',
-        buttons: ['Wait', 'Quit'],
-        title: 'LBRY Unresponsive',
-        defaultId: 1,
-        message: 'LBRY is not responding. Would you like to quit?',
-        cancelId: 0,
-      },
-      buttonIndex => {
-        if (buttonIndex === 1) app.quit();
-      }
-    );
+    event.preventDefault();
+    app.quit();
   });
 
   window.once('ready-to-show', () => {
@@ -184,10 +156,6 @@ export default appState => {
         window.webContents.send('language-set', language);
       }
     });
-  });
-
-  window.webContents.on('crashed', () => {
-    window = null;
   });
 
   window.webContents.setWindowOpenHandler((details) => {

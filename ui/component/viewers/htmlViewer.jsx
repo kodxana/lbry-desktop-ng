@@ -1,6 +1,8 @@
 // @flow
 import * as React from 'react';
 import { stopContextMenu } from 'util/context-menu';
+import desktop from 'util/desktop';
+const pathToFileURL = (value) => new URL(desktop.fileUrl(value));
 
 type Props = {
   source: string,
@@ -19,16 +21,9 @@ class HtmlViewer extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    const resize = () => {
-      const { scrollHeight, scrollWidth } = this.iframe.current.contentDocument.body;
-      this.iframe.current.style.height = `${scrollHeight}px`;
-      this.iframe.current.style.width = `${scrollWidth}px`;
-    };
     this.iframe.current.onload = () => {
       this.setState({ loading: false });
-      resize();
     };
-    this.iframe.current.resize = () => resize();
   }
 
   render() {
@@ -37,7 +32,13 @@ class HtmlViewer extends React.PureComponent<Props, State> {
     return (
       <div className="file-viewer file-viewer--html file-viewer--iframe" onContextMenu={stopContextMenu}>
         {loading && <div className="placeholder--text-document" />}
-        <iframe ref={this.iframe} hidden={loading} sandbox="" title={__('File preview')} src={`file://${source}`} />
+        <iframe
+          ref={this.iframe}
+          hidden={loading}
+          sandbox=""
+          title={__('File preview')}
+          src={pathToFileURL(source).href}
+        />
       </div>
     );
   }

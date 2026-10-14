@@ -1,7 +1,7 @@
 // @flow
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // @if TARGET='app'
-import { ipcRenderer } from 'electron';
+import { requestUpdater } from 'util/updater-client';
 // @endif
 import { Modal } from 'modal/modal';
 import LastReleaseChanges from 'component/lastReleaseChanges';
@@ -12,25 +12,44 @@ type Props = {
   errorWhileUpdating: boolean,
   isDownloading: boolean,
   isUpdateAvailable: boolean,
+  isInstalling: boolean,
 };
 
 const ModalAutoUpdateDownloaded = (props: Props) => {
-  const { closeModal, declineAutoUpdate, errorWhileUpdating, isDownloading, isUpdateAvailable } = props;
+  const { closeModal, declineAutoUpdate, errorWhileUpdating, isDownloading, isUpdateAvailable, isInstalling } = props;
   const [waitingForAutoUpdateResponse, setWaitingForAutoUpdateResponse] = useState(false);
+  const [declining, setDeclining] = useState(false);
+  const [requestError, setRequestError] = useState(false);
+  const mounted = useRef(true);
+  useEffect(
+    () => () => {
+      mounted.current = false;
+    },
+    []
+  );
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (waitingForAutoUpdateResponse || declining || isDownloading || isInstalling || !isUpdateAvailable) return;
     setWaitingForAutoUpdateResponse(true);
-    ipcRenderer.send('autoUpdateAccepted');
+    setRequestError(false);
+    const result = await requestUpdater('accept');
+    if (mounted.current) {
+      setWaitingForAutoUpdateResponse(false);
+      setRequestError(!result.ok);
+    }
   };
 
-  const handleAbort = () => {
-    declineAutoUpdate();
-    closeModal();
+  const handleAbort = async () => {
+    if (isInstalling || declining) return;
+    setDeclining(true);
+    setRequestError(false);
+    const result = await declineAutoUpdate();
+    if (mounted.current) {
+      setDeclining(false);
+      if (result.ok) closeModal();
+      else setRequestError(true);
+    }
   };
-
-  useEffect(() => {
-    setWaitingForAutoUpdateResponse(false);
-  }, [errorWhileUpdating, isDownloading, isUpdateAvailable]);
 
   return (
     <Modal
@@ -38,14 +57,17 @@ const ModalAutoUpdateDownloaded = (props: Props) => {
       type="confirm"
       contentLabel={__('Upgrade Downloaded')}
       title={__('LBRY leveled up')}
-      confirmButtonLabel={isDownloading ? __('Downloading...') : __('Upgrade Now')}
+      confirmButtonLabel={isInstalling ? __('Installing...') : isDownloading ? __('Downloading...') : __('Upgrade Now')}
       abortButtonLabel={isDownloading ? __('Keep browsing') : __('Not Now')}
-      confirmButtonDisabled={!isUpdateAvailable || isDownloading || waitingForAutoUpdateResponse}
+      confirmButtonDisabled={
+        !isUpdateAvailable || isDownloading || isInstalling || declining || waitingForAutoUpdateResponse
+      }
+      abortButtonDisabled={isInstalling || declining}
       onConfirmed={handleConfirm}
       onAborted={handleAbort}
     >
       <LastReleaseChanges />
-      {errorWhileUpdating && <p>{__('There was an error while updating. Please try again.')}</p>}
+      {(errorWhileUpdating || requestError) && <p>{__('There was an error while updating. Please try again.')}</p>}
     </Modal>
   );
 };

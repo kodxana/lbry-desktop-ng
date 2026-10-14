@@ -44,7 +44,24 @@ class WalletSend extends React.PureComponent<Props> {
     (this: any).handleClear = this.handleClear.bind(this);
   }
 
-  handleSubmit() {
+  canSubmit() {
+    const { draftTransaction, balance, sendLabel, isAddress, contentClaim } = this.props;
+    const amount = Number(draftTransaction.amount);
+    return (
+      Number.isFinite(amount) &&
+      amount > 0 &&
+      amount < balance &&
+      sendLabel !== 'Sending...' &&
+      (isAddress
+        ? Boolean(draftTransaction.address) && validateSendTx(draftTransaction.address).address === ''
+        : Boolean(contentClaim))
+    );
+  }
+
+  handleSubmit(_values: {}, { setSubmitting }: { setSubmitting: (boolean) => void }) {
+    // Submission opens a confirmation dialog; cancelling it must allow another attempt.
+    setSubmitting(false);
+    if (!this.canSubmit()) return;
     const { draftTransaction, openModal, isAddress, contentUri, setConfirmed } = this.props;
     const destination = isAddress ? draftTransaction.address : contentUri;
     const amount = draftTransaction.amount;
@@ -71,7 +88,6 @@ class WalletSend extends React.PureComponent<Props> {
       isAddress,
       setIsAddress,
       contentUri,
-      contentClaim,
       setEnteredContentUri,
       contentError,
       confirmed,
@@ -100,7 +116,8 @@ class WalletSend extends React.PureComponent<Props> {
               amount: '',
             }}
             onSubmit={this.handleSubmit}
-            render={({ values, errors, touched, handleBlur, handleSubmit }) => (
+          >
+            {({ values, errors, touched, handleBlur, handleSubmit }) => (
               <div>
                 <div className="section">
                   <Button
@@ -185,19 +202,7 @@ class WalletSend extends React.PureComponent<Props> {
                     </fieldset-group>
 
                     <div className="card__actions">
-                      <Button
-                        button="primary"
-                        type="submit"
-                        label={__(sendLabel)}
-                        disabled={
-                          !(parseFloat(draftTransaction.amount) > 0.0) ||
-                          parseFloat(draftTransaction.amount) >= balance ||
-                          sendLabel === 'Sending...' ||
-                          (isAddress
-                            ? !draftTransaction.address || validateSendTx(draftTransaction.address).address !== ''
-                            : !contentClaim)
-                        }
-                      />
+                      <Button button="primary" type="submit" label={__(sendLabel)} disabled={!this.canSubmit()} />
                       {!!Object.keys(errors).length || (
                         <span className="error__text">
                           {(!!draftTransaction.address && touched.address && errors.address) ||
@@ -213,7 +218,7 @@ class WalletSend extends React.PureComponent<Props> {
                 </div>
               </div>
             )}
-          />
+          </Formik>
         }
       />
     );

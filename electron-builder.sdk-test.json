@@ -1,0 +1,32 @@
+{
+  "extends": "./electron-builder.json",
+  "appId": "net.lbry.community.sdk-test",
+  "productName": "LBRY SDK Test",
+  "extraMetadata": { "main": "main.js" },
+  "files": [
+    { "from": "dist/electron/webpack", "to": "./" },
+    { "from": "dist/electron/static", "to": "./" },
+    "package.json",
+    "node_modules/**/*",
+    "!node_modules/electron{,/**/*}"
+  ],
+  "directories": { "output": "dist/sdk-test" },
+  "publish": null,
+  "protocols": [],
+  "afterSign": null,
+  "npmRebuild": false,
+  "extraResources": [
+    { "from": "static/daemon", "to": "static/daemon", "filter": ["lbrynet.exe"] },
+    { "from": "static/img", "to": "static/img" },
+    { "from": "static/font", "to": "static/font" }
+  ],
+  "extraFiles": [
+    { "from": "docs/isolated-desktop-test.md", "to": "README-SDK-TEST.md" },
+    { "from": "build/sdk-candidate.json", "to": "SDK-CANDIDATE.json" }
+  ],
+  "win": {
+    "target": [{ "target": "zip", "arch": ["x64"] }],
+    "signAndEditExecutable": false
+  },
+  "artifactName": "LBRY-SDK-Test-${version}-pr27-windows-x64.${ext}"
+}

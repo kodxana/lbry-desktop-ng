@@ -1,89 +1,36 @@
+/* eslint no-console:0 */
 const path = require('path');
 const fs = require('fs');
-const packageJSON = require('../package.json');
-const fetch = require('node-fetch');
-const decompress = require('decompress');
-const os = require('os');
-const del = require('del');
+const { artifactFor, verifiedBytes, stageBinary } = require('./sdkArtifact.cjs');
+const { lbrySettings } = require('../package.json');
+const candidate = require('./sdk-candidate.json');
 
-const downloadDaemon = targetPlatform =>
-  new Promise((resolve, reject) => {
-    const daemonURLTemplate = packageJSON.lbrySettings.lbrynetDaemonUrlTemplate;
-    const daemonVersion = packageJSON.lbrySettings.lbrynetDaemonVersion;
-    const daemonDir = path.join(__dirname, '..', packageJSON.lbrySettings.lbrynetDaemonDir);
-    let daemonFileName = packageJSON.lbrySettings.lbrynetDaemonFileName;
-
-    const currentPlatform = os.platform();
-
-    let daemonPlatform = process.env.TARGET || targetPlatform || currentPlatform;
-    if (daemonPlatform === 'mac' || daemonPlatform === 'darwin') daemonPlatform = 'mac';
-    if (daemonPlatform === 'win32' || daemonPlatform === 'windows') {
-      daemonPlatform = 'windows';
-      daemonFileName += '.exe';
+// PR candidates are supplied from CI, never from the older public rc4 release.
+function prepareDaemon(source = process.env.LBRY_SDK_BINARY) {
+  if (lbrySettings.lbrynetDaemonVersion !== candidate.version) throw new Error('SDK version pin mismatch.');
+  const platform = { windows: 'win32', mac: 'darwin', macos: 'darwin' }[process.env.TARGET] ||
+    process.env.TARGET || process.platform;
+  const artifact = artifactFor(platform);
+  const directory = path.resolve(__dirname, '..', lbrySettings.lbrynetDaemonDir);
+  const destination = path.join(directory, 'lbrynet' + (platform === 'win32' ? '.exe' : ''));
+  fs.mkdirSync(directory, { recursive: true });
+  if (source) {
+    stageBinary(path.resolve(source), destination, artifact.sha256);
+  } else {
+    try {
+      verifiedBytes(destination, artifact.sha256);
+    } catch (_) {
+      throw new Error('Supply LBRY_SDK_BINARY or a file argument from the release-candidate artifact at ' +
+        'https://github.com/' + candidate.repository + '/actions/runs/' + candidate.workflowRun);
     }
-    const daemonFilePath = path.join(daemonDir, daemonFileName);
-    const daemonVersionPath = path.join(__dirname, 'daemon.ver');
-    const tmpZipPath = path.join(__dirname, '..', 'dist', 'daemon.zip');
-    const daemonURL = daemonURLTemplate.replace(/DAEMONVER/g, daemonVersion).replace(/OSNAME/g, daemonPlatform);
+  }
+  console.log('Verified SDK ' + candidate.version + ' (' + candidate.headCommit.slice(0, 8) + '): ' + destination);
+}
 
-    // If a daemon and daemon.ver exists, check to see if it matches the current daemon version
-    const hasDaemonDownloaded = fs.existsSync(daemonFilePath);
-    const hasDaemonVersion = fs.existsSync(daemonVersionPath);
-    let downloadedDaemonVersion;
-
-    if (hasDaemonVersion) {
-      downloadedDaemonVersion = fs.readFileSync(daemonVersionPath, 'utf8');
-    }
-
-    if (hasDaemonDownloaded && hasDaemonVersion && downloadedDaemonVersion === daemonVersion) {
-      console.log('\x1b[34minfo\x1b[0m Daemon already downloaded');
-      resolve('Done');
-    } else {
-      console.log('\x1b[34minfo\x1b[0m Downloading daemon...');
-      fetch(daemonURL, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/zip',
-        },
-      })
-        .then(response => response.buffer())
-        .then(
-          result =>
-            new Promise((newResolve, newReject) => {
-              const distPath = path.join(__dirname, '..', 'dist');
-              const hasDistFolder = fs.existsSync(distPath);
-
-              if (!hasDistFolder) {
-                fs.mkdirSync(distPath);
-              }
-
-              fs.writeFile(tmpZipPath, result, error => {
-                if (error) return newReject(error);
-                return newResolve();
-              });
-            })
-        )
-        .then(() => del(`${daemonFilePath}*`))
-        .then()
-        .then(() =>
-          decompress(tmpZipPath, daemonDir, {
-            filter: file => path.basename(file.path) === daemonFileName,
-          })
-        )
-        .then(() => {
-          console.log(`\x1b[32msuccess\x1b[0m Daemon downloaded! - v${daemonVersion}`);
-          if (hasDaemonVersion) {
-            del(daemonVersionPath);
-          }
-
-          fs.writeFileSync(daemonVersionPath, daemonVersion, 'utf8');
-          resolve('Done');
-        })
-        .catch(error => {
-          console.error(`\x1b[31merror\x1b[0m Daemon download failed due to: \x1b[35m${error}\x1b[0m`);
-          reject(error);
-        });
-    }
-  });
-
-downloadDaemon();
+if (require.main === module) {
+  try { prepareDaemon(process.argv[2]) } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+}
+module.exports = prepareDaemon;

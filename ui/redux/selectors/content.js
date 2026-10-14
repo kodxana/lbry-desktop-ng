@@ -13,7 +13,7 @@ import { selectBalance } from 'redux/selectors/wallet';
 import { selectCostInfoForUri } from 'lbryinc';
 import { selectShowMatureContent } from 'redux/selectors/settings';
 import * as RENDER_MODES from 'constants/file_render_modes';
-import path from 'path';
+import path from 'util/file-name';
 import { FORCE_CONTENT_TYPE_PLAYER, FORCE_CONTENT_TYPE_COMIC } from 'constants/claim';
 
 const RECENT_HISTORY_AMOUNT = 10;

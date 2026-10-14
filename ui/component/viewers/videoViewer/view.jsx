@@ -345,12 +345,6 @@ function VideoViewer(props: Props) {
     player.on('pause', (event) => onPause(event, player));
     player.on('dispose', (event) => onDispose(event, player));
 
-    player.on('error', () => {
-      const error = player.error();
-      if (error) {
-        analytics.sentryError('Video.js error', error);
-      }
-    });
     player.on('volumechange', () => {
       if (player) {
         updateVolumeState(player.volume(), player.muted());

@@ -2,6 +2,8 @@
 
 import React from 'react';
 import mammoth from 'mammoth';
+import desktop from 'util/desktop';
+import sanitizeDocumentHtml from 'util/document-html';
 import LoadingScreen from 'component/common/loading-screen';
 
 type Props = {
@@ -24,10 +26,12 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
   }
   componentDidMount() {
+    this.mounted = true;
     const { source } = this.props;
 
     // Overwrite element and styles
     const options = {
+      externalFileAccess: false,
       styleMap: [
         "p[style-name='Title'] => h1:fresh",
         "p[style-name='Heading 1'] => h1:fresh",
@@ -41,15 +45,24 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
 
     // Parse docx to html
-    mammoth
-      .convertToHtml({ path: source }, options)
-      .then(result => {
-        this.setState({ content: result.value, loading: false });
+    desktop
+      .readDocument(source)
+      .then((bytes) =>
+        mammoth.convertToHtml(
+          { arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) },
+          options
+        )
+      )
+      .then((result) => {
+        if (this.mounted) this.setState({ content: sanitizeDocumentHtml(result.value), loading: false });
       })
       .catch(() => {
-        this.setState({ error: true, loading: false });
-      })
-      .done();
+        if (this.mounted) this.setState({ error: true, loading: false });
+      });
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
   }
 
   render() {

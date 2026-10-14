@@ -1,11 +1,14 @@
 /* eslint-disable no-console */
 const { WEBPACK_ELECTRON_PORT } = require('../config');
-const chalk = require('chalk');
+const chalk = require('chalk').default;
 const webpack = require('webpack');
-const merge = require('webpack-merge');
+const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+const { merge } = require('webpack-merge');
 const middleware = require('webpack-dev-middleware');
 const express = require('express');
+const path = require('path');
 const app = express();
+const { spawn } = require('child_process');
 
 console.log(
   chalk.magenta(`Compiling ${chalk.underline('main')} and ${chalk.underline('render')}, this will take a while.`)
@@ -15,56 +18,83 @@ let [mainConfig, renderConfig] = require('../webpack.electron.config.js');
 
 renderConfig = merge(renderConfig, {
   entry: { ui: ['webpack-hot-middleware/client'] },
-  plugins: [new webpack.HotModuleReplacementPlugin()],
+  plugins: [new webpack.HotModuleReplacementPlugin(), new ReactRefreshPlugin({ overlay: { sockIntegration: 'whm' } })],
   resolve: {
-    alias: { 'react-dom': '@hot-loader/react-dom' },
     symlinks: false,
   },
-
 });
 
 const mainCompiler = webpack(mainConfig);
 const mainInstance = middleware(mainCompiler, {
-  logLevel: 'warn',
-  writeToDisk: filename => {
-    // console.log(`Writing '${filename}'.`);
-    return true;
-  },
+  stats: 'errors-warnings',
+  writeToDisk: true,
 });
 
 const renderCompiler = webpack(renderConfig);
 const renderInstance = middleware(renderCompiler, {
-  logLevel: 'warn',
+  stats: 'errors-warnings',
   publicPath: '/',
 });
-app.use(require('webpack-hot-middleware')(renderCompiler));
+const hotMiddleware = require('webpack-hot-middleware')(renderCompiler);
+app.use(hotMiddleware);
 app.use(renderInstance);
 app.use(express.static('dist/electron/static'));
 
-app.listen(WEBPACK_ELECTRON_PORT, () => {
-  console.log(chalk.yellow.bold(`Renderer listening on port ${WEBPACK_ELECTRON_PORT} (still compiling)`));
-});
-
-mainInstance.waitUntilValid(() => console.log(chalk.green(`${chalk.underline('main')} compilation complete.`)));
-renderInstance.waitUntilValid(() => console.log(chalk.green(`${chalk.underline('render')} compilation complete.`)));
-
-mainInstance.waitUntilValid(() => {
-  console.log(chalk.yellow('Spawning electron...'));
-
-  const electron = require('electron');
-  const proc = require('child_process');
-
-  const child = proc.spawn(electron, ['./dist/electron/webpack/main.js']);
-
-  child.stdout.on('data', data => {
-    console.log(data.toString());
-  });
-
-  process.on('SIGINT', function() {
-    console.log('Killing threads...');
-
-    child.kill('SIGINT');
-    process.exit();
+let server;
+const listening = new Promise((resolve, reject) => {
+  server = app.listen(Number(WEBPACK_ELECTRON_PORT), 'localhost', (error) => {
+    if (error) return reject(error);
+    console.log(chalk.yellow.bold(`Renderer listening on port ${WEBPACK_ELECTRON_PORT} (still compiling)`));
+    resolve();
   });
 });
+
+const ready = (instance) => new Promise((resolve) => instance.waitUntilValid(resolve));
+let closing = false;
+function close() {
+  if (closing) return;
+  closing = true;
+  hotMiddleware.close();
+  if (server) server.close();
+  mainInstance.close(() => mainCompiler.close(() => {}));
+  renderInstance.close(() => renderCompiler.close(() => {}));
+}
+
+Promise.all([ready(mainInstance), ready(renderInstance), listening])
+  .then(([mainStats, renderStats]) => {
+    if ([mainStats, renderStats].some((result) => result.hasErrors())) {
+      process.exitCode = 1;
+      close();
+      return;
+    }
+    console.log(chalk.yellow('Spawning electron...'));
+
+    const electron = require('electron');
+    // Launch the application directory so Electron reads its name and version.
+    const child = spawn(electron, [path.resolve(__dirname, '..'), ...process.argv.slice(2)], {
+      stdio: 'inherit',
+      windowsHide: true,
+    });
+    child.on('error', (error) => {
+      console.error(error);
+      process.exitCode = 1;
+      close();
+    });
+    child.on('exit', (code) => {
+      process.exitCode = code || 0;
+      close();
+    });
+
+    process.on('SIGINT', () => {
+      console.log('Killing threads...');
+
+      child.kill('SIGINT');
+      close();
+    });
+  })
+  .catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+    close();
+  });
 /* eslint-enable no-console */

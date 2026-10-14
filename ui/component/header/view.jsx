@@ -15,9 +15,10 @@ import React from 'react';
 import SkipNavigationButton from 'component/skipNavigationButton';
 import Tooltip from 'component/common/tooltip';
 import WunderBar from 'component/wunderbar';
-import * as remote from '@electron/remote';
+import { maximizeWindow } from 'util/window-controls';
 import { IS_MAC } from 'component/app/view';
 import NavigationButton from 'component/navigationButton';
+import { walletSyncProgress } from 'util/wallet-sync';
 
 type Props = {
   authHeader: boolean,
@@ -28,6 +29,7 @@ type Props = {
     simpleTitle: string, // Just use the same value as `title` if `title` is already short (~< 10 chars), unless you have a better idea for title overlfow on mobile
   },
   balance: number,
+  walletSyncStatus: ?StatusResponse,
   emailToVerify?: string,
   hasNavigated: boolean,
   hideBalance: boolean,
@@ -54,6 +56,7 @@ const Header = (props: Props) => {
     authHeader,
     backout,
     balance,
+    walletSyncStatus,
     emailToVerify,
     hideBalance,
     hideCancel,
@@ -76,6 +79,7 @@ const Header = (props: Props) => {
   } = history;
 
   const isMobile = useIsMobile();
+  const walletProgress = walletSyncProgress(walletSyncStatus);
 
   // on the verify page don't let anyone escape other than by closing the tab to keep session data consistent
   const isVerifyPage = pathname.includes(PAGES.AUTH_VERIFY);
@@ -124,7 +128,9 @@ const Header = (props: Props) => {
     <div className="header__menu--right">
       <Tooltip
         title={
-          balance > 0
+          walletProgress.pending
+            ? walletProgress.title
+            : balance > 0
             ? __('Immediately spendable: %spendable_balance%', { spendable_balance: roundedSpendableBalance })
             : __('Your Wallet')
         }
@@ -145,7 +151,13 @@ const Header = (props: Props) => {
             <Button
               navigate={`/$/${PAGES.WALLET}`}
               className="button--file-action header__navigationItem--balance"
-              label={hideBalance || Number(roundedBalance) === 0 ? __('Your Wallet') : roundedBalance}
+              label={
+                walletProgress.pending
+                  ? __('Wallet sync')
+                  : hideBalance || Number(roundedBalance) === 0
+                  ? __('Your Wallet')
+                  : roundedBalance
+              }
               icon={ICONS.LBC}
               onDoubleClick={(e) => {
                 e.stopPropagation();
@@ -165,9 +177,7 @@ const Header = (props: Props) => {
         'header--minimal': authHeader,
         'header--mac': IS_MAC,
       })}
-      onDoubleClick={(e) => {
-        remote.getCurrentWindow().maximize();
-      }}
+      onDoubleClick={maximizeWindow}
     >
       <div className="card__actions--between header__contents">
         {!authHeader && canBackout ? (

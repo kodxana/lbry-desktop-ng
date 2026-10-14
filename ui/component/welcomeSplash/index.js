@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import { doSetDaemonSetting } from 'redux/actions/settings';
 import { doSetWelcomeVersion } from 'redux/actions/app';
 import * as DAEMON_SETTINGS from 'constants/daemon_settings';
-import { WELCOME_VERSION } from 'config.js';
+import { WELCOME_VERSION } from 'config';
 import { selectDaemonSettings, selectDaemonStatus } from 'redux/selectors/settings';
 
 import WelcomeSplash from './view';

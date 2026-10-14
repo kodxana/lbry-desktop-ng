@@ -1,22 +1,13 @@
 // @flow
 import { CHANNEL_STAKED_LEVEL_VIDEO_COMMENTS } from 'config';
-import { formattedLinks, inlineLinks } from 'util/remark-lbry';
-import { formattedTimestamp, inlineTimestamp } from 'util/remark-timestamp';
-import { formattedEmote, inlineEmote } from 'util/remark-emote';
 import * as ICONS from 'constants/icons';
 import * as React from 'react';
 import Button from 'component/button';
 import classnames from 'classnames';
-import defaultSchema from 'hast-util-sanitize/lib/github.json';
 import MarkdownLink from 'component/markdownLink';
 import OptimizedImage from 'component/optimizedImage';
-import reactRenderer from 'remark-react';
-import remark from 'remark';
-import remarkAttr from 'remark-attr';
-import remarkBreaks from 'remark-breaks';
-import remarkEmoji from 'remark-emoji';
-import remarkFrontMatter from 'remark-frontmatter';
-import remarkStrip from 'strip-markdown';
+import markdownRenderer from 'util/markdown-renderer';
+import markdownProcessor from 'util/markdown-processor';
 import ZoomableImage from 'component/zoomableImage';
 import { parse } from 'node-html-parser';
 
@@ -128,13 +119,6 @@ const SimpleImageLink = (props: ImageLinkProps) => {
 // ****************************************************************************
 // ****************************************************************************
 
-// Use github sanitation schema
-const schema = { ...defaultSchema };
-
-// Extend sanitation schema to support lbry protocol
-schema.protocols.href.push('lbry');
-schema.attributes.a.push('embed');
-
 const REPLACE_REGEX = /(<iframe\s+src=["'])(.*?(?=))(["']\s*><\/iframe>)/g;
 
 // ****************************************************************************
@@ -162,7 +146,7 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
 
   const strippedContent = content
     ? content.replace(REPLACE_REGEX, (iframeHtml) => {
-        // Let the browser try to create an iframe to see if the markup is valid
+        // Read the legacy embed source without creating an iframe in the page.
         let lbrySrc;
         try {
           let p = parse(iframeHtml);
@@ -179,9 +163,7 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
     : '';
 
   const remarkOptions: Object = {
-    sanitize: schema,
-    fragment: React.Fragment,
-    remarkReactComponents: {
+    components: {
       a: noDataStore
         ? SimpleLink
         : (linkProps) => (
@@ -193,8 +175,6 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
               allowPreview={isStakeEnoughForPreview(stakedLevel)}
             />
           ),
-      // Workaraund of remarkOptions.Fragment
-      div: React.Fragment,
       img: (imgProps) =>
         noDataStore ? (
           <div className="file-viewer file-viewer--document">
@@ -208,25 +188,16 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
     },
   };
 
-  const remarkAttrOpts = {
-    scope: 'extended',
-    elements: ['link'],
-    extend: { link: ['embed'] },
-    defaultValue: true,
-  };
-
   // Strip all content and just render text
   if (strip) {
     // Remove new lines and extra space
-    remarkOptions.remarkReactComponents.p = SimpleText;
+    remarkOptions.components.p = SimpleText;
     return (
       <span dir="auto" className="markdown-preview">
         {
-          remark()
-            .use(remarkStrip)
-            .use(remarkFrontMatter, ['yaml'])
-            .use(reactRenderer, remarkOptions)
-            .processSync(content).contents
+          markdownProcessor({ strip: true })
+            .use(markdownRenderer, remarkOptions)
+            .processSync(content || '').result
         }
       </span>
     );
@@ -235,23 +206,9 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
   return (
     <div dir="auto" className={classnames('markdown-preview', className)}>
       {
-        remark()
-          .use(remarkAttr, remarkAttrOpts)
-          // Remark plugins for lbry urls
-          // Note: The order is important
-          .use(formattedLinks)
-          .use(inlineLinks)
-          .use(disableTimestamps || isMarkdownPost ? null : inlineTimestamp)
-          .use(disableTimestamps || isMarkdownPost ? null : formattedTimestamp)
-          // Emojis
-          .use(inlineEmote)
-          .use(formattedEmote)
-          .use(remarkEmoji)
-          // Render new lines without needing spaces.
-          .use(remarkBreaks)
-          .use(remarkFrontMatter, ['yaml'])
-          .use(reactRenderer, remarkOptions)
-          .processSync(strippedContent).contents
+        markdownProcessor({ disableTimestamps: disableTimestamps || isMarkdownPost })
+          .use(markdownRenderer, remarkOptions)
+          .processSync(strippedContent).result
       }
     </div>
   );

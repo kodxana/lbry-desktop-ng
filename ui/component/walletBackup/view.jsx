@@ -1,11 +1,8 @@
 // @flow
 import * as React from 'react';
-import { shell } from 'electron';
-import * as remote from '@electron/remote';
+import desktop from 'util/desktop';
 import Button from 'component/button';
 import CopyableText from 'component/copyableText';
-import AdmZip from 'adm-zip';
-import path from 'path';
 import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
 
@@ -18,6 +15,7 @@ type Props = {
 type State = {
   errorMessage: ?string,
   successMessage: ?string,
+  pending: boolean,
 };
 
 class WalletBackup extends React.PureComponent<Props, State> {
@@ -27,6 +25,7 @@ class WalletBackup extends React.PureComponent<Props, State> {
     this.state = {
       errorMessage: null,
       successMessage: null,
+      pending: false,
     };
   }
 
@@ -42,51 +41,44 @@ class WalletBackup extends React.PureComponent<Props, State> {
     this.setState({ errorMessage: null, successMessage: null });
   }
 
-  backupWalletDir(lbryumWalletDir: ?string) {
-    this.clearMessages();
+  componentDidMount() {
+    this.mounted = true;
+  }
 
+  componentWillUnmount() {
+    this.mounted = false;
+    if (this.backupPending) desktop.cancelBackup(this.backupPending);
+  }
+
+  componentDidUpdate(previous) {
+    if (this.backupPending && (previous.daemonSettings || {}).wallet_dir !== (this.props.daemonSettings || {}).wallet_dir) {
+      desktop.cancelBackup(this.backupPending);
+    }
+  }
+
+  async backupWalletDir(lbryumWalletDir: ?string) {
+    if (this.backupPending) return;
+    this.clearMessages();
     if (!lbryumWalletDir) {
       this.showErrorMessage(__('No wallet folder was found.'));
       return;
     }
-
-    // Colon fails on Windows. Backups should be portable, so replace it on other platforms, too.
-    const filenameTime = new Date().toISOString().replace(/:/g, '-');
-
-    const outputFilename = [path.basename(lbryumWalletDir), '-', filenameTime, '.zip'].join('');
-
-    // Prefer placing backup in user's Downloads folder, then their home folder, and finally
-    // right next to the lbryum folder itself.
-    let outputDir = path.dirname(lbryumWalletDir);
-    if (remote && remote.app) {
-      outputDir = remote.app.getPath('downloads') || remote.app.getPath('home') || outputDir;
-    }
-
-    const outputPath = path.join(outputDir, outputFilename);
-
-    const zip = new AdmZip();
-
+    this.backupPending = crypto.randomUUID();
+    this.setState({ pending: true });
     try {
-      zip.addLocalFolder(lbryumWalletDir);
-    } catch (err) {
-      console.error(err); // eslint-disable-line no-console
-      this.showErrorMessage(__('The wallet folder could not be added to the zip archive.'));
-      return;
+      const result = await desktop.backupWallet({ id: this.backupPending, directory: lbryumWalletDir });
+      if (!this.mounted || (this.props.daemonSettings || {}).wallet_dir !== lbryumWalletDir) return;
+      if (result.ok) this.showSuccessMessage(__('Saved zip archive to %outputPath%', { outputPath: result.path }));
+      else if (result.error === 'archive') this.showErrorMessage(__('The wallet folder could not be added to the zip archive.'));
+      else if (result.error === 'write') this.showErrorMessage(__('There was a problem writing the zip archive to disk.'));
+      else this.showErrorMessage(__('The wallet folder could not be determined. Please try again.'));
+    } catch (_) {
+      if (this.mounted) this.showErrorMessage(__('The wallet folder could not be determined. Please try again.'));
+    } finally {
+      this.backupPending = false;
+      if (this.mounted) this.setState({ pending: false });
     }
-
-    try {
-      zip.writeZip(outputPath);
-    } catch (err) {
-      console.error(err); // eslint-disable-line no-console
-      this.showErrorMessage(__('There was a problem writing the zip archive to disk.'));
-      return;
-    }
-
-    this.showSuccessMessage(__('Saved zip archive to %outputPath%', { outputPath }));
-
-    shell.showItemInFolder(outputPath);
   }
-
   render() {
     const { daemonSettings = {} } = this.props;
     const { wallet_dir: lbryumWalletDir } = daemonSettings;
@@ -143,9 +135,10 @@ class WalletBackup extends React.PureComponent<Props, State> {
               <Button
                 button="primary"
                 label={__('Create Backup')}
+                disabled={this.state.pending}
                 onClick={() => this.backupWalletDir(lbryumWalletDir)}
               />
-              <Button button="link" label={__('Open Folder')} onClick={() => shell.openPath(lbryumWalletDir)} />
+              <Button button="link" label={__('Open Folder')} onClick={() => desktop.openWalletFolder()} />
             </div>
           </React.Fragment>
         }

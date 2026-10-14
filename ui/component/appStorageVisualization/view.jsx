@@ -1,7 +1,8 @@
 // @flow
 import * as React from 'react';
 import I18nMessage from 'component/i18nMessage';
-import { ipcRenderer } from 'electron';
+import Button from 'component/button';
+import desktop from 'util/desktop';
 
 type Props = {
   // --- select ---
@@ -16,7 +17,7 @@ type Props = {
 function StorageViz(props: Props) {
   const { diskSpace, viewHostingLimit, autoHostingLimit, viewBlobSpace, autoBlobSpace, privateBlobSpace } = props;
   React.useEffect(() => {
-    ipcRenderer.send('get-disk-space');
+    desktop.requestDiskSpace();
   }, []);
 
   if (!diskSpace || !diskSpace.total) {
@@ -25,6 +26,7 @@ function StorageViz(props: Props) {
         <div className={'storage__bar'}>
           <div className="help">{__('Cannot get disk space information.')}</div>
         </div>
+        <Button button="link" label={__('Retry storage check')} onClick={() => desktop.requestDiskSpace()} />
       </div>
     );
   }

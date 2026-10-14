@@ -15,6 +15,7 @@ type ActionResult = {
 };
 
 type WalletState = {
+  syncStatus: ?StatusResponse,
   balance: any,
   totalBalance: any,
   reservedBalance: any,
@@ -60,6 +61,7 @@ type WalletState = {
 };
 
 const defaultState = {
+  syncStatus: null,
   balance: undefined,
   totalBalance: undefined,
   reservedBalance: undefined,
@@ -359,8 +361,11 @@ export const walletReducer = handleActions(
       return { ...state, gettingNewAddress: false, receiveAddress: address };
     },
 
+    [ACTIONS.WALLET_SYNC_STATUS_UNAVAILABLE]: (state: WalletState) => ({ ...state, syncStatus: null }),
+
     [ACTIONS.UPDATE_BALANCE]: (state: WalletState, action) => ({
       ...state,
+      syncStatus: action.data.syncStatus,
       totalBalance: action.data.totalBalance,
       balance: action.data.balance,
       reservedBalance: action.data.reservedBalance,
@@ -504,7 +509,7 @@ export const walletReducer = handleActions(
 
     [ACTIONS.WALLET_LOCK_START]: (state: WalletState) => ({
       ...state,
-      walletLockPending: false,
+      walletLockPending: true,
       walletLockSucceded: null,
       walletLockResult: null,
     }),

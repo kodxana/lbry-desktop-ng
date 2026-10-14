@@ -6,6 +6,7 @@ import {
   TabList as ReachTabList,
   TabPanels as ReachTabPanels,
   TabPanel as ReachTabPanel,
+  useTabsContext,
 } from '@reach/tabs';
 import classnames from 'classnames';
 import { useRect } from '@reach/rect';
@@ -17,8 +18,8 @@ import { useRect } from '@reach/rect';
 //
 // <Tabs onChange={...} index={...}>
 //   <TabList>
-//     <Tab>Tab label 1</Tab>
-//     <Tab>Tab label 2</Tab>
+//     <Tab index={0}>Tab label 1</Tab>
+//     <Tab index={1}>Tab label 2</Tab>
 //     ...
 //   </TabList>
 //   <TabPanels>
@@ -33,7 +34,7 @@ import { useRect } from '@reach/rect';
 
 type TabsProps = {
   index?: number,
-  onChange?: number => void,
+  onChange?: (number) => void,
   children: Array<React$Node>,
 };
 
@@ -83,18 +84,17 @@ function TabList(props: TabListProps) {
 //
 // The links that users click
 // Accesses `setSelectedRect` from context to set itself as active if needed
-// Flow doesn't understand we don't have to pass it in ourselves
 type TabProps = {
-  isSelected?: Boolean,
+  index: number,
 };
 function Tab(props: TabProps) {
-  // @reach/tabs provides an `isSelected` prop
-  // We could also useContext to read it manually
-  const { isSelected } = props;
+  const { index, ...rest } = props;
+  const { selectedIndex } = useTabsContext();
+  const isSelected = selectedIndex === index;
 
   // Each tab measures itself
   const ref = useRef();
-  const rect = useRect(ref, isSelected);
+  const rect = useRect(ref, { observe: isSelected });
 
   // and calls up to the parent when it becomes selected
   // we useLayoutEffect to avoid flicker
@@ -103,7 +103,7 @@ function Tab(props: TabProps) {
     if (isSelected) setSelectedRect(rect);
   }, [isSelected, rect, setSelectedRect]);
 
-  return <ReachTab ref={ref} {...props} className="tab" />;
+  return <ReachTab ref={ref} {...rest} className="tab" />;
 }
 
 //

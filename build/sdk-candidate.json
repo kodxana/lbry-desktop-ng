@@ -1,0 +1,29 @@
+{
+  "version": "0.114.0rc4",
+  "repository": "kodxana/lbry-sdk-ng",
+  "pullRequest": 28,
+  "includedPullRequests": [
+    28,
+    29,
+    30,
+    31
+  ],
+  "headCommit": "a5ee994f2c26a7810d89ac90f08686d106880b70",
+  "buildCommit": "85bd4df09c9ced4f04c4f714b5a94be83e6e8990",
+  "sourceTree": "6492fd4b0a3749d29284219f0f12e3c272d341d1",
+  "workflowRun": "38237985200",
+  "artifacts": {
+    "win32": {
+      "sha256": "31fc09371c8c337a835533eb6c5580cf229ca44c9f8058822190817e36fbeea5"
+    },
+    "linux": {
+      "sha256": "637c49239b8b9281b923cc5a46c2511ca4c9babcaa61e3957ff2ceaf67cf63c5",
+      "artifactName": "lbrynet-linux",
+      "artifactId": "11742661601",
+      "archiveSha256": "0b19187bda27e5d471f033575e50bc8bcd4dea53ba4e123cb757cd819b402267"
+    }
+  },
+  "artifactName": "lbrynet-windows",
+  "artifactId": "11741538918",
+  "archiveSha256": "e483de18bcdb36e66769b56dc1fd0e972134657e04d9bbcfc4d77d11ecd22116"
+}

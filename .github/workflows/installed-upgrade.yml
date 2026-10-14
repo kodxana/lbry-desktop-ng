@@ -1,0 +1,61 @@
+name: Installed Windows upgrade
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/installed-upgrade.yml'
+      - 'build/**'
+      - 'electron/**'
+      - 'electron-builder*.json'
+      - 'package.json'
+      - 'yarn.lock'
+      - 'ui/util/updater-*.js'
+      - 'ui/modal/modalAutoUpdateDownloaded/**'
+      - 'ui/redux/actions/app.js'
+      - 'ui/redux/reducers/app.js'
+      - 'ui/index.jsx'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: installed-upgrade-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  installed-upgrade:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Install locked dependencies without lifecycle scripts
+        run: node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
+      - name: Install Electron
+        run: node .yarn/releases/yarn-3.2.0.cjs exec install-electron
+      - name: Fetch and verify the pinned SDK
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node build/fetchSdkCandidate.js
+      - name: Real NSIS upgrades with an unfunded local test wallet
+        run: node build/testInstalledUpgrade.js
+      - name: Confirm source and lockfile were restored
+        if: always()
+        run: git diff --exit-code
+      - name: Keep upgrade evidence without profiles or wallets
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: installed-upgrade-evidence
+          path: dist/ci/installed-upgrade/*.json
+          if-no-files-found: warn
+          retention-days: 14

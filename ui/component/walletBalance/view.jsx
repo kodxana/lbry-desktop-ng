@@ -10,8 +10,11 @@ import Card from 'component/common/card';
 import LbcSymbol from 'component/common/lbc-symbol';
 import I18nMessage from 'component/i18nMessage';
 import { formatCredits } from 'util/format-credits';
+import WalletSyncNotice from 'component/walletSyncNotice/view';
+import { walletSyncProgress } from 'util/wallet-sync';
 
 type Props = {
+  syncStatus: ?StatusResponse,
   balance: number,
   totalBalance: number,
   claimsBalance: number,
@@ -34,6 +37,7 @@ const LARGE_WALLET_BALANCE = 100;
 
 const WalletBalance = (props: Props) => {
   const {
+    syncStatus,
     balance,
     claimsBalance,
     supportsBalance,
@@ -66,7 +70,9 @@ const WalletBalance = (props: Props) => {
     <Card
       title={<LbcSymbol postfix={formatCredits(totalBalance, 8)} isTitle />}
       subtitle={
-        totalLocked > 0 ? (
+        walletSyncProgress(syncStatus).pending ? (
+          <WalletSyncNotice status={syncStatus} />
+        ) : totalLocked > 0 ? (
           <I18nMessage tokens={{ lbc: <LbcSymbol /> }}>
             Your total balance. All of this is yours, but some %lbc% is in use on channels and content right now.
           </I18nMessage>

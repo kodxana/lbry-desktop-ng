@@ -283,10 +283,16 @@ function ChannelPage(props: Props) {
       ) : (
         <Tabs onChange={onTabChange} index={tabIndex}>
           <TabList className="tabs__list--channel-page">
-            <Tab disabled={editing}>{__('Content')}</Tab>
-            <Tab disabled={editing}>{__('Playlists')}</Tab>
-            <Tab>{editing ? __('Editing Your Channel') : __('About --[tab title in Channel Page]--')}</Tab>
-            <Tab disabled={editing}>{__('Community')}</Tab>
+            <Tab index={0} disabled={editing}>
+              {__('Content')}
+            </Tab>
+            <Tab index={1} disabled={editing}>
+              {__('Playlists')}
+            </Tab>
+            <Tab index={2}>{editing ? __('Editing Your Channel') : __('About --[tab title in Channel Page]--')}</Tab>
+            <Tab index={3} disabled={editing}>
+              {__('Community')}
+            </Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

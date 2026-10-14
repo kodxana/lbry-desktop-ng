@@ -1,7 +1,7 @@
-import { execSync } from 'child_process';
-import isDev from 'electron-is-dev';
-import { ipcRenderer } from 'electron';
-import * as remote from '@electron/remote';
+import desktopSettings from '../../../desktop-settings.json';
+import desktop from 'util/desktop';
+import { quitApplication } from 'util/window-controls';
+import { requestUpdater } from 'util/updater-client';
 import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
 import * as SETTINGS from 'constants/settings';
@@ -24,11 +24,11 @@ import {
   doSetDaemonSetting,
   doFindFFmpeg,
   doGetDaemonStatus,
+  doSaveCustomWalletServers,
 } from 'redux/actions/settings';
 import {
   selectIsUpgradeSkipped,
   selectUpdateUrl,
-  selectUpgradeDownloadPath,
   selectAutoUpdateDeclined,
   selectRemoteVersion,
   selectUpgradeTimer,
@@ -39,11 +39,13 @@ import { selectDaemonSettings, makeSelectClientSetting, selectDisableAutoUpdates
 import { selectUser } from 'redux/selectors/user';
 import { doSyncLoop, doSetPrefsReady, doPreferenceGet, doPopulateSharedUserState } from 'redux/actions/sync';
 import { doAuthenticate } from 'redux/actions/user';
-import { lbrySettings as config, version as appVersion } from 'package.json';
+import packageInfo from 'package.json';
 import analytics, { SHARE_INTERNAL } from 'analytics';
-import { doSignOutCleanup } from 'util/saved-passwords';
+import { doSignOutCleanup, getAuthToken } from 'util/saved-passwords';
 import { doNotificationSocketConnect } from 'redux/actions/websocket';
-import { stringifyServerParam, shouldSetSetting } from 'util/sync-settings';
+import { shouldSetSetting } from 'util/sync-settings';
+import { withLocalHubPreference } from 'util/hub-preferences';
+const isDev = process.env.NODE_ENV !== 'production';
 
 const CHECK_UPGRADE_INTERVAL = 10 * 60 * 1000;
 
@@ -79,15 +81,7 @@ export function doSkipUpgrade() {
 }
 
 export function doStartUpgrade() {
-  return (dispatch, getState) => {
-    const state = getState();
-    const upgradeDownloadPath = selectUpgradeDownloadPath(state);
-
-    ipcRenderer.send('upgrade', upgradeDownloadPath);
-    dispatch({
-      type: ACTIONS.UPGRADE_INIT_INSTALL,
-    });
-  };
+  return () => requestUpdater('accept');
 }
 
 export function doShowUpgradeInstallationError() {
@@ -98,29 +92,16 @@ export function doShowUpgradeInstallationError() {
 
 export function doDownloadUpgrade() {
   return (dispatch, getState) => {
-    const state = getState();
-    const url = selectUpdateUrl(state);
-    ipcRenderer.send('download-upgrade', { url, options: {} });
-    dispatch({
-      type: ACTIONS.UPGRADE_DOWNLOAD_STARTED,
-    });
+    desktop.openExternal(selectUpdateUrl(getState()));
     dispatch(doHideModal());
-    dispatch(doOpenModal(MODALS.DOWNLOADING));
   };
 }
 
 export function doDownloadUpgradeRequested() {
-  // This means the user requested an upgrade by clicking the "upgrade" button in the navbar.
-  // If on Mac and Windows, we do some new behavior for the auto-update system.
-  // This will probably be reorganized once we get auto-update going on Linux and remove
-  // the old logic.
-
   return (dispatch) => {
-    if (['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE) {
-      // electron-updater behavior
+    if (process.platform === 'win32' && desktopSettings.autoUpdates) {
       dispatch(doOpenModal(MODALS.AUTO_UPDATE_DOWNLOADED));
     } else {
-      // Old behavior for Linux
       dispatch(doDownloadUpgrade());
     }
   };
@@ -152,17 +133,20 @@ export function doAutoUpdate() {
 }
 
 export function doAutoUpdateDeclined() {
-  return (dispatch) => {
+  return async (dispatch) => {
+    const result = await requestUpdater('decline');
+    if (!result.ok) return result;
     dispatch(doClearUpgradeTimer());
 
     dispatch({
       type: ACTIONS.AUTO_UPDATE_DECLINED,
     });
+    return result;
   };
 }
 
 export function doCancelUpgrade() {
-  ipcRenderer.send('cancel-download-upgrade');
+  requestUpdater('decline');
   return { type: ACTIONS.UPGRADE_CANCELLED };
 }
 
@@ -173,26 +157,26 @@ export function doCheckUpgradeAvailable() {
       type: ACTIONS.CHECK_UPGRADE_START,
     });
 
-    const autoUpdateSupported = ['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE;
+    const autoUpdateSupported = process.platform === 'win32' && desktopSettings.autoUpdates;
 
     const autoUpdateDeclined = selectAutoUpdateDeclined(state);
 
-    // If auto update isn't supported (Linux using .deb packages)
-    // don't perform any download, just get the upgrade info
-    // (release notes and version)
     const disableAutoUpdate = !autoUpdateSupported || selectDisableAutoUpdates(state);
 
-    if (autoUpdateDeclined || isDev) {
+    if (autoUpdateDeclined || isDev || !autoUpdateSupported) {
       return;
     }
 
-    ipcRenderer.send('check-for-updates', !disableAutoUpdate);
+    requestUpdater('check', {
+      autoDownload: !disableAutoUpdate,
+      allowPrerelease: makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state),
+    });
   };
 }
 
 export function doNotifyUpdateAvailable(e) {
   return (dispatch, getState) => {
-    const remoteVersion = e.releaseName || e.version;
+    const remoteVersion = e.version;
 
     const state = getState();
     const noModalBeingDisplayed = !selectModal(state);
@@ -208,7 +192,7 @@ export function doNotifyUpdateAvailable(e) {
       },
     });
 
-    const autoUpdateSupported = ['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE;
+    const autoUpdateSupported = process.platform === 'win32' && desktopSettings.autoUpdates;
 
     if (autoUpdateSupported) {
       return;
@@ -257,7 +241,7 @@ export function doCheckDaemonVersion() {
     Lbry.version().then(({ lbrynet_version: lbrynetVersion }) => {
       // Avoid the incompatible daemon modal if running in dev mode
       // Lets you  run a different daemon than the one specified in package.json
-      if (config.lbrynetDaemonVersion === lbrynetVersion || process.env.NODE_ENV !== 'production') {
+      if (packageInfo.lbrySettings.lbrynetDaemonVersion === lbrynetVersion || process.env.NODE_ENV !== 'production') {
         return dispatch({
           type: ACTIONS.DAEMON_VERSION_MATCH,
         });
@@ -329,7 +313,7 @@ export function doDaemonReady() {
 
     dispatch(
       doAuthenticate(
-        appVersion,
+        packageInfo.version,
         undefined,
         undefined,
         shareUsageData,
@@ -360,7 +344,7 @@ export function doDaemonReady() {
       dispatch(doCheckUpgradeAvailable());
     }
     dispatch(doCheckUpgradeSubscribe());
-    ipcRenderer.send('get-disk-space');
+    desktop.requestDiskSpace();
   };
 }
 
@@ -380,31 +364,14 @@ export function doClearCache() {
 export function doQuit() {
   return () => {
     // @if TARGET='app'
-    remote.app.quit();
+    quitApplication();
     // @endif
   };
 }
 
 export function doQuitAnyDaemon() {
-  return (dispatch) => {
-    // @if TARGET='app'
-    Lbry.stop()
-      .catch(() => {
-        try {
-          if (process.platform === 'win32') {
-            execSync('taskkill /im lbrynet.exe /t /f');
-          } else {
-            execSync('pkill lbrynet');
-          }
-        } catch (error) {
-          dispatch(doAlertError(`Quitting daemon failed due to: ${error.message}`));
-        }
-      })
-      .finally(() => {
-        dispatch(doQuit());
-      });
-    // @endif
-  };
+  // The main process stops only the SDK child owned by this application.
+  return doQuit();
 }
 
 export function doChangeVolume(volume) {
@@ -532,20 +499,20 @@ export function doSignIn() {
 }
 
 export function doSignOut() {
-  return () => {
-    Lbryio.call('user', 'signout')
-      .then(doSignOutCleanup)
-      .then(() => {
-        // @if TARGET='web'
-        window.persistor.purge();
-        // @endif
-      })
-      .then(() => {
-        setTimeout(() => {
-          location.reload();
-        });
-      })
-      .catch(() => location.reload());
+  return async () => {
+    // A failed remote sign-out must not skip local password removal. Conversely,
+    // do not reload and report success when the local removal needs a retry.
+    const authToken = Lbryio.authToken || getAuthToken();
+    if (!(await doSignOutCleanup())) return;
+    try {
+      await Lbryio.call('user', 'signout', { auth_token: authToken });
+    } catch (_) {
+      // The local credentials have already been removed, including when offline.
+    }
+    // @if TARGET='web'
+    window.persistor.purge();
+    // @endif
+    setTimeout(() => location.reload());
   };
 }
 
@@ -588,7 +555,9 @@ export function doGetAndPopulatePreferences() {
     let preferenceKey;
     preferenceKey = syncEnabled && hasVerifiedEmail ? 'shared' : 'local';
 
-    function successCb(savedPreferences) {
+    async function successCb(savedPreferences) {
+      const localHubs = await desktop.hubConfig();
+      savedPreferences = withLocalHubPreference(savedPreferences, localHubs);
       const successState = getState();
       const daemonSettings = selectDaemonSettings(successState);
       if (savedPreferences !== null) {
@@ -597,14 +566,9 @@ export function doGetAndPopulatePreferences() {
         const { settings } = savedPreferences.value;
         if (settings) {
           Object.entries(settings).forEach(([key, val]) => {
-            if (SDK_SYNC_KEYS.includes(key)) {
+            if (SDK_SYNC_KEYS.includes(key) && key !== DAEMON_SETTINGS.LBRYUM_SERVERS) {
               if (shouldSetSetting(key, val, daemonSettings[key])) {
-                if (key === DAEMON_SETTINGS.LBRYUM_SERVERS) {
-                  const servers = stringifyServerParam(val);
-                  dispatch(doSetDaemonSetting(key, servers, true));
-                } else {
-                  dispatch(doSetDaemonSetting(key, val, true));
-                }
+                dispatch(doSetDaemonSetting(key, val, true));
               }
             }
             // probably set commentServer here instead of in doPopulateSharedUserState()
@@ -613,6 +577,8 @@ export function doGetAndPopulatePreferences() {
       } else {
         dispatch(doSetPrefsReady());
       }
+      dispatch(doSaveCustomWalletServers(localHubs ? localHubs.map(([host, port]) => [host, String(port)]) : []));
+      dispatch({ type: ACTIONS.SHARED_PREFERENCE_SET, data: { key: DAEMON_SETTINGS.LBRYUM_SERVERS, value: localHubs } });
       return true;
     }
 

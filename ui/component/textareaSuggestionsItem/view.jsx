@@ -6,16 +6,17 @@ type Props = {
   claim?: Claim,
   emote?: any,
   uri?: string,
+  dispatch?: (action: any) => any,
 };
 
 export default function TextareaSuggestionsItem(props: Props) {
-  const { claim, emote, uri, ...autocompleteProps } = props;
+  const { claim, emote, uri, dispatch, ...autocompleteProps } = props;
 
   if (emote) {
     const { name: value, url, unicode } = emote;
 
     return (
-      <div {...autocompleteProps} dispatch={undefined}>
+      <div {...autocompleteProps}>
         {unicode ? <div className="emote">{unicode}</div> : <img className="emote" src={url} />}
 
         <div className="textareaSuggestion__label">
@@ -31,7 +32,7 @@ export default function TextareaSuggestionsItem(props: Props) {
     const value = claim.canonical_url.replace('lbry://', '').replace('#', ':');
 
     return (
-      <div {...autocompleteProps} dispatch={undefined}>
+      <div {...autocompleteProps}>
         <ChannelThumbnail xsmall uri={uri} />
 
         <div className="textareaSuggestion__label">

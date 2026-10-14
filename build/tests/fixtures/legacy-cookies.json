@@ -1,0 +1,69 @@
+{
+  "lbry.tv": {
+    "/": {
+      "auth_token": {
+        "key": "auth_token",
+        "value": "fixture-auth-token",
+        "domain": "lbry.tv",
+        "path": "/",
+        "secure": true,
+        "hostOnly": false,
+        "creation": "2025-01-01T00:00:00.000Z",
+        "lastAccessed": "2025-01-01T00:00:00.000Z"
+      },
+      "saved_password": {
+        "key": "saved_password",
+        "value": "fixture-%20=value",
+        "domain": "lbry.tv",
+        "path": "/",
+        "hostOnly": true,
+        "creation": "2025-01-01T00:00:00.000Z",
+        "lastAccessed": "2025-01-01T00:00:00.000Z"
+      },
+      "unrelated_cookie": {
+        "key": "unrelated_cookie",
+        "value": "preserve-me",
+        "domain": "lbry.tv",
+        "path": "/",
+        "hostOnly": true,
+        "creation": "2025-01-01T00:00:00.000Z",
+        "lastAccessed": "2025-01-01T00:00:00.000Z"
+      },
+      "expired": {
+        "key": "expired",
+        "value": "discard-me",
+        "expires": "2000-01-01T00:00:00.000Z",
+        "domain": "lbry.tv",
+        "path": "/",
+        "hostOnly": true,
+        "creation": "2025-01-01T00:00:00.000Z",
+        "lastAccessed": "2025-01-01T00:00:00.000Z"
+      }
+    },
+    "/old": {
+      "saved_password": {
+        "key": "saved_password",
+        "value": "fixture-%20=value",
+        "domain": "lbry.tv",
+        "path": "/old",
+        "secure": true,
+        "hostOnly": false,
+        "creation": "2025-01-01T00:00:00.000Z",
+        "lastAccessed": "2025-01-01T00:00:00.000Z"
+      }
+    }
+  },
+  "example.com": {
+    "/": {
+      "saved_password": {
+        "key": "saved_password",
+        "value": "unrelated",
+        "domain": "example.com",
+        "path": "/",
+        "hostOnly": true,
+        "creation": "2025-01-01T00:00:00.000Z",
+        "lastAccessed": "2025-01-01T00:00:00.000Z"
+      }
+    }
+  }
+}
