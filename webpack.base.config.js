@@ -75,15 +75,9 @@ let baseConfig = {
           : path.resolve(__dirname, 'homepages/meme/index.js'),
       lbryinc: 'extras/lbryinc',
       recsys: 'extras/recsys',
-      // Build optimizations for 'redux-persist-transform-filter'
+      // Use the filter transform's ES module entry. Its Lodash subpaths also
+      // have CommonJS callers, so they must retain their native export shape.
       'redux-persist-transform-filter': 'redux-persist-transform-filter/index.js',
-      'lodash.get': 'lodash-es/get',
-      'lodash.set': 'lodash-es/set',
-      'lodash.unset': 'lodash-es/unset',
-      'lodash.pickby': 'lodash-es/pickBy',
-      'lodash.isempty': 'lodash-es/isEmpty',
-      'lodash.forin': 'lodash-es/forIn',
-      'lodash.clonedeep': 'lodash-es/cloneDeep',
       ...ifProduction({}, { 'react-dom': '@hot-loader/react-dom' }),
     },
     symlinks: false,

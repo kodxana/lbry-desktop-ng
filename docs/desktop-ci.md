@@ -10,6 +10,10 @@ Further dependency upgrades are separate changes; installing the lockfile must
 not change it. The pinned
 Linux SDK requires glibc 2.36 or newer, so it cannot run on Ubuntu 22.04.
 
+The [state-management upgrade](state-management.md) adds selector immutability,
+nested React subscription, thunk and persistence-filter checks, plus real
+compressed playback-state preservation across installed Windows upgrades.
+
 ## Checks
 
 | Check                   | Coverage                                                                                                                                                                                                                                                                                              |

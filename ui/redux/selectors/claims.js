@@ -15,7 +15,7 @@ export const selectById = (state: State) => selectState(state).byId || {};
 export const selectPendingClaimsById = (state: State) => selectState(state).pendingById || {};
 
 export const selectClaimsById = createSelector(selectById, selectPendingClaimsById, (byId, pendingById) => {
-  return Object.assign(byId, pendingById); // do I need merged to keep metadata?
+  return { ...byId, ...pendingById };
 });
 
 export const selectClaimIdsByUri = (state: State) => selectState(state).claimsByUri || {};

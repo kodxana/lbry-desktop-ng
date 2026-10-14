@@ -219,20 +219,20 @@ async function main() {
   const indexedState = { subscriptions: ['@fixture#123'], positions: { fixture: 42 }, label: 'Saved state ł' };
   // Exercise a database physically created by the old Chromium runtime, rather
   // than seeding the new runtime with a JSON representation of old UI state.
-  const indexedDBState = (write = false) =>
+  const indexedDBValue = (name, storeName, key, value) =>
     client.evaluate(`new Promise((resolve, reject) => {
-    const opened = indexedDB.open('installed-upgrade-fixture', 1);
+    const opened = indexedDB.open(${JSON.stringify(name)});
     opened.onerror = () => reject(opened.error);
     opened.onblocked = () => reject(new Error('Fixture database is blocked'));
-    opened.onupgradeneeded = () => opened.result.createObjectStore('state');
+    opened.onupgradeneeded = () => opened.result.createObjectStore(${JSON.stringify(storeName)});
     opened.onsuccess = () => {
       const database = opened.result;
-      const transaction = database.transaction('state', ${JSON.stringify(write ? 'readwrite' : 'readonly')});
-      const store = transaction.objectStore('state');
-      const request = ${write ? `store.put(${JSON.stringify(indexedState)}, 'fixture')` : "store.get('fixture')"};
+      const transaction = database.transaction(${JSON.stringify(storeName)}, ${JSON.stringify(value === undefined ? 'readonly' : 'readwrite')});
+      const store = transaction.objectStore(${JSON.stringify(storeName)});
+      const request = ${value === undefined ? `store.get(${JSON.stringify(key)})` : `store.put(${JSON.stringify(value)}, ${JSON.stringify(key)})`};
       transaction.oncomplete = () => {
         database.close();
-        resolve(${write ? 'true' : 'request.result'});
+        resolve(${value === undefined ? 'request.result' : 'true'});
       };
       transaction.onabort = transaction.onerror = () => {
         database.close();
@@ -240,6 +240,18 @@ async function main() {
       };
     };
   })`);
+  const indexedDBState = (write = false) => indexedDBValue(
+    'installed-upgrade-fixture', 'state', 'fixture', write ? indexedState : undefined
+  );
+  const persistedState = (value) => indexedDBValue('localforage', 'keyvaluepairs', 'persist:v0', value);
+  const flushPreferences = async () => {
+    await until(
+      () => client.evaluate('Boolean(window.persistor && window.persistor.getState().bootstrapped)'),
+      'Application preferences did not rehydrate'
+    );
+    await client.evaluate('window.persistor.flush().then(() => true)');
+  };
+  const preferenceFixture = require('./tests/fixtures/persist-v0.json');
   const targetElectron = require('../package.json').devDependencies.electron;
   const launch = async () => {
     const reservation = net.createServer();
@@ -298,6 +310,15 @@ async function main() {
     await client.evaluate("localStorage.setItem('installed-upgrade-fixture', 'preserve desktop storage'); true");
     assert.equal(await indexedDBState(true), true);
     assert.deepEqual(await indexedDBState(), indexedState);
+    await flushPreferences();
+    // Keep the old application's settings, but add legacy playback data to its
+    // real Redux database. Pause writes so its in-memory state cannot overwrite
+    // the fixture before the first upgrade rehydrates it.
+    await client.evaluate('window.persistor.pause(); true');
+    await flushPreferences();
+    const preferences = JSON.parse(await persistedState());
+    preferences.content = JSON.parse(preferenceFixture.serialized).content;
+    assert.equal(await persistedState(JSON.stringify(preferences)), true);
     await client.evaluate(
       "document.cookie = 'upgrade_root_cookie=preserve-root; path=/;'; " +
         "document.cookie = 'upgrade_path_cookie=preserve-path'; true"
@@ -451,6 +472,12 @@ async function main() {
         'preserve desktop storage'
       );
       assert.deepEqual(await indexedDBState(), indexedState, 'The old Chromium IndexedDB must survive installation');
+      await flushPreferences();
+      const upgradedPreferences = JSON.parse(await persistedState());
+      const playback = JSON.parse(require('lz-string').decompressFromUTF16(JSON.parse(upgradedPreferences.content)));
+      assert.deepEqual(playback, preferenceFixture.expected.content,
+        'Legacy playback positions and history must survive rehydration and writes by the upgraded application');
+      console.log('PASS: installed upgrade preserves compressed Redux playback positions and history');
       assert(await client.evaluate("document.cookie.includes('upgrade_root_cookie=preserve-root')"));
       assert(
         await client.evaluate("document.cookie.includes('upgrade_path_cookie=preserve-path')"),
@@ -485,6 +512,7 @@ async function main() {
         encryptedWallet: true,
         desktopStoragePreserved: true,
         indexedDBPreserved: true,
+        reduxPreferencesPreserved: true,
         cookieStorageAndPathPreserved: true,
         rememberedPasswordRecovered: true,
         ...handoff,
