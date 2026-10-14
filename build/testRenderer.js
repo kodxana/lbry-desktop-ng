@@ -26,6 +26,8 @@ for (const [command, args] of [
   [process.execPath, ['node_modules/webpack/bin/webpack.js', '--config', 'build/tests/webpack.config.js']],
   [require('electron'), ['build/tests/electron.cjs']],
   [require('electron'), ['build/tests/sandbox.cjs']],
+  [require('electron'), ['build/tests/devtools.cjs']],
+  [require('electron'), ['build/tests/devtools.cjs', '--failure']],
 ]) {
   const env = { ...process.env, NODE_ENV: 'production' };
   delete env.ELECTRON_RUN_AS_NODE;
@@ -44,6 +46,8 @@ for (const [command, args] of [
         ? 'renderer-build.log'
         : args[0].endsWith('sandbox.cjs')
         ? 'sandbox-tests.log'
+        : args[0].endsWith('devtools.cjs')
+        ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
         : 'renderer-tests.log'
     ),
     log
