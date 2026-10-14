@@ -10890,7 +10890,7 @@ __metadata:
     match-sorter: ^6.3.0
     md-attr-parser: 1.3.0
     mdast-util-to-hast: 13.2.1
-    mime: ^3.0.0
+    mime: 4.1.1
     moment: ^2.29.2
     node-emoji: 2.2.0
     node-fetch: ^2.6.7
@@ -12337,21 +12337,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mime@npm:4.1.1":
+  version: 4.1.1
+  resolution: "mime@npm:4.1.1"
+  bin:
+    mime: bin/cli.js
+  checksum: 0418b9af0bf740dfb1e508cd2c6e6439c8e66d3575a0948a6fc4d2159fbed25373af5a80dbf89279a8d95018a2f7e3f0eac7c9456432d47f2343706695a19d3e
+  languageName: node
+  linkType: hard
+
 "mime@npm:^2.5.2":
   version: 2.6.0
   resolution: "mime@npm:2.6.0"
   bin:
     mime: cli.js
   checksum: 1497ba7b9f6960694268a557eae24b743fd2923da46ec392b042469f4b901721ba0adcf8b0d3c2677839d0e243b209d76e5edcbd09cfdeffa2dfb6bb4df4b862
-  languageName: node
-  linkType: hard
-
-"mime@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "mime@npm:3.0.0"
-  bin:
-    mime: cli.js
-  checksum: f43f9b7bfa64534e6b05bd6062961681aeb406a5b53673b53b683f27fcc4e739989941836a355eef831f4478923651ecc739f4a5f6e20a76487b432bfd4db928
   languageName: node
   linkType: hard
 
