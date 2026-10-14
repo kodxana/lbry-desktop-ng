@@ -58,7 +58,7 @@
     "electron-updater": "6.8.10",
     "ffmpeg-probe": "^1.0.6",
     "humanize-duration": "3.35.0",
-    "js-yaml": "4.1.0",
+    "js-yaml": "5.4.3",
     "match-sorter": "8.3.0",
     "mime": "4.1.1",
     "node-html-parser": "9.0.4",
@@ -69,8 +69,7 @@
     "react-calendar": "6.0.1",
     "react-datetime-picker": "7.1.0",
     "regenerator-runtime": "0.14.1",
-    "source-map-explorer": "^2.5.2",
-    "sudo-prompt": "^9.2.1"
+    "source-map-explorer": "^2.5.2"
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
@@ -109,8 +108,6 @@
     "crypto-js": "^4.0.0",
     "css-loader": "7.1.5",
     "dat.gui": "^0.7.2",
-    "decompress": "^4.2.1",
-    "del": "^3.0.0",
     "dotenv-defaults": "6.0.0",
     "dotenv-webpack": "9.0.0",
     "easymde": "2.21.0",
@@ -153,8 +150,7 @@
     "mdast-util-to-hast": "13.2.1",
     "moment": "2.31.0",
     "node-emoji": "2.2.0",
-    "node-fetch": "^2.6.7",
-    "node-wget": "^0.4.3",
+    "node-fetch": "3.3.2",
     "path-browserify": "1.0.1",
     "postcss": "8.5.29",
     "postcss-loader": "8.2.1",

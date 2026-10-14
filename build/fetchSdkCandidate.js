@@ -3,7 +3,7 @@ const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch').default;
 const Zip = require('adm-zip');
 const candidate = require('./sdk-candidate.json');
 const { artifactFor, stageBinary } = require('./sdkArtifact.cjs');
@@ -14,7 +14,7 @@ async function main() {
   const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'lbry-desktop-ci' };
   if (process.env.GITHUB_TOKEN) headers.Authorization = 'Bearer ' + process.env.GITHUB_TOKEN;
   async function api(suffix) {
-    const response = await fetch(base + suffix, { headers, timeout: 30000 });
+    const response = await fetch(base + suffix, { headers, signal: AbortSignal.timeout(30000) });
     if (!response.ok) throw new Error('GitHub API ' + response.status + ': ' + suffix);
     return response.json();
   }
@@ -28,15 +28,15 @@ async function main() {
   const redirect = await fetch(base + '/actions/artifacts/' + artifact.artifactId + '/zip', {
     headers,
     redirect: 'manual',
-    timeout: 30000,
+    signal: AbortSignal.timeout(30000),
   });
   assert.equal(redirect.status, 302, 'GitHub did not provide the SDK archive');
   const location = new URL(redirect.headers.get('location'));
   assert.equal(location.protocol, 'https:');
   // The signed archive URL needs no GitHub credentials.
-  const response = await fetch(location.href, { timeout: 120000, size: 512 * 1024 * 1024 });
+  const response = await fetch(location.href, { signal: AbortSignal.timeout(120000), size: 512 * 1024 * 1024 });
   assert(response.ok, 'SDK archive download failed: ' + response.status);
-  const bytes = await response.buffer();
+  const bytes = Buffer.from(await response.arrayBuffer());
   assert.equal(
     crypto.createHash('sha256').update(bytes).digest('hex'),
     artifact.archiveSha256,
@@ -56,7 +56,10 @@ async function main() {
   console.log('Verified SDK ' + candidate.headCommit + ' for ' + process.platform);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
+module.exports = main;

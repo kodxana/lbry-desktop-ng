@@ -1,6 +1,7 @@
 const net = require('net');
 const { performance } = require('perf_hooks');
 const semver = require('semver');
+const yaml = require('js-yaml');
 
 const GENESIS = '9c89283ba0f3227f6c03b70216b9f665f0118d5e0fa729cedf4fb34d6a34f463';
 
@@ -10,6 +11,18 @@ function parseServer(endpoint) {
   const match = typeof endpoint === 'string' && endpoint.match(/^([a-z0-9.-]+):(\d+)$/i);
   if (!match || Number(match[2]) < 1 || Number(match[2]) > 65535) throw new Error('Invalid hub address.');
   return { endpoint, host: match[1], port: Number(match[2]) };
+}
+
+function parseHubConfig(source) {
+  // v5 load() rejects empty files and no longer enables YAML merge keys.
+  const documents = yaml.loadAll(source, { schema: yaml.CORE_SCHEMA.withTags(yaml.mergeTag) });
+  if (documents.length > 1) throw new Error('Expected a single SDK configuration document.');
+  const config = documents[0] || {};
+  return Object.prototype.hasOwnProperty.call(config, 'lbryum_servers')
+    ? config.lbryum_servers.map(endpoint => {
+      const { host, port } = parseServer(endpoint);
+      return [host, port];
+    }) : null;
 }
 
 function probeHub(endpoint, timeout = 4000) {
@@ -153,4 +166,4 @@ class HubSelection {
   }
 }
 
-module.exports = { GENESIS, parseServer, probeHub, probeHubs, HubSelection };
+module.exports = { GENESIS, parseServer, parseHubConfig, probeHub, probeHubs, HubSelection };

@@ -12,7 +12,6 @@ import createTray from './createTray';
 import createWindow, { rendererURL } from './createWindow';
 import { DOMAIN } from 'config';
 import pjson from '../package.json';
-import startSandbox from './startSandbox';
 import installDevtools from './installDevtools';
 import fs from 'fs';
 import path from 'path';
@@ -29,8 +28,7 @@ const { registerContextMenu } = require('./contextMenu.cjs');
 const { registerDesktopInfo } = require('./desktopInfo.cjs');
 const { registerDownloadNotifications } = require('./downloadNotifications.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
-const { HubSelection, parseServer } = require('./hubServers.cjs');
-const yaml = require('js-yaml');
+const { HubSelection, parseHubConfig } = require('./hubServers.cjs');
 const probe = require('ffmpeg-probe');
 
 const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
@@ -132,11 +130,7 @@ const startDaemon = async (settingsOnly = false) => {
 };
 
 const hubSetupMarker = path.join(desktopProfile.root, 'hub-setup-complete.json');
-const readHubConfig = () => {
-  const config = yaml.load(fs.readFileSync(desktopProfile.config, 'utf8')) || {};
-  return Object.prototype.hasOwnProperty.call(config, 'lbryum_servers')
-    ? config.lbryum_servers.map(endpoint => { const { host, port } = parseServer(endpoint); return [host, port] }) : null;
-};
+const readHubConfig = () => parseHubConfig(fs.readFileSync(desktopProfile.config, 'utf8'));
 const hubs = new HubSelection({
   settingsOnly: !fs.existsSync(hubSetupMarker),
   rpc: (method, params) => {
@@ -275,8 +269,6 @@ if (!gotSingleInstanceLock) {
       app.exit(1);
       return;
     }
-    startSandbox();
-
       if (isDev && !process.argv.includes('--skip-devtools')) {
       await installDevtools();
     }

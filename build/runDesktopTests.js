@@ -2,6 +2,8 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 for (const file of [
+  'testArtifactDownload.js',
+  'testYaml.js',
   'testBuildHelpers.js',
   'testCompiler.js',
   'testDesktopSetup.js',

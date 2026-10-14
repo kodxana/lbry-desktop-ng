@@ -142,13 +142,13 @@ if (process.argv[2] !== '--child') {
         'Refresh instrumentation must stay out of main-process and test modules'
       );
     }
-    const sandbox = spawnSync(process.execPath, [path.join(__dirname, '../electron/sandboxTest.js')], {
+    const registered = spawnSync(process.execPath, [path.join(__dirname, 'tests/register.cjs')], {
       env: { ...process.env, BABEL_DISABLE_CACHE: '1' },
       encoding: 'utf8',
       timeout: 30000,
     });
-    if (sandbox.error) throw sandbox.error;
-    assert.equal(sandbox.status, 0, sandbox.stdout + sandbox.stderr);
+    if (registered.error) throw registered.error;
+    assert.equal(registered.status, 0, registered.stdout + registered.stderr);
     console.log(
       'PASS: ' +
         process.env.NODE_ENV +
