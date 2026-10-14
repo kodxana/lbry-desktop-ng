@@ -1,7 +1,8 @@
 /* eslint no-console:0 */
 /* eslint space-before-function-paren:0 */
 // Module imports
-import '@babel/polyfill';
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import { app, dialog, ipcMain, session, safeStorage, Menu, clipboard, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';

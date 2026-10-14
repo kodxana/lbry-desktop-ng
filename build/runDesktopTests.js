@@ -2,6 +2,7 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 for (const file of [
+  'testCompiler.js',
   'testDesktopSetup.js',
   'testDesktopUpdates.js',
   'testUpdaterIpc.js',
