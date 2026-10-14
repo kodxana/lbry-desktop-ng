@@ -128,6 +128,13 @@ async function main() {
   const debugPort = portSocket.address().port;
   await new Promise((resolve) => portSocket.close(resolve));
   const log = fs.createWriteStream(path.join(output, label + '-desktop.log'));
+  const env = {
+    ...process.env,
+    NODE_ENV: development ? 'development' : 'production',
+    ...(development ? { LBRY_I18N_OUTPUT_FILE: messagesOutput } : {}),
+  };
+  // Exercise automatic runtime detection, not an override from the caller's shell.
+  delete env.ELECTRON_IS_DEV;
   const app = spawn(
     executable,
     [
@@ -141,11 +148,7 @@ async function main() {
     {
       cwd: development ? root : path.dirname(executable),
       windowsHide: true,
-      env: {
-        ...process.env,
-        NODE_ENV: development ? 'development' : 'production',
-        ...(development ? { LBRY_I18N_OUTPUT_FILE: messagesOutput } : {}),
-      },
+      env,
     }
   );
   app.stdout.pipe(log, { end: false });
@@ -320,6 +323,7 @@ async function main() {
       'The application renderer must be isolated, sandboxed and have no Node globals'
     );
     const runtime = await evaluate('window.lbryDesktop.electron');
+    assert.equal(await evaluate('location.protocol'), development ? 'http:' : 'file:');
     assert.equal(runtime, require(root + '/package.json').devDependencies.electron);
     console.log('PASS: ' + label + ' runs Electron ' + runtime);
     const metadata = await evaluate("window.lbryDesktop.info('metadata')");

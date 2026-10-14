@@ -105,6 +105,18 @@ shutdown and clean renderer exits do not show a crash notice.
 
 ## Validation
 
+Development-mode detection uses `electron-is-dev` 3.0.1 in the main process.
+It uses Electron's `app.isPackaged` flag instead of version 0.3's executable-path
+heuristic. The existing `ELECTRON_IS_DEV` override remains supported; `NODE_ENV`
+does not determine whether the running app is packaged. The dependency is now
+ESM-only and requires Electron 28+, which the current Electron 44 runtime meets.
+Both application callers already use its default import. See the
+[upstream documentation](https://github.com/sindresorhus/electron-is-dev).
+Tests cover automatic development detection and explicit overrides in real
+Electron. Packaged/development smoke tests clear inherited overrides and check
+the renderer protocol and updater mode. Installed-upgrade tests additionally
+verify production web security after both upgrades.
+
 Window geometry uses `electron-window-state` 5.0.3. It keeps the existing
 `userData/window-state.json` format and main-process API. Version 5 checks all
 current displays and resets a window to defaults unless it fits entirely within
