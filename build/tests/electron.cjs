@@ -72,6 +72,7 @@ app
   .whenReady()
   .then(async () => {
     assert.equal(process.versions.electron, require('../../package.json').devDependencies.electron);
+    await require('./devMode.cjs')();
     await require('./windowState.cjs')();
     await require('./rendererLifecycle.cjs')();
     await require('../testDesktopUpdates')();

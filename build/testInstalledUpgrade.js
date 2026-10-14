@@ -423,6 +423,10 @@ async function main() {
       for (const [key, value] of Object.entries(originalBounds)) assert.equal(savedWindow[key], value);
       console.log('PASS: installed upgrade preserves the previous window bounds in the existing profile');
       assert.equal(await mainClient.evaluate('process.versions.electron'), targetElectron);
+      assert.equal(await mainClient.evaluate("process.mainModule.require('electron').app.isPackaged"), true);
+      assert.equal(await mainClient.evaluate(nativeWindow + '.webContents.getLastWebPreferences().webSecurity'), true,
+        'Installed applications must retain production web security');
+      assert.equal(await client.evaluate('location.protocol'), 'file:');
       assert.equal(await client.evaluate('window.lbryDesktop.electron'), targetElectron);
       assert.equal(await client.evaluate('typeof window.__electronLog'), 'undefined');
       assert.equal(
