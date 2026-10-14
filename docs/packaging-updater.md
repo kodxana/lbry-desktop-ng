@@ -56,6 +56,19 @@ Upstream changes reviewed:
 
 ## Validation
 
+Updater diagnostics use `electron-log` 5.4.4 through its Node entry point. The
+app needs no renderer logging, so it does not load the Electron entry point's
+IPC handlers or initialize a logging preload. The file transport uses the v5
+`resolvePathFn` option to retain the selected profile's `logs/main.log`, including
+existing content and the default 1 MiB rotation to `main.old.log`. No remote
+transport or automatic exception capture is enabled. See the upstream
+[v4-to-v5 migration guide](https://github.com/megahertz/electron-log/blob/v5.4.4/docs/migration.md).
+Updater tests use the real logger, checking formatting, append, rotation,
+profile isolation and a non-writable destination. These run in Node and Electron;
+packaged/development tests verify that no logging bridge appears in the renderer.
+The hosted installed-upgrade test carries an RC3 log through both updates and
+verifies that the new app appends to it in the same profile.
+
 The app's direct `semver` dependency is pinned to 7.8.5, replacing 5.7.1.
 The updater and hub handshake retain the existing minimum-version, prerelease
 and downgrade rules. Version 7 trims surrounding whitespace during validation;

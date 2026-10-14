@@ -15,6 +15,55 @@ const settings = require('../desktop-settings.json');
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const { ipcFixture, updaterFixture } = require('./tests/updaterFixture.cjs');
 
+function testLogging(root) {
+  const createLogger = require('../electron/updaterLogger.cjs');
+  const directory = path.join(root, 'logs ł');
+  const file = path.join(directory, 'main.log');
+  fs.mkdirSync(directory);
+  fs.writeFileSync(file, 'Existing updater log\n');
+  const logger = createLogger(directory);
+  logger.transports.console.level = false;
+  assert.equal(logger.transports.remote.level, false);
+  assert.equal(logger.transports.file.maxSize, 1024 * 1024);
+  logger.info('Update %s', 'available');
+  logger.warn('Download retry');
+  logger.error(new Error('Synthetic update failure'));
+  assert.equal(logger.transports.file.getFile().path, file);
+  let content = fs.readFileSync(file, 'utf8');
+  assert(content.startsWith('Existing updater log\n'));
+  for (const text of ['[info]', 'Update available', '[warn]', 'Download retry', '[error]', 'Synthetic update failure']) {
+    assert(content.includes(text), 'Missing log content: ' + text);
+  }
+  const reopened = createLogger(directory);
+  reopened.transports.console.level = false;
+  reopened.info('Logger reopened');
+  content = fs.readFileSync(file, 'utf8');
+  assert(content.includes('Existing updater log') && content.includes('Logger reopened'));
+  reopened.transports.file.maxSize = 1;
+  reopened.info('After rotation');
+  assert.equal(fs.readFileSync(path.join(directory, 'main.old.log'), 'utf8'), content);
+  assert(fs.readFileSync(file, 'utf8').includes('After rotation'));
+  const isolated = createLogger(path.join(root, 'other-profile', 'logs'));
+  isolated.transports.console.level = false;
+  isolated.info('Other profile');
+  assert(!fs.readFileSync(file, 'utf8').includes('Other profile'));
+  assert(fs.readFileSync(path.join(root, 'other-profile', 'logs', 'main.log'), 'utf8').includes('Other profile'));
+  const blocked = path.join(root, 'not-a-directory');
+  fs.writeFileSync(blocked, 'preserve');
+  const unavailable = createLogger(blocked);
+  unavailable.transports.console.level = false;
+  assert.doesNotThrow(() => unavailable.error('Synthetic unwritable log'));
+  assert.equal(fs.readFileSync(blocked, 'utf8'), 'preserve');
+  if (process.versions.electron) {
+    const { ipcMain } = require('electron');
+    assert.equal(ipcMain.listenerCount('__ELECTRON_LOG__'), 0);
+    // Registering succeeds only if the logger did not install an invoke handler.
+    ipcMain.handle('__ELECTRON_LOG__', () => {});
+    ipcMain.removeHandler('__ELECTRON_LOG__');
+  }
+  console.log('PASS: updater log append, formatting, rotation, profile isolation and write failure without renderer IPC');
+}
+
 async function testVersionPolicy() {
   const cases = [
     ['0.54.0-rc.9', '0.54.0-rc.10', true, true],
@@ -219,7 +268,8 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
     };
     fs.writeFileSync(app.appUpdateConfigPath, 'updaterCacheDirName: ng-update-test\n');
     const updater = new NsisUpdater(null, app);
-    updater.logger = null;
+    updater.logger = require('../electron/updaterLogger.cjs')(path.join(directory, 'logs'));
+    updater.logger.transports.console.level = false;
     updater._testOnlyOptions = { platform: 'win32', isUseDifferentialDownload: false };
     const executor = new ElectronHttpExecutor();
     executor.createRequest = (options, callback) => {
@@ -420,6 +470,7 @@ async function main() {
   assert.deepEqual(builder.publish, [source]);
   assert.equal(require('../electron-builder.sdk-test.json').publish, null);
   console.log('PASS: independent NG/test profile ownership and matching build/update identities');
+  testLogging(root);
   await testVersionPolicy();
   await testInstallation();
   const builtMetadata = process.argv.includes('--built-metadata')

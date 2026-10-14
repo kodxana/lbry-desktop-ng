@@ -331,6 +331,7 @@ async function main() {
     assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
     assert.equal(updateState.state.enabled, !development && process.platform === 'win32');
     assert.equal(updateState.state.accepted, false, 'Startup must never supply install consent');
+    assert.equal(await evaluate('typeof window.__electronLog'), 'undefined', 'Updater logging needs no renderer bridge');
     assert.deepEqual(
       await evaluate("window.lbryDesktop.selectFile({type: 'invalid'})"),
       { ok: false, error: 'invalid' },
