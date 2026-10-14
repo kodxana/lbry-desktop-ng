@@ -105,6 +105,18 @@ shutdown and clean renderer exits do not show a crash notice.
 
 ## Validation
 
+Window geometry uses `electron-window-state` 5.0.3. It keeps the existing
+`userData/window-state.json` format and main-process API. Version 5 checks all
+current displays and resets a window to defaults unless it fits entirely within
+one display. This also resets windows intentionally spanning two monitors; it
+replaces version 4's display-size adjustment. A valid saved
+position on a monitor left of the primary display remains valid. Maximized and
+fullscreen states retain their normal window bounds. See the
+[upstream implementation](https://github.com/mawie81/electron-window-state/blob/v5.0.3/index.js).
+The Electron fixture tests these cases, corrupt settings, write failures and a
+real hidden window's move/close/reload cycle. Hosted installed-upgrade tests also
+check window bounds written by the actual published RC3 through both upgrades.
+
 - Desktop unit tests exercise Wait/Quit/dismissal, failed dialogs, repeated
   events, renderer failures and shutdown races. The Electron renderer suite
   also deliberately crashes a disposable real renderer and checks the normal
