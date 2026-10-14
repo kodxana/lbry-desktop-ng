@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const http = require('http');
 const net = require('net');
 const { spawn, spawnSync } = require('child_process');
-const fetch = require('node-fetch');
+const fetch = require('node-fetch').default;
 const asar = require('@electron/asar');
 const yaml = require('js-yaml');
 const settings = require('../desktop-settings.json');
@@ -150,9 +150,9 @@ async function main() {
   const candidates = ['0.54.0-rc.4.upgrade-test', '0.54.0-rc.5.upgrade-test'].map(buildCandidate);
   const url =
     'https://github.com/kodxana/lbry-desktop-ng/releases/download/v' + published.version + '/' + published.name;
-  const response = await fetch(url, { timeout: 120000, size: 256 * 1024 * 1024 });
+  const response = await fetch(url, { signal: AbortSignal.timeout(120000), size: 256 * 1024 * 1024 });
   assert(response.ok, 'Published RC3 installer download failed: ' + response.status);
-  const bytes = await response.buffer();
+  const bytes = Buffer.from(await response.arrayBuffer());
   assert.equal(hash(bytes), published.sha256, 'Published installer must match the recorded RC3 release');
   const oldInstaller = path.join(output, published.name);
   fs.writeFileSync(oldInstaller, bytes);
