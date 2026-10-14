@@ -320,11 +320,11 @@ function CollectionForm(props: Props) {
       <div className={classnames('main--contained', { 'card--disabled': disabled })}>
         <Tabs>
           <TabList className="tabs__list--collection-edit-page">
-            <Tab>{__('General')}</Tab>
-            <Tab>{__('Items')}</Tab>
-            <Tab>{__('Credits')}</Tab>
-            <Tab>{__('Tags')}</Tab>
-            <Tab>{__('Other')}</Tab>
+            <Tab index={0}>{__('General')}</Tab>
+            <Tab index={1}>{__('Items')}</Tab>
+            <Tab index={2}>{__('Credits')}</Tab>
+            <Tab index={3}>{__('Tags')}</Tab>
+            <Tab index={4}>{__('Other')}</Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

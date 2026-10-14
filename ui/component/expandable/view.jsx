@@ -15,32 +15,31 @@ export default function Expandable(props: Props) {
   const { children } = props;
   const ref = useRef();
   const rect = useRect(ref);
+  const canExpand = rect && rect.height > COLLAPSED_HEIGHT;
 
   function handleClick() {
     setExpanded(!expanded);
   }
 
   return (
-    <div ref={ref}>
-      {rect && rect.height > COLLAPSED_HEIGHT ? (
-        <div ref={ref}>
-          <div
-            className={classnames({
-              'expandable--open': expanded,
-              'expandable--closed': !expanded,
-            })}
-          >
-            {children}
-          </div>
-          <Button
-            button="link"
-            className="expandable__button"
-            label={expanded ? __('Less') : __('More')}
-            onClick={handleClick}
-          />
-        </div>
-      ) : (
-        <div>{children}</div>
+    <div>
+      <div
+        className={classnames({
+          'expandable--open': canExpand && expanded,
+          'expandable--closed': canExpand && !expanded,
+        })}
+      >
+        {/* Measure the full content, not the clipped container or its button. */}
+        <div ref={ref}>{children}</div>
+      </div>
+      {canExpand && (
+        <Button
+          button="link"
+          className="expandable__button"
+          label={expanded ? __('Less') : __('More')}
+          aria-expanded={expanded}
+          onClick={handleClick}
+        />
       )}
     </div>
   );
