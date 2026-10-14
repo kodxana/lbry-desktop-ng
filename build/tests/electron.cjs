@@ -83,6 +83,17 @@ app
       activeWindow.webContents.debugger.attach('1.3');
       await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
     });
+    ipcMain.handle('fixture-editor-input', async (event, input) => {
+      assert.equal(activePhase, 'markdownEditor');
+      assert.equal(event.sender, activeWindow.webContents);
+      if (input.text !== undefined) {
+        await activeWindow.webContents.debugger.sendCommand('Input.insertText', { text: input.text });
+      } else {
+        const key = { keyCode: input.key, modifiers: input.modifiers || [] };
+        activeWindow.webContents.sendInputEvent({ type: 'keyDown', ...key });
+        activeWindow.webContents.sendInputEvent({ type: 'keyUp', ...key });
+      }
+    });
     assert.equal(process.versions.electron, require('../../package.json').devDependencies.electron);
     await require('./devMode.cjs')();
     await require('./windowState.cjs')();
@@ -187,6 +198,7 @@ app
       'uiComponents',
       'accessibleControls',
       'formsAndDates',
+      'markdownEditor',
       'documents',
       'media',
       'fileDialogs',

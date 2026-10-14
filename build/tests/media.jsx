@@ -4,6 +4,7 @@ import { ipcRenderer } from 'electron';
 import videojs from 'video.js';
 import VideoJs from 'component/viewers/videoViewer/internal/videojs';
 import LbryVolumeBar from 'component/viewers/videoViewer/internal/lbry-volume-bar';
+import hlsQualitySelector from 'component/viewers/videoViewer/internal/plugins/videojs-hls-quality-selector/plugin';
 import { addTheaterModeButton } from 'component/viewers/videoViewer/internal/theater-mode';
 import { addAutoplayNextButton } from 'component/viewers/videoViewer/internal/autoplay-next';
 import { addPlayNextButton } from 'component/viewers/videoViewer/internal/play-next';
@@ -11,6 +12,29 @@ import { addPlayPreviousButton } from 'component/viewers/videoViewer/internal/pl
 import { render, unmount, waitFor } from './helpers';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function lateQualityMenu() {
+  const element = document.createElement('video');
+  document.getElementById('app').appendChild(element);
+  const player = videojs(element, { controls: true });
+  try {
+    await new Promise((resolve) => player.ready(resolve));
+    for (const height of [32, 64]) {
+      player
+        .qualityLevels()
+        .addQualityLevel({ id: String(height), height, bitrate: height * 1000, enabled: () => true });
+    }
+    hlsQualitySelector.call(player, {});
+    await waitFor(() => typeof player.hlsQualitySelector === 'object', 'Late quality selector did not initialize');
+    assert.deepEqual(
+      player.controlBar.getChild('QualityButton').items.map((item) => item.item.value),
+      [32, 64, 'auto'],
+      'Quality levels loaded before plugin initialization must populate the menu'
+    );
+  } finally {
+    player.dispose();
+  }
+}
 
 async function lifecycle(store, history, origin) {
   const players = [];
@@ -83,6 +107,7 @@ async function lifecycle(store, history, origin) {
 }
 
 export default async function media(store, history) {
+  await lateQualityMenu();
   assert.equal(videojs.VERSION, '8.24.1');
   const { origin } = await ipcRenderer.invoke('fixture-media');
   for (const [file, type, audio] of [

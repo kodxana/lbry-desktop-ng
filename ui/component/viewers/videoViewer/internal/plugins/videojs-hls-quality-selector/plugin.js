@@ -43,6 +43,10 @@ class HlsQualitySelectorPlugin {
     // Bind event listeners
     this.bindPlayerEvents();
 
+    // A cached playlist can populate levels before this ready callback runs.
+    if (this.player.qualityLevels().length) this.onAddQualityLevel();
+    this.updatePlugin();
+
     // Listen for source changes
     this.player.on('loadedmetadata', (e) => {
       this.updatePlugin();

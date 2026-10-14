@@ -26,7 +26,7 @@ let baseConfig = {
     rules: [
       {
         test: /[\\/]node_modules[\\/]villain-react[\\/]dist[\\/]villain\.js$/,
-        resolve: { alias: { 'reakit$': path.resolve(__dirname, 'ui/util/villain-reakit.js') } },
+        resolve: { alias: { reakit$: path.resolve(__dirname, 'ui/util/villain-reakit.js') } },
       },
       {
         test: /\.jsx?$/,
@@ -58,6 +58,15 @@ let baseConfig = {
       {
         test: /\.(vert|frag|glsl)$/,
         type: 'asset/source',
+      },
+      {
+        test: /\.(aff|dic)$/,
+        type: 'asset/bytes',
+      },
+      {
+        test: /\.(woff2?|ttf|eot)$/,
+        type: 'asset/resource',
+        generator: { filename: 'fonts/[name][ext]' },
       },
     ],
   },
