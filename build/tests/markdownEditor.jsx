@@ -161,19 +161,20 @@ export default async function markdownEditor(store, history) {
     await waitFor(async () => (await fixture()).requests === before + 1, 'Editor context menu must open once');
     await fixture('choose', 'editor-select-all');
     await waitFor(() => editor.getSelection() === editor.getValue(), 'Native menu Select All failed');
+    const requests = (await fixture()).requests;
+    code.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        cancelable: true,
+        clientX: bounds.left + 2,
+        clientY: bounds.top + 5,
+      })
+    );
+    await waitFor(async () => (await fixture()).requests === requests + 1, 'Paste menu did not open');
+    await fixture('paste-fixture');
+    await fixture('choose', 'paste');
+    assert.deepEqual((await fixture()).commands, ['paste']);
     if (nativeClipboard) {
-      const requests = (await fixture()).requests;
-      code.dispatchEvent(
-        new MouseEvent('contextmenu', {
-          bubbles: true,
-          cancelable: true,
-          clientX: bounds.left + 2,
-          clientY: bounds.top + 5,
-        })
-      );
-      await waitFor(async () => (await fixture()).requests === requests + 1, 'Paste menu did not open');
-      await fixture('paste-fixture');
-      await fixture('choose', 'paste');
       await waitFor(() => form.value === 'Synthetic paste ł', 'Native paste must update the Markdown draft');
     }
 

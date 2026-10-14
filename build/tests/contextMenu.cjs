@@ -33,6 +33,11 @@ module.exports = (getWindow, rendererURL) => {
   });
   ipcMain.handle('fixture-context-menu', async (_event, command, value) => {
     if (command === 'configure') {
+      // Each renderer phase owns a fresh window and command history.
+      commands.length = 0;
+      requests = 0;
+      menu = undefined;
+      dismiss = undefined;
       // Hidden windows do not receive OS focus. Give Chromium an active document
       // so CodeMirror receives real DOM focus events and prepares its selection.
       const debuggerApi = getWindow().webContents.debugger;
