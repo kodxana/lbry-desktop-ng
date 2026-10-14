@@ -105,6 +105,8 @@ class DesktopUpdater extends EventEmitter {
     return !!(
       this.enabled &&
       this.info &&
+      typeof this.info.version === 'string' &&
+      this.info.version === this.info.version.trim() &&
       semver.valid(this.info.version) &&
       semver.gt(this.info.version, this.version) &&
       (this.updater.allowPrerelease || !semver.prerelease(this.info.version))
