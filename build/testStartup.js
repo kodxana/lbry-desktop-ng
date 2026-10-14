@@ -9,15 +9,16 @@ function load(relativePath, dependencies, globals = {}) {
   const { code } = transformFileSync(path.join(__dirname, '../ui', relativePath), {
     babelrc: false,
     configFile: false,
-    presets: ['@babel/preset-react', '@babel/preset-flow'],
+    presets: [['@babel/preset-react', { runtime: 'classic', development: false }], '@babel/preset-flow'],
     plugins: ['@babel/plugin-transform-modules-commonjs'],
   });
   const context = {
     exports: {},
-    __: (text, tokens = {}) => text.replace(/%([^%]+)%/g, (match, key) => tokens[key] === undefined ? match : tokens[key]),
+    __: (text, tokens = {}) =>
+      text.replace(/%([^%]+)%/g, (match, key) => (tokens[key] === undefined ? match : tokens[key])),
     process: { env: { NODE_ENV: 'production' } },
     ...globals,
-    require: name => {
+    require: (name) => {
       assert(Object.prototype.hasOwnProperty.call(dependencies, name), 'Unexpected import: ' + name);
       return dependencies[name];
     },
@@ -36,13 +37,21 @@ module.exports = async function startupTests() {
     assert.equal(startupProgress({ wallet: { ...connected, headers_synchronization_progress: value } }).percent, null);
   }
   assert.equal(startupProgress({ wallet: { ...connected, headers_synchronization_progress: 0 } }).percent, 0);
-  assert.equal(startupProgress({ wallet: connected, is_running: false }).step, 1,
-    '100% headers must not mean the whole wallet is ready');
-  assert.equal(startupProgress({ wallet: connected, is_running: true }, true).step, 1,
-    'An encrypted wallet still needs to be unlocked');
+  assert.equal(
+    startupProgress({ wallet: connected, is_running: false }).step,
+    1,
+    '100% headers must not mean the whole wallet is ready'
+  );
+  assert.equal(
+    startupProgress({ wallet: connected, is_running: true }, true).step,
+    1,
+    'An encrypted wallet still needs to be unlocked'
+  );
   assert.equal(startupProgress({ wallet: connected, startup_status: { wallet: true } }).step, 2);
   const { withLocalHubPreference } = load('util/hub-preferences.js', {});
-  const old = { value: { settings: { lbryum_servers: [['offline.example', 50001]], theme: 'dark' }, other: 'retained' } };
+  const old = {
+    value: { settings: { lbryum_servers: [['offline.example', 50001]], theme: 'dark' }, other: 'retained' },
+  };
   const before = JSON.stringify(old);
   for (const local of [null, [['working.example', 50001]]]) {
     const updated = withLocalHubPreference(old, local);
@@ -59,16 +68,35 @@ module.exports = async function startupTests() {
   let ready = 0;
   const sdk = {
     status: async () => ({ is_running: false, wallet: { available_servers: 0 }, startup_status: {} }),
-    wallet_status: async () => { walletCalls++; throw new Error('Wallet is still starting') },
+    wallet_status: async () => {
+      walletCalls++;
+      throw new Error('Wallet is still starting');
+    },
   };
-  const dependencies = { react: React, lbry: sdk, 'constants/modal_types': {}, 'constants/icons': {}, 'util/startup-progress': { startupProgress } };
-  for (const name of ['component/button', 'component/setupLayout', 'component/common/icon',
-    'modal/modalWalletUnlock', 'modal/modalIncompatibleDaemon', 'modal/modalUpgrade', 'modal/modalDownloading']) {
+  const dependencies = {
+    react: React,
+    lbry: sdk,
+    'constants/modal_types': {},
+    'constants/icons': {},
+    'util/startup-progress': { startupProgress },
+  };
+  for (const name of [
+    'component/button',
+    'component/setupLayout',
+    'component/common/icon',
+    'modal/modalWalletUnlock',
+    'modal/modalIncompatibleDaemon',
+    'modal/modalUpgrade',
+    'modal/modalDownloading',
+  ]) {
     dependencies[name] = () => null;
   }
   const Splash = load('component/splash/view.jsx', dependencies, {
-    setTimeout: callback => { timers.set(++timerId, callback); return timerId },
-    clearTimeout: id => timers.delete(id),
+    setTimeout: (callback) => {
+      timers.set(++timerId, callback);
+      return timerId;
+    },
+    clearTimeout: (id) => timers.delete(id),
   }).default;
   const splash = new Splash({ daemonVersionMatched: true, onReadyToLaunch: () => ready++ });
   splash.active = true;
@@ -91,7 +119,13 @@ module.exports = async function startupTests() {
   assert(!splash.state.waitingForProgress, 'Actual progress clears the waiting message');
   assert.equal(ready, 0, 'Partial header sync cannot open the app');
 
-  const history = { state: 'syncing', connected: true, entries_completed: 100, entries_total: 250, pending_operations: 1 };
+  const history = {
+    state: 'syncing',
+    connected: true,
+    entries_completed: 100,
+    entries_total: 250,
+    pending_operations: 1,
+  };
   sdk.status = async () => ({ is_running: false, wallet: { ...connected, history_sync: history } });
   await splash.updateStatus();
   const historyTimer = splash.timeout;
@@ -108,12 +142,17 @@ module.exports = async function startupTests() {
   assert.equal(progress.title, 'Syncing transaction history');
   assert(progress.history.count.includes('200 of 250'));
 
-  sdk.status = async () => { throw new Error('SDK temporarily unavailable') };
+  sdk.status = async () => {
+    throw new Error('SDK temporarily unavailable');
+  };
   await splash.updateStatus();
   assert.equal(timers.size, 2, 'API failures must not duplicate poll timers');
   const callsBeforeUnmount = walletCalls;
   let answer;
-  sdk.status = () => new Promise(resolve => { answer = resolve });
+  sdk.status = () =>
+    new Promise((resolve) => {
+      answer = resolve;
+    });
   const pending = splash.updateStatus();
   splash.componentWillUnmount();
   answer({ is_running: true, wallet: { available_servers: 1 } });
@@ -124,14 +163,19 @@ module.exports = async function startupTests() {
   splash.active = true;
   sdk.status = async () => ({ is_running: true, wallet: { available_servers: 1 } });
   sdk.wallet_status = async () => ({ is_locked: false });
-  sdk.resolve = () => new Promise(resolve => { answer = resolve });
+  sdk.resolve = () =>
+    new Promise((resolve) => {
+      answer = resolve;
+    });
   await splash.updateStatus();
   splash.componentWillUnmount();
   answer({});
   await Promise.resolve();
   assert.equal(ready, 0, 'A stale resolve response must not bypass hub setup');
   assert.equal(timers.size, 0);
-  console.log('PASS: truthful header progress, stalled progress detection, local hub preferences and stale startup replies');
+  console.log(
+    'PASS: truthful header progress, stalled progress detection, local hub preferences and stale startup replies'
+  );
 };
 
 module.exports.load = load;

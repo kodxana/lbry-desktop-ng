@@ -54,6 +54,7 @@ if (process.argv[2] !== '--child') {
         #secret = 'private';
         #read() { return this.#secret; }
         read = () => this.#read();
+        readPrivate() { return this.#secret; }
         static owns(value) { return #secret in value; }
         render() { return <button {...this.props} disabled={false}>Save</button>; }
       }
@@ -75,6 +76,8 @@ if (process.argv[2] !== '--child') {
     assert(Form.owns(form));
     assert(!Form.owns({}));
     assert.deepEqual(Object.keys(form).sort(), ['props', 'read', 'value']);
+    assert.equal(Object.getOwnPropertySymbols(form).length, 0, 'Private fields must not become visible symbol keys');
+    assert.throws(() => form.readPrivate.call({}), /private/i, 'A borrowed method must reject the wrong private brand');
     form.props = { label: 'Backup' };
     const element = form.render();
     assert(React.isValidElement(element));
@@ -88,6 +91,14 @@ if (process.argv[2] !== '--child') {
     assert.equal(element.props.label, 'Backup');
     assert.equal(element.props.children, 'Save');
     assert.equal(element.props.disabled, false);
+    assert(element._source == null, 'Keep the classic JSX production preset in both build modes');
+    const { jsxProps } = evaluate(`
+      export const jsxProps = input => <button {...input} label="last" />;
+    `);
+    const jsx = jsxProps({ label: 'first', key: 'backup', title: 'Save wallet' });
+    assert.equal(jsx.key, 'backup');
+    assert.equal(jsx.props.label, 'last', 'Explicit JSX props must override earlier spreads');
+    assert.equal(jsx.props.title, 'Save wallet');
     const symbol = Symbol('saved');
     const result = await transform({ count: 0, saved: 'kept' });
     assert.equal(result.count, 0);
