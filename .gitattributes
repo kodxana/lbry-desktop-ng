@@ -1,2 +1,3 @@
 # Patch context lines may consist of a single space; keep their diff syntax intact.
 .yarn/patches/*.patch text eol=lf -whitespace
+.husky/* text eol=lf

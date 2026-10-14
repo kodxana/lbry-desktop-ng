@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.yarn/
+flow-typed/
+static/daemon/
+static/locales/
+web/dist/
+ui/component/viewers/videoViewer/internal/plugins/
