@@ -41,14 +41,13 @@ let baseConfig = {
             loader: 'postcss-loader',
             options: {
               postcssOptions: {
-                // The desktop has always supplied its own plugins; do not also
-                // load the unrelated root postcss.config.js after upgrading.
+                // Keep the desktop pipeline independent of external PostCSS configs.
                 config: false,
                 plugins: [require('postcss-rtl')()],
               },
             },
           },
-          { loader: 'sass-loader', options: { implementation: require('sass') } },
+          { loader: 'sass-loader', options: { implementation: require('sass'), api: 'modern' } },
         ],
       },
       {

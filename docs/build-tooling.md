@@ -7,9 +7,10 @@ pin. No OpenSSL legacy-provider option is needed.
 This stage updates Webpack to 5.111.1 and its CLI, middleware, merge utility,
 Babel loader, asset-copy plugin, environment plugin, minifier and stylesheet
 loaders. PostCSS 8 uses the existing RTL plugin's compatible 2.0 release. The
-Sass compiler stays at the RC3 lock's 1.53.0; it is passed explicitly to the new
-loader because its older CommonJS export is not recognized by automatic ESM
-discovery. Sass language/output changes are a separate migration.
+Sass compiler stayed at the RC3 lock's 1.53.0 during that stage; it was passed
+explicitly to the new loader because its older CommonJS export was not recognized
+by automatic ESM discovery. The subsequent [stylesheet migration](stylesheets.md)
+updates Sass and handles its declaration-order changes.
 
 That build-tooling migration kept Electron 17.2.0, React and the SDK pin at their
 RC3 versions. The [subsequent runtime migration](electron-runtime.md) moves to

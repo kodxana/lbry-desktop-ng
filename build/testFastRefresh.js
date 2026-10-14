@@ -45,7 +45,23 @@ module.exports = async function testFastRefresh(evaluate, until) {
     'Restoring the component must also refresh successfully'
   );
   assert.equal(await evaluate("document.getElementById('custom-wallet-hub').value"), 'draft.invalid:50001');
+  const stylesheet = path.join(__dirname, '../ui/scss/component/_first-run.scss');
+  const originalStyles = fs.readFileSync(stylesheet, 'utf8');
+  const updatedStyles = originalStyles + '\nh1 { color: rgb(12, 34, 56) !important; }\n';
+  const headingColor = () => evaluate("getComputedStyle(document.querySelector('h1')).color");
+  const originalColor = await headingColor();
+  assert.notEqual(originalColor, 'rgb(12, 34, 56)');
+  try {
+    fs.writeFileSync(stylesheet, updatedStyles);
+    await until(() => headingColor().then((color) => color === 'rgb(12, 34, 56)'), 'Sass partial edits must reload CSS');
+    assert.equal(await evaluate('window.refreshFixture'), 'same document', 'Style edits must not reload the page');
+    assert.equal(await evaluate("document.getElementById('custom-wallet-hub').value"), 'draft.invalid:50001');
+  } finally {
+    assert.equal(fs.readFileSync(stylesheet, 'utf8'), updatedStyles, 'Refusing to overwrite a concurrent style edit');
+    fs.writeFileSync(stylesheet, originalStyles);
+  }
+  await until(() => headingColor().then((color) => color === originalColor), 'Restoring the partial must restore CSS');
   console.log(
-    'PASS: Fast Refresh applies/restores a real component edit, preserves unsaved form state and reruns effects'
+    'PASS: component Fast Refresh and Sass partial reload apply/restore edits without losing the document or unsaved form state'
   );
 };
