@@ -49,6 +49,7 @@ async function main() {
     phase === 'formsAndDates' ||
     phase === 'markdownEditor' ||
     phase === 'documents' ||
+    phase === 'three' ||
     phase === 'media' ||
     phase === 'fileDialogs' ||
     phase === 'fileUploads' ||
@@ -69,6 +70,7 @@ async function main() {
       formsAndDates: () => require('./formsAndDates'),
       markdownEditor: () => require('./markdownEditor'),
       documents: () => require('./documents'),
+      three: () => require('./three'),
       media: () => require('./media'),
       fileDialogs: () => require('./fileDialogs'),
       fileUploads: () => require('./fileUploads'),

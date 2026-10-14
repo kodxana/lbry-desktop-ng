@@ -1,18 +1,13 @@
-// dat.gui component
-
 .gui-container {
   top: 0;
   right: 0;
   position: absolute;
+  z-index: 1;
 
-  .dg.main {
+  .lil-gui {
     margin: 0;
     padding: 0;
     overflow: inherit;
-
-    li {
-      margin: 0;
-    }
 
     input {
       height: initial;

@@ -25,6 +25,7 @@ fs.writeFileSync(
 for (const [command, args] of [
   [process.execPath, ['node_modules/webpack/bin/webpack.js', '--config', 'build/tests/webpack.config.js']],
   [require('electron'), ['build/tests/electron.cjs']],
+  [require('electron'), ['build/tests/electron.cjs', '--three']],
   [require('electron'), ['build/tests/sandbox.cjs']],
   [require('electron'), ['build/tests/devtools.cjs']],
   [require('electron'), ['build/tests/devtools.cjs', '--failure']],
@@ -44,6 +45,8 @@ for (const [command, args] of [
       'dist/ci',
       command === process.execPath
         ? 'renderer-build.log'
+        : args.includes('--three')
+        ? 'three-tests.log'
         : args[0].endsWith('sandbox.cjs')
         ? 'sandbox-tests.log'
         : args[0].endsWith('devtools.cjs')

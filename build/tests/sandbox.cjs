@@ -15,7 +15,8 @@ const { updaterFixture } = require('./updaterFixture.cjs');
 const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'sandbox-'));
 app.setPath('userData', root);
-app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('use-angle', 'swiftshader');
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 app.on('window-all-closed', () => {});
 const page = path.join(root, 'index.html');
 fs.writeFileSync(
@@ -128,6 +129,19 @@ app
     const docx = path.join(root, 'sandbox.docx');
     docxFixture().writeZip(docx);
     await files.grant(docx);
+    const model = path.join(root, 'model ł #1.stl');
+    fs.writeFileSync(
+      model,
+      'solid triangle\nfacet normal 0 0 1\nouter loop\nvertex -1 -1 0\nvertex 1 -1 0\nvertex 0 1 0\nendloop\nendfacet\nendsolid triangle'
+    );
+    await files.grant(model);
+    assert.deepEqual(await evaluate('window.probeThree(' + JSON.stringify(model) + ')'), {
+      node: 'undefined',
+      webgl2: true,
+      triangles: 1,
+      vertices: 3,
+    });
+    console.log('PASS: sandboxed Three.js loads authorized model bytes and renders with WebGL 2 without Node globals');
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
     const utilities = documents.utilities;
     const expectedBytes = [0, 1, 127, 128, 254, 255];

@@ -3,6 +3,11 @@ import 'regenerator-runtime/runtime';
 import markdownProcessor from 'util/markdown-processor';
 import markdownRenderer from 'util/markdown-renderer';
 import ReactDOMServer from 'react-dom/server';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import { createStore } from 'redux';
+import ThreeViewer from 'component/viewers/threeViewer';
 import mammoth from 'mammoth';
 import { PassThrough } from 'stream';
 import { deprecate } from 'util';
@@ -11,6 +16,43 @@ import sanitizeDocumentHtml from 'util/document-html';
 import ElectronCookies from 'util/electron-cookies.cjs';
 import legacyCookies from './fixtures/legacy-cookies.json';
 import runtimeUtilities from './runtimeUtilities';
+
+window.probeThree = async (filename) => {
+  const container = document.createElement('div');
+  const store = createStore(() => ({ settings: { clientSettings: { theme: 'dark' } } }));
+  document.body.append(container);
+  window.__ = (text) => text;
+  let viewer;
+  try {
+    ReactDOM.render(
+      React.createElement(
+        Provider,
+        { store },
+        React.createElement(ThreeViewer, {
+          ref: (value) => {
+            viewer = value;
+          },
+          source: { fileType: 'stl', downloadPath: filename },
+        })
+      ),
+      container
+    );
+    for (let count = 0; count < 200 && !viewer.state.isReady && !viewer.state.error; count++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (!viewer.state.isReady) throw new Error(viewer.state.error || 'Sandbox model timed out');
+    viewer.renderer.render(viewer.scene, viewer.camera);
+    return {
+      node: typeof window.require,
+      webgl2: viewer.renderer.getContext() instanceof WebGL2RenderingContext,
+      triangles: viewer.renderer.info.render.triangles,
+      vertices: viewer.mesh.geometry.getAttribute('position').count,
+    };
+  } finally {
+    ReactDOM.unmountComponentAtNode(container);
+    container.remove();
+  }
+};
 
 // Exercise browser compatibility code with no ambient Node globals. The fixture
 // runner cannot catch a dependency accidentally relying on its own Node process.
