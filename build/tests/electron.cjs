@@ -18,7 +18,14 @@ let activePhase;
 const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'profile-'));
 app.setPath('userData', root);
-app.disableHardwareAcceleration();
+const graphics = process.argv.includes('--three');
+if (graphics) {
+  // Exercise real WebGL 2 rendering deterministically on GPU-less CI runners.
+  app.commandLine.appendSwitch('use-angle', 'swiftshader');
+  app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+} else {
+  app.disableHardwareAcceleration();
+}
 app.on('window-all-closed', () => {});
 const timer = setTimeout(() => {
   console.error('Renderer regression tests timed out');
@@ -42,7 +49,7 @@ async function run(phase) {
       plugins: true,
       // Hidden fixture windows still need animation frames for the real viewers.
       backgroundThrottling: false,
-      offscreen: phase === 'documents',
+      offscreen: phase === 'documents' || phase === 'three',
     },
   });
   activeWindow = window;
@@ -77,6 +84,11 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    ipcMain.handle('fixture-three-capture', async (event) => {
+      assert.equal(activePhase, 'three');
+      assert.equal(event.sender, activeWindow.webContents);
+      fs.writeFileSync(path.resolve('dist/ci/three-preview.png'), (await activeWindow.webContents.capturePage()).toPNG());
+    });
     ipcMain.handle('fixture-controls-focus', async (event) => {
       assert.equal(activePhase, 'accessibleControls');
       assert.equal(event.sender, activeWindow.webContents);
@@ -190,40 +202,44 @@ app
         callback({ cancel: true });
       }
     );
-    for (const phase of [
-      'bundling',
-      'fresh',
-      'legacy',
-      'restart',
-      'uiComponents',
-      'accessibleControls',
-      'formsAndDates',
-      'markdownEditor',
-      'documents',
-      'media',
-      'fileDialogs',
-      'fileUploads',
-      'windowControls',
-      'contextMenu',
-      'updater',
-      'updaterRestart',
-      'wallet',
-      'downloadNotifications',
-      'passwords',
-      'passwordRestart',
-      'analytics',
-      'analyticsEnabled',
-      'analyticsDisabled',
-      'analyticsUnconfigured',
-    ]) {
+    for (const phase of graphics
+      ? ['three']
+      : [
+          'bundling',
+          'fresh',
+          'legacy',
+          'restart',
+          'uiComponents',
+          'accessibleControls',
+          'formsAndDates',
+          'markdownEditor',
+          'documents',
+          'media',
+          'fileDialogs',
+          'fileUploads',
+          'windowControls',
+          'contextMenu',
+          'updater',
+          'updaterRestart',
+          'wallet',
+          'downloadNotifications',
+          'passwords',
+          'passwordRestart',
+          'analytics',
+          'analyticsEnabled',
+          'analyticsDisabled',
+          'analyticsUnconfigured',
+        ]) {
       await run(phase);
     }
     assert.deepEqual(
       analyticsRequests,
-      [
-        { phase: 'analytics', url: 'https://analytics.lbry.com/matomo.js' },
-        { phase: 'analyticsEnabled', url: 'https://analytics.lbry.com/matomo.js' },
-      ],
+      graphics
+        ? []
+        : [
+            { phase: 'analytics', url: 'https://analytics.lbry.com/matomo.js' },
+            { phase: 'analyticsEnabled', url: 'https://analytics.lbry.com/matomo.js' },
+          ],
       'Only explicit analytics opt-in may request the tracking script'
     );
     assert.deepEqual(blocked, [], 'Unexpected renderer requests: ' + JSON.stringify(blocked));

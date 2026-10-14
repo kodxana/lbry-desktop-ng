@@ -1,11 +1,10 @@
-import { WebGLRenderer } from 'three-full/sources/renderers/WebGLRenderer';
+import { WebGLRenderer, SRGBColorSpace } from 'three';
 
-const ThreeRenderer = ({ antialias, shadowMap, gammaCorrection }) => {
+const ThreeRenderer = ({ antialias, shadowMap }) => {
   const renderer = new WebGLRenderer({ antialias });
   // Renderer configuration
   renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.gammaInput = gammaCorrection || false;
-  renderer.gammaOutput = gammaCorrection || false;
+  renderer.outputColorSpace = SRGBColorSpace;
   renderer.shadowMap.enabled = shadowMap || false;
   renderer.shadowMap.autoUpdate = false;
   return renderer;

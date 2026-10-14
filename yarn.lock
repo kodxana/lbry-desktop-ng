@@ -2955,15 +2955,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/three@npm:^0.103.2":
-  version: 0.103.2
-  resolution: "@types/three@npm:0.103.2"
-  dependencies:
-    three: "*"
-  checksum: 072124d175b70052df6ad97f4d59c273afed4104adc6d1e02130bdaae069232a4e892aa4adbb59f18e76bddfb69e6f0228a0f4e49e159866d6308b001b9ee293
-  languageName: node
-  linkType: hard
-
 "@types/unist@npm:*, @types/unist@npm:^2.0.0":
   version: 2.0.6
   resolution: "@types/unist@npm:2.0.6"
@@ -5300,13 +5291,6 @@ __metadata:
   version: 1.0.8
   resolution: "damerau-levenshtein@npm:1.0.8"
   checksum: d240b7757544460ae0586a341a53110ab0a61126570ef2d8c731e3eab3f0cb6e488e2609e6a69b46727635de49be20b071688698744417ff1b6c1d7ccd03e0de
-  languageName: node
-  linkType: hard
-
-"dat.gui@npm:^0.7.2":
-  version: 0.7.9
-  resolution: "dat.gui@npm:0.7.9"
-  checksum: b5b70160657224eacdb8e0a8d76376e6e59adcc654db577531c7bebce854c4f774d1511df6f064e8246a88cf9a3abe489e4d647cf9e53d26a26141a1b5d31e68
   languageName: node
   linkType: hard
 
@@ -9150,7 +9134,6 @@ __metadata:
     "@reach/rect": 0.18.0
     "@reach/tabs": 0.18.0
     "@types/react": 17.0.93
-    "@types/three": ^0.103.2
     adm-zip: 0.6.1
     assert: 2.1.0
     auto-launch: ^5.0.5
@@ -9168,7 +9151,6 @@ __metadata:
     cross-env: 10.1.0
     crypto-js: ^4.0.0
     css-loader: 7.1.5
-    dat.gui: ^0.7.2
     dotenv-defaults: 6.0.0
     dotenv-webpack: 9.0.0
     easymde: 2.21.0
@@ -9209,6 +9191,7 @@ __metadata:
     imagesloaded: 5.0.0
     js-yaml: 5.4.3
     jsqr: 1.4.0
+    lil-gui: 0.21.0
     lint-staged: ^7.0.2
     localforage: 1.10.0
     mammoth: 1.13.0
@@ -9269,7 +9252,7 @@ __metadata:
     strip-markdown: 6.0.0
     style-loader: 4.0.0
     terser-webpack-plugin: 5.6.1
-    three-full: ^28.0.2
+    three: 0.186.1
     tough-cookie: 6.0.2
     tough-cookie-web-storage-store: 1.0.0
     typo-js: 1.3.2
@@ -9331,6 +9314,13 @@ __metadata:
   dependencies:
     immediate: ~3.0.5
   checksum: 33102302cf19766f97919a6a98d481e01393288b17a6aa1f030a3542031df42736edde8dab29ffdbf90bebeffc48c761eb1d064dc77592ca3ba3556f9fe6d2a8
+  languageName: node
+  linkType: hard
+
+"lil-gui@npm:0.21.0":
+  version: 0.21.0
+  resolution: "lil-gui@npm:0.21.0"
+  checksum: c67dfc82da750e55ac7fccc3fd61fa13c7803caf0580475e5a778bbf7ccf7083953ccb4c15abc1036b2395129a6cf48867743468a52f3e5cce139c999bcb1568
   languageName: node
   linkType: hard
 
@@ -14687,17 +14677,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"three-full@npm:^28.0.2":
-  version: 28.0.2
-  resolution: "three-full@npm:28.0.2"
-  checksum: 3583001c50dd1e296f5d1a27e90cdad15d3ab775b0bba4d8e7515db2bab22f62825265fd11668108b6416f5a0cd74cb2da831b38f7e09c58d408b75b01e96628
-  languageName: node
-  linkType: hard
-
-"three@npm:*":
-  version: 0.142.0
-  resolution: "three@npm:0.142.0"
-  checksum: b920987cab222bea5fd657a498f8203546c6b613cee01d2e1a355c7e044204bbff6ef051641b026743a6d3d5261a988c84285039a94e4c94a959f1b3789ac682
+"three@npm:0.186.1":
+  version: 0.186.1
+  resolution: "three@npm:0.186.1"
+  checksum: ebcfeb4b3781dd96cf30871069681af4874c542b54eabd4316adbfdde69066569c28b4863705a0deb6e7c22ed2cc814bc7fee47cf5747b9b66b7dcf42905ef41
   languageName: node
   linkType: hard
 
