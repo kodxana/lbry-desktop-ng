@@ -7,6 +7,7 @@ import BlockList from 'component/blockList/view';
 import WunderbarSuggestions from 'component/wunderbarSuggestions/view';
 import TextareaWithSuggestions from 'component/textareaWithSuggestions/view';
 import Expandable from 'component/expandable/view';
+import Tooltip from 'component/common/tooltip';
 import { lighthouse } from 'redux/actions/search';
 import * as ACTIONS from 'constants/action_types';
 import { render, unmount, tick, waitFor, submit } from './helpers';
@@ -15,11 +16,11 @@ import 'scss/all.scss';
 
 const key = (node, value, keyCode) =>
   node.dispatchEvent(new KeyboardEvent('keydown', { key: value, keyCode, bubbles: true, cancelable: true }));
-const type = (field, value) => {
+const type = (field, value, cursor = value.length) => {
   field.focus();
   const prototype = field.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
   Object.getOwnPropertyDescriptor(prototype, 'value').set.call(field, value);
-  field.setSelectionRange(value.length, value.length);
+  field.setSelectionRange(cursor, cursor);
   field.dispatchEvent(new Event('input', { bubbles: true }));
 };
 const options = () => Array.from(document.querySelectorAll('[role="option"]'));
@@ -249,13 +250,36 @@ async function searchBar(store, history) {
 }
 
 async function suggestions(store, history) {
+  const uri = 'lbry://@fixture#' + 'a'.repeat(40);
+  const channel = {
+    claim_id: 'a'.repeat(40),
+    name: '@fixture',
+    value_type: 'channel',
+    value: { title: 'Fixture channel' },
+    canonical_url: uri,
+    permanent_url: uri,
+    meta: { claims_in_channel: 0 },
+  };
+  store.dispatch({ type: ACTIONS.RESOLVE_URIS_COMPLETED, data: { resolveInfo: { [uri]: { channel, stream: null } } } });
+  const focus = [];
+  let setDisabled;
   function Comment() {
     const [value, setValue] = React.useState('');
+    const [disabled, updateDisabled] = React.useState(false);
+    setDisabled = updateDisabled;
     const ref = React.useRef();
     return (
       <TextareaWithSuggestions
         id="fixture-comment"
+        canonicalCreatorUri={uri}
         inputRef={ref}
+        isLivestream
+        maxLength={500}
+        disabled={disabled}
+        placeholder="Write a comment"
+        className="fixture-comment-input"
+        onFocus={() => focus.push('focus')}
+        onBlur={() => focus.push('blur')}
         value={value}
         onChange={(event) => setValue(event.target.value)}
         doResolveUris={noop}
@@ -266,6 +290,10 @@ async function suggestions(store, history) {
   }
   render(<Comment />, store, history);
   const field = document.getElementById('fixture-comment');
+  assert.equal(field.tagName, 'TEXTAREA');
+  assert.equal(field.maxLength, 500);
+  assert.equal(field.placeholder, 'Write a comment');
+  assert(field.classList.contains('fixture-comment-input'));
   type(field, 'hello :slightly_smiling_face');
   await waitFor(
     () => options().some((node) => node.textContent.includes('slightly_smiling_face')),
@@ -279,6 +307,90 @@ async function suggestions(store, history) {
   );
   assert.equal(document.activeElement, field);
   assert.equal(field.selectionStart, field.value.length);
+  await waitFor(() => !field.hasAttribute('term'), 'Selecting an emoji must release the livestream send guard');
+  const highlighted = () => {
+    const active = document.getElementById(field.getAttribute('aria-activedescendant'));
+    return (
+      field.getAttribute('aria-expanded') === 'true' && active && active.textContent.includes('slightly_smiling_face')
+    );
+  };
+  type(field, 'before :slightly_smiling_face after', 'before :slightly_smiling_face'.length);
+  await waitFor(highlighted, 'Keyboard suggestions must highlight a current match after filtering');
+  key(field, 'Enter', 13);
+  await waitFor(() => field.value === 'before :slightly_smiling_face: after', 'Enter preserves text after the cursor');
+  assert.equal(field.selectionStart, 'before :slightly_smiling_face: '.length);
+  type(field, ':slightly_smiling_face');
+  await waitFor(highlighted, 'Tab suggestions must highlight a current match');
+  field.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, which: 229, isComposing: true, bubbles: true })
+  );
+  assert.equal(field.value, ':slightly_smiling_face', 'IME composition must not select a suggestion');
+  await tick();
+  assert.equal(key(field, 'Tab', 9), false, 'Selecting with Tab must prevent moving focus');
+  await waitFor(() => field.value === ':slightly_smiling_face: ', 'Tab inserts the highlighted emoji');
+  type(field, 'hello :grin');
+  await waitFor(
+    () => options().filter((node) => node.textContent.includes('grin')).length > 1,
+    'Arrow navigation needs multiple matches'
+  );
+  key(field, 'ArrowDown', 40);
+  const selected = document.getElementById(field.getAttribute('aria-activedescendant'));
+  const label = selected.querySelector('.textareaSuggestion__value').textContent;
+  key(field, 'Enter', 13);
+  await waitFor(() => field.value === 'hello ' + label + ' ', 'Enter must respect the option chosen with arrow keys');
+  type(field, ':slightly_smiling_face');
+  await waitFor(highlighted, 'Escape suggestions must highlight a current match');
+  key(field, 'Escape', 27);
+  await waitFor(() => field.getAttribute('aria-expanded') === 'false', 'Escape dismisses suggestions');
+  assert.equal(field.value, ':slightly_smiling_face', 'Dismissal must not insert a suggestion');
+  assert.equal(key(field, 'Tab', 9), true, 'Tab must navigate normally when suggestions are dismissed');
+  type(field, ':no_such_emoji_12345');
+  await tick();
+  key(field, 'Enter', 13);
+  assert.equal(field.value, ':no_such_emoji_12345', 'Free text must not be treated as a selected option');
+  type(field, 'hello @fi');
+  await waitFor(
+    () => options().some((node) => node.textContent.includes('Fixture channel')),
+    'Known channel mentions must appear'
+  );
+  key(field, 'ArrowDown', 40);
+  key(field, 'Enter', 13);
+  await waitFor(
+    () => field.value === 'hello @fixture:' + 'a'.repeat(40) + ' ',
+    'Mention selection must retain its claim ID'
+  );
+  type(field, 'plain\nmultiline comment');
+  assert.equal(field.value, 'plain\nmultiline comment');
+  field.blur();
+  assert.deepEqual(focus, ['focus', 'blur']);
+  setDisabled(true);
+  assert.equal(field.disabled, true);
+  unmount();
+  assert(!document.querySelector('[role="listbox"]'), 'Suggestion portals must be cleaned up');
+}
+
+async function tooltips(store, history) {
+  render(
+    <Tooltip title="Back up your wallet">
+      <button>Backup</button>
+    </Tooltip>,
+    store,
+    history
+  );
+  const button = document.querySelector('#app button');
+  button.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+  assert(!document.querySelector('[role="tooltip"]'), 'Tooltips respect their hover delay');
+  await waitFor(() => document.querySelector('[role="tooltip"]'), 'Hover must show the tooltip');
+  assert.equal(document.querySelector('[role="tooltip"]').textContent, 'Back up your wallet');
+  assert(document.querySelector('.MuiTooltip-arrow'));
+  key(button, 'Escape', 27);
+  await waitFor(() => !document.querySelector('[role="tooltip"]'), 'Escape dismisses the tooltip');
+  button.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }));
+  document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+  button.focus();
+  await waitFor(() => document.querySelector('[role="tooltip"]'), 'Keyboard focus must show the tooltip');
+  button.blur();
+  await waitFor(() => !document.querySelector('[role="tooltip"]'), 'Blur dismisses the tooltip');
   unmount();
 }
 
@@ -317,11 +429,13 @@ async function measurement(store, history) {
 export default async function accessibleControls(store, history) {
   await ipcRenderer.invoke('fixture-controls-focus');
   document.documentElement.setAttribute('theme', 'dark');
+  document.documentElement.setAttribute('dir', 'ltr');
   await tabs(store, history);
   await menus(store, history);
   await blockedChannels(store, history);
   await searchBar(store, history);
   await suggestions(store, history);
+  await tooltips(store, history);
   await measurement(store, history);
-  return 'accessible controls: tab focus/underline, menu dismissal/actions/routing, channel search, LBRY links, comment suggestions and measured descriptions';
+  return 'accessible controls: tabs, menus, search, LBRY links, emoji mouse/Enter/Tab/Escape, input refs/props, multiline/free text, tooltip hover/focus/dismissal and measured descriptions';
 }

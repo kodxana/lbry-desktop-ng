@@ -7,7 +7,6 @@ import Autocomplete from '@mui/material/Autocomplete';
 import BusyIndicator from 'component/common/busy-indicator';
 import EMOJIS from 'emoji-dictionary';
 import LbcSymbol from 'component/common/lbc-symbol';
-import Popper from '@mui/material/Popper';
 import React from 'react';
 import TextareaSuggestionsItem from 'component/textareaSuggestionsItem';
 import TextField from '@mui/material/TextField';
@@ -93,9 +92,11 @@ export default function TextareaWithSuggestions(props: Props) {
   const inputDefaultProps = { className, placeholder, maxLength, type, disabled };
 
   const [suggestionValue, setSuggestionValue] = React.useState(undefined);
-  const [highlightedSuggestion, setHighlightedSuggestion] = React.useState('');
+  // A highlight must not recreate the option list and reset MUI's keyboard position.
+  const highlightedSuggestion = React.useRef(undefined);
   const [shouldClose, setClose] = React.useState();
   const [debouncedTerm, setDebouncedTerm] = React.useState('');
+  const cursorAfterSelection = React.useRef(null);
   // const [mostSupported, setMostSupported] = React.useState('');
 
   const suggestionTerm = suggestionValue && suggestionValue.term;
@@ -180,6 +181,7 @@ export default function TextareaWithSuggestions(props: Props) {
   /** --------- **/
 
   function handleInputChange(value: string) {
+    highlightedSuggestion.current = undefined;
     onChange({ target: { value } });
 
     const cursorIndex = inputRef && inputRef.current && inputRef.current.selectionStart;
@@ -251,7 +253,6 @@ export default function TextareaWithSuggestions(props: Props) {
     (selectedValue: string) => {
       if (!suggestionValue) return;
 
-      const elem = inputRef && inputRef.current;
       const newCursorPos = suggestionValue.beforeTerm.length + suggestionValue.index + selectedValue.length + 1;
 
       const contentBegin = messageValue.substring(0, suggestionValue.index);
@@ -263,17 +264,26 @@ export default function TextareaWithSuggestions(props: Props) {
 
       const newValue = contentBegin + replaceValue + contentEnd;
 
+      cursorAfterSelection.current = newCursorPos;
       onChange({ target: { value: newValue } });
       setSuggestionValue(null);
-      elem.focus();
-      elem.setSelectionRange(newCursorPos, newCursorPos);
     },
-    [messageValue, inputRef, onChange, suggestionValue]
+    [messageValue, onChange, suggestionValue]
   );
 
   /** ------- **/
   /** Effects **/
   /** ------- **/
+
+  React.useLayoutEffect(() => {
+    const cursor = cursorAfterSelection.current;
+    if (cursor !== null && inputRef.current) {
+      // Set the caret after React commits the controlled textarea value.
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(cursor, cursor);
+      cursorAfterSelection.current = null;
+    }
+  }, [inputRef, messageValue, suggestionValue]);
 
   React.useEffect(() => {
     if (!isMention) return;
@@ -313,23 +323,31 @@ export default function TextareaWithSuggestions(props: Props) {
     if (isLivestream && commentorUris && suggestionTerm) doResolveUris(commentorUris);
   }, [commentorUris, doResolveUris, isLivestream, suggestionTerm]);
 
-  // Allow selecting with TAB key
-  React.useEffect(() => {
-    if (!suggestionTerm) return; // only if there is a term, or else can't tab to navigate page
-
-    function handleKeyDown(e: SyntheticKeyboardEvent<*>) {
-      const { keyCode } = e;
-
-      if (highlightedSuggestion && keyCode === KEYCODES.TAB) {
-        e.preventDefault();
-        handleSelect(highlightedSuggestion.label);
-      }
+  function handleKeyDown(event: any) {
+    // MUI reports user highlight changes only; automatic highlighting uses the first match.
+    const highlighted =
+      highlightedSuggestion.current === undefined
+        ? allOptionsGrouped.find(({ label }) => allMatches.includes(label))
+        : highlightedSuggestion.current;
+    if (
+      !suggestionTerm ||
+      shouldClose ||
+      !highlighted ||
+      !allMatches.includes(highlighted.label) ||
+      event.nativeEvent.isComposing ||
+      event.keyCode === 229
+    ) {
+      return;
     }
 
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSelect, highlightedSuggestion, suggestionTerm]);
+    // MUI 9 gives free text priority over automatic highlighting on Enter.
+    // Comment completion keeps Enter and Tab selecting the visible suggestion.
+    if (event.keyCode === KEYCODES.ENTER || event.keyCode === KEYCODES.TAB) {
+      event.preventDefault();
+      event.defaultMuiPrevented = true;
+      handleSelect(highlighted.label);
+    }
+  }
 
   /** ------ **/
   /** Render **/
@@ -352,11 +370,17 @@ export default function TextareaWithSuggestions(props: Props) {
   );
 
   const renderInput = (params: any) => {
-    const { InputProps, disabled, fullWidth, id, inputProps: autocompleteInputProps } = params;
-    const inputProps = { ...autocompleteInputProps, ...inputDefaultProps };
-    const autocompleteProps = { InputProps, disabled, fullWidth, id, inputProps };
-
-    return <TextField inputRef={inputRef} multiline select={false} {...autocompleteProps} />;
+    return (
+      <TextField
+        {...params}
+        inputRef={inputRef}
+        multiline
+        slotProps={{
+          ...params.slotProps,
+          htmlInput: { ...params.slotProps.htmlInput, ...inputDefaultProps },
+        }}
+      />
+    );
   };
 
   const renderOption = (optionProps: any, label: string) => {
@@ -370,26 +394,30 @@ export default function TextareaWithSuggestions(props: Props) {
 
   return (
     <Autocomplete
-      PopperComponent={AutocompletePopper}
+      slotProps={{ popper: { placement: 'top' } }}
       autoHighlight
       disableClearable
       filterOptions={(options) => options.filter(({ label }) => allMatches.includes(label))}
       freeSolo
       fullWidth
-      getOptionLabel={(option) => option.label || ''}
+      getOptionLabel={(option) => (typeof option === 'string' ? option : option.label)}
       groupBy={(option) => option.group}
       id={id}
       inputValue={messageValue}
+      value={null}
       loading={allMatches.length === 0 || showPlaceholder}
       loadingText={showPlaceholder ? <BusyIndicator message={__('Searching...')} /> : __('Nothing found')}
       onBlur={() => onBlur && onBlur()}
       /* Different from onInputChange, onChange is only used for the selected value,
         so here it is acting simply as a selection handler (see it as onSelect) */
-      onChange={(event, value) => handleSelect(value.label)}
+      onChange={(event, value, reason) => reason === 'selectOption' && handleSelect(value.label)}
       onClose={(event, reason) => reason !== 'selectOption' && setClose(true)}
       onFocus={() => onFocus && onFocus()}
-      onHighlightChange={(event, option) => setHighlightedSuggestion(option)}
+      onHighlightChange={(event, option) => {
+        highlightedSuggestion.current = option;
+      }}
       onInputChange={(event, value, reason) => reason === 'input' && handleInputChange(value)}
+      onKeyDown={handleKeyDown}
       onOpen={() => suggestionTerm && setClose(false)}
       /* 'open' is for the popper box component, set to check for a valid term
         or else it will be displayed all the time as empty (no options) */
@@ -400,10 +428,6 @@ export default function TextareaWithSuggestions(props: Props) {
       renderOption={(optionProps, option) => renderOption(optionProps, option.label)}
     />
   );
-}
-
-function AutocompletePopper(props: any) {
-  return <Popper {...props} placement="top" />;
 }
 
 function useSuggestionMatch(term: string, list: Array<string>) {

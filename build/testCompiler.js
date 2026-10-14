@@ -24,7 +24,15 @@ if (process.argv[2] !== '--child') {
     }).code;
   const evaluate = (source, filename, globals = {}) => {
     const module = { exports: {} };
-    vm.runInNewContext(compile(source, filename), { require, module, exports: module.exports, React, ...globals });
+    vm.runInNewContext(compile(source, filename), {
+      require,
+      module,
+      exports: module.exports,
+      React,
+      $RefreshReg$: () => {},
+      $RefreshSig$: () => (value) => value,
+      ...globals,
+    });
     return module.exports;
   };
 
@@ -64,6 +72,12 @@ if (process.argv[2] !== '--child') {
     form.props = { label: 'Backup' };
     const element = form.render();
     assert(React.isValidElement(element));
+    assert(require('react-is').isElement(element), 'Element detection must match the installed React runtime');
+    assert.equal(
+      require.resolve('react-is', { paths: [path.dirname(require.resolve('@mui/utils'))] }),
+      require.resolve('react-is'),
+      'Material UI must use the same React element symbols'
+    );
     assert.equal(element.type, 'button');
     assert.equal(element.props.label, 'Backup');
     assert.equal(element.props.children, 'Save');
@@ -110,17 +124,18 @@ if (process.argv[2] !== '--child') {
         return <span>{count}</span>;
       }
     `,
-      'build/tests/compiler-hot.jsx',
+      'ui/component/compiler-hot.jsx',
       {
-        reactHotLoaderGlobal: {
-          default: {
-            register: (value, name) => registrations.push(name),
-            signature: (value) => value,
-          },
-        },
+        $RefreshReg$: (value, name) => registrations.push(name),
       }
     );
     assert.equal(registrations.includes('Editor'), process.env.NODE_ENV === 'development');
+    for (const filename of ['electron/compiler-fixture.js', 'build/tests/compiler-fixture.jsx']) {
+      assert(
+        !compile('export function Editor() { return <span />; }', filename).includes('$Refresh'),
+        'Refresh instrumentation must stay out of main-process and test modules'
+      );
+    }
     const sandbox = spawnSync(process.execPath, [path.join(__dirname, '../electron/sandboxTest.js')], {
       env: { ...process.env, BABEL_DISABLE_CACHE: '1' },
       encoding: 'utf8',
@@ -131,7 +146,7 @@ if (process.argv[2] !== '--child') {
     console.log(
       'PASS: ' +
         process.env.NODE_ENV +
-        ' compiler: Flow fields, React JSX, public/private fields, async errors/generators, symbols, native player inheritance, lazy imports, hot-loader hooks and register entry point'
+        ' compiler: Flow fields, React JSX, public/private fields, async errors/generators, symbols, native player inheritance, lazy imports, renderer-only Fast Refresh and register entry point'
     );
   };
   main().catch((error) => {

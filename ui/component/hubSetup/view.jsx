@@ -38,6 +38,7 @@ export default function HubSetup({ handleNextPage }: Props) {
   }
 
   React.useEffect(() => {
+    mounted.current = true;
     scan();
     return () => {
       mounted.current = false;

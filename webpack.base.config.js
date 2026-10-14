@@ -25,6 +25,10 @@ let baseConfig = {
   module: {
     rules: [
       {
+        test: /[\\/]node_modules[\\/]villain-react[\\/]dist[\\/]villain\.js$/,
+        resolve: { alias: { 'reakit$': path.resolve(__dirname, 'ui/util/villain-reakit.js') } },
+      },
+      {
         test: /\.jsx?$/,
         loader: 'babel-loader',
       },
@@ -75,12 +79,11 @@ let baseConfig = {
           : path.resolve(__dirname, 'homepages/meme/index.js'),
       lbryinc: 'extras/lbryinc',
       recsys: 'extras/recsys',
-      // React 16 provides this runtime without an exports map for ESM callers.
+      // React 17 provides this runtime without an exports map for ESM callers.
       'react/jsx-runtime$': require.resolve('react/jsx-runtime.js'),
       // Use the filter transform's ES module entry. Its Lodash subpaths also
       // have CommonJS callers, so they must retain their native export shape.
       'redux-persist-transform-filter': 'redux-persist-transform-filter/index.js',
-      ...ifProduction({}, { 'react-dom': '@hot-loader/react-dom' }),
     },
     symlinks: false,
   },

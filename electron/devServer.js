@@ -2,6 +2,7 @@
 const { WEBPACK_ELECTRON_PORT } = require('../config');
 const chalk = require('chalk');
 const webpack = require('webpack');
+const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const { merge } = require('webpack-merge');
 const middleware = require('webpack-dev-middleware');
 const express = require('express');
@@ -17,9 +18,8 @@ let [mainConfig, renderConfig] = require('../webpack.electron.config.js');
 
 renderConfig = merge(renderConfig, {
   entry: { ui: ['webpack-hot-middleware/client'] },
-  plugins: [new webpack.HotModuleReplacementPlugin()],
+  plugins: [new webpack.HotModuleReplacementPlugin(), new ReactRefreshPlugin({ overlay: { sockIntegration: 'whm' } })],
   resolve: {
-    alias: { 'react-dom': '@hot-loader/react-dom' },
     symlinks: false,
   },
 });

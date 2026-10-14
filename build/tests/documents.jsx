@@ -14,11 +14,13 @@ import documentHtml from './documentHtml';
 import pdfFixture from './fixtures/pdf.cjs';
 import docxFixture from './fixtures/docx.cjs';
 import markdown from './markdown';
+import comics from './comics';
 import { render, unmount, waitFor } from './helpers';
 
 export default async function documents(store, history, root) {
   await markdown(store, history);
   documentHtml();
+  await comics(store, history);
   for (const strict of [false, true]) {
     const source = path.join(root, `document ł #${strict ? 'strict' : 'transitional'}.docx`);
     docxFixture(strict).writeZip(source);
@@ -159,5 +161,5 @@ export default async function documents(store, history, root) {
   assert.equal(document.querySelector('iframe').getAttribute('sandbox'), '');
   await waitFor(() => !document.querySelector('iframe').hidden, 'Sandboxed HTML must become visible after loading');
   unmount();
-  return 'DOCX formatting, LBRY links, images, footnotes, sanitizing/errors; Markdown formatting, timestamps, embeds/entities, text, PDF pixels and sandbox contracts';
+  return 'CBZ worker/page pixels/navigation/errors; DOCX formatting, LBRY links, images, footnotes, sanitizing/errors; Markdown formatting, timestamps, embeds/entities, text, PDF pixels and sandbox contracts';
 }

@@ -38,6 +38,9 @@ async function run(phase) {
       preload: path.join(output, 'fixture-preload.js'),
       additionalArguments: ['--lbry-renderer-url=' + require('url').pathToFileURL(path.join(output, 'index.html')).href],
       plugins: true,
+      // Hidden fixture windows still need animation frames for the real viewers.
+      backgroundThrottling: false,
+      offscreen: phase === 'documents',
     },
   });
   activeWindow = window;

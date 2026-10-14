@@ -1,5 +1,5 @@
 // @flow
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Button from 'component/button';
 import * as ICONS from 'constants/icons';
 import classnames from 'classnames';
@@ -218,7 +218,8 @@ export default React.memo<Props>(function VideoJs(props: Props) {
 
   /** instantiate videoJS and dispose of it when done with code **/
   // This lifecycle hook is only called once (on mount), or when `isAudio` or `source` changes.
-  useEffect(() => {
+  // React 17 defers passive cleanup; cancel source detection and detach the player synchronously.
+  useLayoutEffect(() => {
     let cancelled = false;
     const vjsElement = createVideoPlayerDOM(containerRef.current);
     const wrapper = vjsElement && vjsElement.parentNode;
