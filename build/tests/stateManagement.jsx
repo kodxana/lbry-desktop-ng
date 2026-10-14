@@ -7,6 +7,14 @@ import createCompressor from 'redux-persist-transform-compress';
 import * as ACTIONS from 'constants/action_types';
 import { selectClaimsById, selectClaimForUri } from 'redux/selectors/claims';
 import { selectSubscriptions } from 'redux/selectors/subscriptions';
+import {
+  selectMyPublishedCollections,
+  selectMyPublishedMixedCollections,
+  selectMyPublishedPlaylistCollections,
+} from 'redux/selectors/collections';
+import { doLocalCollectionCreate } from 'redux/actions/collections';
+import { doToast } from 'redux/actions/notifications';
+import { collectionsReducer } from 'redux/reducers/collections';
 import { tick } from './helpers';
 
 export function testSelectors() {
@@ -52,6 +60,55 @@ export function testSelectors() {
   assert.equal(subscriptions[0].channelName, '@zebra', 'Sorting must not change persisted subscription order');
   assert.equal(selectSubscriptions(subscribed), sorted, 'Unchanged input must reuse the selected array');
   assert.deepEqual(selectSubscriptions({ subscriptions: { subscriptions: [] } }), []);
+
+  const resolved = Object.freeze({ id: 'mine', type: 'playlist', name: 'Published' });
+  const pendingCollection = Object.freeze({ ...resolved, name: 'Pending' });
+  const edited = Object.freeze({ ...resolved, name: 'Edited' });
+  const mixed = Object.freeze({ id: 'mixed', type: 'collection', name: 'Mixed' });
+  const collections = {
+    claims: { myCollectionClaims: ['mine', 'mixed'] },
+    collections: {
+      resolved: Object.freeze({ mine: resolved, mixed, other: { id: 'other' } }),
+      pending: Object.freeze({ mine: pendingCollection }),
+      edited: Object.freeze({}),
+    },
+  };
+  assert.deepEqual(selectMyPublishedCollections(collections), { mine: pendingCollection, mixed });
+  assert.deepEqual(selectMyPublishedMixedCollections(collections), { mixed });
+  assert.deepEqual(selectMyPublishedPlaylistCollections(collections), { mine: pendingCollection });
+  assert.deepEqual(
+    selectMyPublishedCollections({
+      ...collections,
+      collections: { ...collections.collections, edited: { mine: edited } },
+    }),
+    { mine: edited, mixed }
+  );
+  assert.equal(collections.collections.resolved.mine, resolved, 'Collection overlays must not mutate stored data');
+  assert.deepEqual(
+    selectMyPublishedCollections({
+      claims: { myCollectionClaims: [] },
+      collections: { resolved: {}, pending: {}, edited: {} },
+    }),
+    {}
+  );
+
+  const actions = [];
+  const dispatch = (action) => {
+    actions.push(action);
+    return action;
+  };
+  doLocalCollectionCreate('Private playlist', ['lbry://fixture#abc'], 'playlist')(dispatch);
+  doLocalCollectionCreate('Second playlist', [], 'playlist')(dispatch);
+  const first = actions[0].data.entry;
+  const second = actions[1].data.entry;
+  const toast = doToast({ message: 'Fixture notification' });
+  const ids = [first.id, second.id, toast.data.id];
+  assert.equal(new Set(ids).size, 3, 'Collections and notifications must get distinct IDs');
+  for (const id of ids) assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+  const created = actions.reduce(collectionsReducer, undefined);
+  const restored = JSON.parse(JSON.stringify(created));
+  assert.deepEqual(restored.unpublished[first.id].items, ['lbry://fixture#abc']);
+  assert.equal(restored.lastUsedCollection, second.id, 'Generated IDs must survive collection persistence');
 }
 
 export async function testSubscriptionsAndThunks(store) {

@@ -129,7 +129,35 @@ app
     docxFixture().writeZip(docx);
     await files.grant(docx);
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
-    assert.equal(await evaluate('typeof regeneratorRuntime.wrap'), 'function', 'Legacy generators retain their runtime');
+    const utilities = documents.utilities;
+    const expectedBytes = [0, 1, 127, 128, 254, 255];
+    assert.equal(utilities.encoded, Buffer.from(expectedBytes).toString('base64'));
+    assert.deepEqual(utilities.decoded, expectedBytes, 'Buffer views must preserve offsets and binary bytes');
+    assert.equal(utilities.utf8, 'LBRY ł 🐦\0');
+    assert.equal(utilities.streamed, utilities.utf8, 'Streaming must preserve split UTF-8 characters');
+    assert.equal(utilities.streamError, 'Fixture stream failure');
+    assert.deepEqual(utilities.inheritance, { value: 'inherited', parent: true, constructor: true });
+    assert.deepEqual(utilities.assertion, { recognized: true, actual: 1, expected: 2 });
+    assert.deepEqual(utilities.url, {
+      auth: 'user:pass',
+      hostname: 'example.org',
+      port: '8443',
+      pathname: '/a%20b',
+      query: 'q=hello',
+      hash: '#frag',
+    });
+    assert.equal(utilities.ids.length, 64);
+    assert.equal(new Set(utilities.ids).size, 64);
+    for (const id of utilities.ids)
+      assert.match(id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    console.log(
+      'PASS: browser Buffer offsets/base64/UTF-8, split streams/errors, inheritance, assertions, URLs and UUID v4 without Node globals'
+    );
+    assert.equal(
+      await evaluate('typeof regeneratorRuntime.wrap'),
+      'function',
+      'Legacy generators retain their runtime'
+    );
     assert(documents.legacyCookie.includes('auth_token=fixture-auth-token'));
     assert(!documents.legacyCookie.includes('expired='));
     assert(documents.persistedCookie.includes('sandbox_cookie=roundtrip-%20=value'));

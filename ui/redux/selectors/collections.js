@@ -1,5 +1,4 @@
 // @flow
-import fromEntries from '@ungap/from-entries';
 import { createSelector } from 'reselect';
 import { selectMyCollectionIds, makeSelectClaimForUri } from 'redux/selectors/claims';
 import { parseURI } from 'util/lbryURI';
@@ -49,7 +48,7 @@ export const selectMyPublishedCollections = createSelector(
   selectMyCollectionIds,
   (resolved, pending, edited, myIds) => {
     // all resolved in myIds, plus those in pending and edited
-    const myPublishedCollections = fromEntries(
+    const myPublishedCollections = Object.fromEntries(
       Object.entries(pending).concat(
         Object.entries(resolved).filter(
           ([key, val]) =>
@@ -68,7 +67,7 @@ export const selectMyPublishedCollections = createSelector(
 );
 
 export const selectMyPublishedMixedCollections = createSelector(selectMyPublishedCollections, (published) => {
-  const myCollections = fromEntries(
+  const myCollections = Object.fromEntries(
     // $FlowFixMe
     Object.entries(published).filter(([key, collection]) => {
       // $FlowFixMe
@@ -79,7 +78,7 @@ export const selectMyPublishedMixedCollections = createSelector(selectMyPublishe
 });
 
 export const selectMyPublishedPlaylistCollections = createSelector(selectMyPublishedCollections, (published) => {
-  const myCollections = fromEntries(
+  const myCollections = Object.fromEntries(
     // $FlowFixMe
     Object.entries(published).filter(([key, collection]) => {
       // $FlowFixMe
