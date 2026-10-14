@@ -17,6 +17,9 @@ compressed playback-state preservation across installed Windows upgrades.
 The [shared UI upgrade](ui-components.md) adds QR pixel decoding, pagination,
 dialog focus, update progress, floating-player dragging and thumbnail checks.
 
+The [menus, tabs and search upgrade](accessible-controls.md) adds keyboard/focus,
+tab indicator geometry, menu routing/dismissal and search selection checks.
+
 ## Checks
 
 | Check                   | Coverage                                                                                                                                                                                                                                                                                              |

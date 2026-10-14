@@ -72,6 +72,12 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    ipcMain.handle('fixture-controls-focus', async (event) => {
+      assert.equal(activePhase, 'accessibleControls');
+      assert.equal(event.sender, activeWindow.webContents);
+      activeWindow.webContents.debugger.attach('1.3');
+      await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
+    });
     assert.equal(process.versions.electron, require('../../package.json').devDependencies.electron);
     await require('./devMode.cjs')();
     await require('./windowState.cjs')();
@@ -169,6 +175,7 @@ app
       'legacy',
       'restart',
       'uiComponents',
+      'accessibleControls',
       'documents',
       'media',
       'fileDialogs',

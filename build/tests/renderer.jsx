@@ -39,6 +39,7 @@ async function main() {
   assert.equal(localForage.driver(), localForage.INDEXEDDB);
   if (
     phase === 'uiComponents' ||
+    phase === 'accessibleControls' ||
     phase === 'documents' ||
     phase === 'media' ||
     phase === 'fileDialogs' ||
@@ -56,6 +57,7 @@ async function main() {
     require('component/app');
     const tests = {
       uiComponents: () => require('./uiComponents'),
+      accessibleControls: () => require('./accessibleControls'),
       documents: () => require('./documents'),
       media: () => require('./media'),
       fileDialogs: () => require('./fileDialogs'),

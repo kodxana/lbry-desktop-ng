@@ -337,10 +337,10 @@ function ChannelForm(props: Props) {
 
         <Tabs className="channelPage-wrapper">
           <TabList className="tabs__list--channel-page">
-            <Tab>{__('General')}</Tab>
-            <Tab>{__('Credit Details')}</Tab>
-            <Tab>{__('Tags')}</Tab>
-            <Tab>{__('Other')}</Tab>
+            <Tab index={0}>{__('General')}</Tab>
+            <Tab index={1}>{__('Credit Details')}</Tab>
+            <Tab index={2}>{__('Tags')}</Tab>
+            <Tab index={3}>{__('Other')}</Tab>
           </TabList>
           <TabPanels>
             <TabPanel>
