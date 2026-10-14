@@ -13,6 +13,8 @@ Ariakit's `render` prop. The simulated mousedown workaround is removed because
 Ariakit opens menus on click. Collection and notification triggers now sit outside
 their navigation links. Popup events do not activate an enclosing claim card,
 and menu links do not reload the renderer. Disabled actions remain inert.
+Closed menus stay mounted, as they did with Reach, so rapid reopening retains
+stable focus targets while the popup animation finishes.
 
 Tabs retain their existing indexed API at all three callers. Each group has
 distinct tab/panel IDs, automatic arrow-key selection and RTL navigation. Disabled

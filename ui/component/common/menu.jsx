@@ -17,7 +17,6 @@ function MenuList({ className, ...props }: { className?: string, children: React
       {...props}
       className={classnames('menu__popup', className)}
       portal
-      unmountOnHide
       onClick={(event) => {
         // Menu actions inside claim cards must not activate the card's link.
         event.stopPropagation();

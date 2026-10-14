@@ -203,7 +203,10 @@ async function menus(store, history) {
     opening++;
     trigger.focus();
     await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
-    await waitFor(() => trigger.getAttribute('aria-expanded') === 'true', 'Menu must open from keyboard');
+    await waitFor(
+      () => trigger.getAttribute('aria-expanded') === 'true',
+      `Menu must open from keyboard (open ${opening})`
+    );
     let menu;
     await waitFor(
       () => {
@@ -266,6 +269,11 @@ async function menus(store, history) {
   help.click();
   await closed(triggers[1]);
   assert.equal(history.location.pathname, '/$/help');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await open(triggers[0]);
+    await ipcRenderer.invoke('fixture-controls-key', 'Escape');
+    await closed(triggers[0]);
+  }
   await open(triggers[1]);
   await ipcRenderer.invoke('fixture-controls-click-outside');
   await waitFor(() => triggers[1].getAttribute('aria-expanded') !== 'true', 'Outside click dismisses the menu');
@@ -315,8 +323,8 @@ async function nestedMenus(store, history) {
     const [collection, actions] = document.querySelectorAll('[aria-haspopup="menu"]');
     collection.click();
     await waitFor(() => collection.getAttribute('aria-expanded') === 'true', 'Collection menu must open with a click');
-    await waitFor(() => document.querySelector('.menu__popup a'), 'The collection link must mount');
-    const link = document.querySelector('.menu__popup a');
+    await waitFor(() => document.querySelector('.menu__popup[data-open] a'), 'The collection link must mount');
+    const link = document.querySelector('.menu__popup[data-open] a');
     assert(link);
     assert.equal(
       link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 })),
@@ -332,7 +340,7 @@ async function nestedMenus(store, history) {
       () => document.activeElement.getAttribute('role') === 'menuitem',
       'The action menu must receive focus before Tab navigation'
     );
-    document.querySelector('[role="menuitem"][aria-disabled="true"]').click();
+    document.querySelector('.menu__popup[data-open] [role="menuitem"][aria-disabled="true"]').click();
     assert.equal(disabledClicks, 0);
     assert.equal(actions.getAttribute('aria-expanded'), 'true');
     await ipcRenderer.invoke('fixture-controls-key', 'Tab');
@@ -388,8 +396,11 @@ async function linkedCards(store, history) {
     await waitFor(() => trigger.getAttribute('aria-expanded') === 'false', 'Card menu dismisses');
   }
   triggers[1].click();
-  await waitFor(() => document.querySelector('.menu__popup [role="menuitem"]'), 'Notification actions appear');
-  document.querySelector('.menu__popup [role="menuitem"]').click();
+  await waitFor(
+    () => document.querySelector('.menu__popup[data-open] [role="menuitem"]'),
+    'Notification actions appear'
+  );
+  document.querySelector('.menu__popup[data-open] [role="menuitem"]').click();
   assert.equal(deletes, 1);
   assert.equal(reads, 0, 'Opening and deleting a notification must not activate its content link');
   assert.equal(history.location.pathname, '/controls');
