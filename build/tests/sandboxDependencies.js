@@ -10,6 +10,7 @@ import desktop from 'util/desktop';
 import sanitizeDocumentHtml from 'util/document-html';
 import ElectronCookies from 'util/electron-cookies.cjs';
 import legacyCookies from './fixtures/legacy-cookies.json';
+import runtimeUtilities from './runtimeUtilities';
 
 // Exercise browser compatibility code with no ambient Node globals. The fixture
 // runner cannot catch a dependency accidentally relying on its own Node process.
@@ -62,6 +63,7 @@ window.probeDependencies = async (docx) => {
     source.end(Buffer.from('Browser stream ł'));
   });
   return {
+    utilities: await runtimeUtilities(),
     legacyCookie,
     persistedCookie,
     mappedCookie,
