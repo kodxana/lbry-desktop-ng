@@ -31,6 +31,12 @@ module.exports = async () => {
     write(legacy);
     assert.deepEqual(bounds(windowStateKeeper(defaults)), bounds(legacy));
     assert.deepEqual(JSON.parse(fs.readFileSync(file)), legacy, 'Loading must not rewrite the old settings');
+    write({ ...legacy, x: -200 });
+    assert.deepEqual(
+      bounds(windowStateKeeper(defaults)),
+      { x: 0, y: 0, width: 1000, height: 600 },
+      'Version 5 resets windows spanning displays, even when both displays are present'
+    );
     screen.getAllDisplays = () => [{ bounds: primary }];
     for (const state of [legacy, { ...legacy, x: 1800, y: 80, displayBounds: primary }]) {
       write(state);
@@ -108,6 +114,6 @@ module.exports = async () => {
     if (!window.isDestroyed()) window.destroy();
   }
   console.log(
-    'PASS: legacy window state, display removal, off-screen recovery, fullscreen/maximized bounds, corrupt/write-failed settings and native close/reopen'
+    'PASS: legacy window state, display removal, off-screen/spanning recovery, fullscreen/maximized bounds, corrupt/write-failed settings and native close/reopen'
   );
 };
