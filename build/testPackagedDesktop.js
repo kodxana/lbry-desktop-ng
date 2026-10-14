@@ -308,6 +308,7 @@ async function main() {
       assert(hot.hash.length > 0);
       assert.deepEqual(hot.errors, []);
       console.log('PASS: Express static worker bytes/MIME, missing assets and the real hot-reload event stream');
+      await require('./testFastRefresh')(evaluate, until);
     }
     assert.deepEqual(
       await evaluate(

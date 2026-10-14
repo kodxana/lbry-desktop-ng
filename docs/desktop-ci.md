@@ -1,5 +1,8 @@
 # Desktop regression checks
 
+The [React and Material UI migration](react-and-material.md) adds autocomplete
+and tooltip interaction, comic-page rendering and real Fast Refresh checks.
+
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
 Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 44.7.0. The

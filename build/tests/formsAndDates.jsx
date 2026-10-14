@@ -152,6 +152,8 @@ async function publishDate(store, history) {
   change(field('Day'), '29');
   await waitFor(() => changes.length === 1, 'Leap-day input did not update the publish draft');
   assert.equal(changes[0], stamp(new Date(2024, 1, 29, 23, 45)), 'Local date/time must become Unix seconds');
+  // React 17 schedules the picker's prop-sync effect after the draft callback.
+  await tick();
   change(field('Minute'), '30');
   await waitFor(() => changes.length === 2, 'Minute input did not update the publish draft');
   assert.equal(changes[1], stamp(new Date(2024, 1, 29, 23, 30)));

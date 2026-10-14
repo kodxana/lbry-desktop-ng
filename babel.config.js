@@ -9,6 +9,10 @@ module.exports = (api) => {
     ],
     overrides: [
       {
+        test: /[\\/]ui[\\/]/,
+        plugins: process.env.NODE_ENV === 'development' ? ['react-refresh/babel'] : [],
+      },
+      {
         // Video.js 8 components are native classes. Transpiled constructors
         // cannot call their superclasses without `new`.
         test: /[\\/]ui[\\/]component[\\/]viewers[\\/]videoViewer[\\/]internal[\\/]/,
@@ -21,7 +25,6 @@ module.exports = (api) => {
       ['@babel/plugin-transform-private-property-in-object', { loose: false }],
       '@babel/plugin-transform-flow-strip-types',
       ['@babel/plugin-transform-class-properties', { loose: false }],
-      'react-hot-loader/babel',
     ],
     ignore: [/node_modules/],
   };

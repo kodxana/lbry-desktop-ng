@@ -15,6 +15,7 @@ for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels
 }
 const output = path.resolve('dist/renderer-tests');
 fs.mkdirSync(output, { recursive: true });
+fs.cpSync(path.resolve('static/webworkers'), path.join(output, 'webworkers'), { recursive: true });
 fs.mkdirSync(path.resolve('dist/ci'), { recursive: true });
 fs.writeFileSync(
   path.join(output, 'index.html'),

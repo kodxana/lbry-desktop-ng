@@ -1,4 +1,3 @@
-import { hot } from 'react-hot-loader/root';
 import { connect } from 'react-redux';
 import { selectGetSyncErrorMessage, selectSyncFatalError } from 'redux/selectors/sync';
 import { doFetchAccessToken, doUserSetReferrer } from 'redux/actions/user';
@@ -72,4 +71,4 @@ const perform = (dispatch) => ({
   fetchModAmIList: () => dispatch(doFetchCommentModAmIList()),
 });
 
-export default hot(connect(select, perform)(App));
+export default connect(select, perform)(App);
