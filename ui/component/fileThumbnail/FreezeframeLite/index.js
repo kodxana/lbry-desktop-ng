@@ -47,8 +47,8 @@ class FreezeframeLite {
   }
 
   load($images) {
-    imagesLoaded($images).on('progress', (instance, { img }) => {
-      this.setup(img);
+    imagesLoaded($images).on('progress', (instance, { img, isLoaded }) => {
+      if (isLoaded) this.setup(img);
     });
   }
 

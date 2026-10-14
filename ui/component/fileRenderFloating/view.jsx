@@ -146,6 +146,7 @@ export default function FileRenderFloating(props: Props) {
     y: window.innerHeight - 400,
   });
   const relativePosRef = React.useRef({ x: 0, y: 0 });
+  const draggableRef = React.useRef(null);
 
   const navigateUrl =
     playingUri &&
@@ -329,6 +330,7 @@ export default function FileRenderFloating(props: Props) {
 
   return (
     <Draggable
+      nodeRef={draggableRef}
       onDrag={handleDragMove}
       onStart={handleDragStart}
       onStop={handleDragStop}
@@ -340,6 +342,7 @@ export default function FileRenderFloating(props: Props) {
       cancel=".button"
     >
       <div
+        ref={draggableRef}
         className={classnames('content__viewer', {
           'content__viewer--floating': isFloating,
           'content__viewer--inline': !isFloating,

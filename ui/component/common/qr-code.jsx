@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import ReactQrCode from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 
 type Props = {
   value: string,
@@ -24,7 +24,7 @@ class QRCode extends React.Component<Props> {
           'qr-code--top-padding': paddingTop,
         })}
       >
-        <ReactQrCode value={value} />
+        {value && <QRCodeCanvas value={value} marginSize={4} aria-label={__('Wallet receive address QR code')} />}
       </div>
     );
   }

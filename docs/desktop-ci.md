@@ -14,6 +14,9 @@ The [state-management upgrade](state-management.md) adds selector immutability,
 nested React subscription, thunk and persistence-filter checks, plus real
 compressed playback-state preservation across installed Windows upgrades.
 
+The [shared UI upgrade](ui-components.md) adds QR pixel decoding, pagination,
+dialog focus, update progress, floating-player dragging and thumbnail checks.
+
 ## Checks
 
 | Check                   | Coverage                                                                                                                                                                                                                                                                                              |

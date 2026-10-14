@@ -143,8 +143,8 @@ const renderConfig = {
     ...plugins,
     new ProvidePlugin({
       Buffer: ['buffer', 'Buffer'],
-      process: 'process/browser',
-      'global.process': 'process/browser',
+      process: require.resolve('process/browser.js'),
+      'global.process': require.resolve('process/browser.js'),
     }),
     new DefinePlugin({
       'process.platform': 'window.lbryDesktop.platform',

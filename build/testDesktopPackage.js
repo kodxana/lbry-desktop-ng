@@ -40,6 +40,7 @@ for (const name of [
   '@electron/asar',
   'webpack',
   'express',
+  'jsqr',
 ]) {
   assert(!entries.has('/node_modules/' + name + '/package.json'), 'Development package shipped: ' + name);
 }
