@@ -1,3 +1,4 @@
+// @flow
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import { strict as assert } from 'assert';
@@ -124,7 +125,7 @@ async function main() {
   assert.equal(state.wallet.draftTransaction.amount, undefined, 'A restart must discard unsent transactions');
   assert.equal(state.wallet.draftTransaction.address, undefined);
 
-  function Position({ positions }) {
+  function Position({ positions }: { positions: { [string]: { [string]: number } } }) {
     return <output id="position">{positions['fixture-claim'] && positions['fixture-claim']['fixture-tx:0']}</output>;
   }
   const ConnectedPosition = connect((value) => ({ positions: value.content.positions }))(Position);

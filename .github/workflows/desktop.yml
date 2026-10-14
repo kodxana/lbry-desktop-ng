@@ -37,6 +37,8 @@ jobs:
         run: node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
       - name: Install Electron
         run: node .yarn/releases/yarn-3.2.0.cjs exec install-electron
+      - name: Lint application and test sources
+        run: node .yarn/releases/yarn-3.2.0.cjs lint
       - name: Install Linux runtime libraries
         if: runner.os == 'Linux'
         run: |

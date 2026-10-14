@@ -29,7 +29,11 @@ startup/shutdown. The SDK itself is maintained in
 - Record the platform, SDK source/hash, test steps and remaining limitations.
   A successful build alone does not establish wallet or playback compatibility.
 
-The inherited lint baseline contains known findings. Report new failures
-separately from existing ones; do not suppress checks to hide a regression.
+Run `yarn lint` for the application and test sources. It currently has no errors;
+existing hook-dependency and console warnings remain visible. Do not suppress
+checks to hide a regression. Run `yarn hooks:install` once per checkout to install
+the staged-file checks, including after a dependency install with scripts skipped.
+See [lint and commit hooks](docs/lint-tooling.md) for commands and the separate Flow
+type-checking limitation.
 Changes to packaging and release automation must retain the test application's
 separate identity until a reviewed migration and release process exists.

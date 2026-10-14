@@ -385,7 +385,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
                   </NavLink>
                 )}
               </div>
-              <div className="claim-tile__info" uri={uri}>
+              <div className="claim-tile__info" data-uri={uri}>
                 {!isChannelUri && signingChannel && (
                   <div className="claim-preview__channel-staked">
                     <UriIndicator focusable={false} uri={uri} link hideAnonymous>
@@ -423,8 +423,8 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
                     {typeof properties === 'function'
                       ? properties(claim)
                       : properties !== undefined
-                      ? properties
-                      : !isMobile && <ClaimTags uri={uri} type={type} />}
+                        ? properties
+                        : !isMobile && <ClaimTags uri={uri} type={type} />}
                   </React.Fragment>
                 )}
               </div>
