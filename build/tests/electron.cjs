@@ -36,7 +36,9 @@ async function run(phase) {
       contextIsolation: false,
       sandbox: false,
       preload: path.join(output, 'fixture-preload.js'),
-      additionalArguments: ['--lbry-renderer-url=' + require('url').pathToFileURL(path.join(output, 'index.html')).href],
+      additionalArguments: [
+        '--lbry-renderer-url=' + require('url').pathToFileURL(path.join(output, 'index.html')).href,
+      ],
       plugins: true,
       // Hidden fixture windows still need animation frames for the real viewers.
       backgroundThrottling: false,
@@ -150,6 +152,7 @@ app
       };
     });
     const blocked = [];
+    const analyticsRequests = [];
     media = await require('./mediaServer.cjs')();
     ipcMain.handle('fixture-media', (event) => {
       assert.equal(event.sender, activeWindow.webContents);
@@ -168,7 +171,11 @@ app
           callback({ cancel: false });
           return;
         }
-        blocked.push(details.url);
+        if (['analytics', 'analyticsEnabled'].includes(activePhase)) {
+          analyticsRequests.push({ phase: activePhase, url: details.url });
+        } else {
+          blocked.push(details.url);
+        }
         callback({ cancel: true });
       }
     );
@@ -192,16 +199,22 @@ app
       'downloadNotifications',
       'passwords',
       'passwordRestart',
+      'analytics',
+      'analyticsEnabled',
+      'analyticsDisabled',
+      'analyticsUnconfigured',
     ]) {
       await run(phase);
     }
-    // The legacy analytics module eagerly loads this script even with analytics disabled.
-    // Keep it blocked; any SDK or other service request is outside these tests' scope.
     assert.deepEqual(
-      blocked.filter((url) => url !== 'https://analytics.lbry.com/matomo.js'),
-      [],
-      'Unexpected renderer requests: ' + JSON.stringify(blocked)
+      analyticsRequests,
+      [
+        { phase: 'analytics', url: 'https://analytics.lbry.com/matomo.js' },
+        { phase: 'analyticsEnabled', url: 'https://analytics.lbry.com/matomo.js' },
+      ],
+      'Only explicit analytics opt-in may request the tracking script'
     );
+    assert.deepEqual(blocked, [], 'Unexpected renderer requests: ' + JSON.stringify(blocked));
     console.log('PASS: external requests blocked; no SDK calls; disposable IndexedDB profile');
     await media.close();
     clearTimeout(timer);

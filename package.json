@@ -87,15 +87,13 @@
     "@babel/preset-flow": "7.29.7",
     "@babel/preset-react": "7.29.7",
     "@babel/register": "7.29.7",
-    "@datapunt/matomo-tracker-js": "^0.1.4",
+    "@datapunt/matomo-tracker-js": "0.5.1",
     "@electron/asar": "4.3.1",
     "@pmmmwh/react-refresh-webpack-plugin": "0.6.3",
     "@reach/combobox": "0.18.0",
     "@reach/menu-button": "0.18.0",
     "@reach/rect": "0.18.0",
     "@reach/tabs": "0.18.0",
-    "@sentry/browser": "^5.12.1",
-    "@sentry/webpack-plugin": "^1.10.0",
     "@types/react": "17.0.93",
     "@types/three": "^0.103.2",
     "adm-zip": "0.6.1",
@@ -225,6 +223,7 @@
     "yauzl": "3.4.0"
   },
   "resolutions": {
+    "@datapunt/matomo-tracker-js@0.5.1": "patch:@datapunt/matomo-tracker-js@npm:0.5.1#.yarn/patches/matomo-tracker-js-npm-0.5.1.patch",
     "react-is": "17.0.2",
     "video.js": "8.24.1",
     "tough-cookie-web-storage-store@1.0.0": "patch:tough-cookie-web-storage-store@npm:1.0.0#.yarn/patches/tough-cookie-web-storage-store-npm-1.0.0-d9f89f8966.patch"

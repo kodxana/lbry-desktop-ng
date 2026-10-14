@@ -20,6 +20,7 @@ window.addEventListener('unhandledrejection', (event) => reportError(event.reaso
 async function main() {
   if (phase === 'bundling') return require('./bundling').default();
   window.i18n_messages = {};
+  if (phase === 'analyticsUnconfigured') require('config').MATOMO_URL = '';
   await localForage.setDriver(localForage.INDEXEDDB);
   if (phase === 'fresh') await localForage.clear();
   if (phase === 'legacy') await localForage.setItem('persist:v0', fixture.serialized);
@@ -37,6 +38,11 @@ async function main() {
     });
   });
   assert.equal(localForage.driver(), localForage.INDEXEDDB);
+  if (phase.startsWith('analytics')) {
+    const message = await require('./analytics').default(phase, history);
+    persistor.pause();
+    return message;
+  }
   if (
     phase === 'uiComponents' ||
     phase === 'accessibleControls' ||

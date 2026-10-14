@@ -89,17 +89,6 @@ const plugins = [
   }),
 ];
 
-// if (hasSentryToken) {
-//   plugins.push(
-//     new SentryWebpackPlugin({
-//       include: './dist',
-//       ignoreFile: '.sentrycliignore',
-//       ignore: ['node_modules', 'webpack.config.js', 'webworkers'],
-//       configFile: 'sentry.properties',
-//     })
-//   );
-// }
-
 const renderConfig = {
   target: 'web',
   resolve: {
