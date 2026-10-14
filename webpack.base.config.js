@@ -75,6 +75,8 @@ let baseConfig = {
           : path.resolve(__dirname, 'homepages/meme/index.js'),
       lbryinc: 'extras/lbryinc',
       recsys: 'extras/recsys',
+      // React 16 provides this runtime without an exports map for ESM callers.
+      'react/jsx-runtime$': require.resolve('react/jsx-runtime.js'),
       // Use the filter transform's ES module entry. Its Lodash subpaths also
       // have CommonJS callers, so they must retain their native export shape.
       'redux-persist-transform-filter': 'redux-persist-transform-filter/index.js',
