@@ -1,3 +1,5 @@
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import { strict as assert } from 'assert';
 import { ipcRenderer } from 'electron';
 import localForage from 'localforage';

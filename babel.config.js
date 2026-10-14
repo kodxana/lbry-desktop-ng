@@ -2,7 +2,11 @@ module.exports = (api) => {
   api.cache(false);
 
   return {
-    presets: [['@babel/env', { loose: true, modules: false }], '@babel/react', '@babel/flow'],
+    presets: [
+      ['@babel/env', { loose: true, modules: false }],
+      ['@babel/react', { runtime: 'classic' }],
+      '@babel/flow',
+    ],
     overrides: [
       {
         // Video.js 8 components are native classes. Transpiled constructors
@@ -12,13 +16,11 @@ module.exports = (api) => {
       },
     ],
     plugins: [
-      'import-glob',
-      '@babel/plugin-transform-runtime',
-      ['@babel/plugin-proposal-decorators', { decoratorsBeforeExport: true }],
-      ['@babel/plugin-proposal-private-methods', { loose: false }],
-      ['@babel/plugin-proposal-private-property-in-object', { loose: false }],
+      ['@babel/plugin-transform-runtime', { version: require('./package.json').dependencies['@babel/runtime'] }],
+      ['@babel/plugin-transform-private-methods', { loose: false }],
+      ['@babel/plugin-transform-private-property-in-object', { loose: false }],
       '@babel/plugin-transform-flow-strip-types',
-      '@babel/plugin-proposal-class-properties',
+      ['@babel/plugin-transform-class-properties', { loose: false }],
       'react-hot-loader/babel',
     ],
     ignore: [/node_modules/],

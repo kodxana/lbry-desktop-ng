@@ -129,6 +129,7 @@ app
     docxFixture().writeZip(docx);
     await files.grant(docx);
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
+    assert.equal(await evaluate('typeof regeneratorRuntime.wrap'), 'function', 'Legacy generators retain their runtime');
     assert(documents.legacyCookie.includes('auth_token=fixture-auth-token'));
     assert(!documents.legacyCookie.includes('expired='));
     assert(documents.persistedCookie.includes('sandbox_cookie=roundtrip-%20=value'));

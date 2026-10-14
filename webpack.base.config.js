@@ -27,9 +27,6 @@ let baseConfig = {
       {
         test: /\.jsx?$/,
         loader: 'babel-loader',
-        options: {
-          plugins: ['@babel/plugin-syntax-dynamic-import'],
-        },
       },
       {
         test: /\.s?css$/,

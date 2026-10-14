@@ -1,3 +1,5 @@
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import markdownProcessor from 'util/markdown-processor';
 import markdownRenderer from 'util/markdown-renderer';
 import ReactDOMServer from 'react-dom/server';
