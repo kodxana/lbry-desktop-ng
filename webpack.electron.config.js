@@ -50,6 +50,14 @@ const mainConfig = {
     new CopyWebpackPlugin({
       patterns: [
         {
+          from: path.resolve(__dirname, 'node_modules/font-awesome/README.md'),
+          to: `${DIST_ROOT}/electron/static/licenses/font-awesome-README.md`,
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/codemirror-spell-checker/LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/codemirror-spell-checker.LICENSE`,
+        },
+        {
           from: path.resolve(__dirname, 'ui/util/electron-cookies.LICENSE'),
           to: `${DIST_ROOT}/electron/static/licenses/electron-cookies.LICENSE`,
         },

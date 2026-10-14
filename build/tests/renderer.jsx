@@ -47,6 +47,7 @@ async function main() {
     phase === 'uiComponents' ||
     phase === 'accessibleControls' ||
     phase === 'formsAndDates' ||
+    phase === 'markdownEditor' ||
     phase === 'documents' ||
     phase === 'media' ||
     phase === 'fileDialogs' ||
@@ -66,6 +67,7 @@ async function main() {
       uiComponents: () => require('./uiComponents'),
       accessibleControls: () => require('./accessibleControls'),
       formsAndDates: () => require('./formsAndDates'),
+      markdownEditor: () => require('./markdownEditor'),
       documents: () => require('./documents'),
       media: () => require('./media'),
       fileDialogs: () => require('./fileDialogs'),

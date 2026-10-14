@@ -2673,21 +2673,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/codemirror@npm:^0.0.88":
-  version: 0.0.88
-  resolution: "@types/codemirror@npm:0.0.88"
+"@types/codemirror@npm:^5.60.10, @types/codemirror@npm:~5.60.5":
+  version: 5.60.18
+  resolution: "@types/codemirror@npm:5.60.18"
   dependencies:
     "@types/tern": "*"
-  checksum: 81e75595cc0bcf1dd08aaa3b968d8116bbe4ead9a61f895cf3d06154028919ab238f50378403124856373eeaf80439608fc5847923227ba31e707db216fc804a
-  languageName: node
-  linkType: hard
-
-"@types/codemirror@npm:^5.60.4":
-  version: 5.60.5
-  resolution: "@types/codemirror@npm:5.60.5"
-  dependencies:
-    "@types/tern": "*"
-  checksum: 423b6378b6415b626d9f54d37d69477f96940b30a695d4ec36402feb59a96f7ab42d1c17b8472fbb222a0966f6061deee234e37bcd3e34c75836e989dc95929d
+  checksum: d297c451f5480a7184822c91e4c139e45d9f97f4389c11e62a346db6b077483a844478102dfbeec4a2d99d29f9313d4e4ccf1bb1df0bf9d42c47098ac49a7aaf
   languageName: node
   linkType: hard
 
@@ -2808,17 +2799,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/marked@npm:^0.7.4":
-  version: 0.7.4
-  resolution: "@types/marked@npm:0.7.4"
-  checksum: 110d869d22ca52546664703a1b89dbb03f518b6657a547a5a0a2a0935fb089251261979fb3aa987379914922246ca9f8922ee05b6989dd4a8961afa9621323bb
-  languageName: node
-  linkType: hard
-
-"@types/marked@npm:^4.0.1":
-  version: 4.0.3
-  resolution: "@types/marked@npm:4.0.3"
-  checksum: 2fc409a6291cb770688731a444f54e7eab6257c9b565dea4e9d2f3b6654b606e9dd8ea4a924e306b2d2f581dedcb7a27f10f2ca7aed828b11642ab85955341f1
+"@types/marked@npm:^4.0.7":
+  version: 4.3.2
+  resolution: "@types/marked@npm:4.3.2"
+  checksum: c1107079d6c368dd60a668a41aa2101d006cad404b6eb4af6723d419dc869b278928fb769825f11d0d311a8cf437428992729c8a47253b6a3894a6326b1ee4d9
   languageName: node
   linkType: hard
 
@@ -4961,10 +4945,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"codemirror@npm:^5.39.2, codemirror@npm:^5.63.1":
-  version: 5.65.6
-  resolution: "codemirror@npm:5.65.6"
-  checksum: d65aa28af06df5e37fc34a0ae0cd96566411f2c62a157047a2993c2d4db312452e3e5542a64aad66e9bd2114a2dfce448032be71fb382452753d7a6deeaa08dc
+"codemirror@npm:5.65.21, codemirror@npm:^5.65.15":
+  version: 5.65.21
+  resolution: "codemirror@npm:5.65.21"
+  checksum: 31b00bdbdea89f1efef7ea57eb3c59536806ccfc4a514f0187f40dafb580ba2ce50c91afdca80c6eeb2f7620a6032b25f5d2cce42d10d2d97c6ad204c332b82a
   languageName: node
   linkType: hard
 
@@ -6156,16 +6140,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"easymde@npm:^2.10.1":
-  version: 2.16.1
-  resolution: "easymde@npm:2.16.1"
+"easymde@npm:2.21.0":
+  version: 2.21.0
+  resolution: "easymde@npm:2.21.0"
   dependencies:
-    "@types/codemirror": ^5.60.4
-    "@types/marked": ^4.0.1
-    codemirror: ^5.63.1
+    "@types/codemirror": ^5.60.10
+    "@types/marked": ^4.0.7
+    codemirror: ^5.65.15
     codemirror-spell-checker: 1.1.2
-    marked: ^4.0.10
-  checksum: fe75259103e7383e4e4089587ca0a5c0ad54add76c9f7ea64a83aa85d924a182205d4dd1a234eb8b8c692b123178961a0283fb5bc32e10e66590d1d4e25a58a8
+    marked: ^4.1.0
+  checksum: b973ba85129839710df6037e30b63ef8ff90cf5294a816c51839b1ec4a90e2fd1b31ef2e7b10d09e4085c299e943b9e9cd545b192ecb2b6da975865033f329eb
   languageName: node
   linkType: hard
 
@@ -7643,6 +7627,13 @@ __metadata:
   bin:
     flowgen: lib/cli/index.js
   checksum: 412e3118b18b553791f34e38b0e30297627ca0a03e2c107c6255e051db8834f313fdc49267c28aa25c87686d346ad6676bb6cd5bb68448d8618a0e1be12e83fc
+  languageName: node
+  linkType: hard
+
+"font-awesome@npm:4.7.0":
+  version: 4.7.0
+  resolution: "font-awesome@npm:4.7.0"
+  checksum: fa223f6e3b27e97d2d09cdbf0c1363e2ad18d2a685fc045f54e86394db59f7c113482a819de3b6489f42a630a8ec5911b8e65718e45f7cace1c0a1b05d7fce08
   languageName: node
   linkType: hard
 
@@ -9914,7 +9905,8 @@ __metadata:
     buffer: 5.7.1
     chalk: ^4.1.0
     classnames: 2.5.1
-    codemirror: ^5.39.2
+    codemirror: 5.65.21
+    codemirror-spell-checker: 1.1.2
     connected-react-router: 6.9.3
     copy-webpack-plugin: 14.0.0
     core-js: 3.50.0
@@ -9928,6 +9920,7 @@ __metadata:
     devtron: ^1.4.0
     dotenv-defaults: ^2.0.1
     dotenv-webpack: 9.0.0
+    easymde: 2.21.0
     electron: 44.7.0
     electron-builder: 26.17.0
     electron-devtools-installer: ^3.1.1
@@ -9956,6 +9949,7 @@ __metadata:
     ffmpeg-probe: ^1.0.6
     flow-bin: ^0.97.0
     flow-typed: ^3.7.0
+    font-awesome: 4.7.0
     formik: 2.4.9
     hast-util-sanitize: 5.0.2
     hast-util-to-jsx-runtime: 2.3.6
@@ -10009,7 +10003,7 @@ __metadata:
     react-refresh: 0.19.0
     react-router: ^5.1.0
     react-router-dom: ^5.1.0
-    react-simplemde-editor: ^4.1.3
+    react-simplemde-editor: 5.2.0
     reakit: 1.3.11
     redux: 4.2.1
     redux-persist: 6.0.0
@@ -10035,6 +10029,7 @@ __metadata:
     three-full: ^28.0.2
     tough-cookie: 6.0.2
     tough-cookie-web-storage-store: 1.0.0
+    typo-js: 1.3.2
     unist-util-visit: 5.1.0
     url: 0.11.0
     util: 0.10.3
@@ -10545,12 +10540,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"marked@npm:^4.0.10":
-  version: 4.0.17
-  resolution: "marked@npm:4.0.17"
+"marked@npm:^4.1.0":
+  version: 4.3.0
+  resolution: "marked@npm:4.3.0"
   bin:
     marked: bin/marked.js
-  checksum: 33a3c43a20b47bddaf045a59bfc7c3d41cc321931cc663ed231ca3b5b3b195fb2ac2973e687c2afd65b79539c14619baa07d19793f70130160f0af80c06d9b3a
+  checksum: 0db6817893952c3ec710eb9ceafb8468bf5ae38cb0f92b7b083baa13d70b19774674be04db5b817681fa7c5c6a088f61300815e4dd75a59696f4716ad69f6260
   languageName: node
   linkType: hard
 
@@ -13617,17 +13612,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-simplemde-editor@npm:^4.1.3":
-  version: 4.1.5
-  resolution: "react-simplemde-editor@npm:4.1.5"
+"react-simplemde-editor@npm:5.2.0":
+  version: 5.2.0
+  resolution: "react-simplemde-editor@npm:5.2.0"
   dependencies:
-    "@types/codemirror": ^0.0.88
-    "@types/marked": ^0.7.4
-    easymde: ^2.10.1
+    "@types/codemirror": ~5.60.5
   peerDependencies:
-    react: ">=15"
-    react-dom: ">=15"
-  checksum: 1c787bfd12d023f05675cebeea84f7c97e47b055ae9093f3f0aec533588dbc47b22a5c7f791129ac543501efa79d549529b251844933c1fd49e047b6607a0d4f
+    easymde: ">= 2.0.0 < 3.0.0"
+    react: ">=16.8.2"
+    react-dom: ">=16.8.2"
+  checksum: 3e47019f8ca47875fd750b7af975c0a485372d494434d8b251a0222aab810f94fda6807916d7aac3be82fbd8173d2c1a116ec91ac6fd2033f635f053297ed266
   languageName: node
   linkType: hard
 
@@ -16156,10 +16150,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typo-js@npm:*":
-  version: 1.2.1
-  resolution: "typo-js@npm:1.2.1"
-  checksum: 35726fd7c5f9307ee153a1986ad0e2c22c6d3f8f33e7b313f248b24a9e083369b27ab41159374f8c84093520786cfda687b6ad6cae86b00ec454edbb139ac679
+"typo-js@npm:*, typo-js@npm:1.3.2":
+  version: 1.3.2
+  resolution: "typo-js@npm:1.3.2"
+  checksum: ae9a2bc814baeb83d51bb2c3d8fea760246e47ffcee8d4e33bc65ae4ebbbe2d278ae7697a6d0097b998aed9dd2531141c32e70428a906645dd7baafc95f3ca3e
   languageName: node
   linkType: hard
 
