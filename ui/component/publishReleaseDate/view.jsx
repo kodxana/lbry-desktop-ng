@@ -83,7 +83,15 @@ const PublishReleaseDate = (props: Props) => {
         {showDatePicker && (
           <DateTimePicker
             className="date-picker-input"
-            calendarClassName="form-field-calendar"
+            calendarProps={{ className: 'form-field-calendar' }}
+            calendarAriaLabel={__('Choose release date')}
+            yearAriaLabel={__('Year')}
+            monthAriaLabel={__('Month')}
+            dayAriaLabel={__('Day')}
+            hourAriaLabel={__('Hour')}
+            minuteAriaLabel={__('Minute')}
+            amPmAriaLabel={__('AM/PM')}
+            nativeInputAriaLabel={__('Release date')}
             onChange={onDateTimePickerChanged}
             value={date}
             maxDate={maxDate}

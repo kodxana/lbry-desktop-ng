@@ -176,6 +176,7 @@ app
       'restart',
       'uiComponents',
       'accessibleControls',
+      'formsAndDates',
       'documents',
       'media',
       'fileDialogs',

@@ -20,6 +20,9 @@ dialog focus, update progress, floating-player dragging and thumbnail checks.
 The [menus, tabs and search upgrade](accessible-controls.md) adds keyboard/focus,
 tab indicator geometry, menu routing/dismissal and search selection checks.
 
+The [forms and dates upgrade](forms-and-dates.md) adds send confirmation/retry,
+publish date editing, timed blocks, locale and duration formatting checks.
+
 ## Checks
 
 | Check                   | Coverage                                                                                                                                                                                                                                                                                              |
