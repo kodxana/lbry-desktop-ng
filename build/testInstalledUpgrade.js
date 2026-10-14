@@ -304,7 +304,8 @@ async function main() {
     );
     assert.equal(saved.ok, true);
     const logger = "process.mainModule.require('electron-updater').autoUpdater.logger";
-    const updaterLog = path.join(profile.logs, 'main.log');
+    const updaterLog = await mainClient.evaluate(logger + '.transports.file.getFile().path');
+    assert.equal(updaterLog, path.join(profile.desktop, 'logs', 'main.log'));
     await mainClient.evaluate(logger + ".info('Published RC3 log fixture'); true");
     assert(fs.readFileSync(updaterLog, 'utf8').includes('Published RC3 log fixture'));
     for (let index = 0; index < candidates.length; index++) {

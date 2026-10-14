@@ -59,8 +59,10 @@ Upstream changes reviewed:
 Updater diagnostics use `electron-log` 5.4.4 through its Node entry point. The
 app needs no renderer logging, so it does not load the Electron entry point's
 IPC handlers or initialize a logging preload. The file transport uses the v5
-`resolvePathFn` option to retain the selected profile's `logs/main.log`, including
-existing content and the default 1 MiB rotation to `main.old.log`. No remote
+`resolvePathFn` option to retain `desktop/logs/main.log` inside the selected
+profile, including existing content and the default 1 MiB rotation to
+`main.old.log`. Version 4 derived this location from Electron's `userData` path,
+not the separate `logs` path used by the SDK. No remote
 transport or automatic exception capture is enabled. See the upstream
 [v4-to-v5 migration guide](https://github.com/megahertz/electron-log/blob/v5.4.4/docs/migration.md).
 Updater tests use the real logger, checking formatting, append, rotation,
