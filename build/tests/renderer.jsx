@@ -38,6 +38,7 @@ async function main() {
   });
   assert.equal(localForage.driver(), localForage.INDEXEDDB);
   if (
+    phase === 'uiComponents' ||
     phase === 'documents' ||
     phase === 'media' ||
     phase === 'fileDialogs' ||
@@ -54,6 +55,7 @@ async function main() {
     // Follow the desktop component import order to resolve its existing app/router cycle.
     require('component/app');
     const tests = {
+      uiComponents: () => require('./uiComponents'),
       documents: () => require('./documents'),
       media: () => require('./media'),
       fileDialogs: () => require('./fileDialogs'),

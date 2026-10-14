@@ -28,6 +28,7 @@ const timer = setTimeout(() => {
 async function run(phase) {
   const window = new BrowserWindow({
     show: false,
+    ...(phase === 'uiComponents' ? { width: 1280, height: 800 } : {}),
     webPreferences: {
       nodeIntegration: true,
       // Fixture code creates files and inspects ZIPs. A separate sandbox suite
@@ -167,6 +168,7 @@ app
       'fresh',
       'legacy',
       'restart',
+      'uiComponents',
       'documents',
       'media',
       'fileDialogs',
