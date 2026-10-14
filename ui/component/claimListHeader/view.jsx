@@ -80,11 +80,11 @@ function ClaimListHeader(props: Props) {
   const isFiltered = () =>
     Boolean(
       urlParams.get(CS.FRESH_KEY) ||
-        urlParams.get(CS.CONTENT_KEY) ||
-        urlParams.get(CS.DURATION_KEY) ||
-        urlParams.get(CS.TAGS_KEY) ||
-        urlParams.get(CS.FEE_AMOUNT_KEY) ||
-        urlParams.get(CS.LANGUAGE_KEY)
+      urlParams.get(CS.CONTENT_KEY) ||
+      urlParams.get(CS.DURATION_KEY) ||
+      urlParams.get(CS.TAGS_KEY) ||
+      urlParams.get(CS.FEE_AMOUNT_KEY) ||
+      urlParams.get(CS.LANGUAGE_KEY)
     );
 
   const languageValue = searchInLanguage
@@ -92,8 +92,8 @@ function ClaimListHeader(props: Props) {
       ? languageSetting
       : languageParam
     : languageParam === null
-    ? CS.LANGUAGES_ALL
-    : languageParam;
+      ? CS.LANGUAGES_ALL
+      : languageParam;
 
   const shouldHighlight = searchInLanguage
     ? languageParam !== languageSetting && languageParam !== null
@@ -455,7 +455,6 @@ function ClaimListHeader(props: Props) {
                     <option value={CS.FEE_AMOUNT_ANY}>{__('Any')}</option>
                     <option value={CS.FEE_AMOUNT_ONLY_FREE}>{__('Free')}</option>
                     <option value={CS.FEE_AMOUNT_ONLY_PAID}>{__('Paid')}</option>
-                    ))}
                   </FormField>
                 </div>
               )}
