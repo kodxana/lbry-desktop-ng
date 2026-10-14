@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { registerContentFiles } = require('../electron/contentFiles.cjs');
 const { registerDesktopActions } = require('../electron/desktopActions.cjs');
+const mimeFixtures = require('./tests/fixtures/mime.json');
 
 async function main() {
   const output = path.resolve(__dirname, '../dist/content-tests');
@@ -29,6 +30,7 @@ async function main() {
   let downloaded = [];
   let release;
   let hold = false;
+  let media;
   const files = registerContentFiles({
     ipcMain,
     profile: { temp: root },
@@ -36,15 +38,17 @@ async function main() {
     rendererURL: frame.url,
     shell: { openPath: (file) => calls.push(['open', file]), showItemInFolder: (file) => calls.push(['reveal', file]) },
     probe: async () => {
+      if (media) return media;
       throw new Error('Not media');
     },
     rpc: async (method, params) => {
       assert.equal(method, 'file_list');
       assert.equal(params.page_size, 1);
-      if (hold)
+      if (hold) {
         await new Promise((resolve) => {
           release = resolve;
         });
+      }
       return { items: downloaded.map((download_path) => ({ download_path })) };
     },
   });
@@ -59,6 +63,28 @@ async function main() {
   assert.equal(details.name, path.basename(source));
   assert.equal(details.size, Buffer.byteLength('Document ł'));
   assert.equal(details.buffer.toString(), 'Document ł');
+  assert.equal(details.mime, 'text/plain');
+  for (const [name, type] of mimeFixtures) {
+    const filename = path.join(root, name);
+    fs.writeFileSync(filename, 'Synthetic content');
+    // Downloads are authorized by the SDK, independently of picker grants.
+    downloaded = [filename];
+    const metadata = await invoke('get-file-details-from-path', filename);
+    assert.equal(metadata.mime, type || undefined, name);
+    assert.equal(metadata.duration, 0);
+    assert.equal(metadata.buffer.toString(), 'Synthetic content');
+    if (name === 'script.js') {
+      assert.equal(await invoke('open-content-file', filename), 'Open this file from its folder.');
+      assert.equal(calls.length, 0, 'Recognizing a script MIME type must not allow launching it');
+    }
+  }
+  const mediaFile = downloaded[0];
+  media = { format: { duration: 12.5, format_name: 'mov,mp4,m4a,3gp,3g2,mj2' } };
+  const probed = await invoke('get-file-details-from-path', mediaFile);
+  assert.equal(probed.mime, 'video/mp4', 'Media probing still overrides the filename type');
+  assert.equal(probed.duration, 12.5);
+  media = undefined;
+  downloaded = [];
   await invoke('reveal-content-file', source);
   assert.deepEqual(calls, [['reveal', source]]);
   const executable = path.join(root, 'program.exe');
@@ -81,7 +107,8 @@ async function main() {
   hold = true;
   downloaded = [secret];
   const pending = invoke('read-document', secret);
-  while (!release) await new Promise((resolve) => setTimeout(resolve, 1));
+  // The pending RPC assigns release asynchronously.
+  while (!release) await new Promise((resolve) => setTimeout(resolve, 1)); // eslint-disable-line no-unmodified-loop-condition
   frame.url = 'https://example.invalid';
   release();
   await assert.rejects(pending, /Renderer changed/);
@@ -103,7 +130,7 @@ async function main() {
   assert.throws(() => invoke('auto-launch', 'constructor'));
   assert.equal(invoke('auto-launch', 'isEnabled'), true);
   console.log(
-    'PASS: selected/SDK file authorization, document bytes, post destinations, stale senders and scoped desktop actions'
+    'PASS: selected/SDK file authorization, MIME metadata and probe override, document bytes, post destinations, stale senders and scoped desktop actions'
   );
 }
 main().catch((error) => {

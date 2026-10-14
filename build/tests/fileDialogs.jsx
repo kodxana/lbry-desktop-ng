@@ -5,6 +5,7 @@ import path from 'path';
 import { ipcRenderer } from 'electron';
 import FileSelector from 'component/common/file-selector';
 import { render, unmount, waitFor } from './helpers';
+import mimeFixtures from './fixtures/mime.json';
 
 export default async function fileDialogs(store, history, root) {
   const selected = path.join(root, 'chosen ł #1.txt');
@@ -118,5 +119,22 @@ export default async function fileDialogs(store, history, root) {
   await waitFor(() => chosen.length === 7, 'A new form must be able to select after the previous form unmounts');
   assert(!document.body.textContent.includes('could not be opened'));
   unmount();
-  return 'native dialog options/cancel/errors/retry, scoped file IPC, metadata-only folders/files, webUtils paths, repeat selection, missing paths, pending dialogs and unmounted selectors';
+
+  for (const [name, type] of mimeFixtures) {
+    const filename = path.join(root, name);
+    fs.writeFileSync(filename, contents);
+    const count = chosen.length;
+    render(<FileSelector type="openFile" onFileChosen={onFileChosen} />, store, history);
+    await ipcRenderer.invoke('fixture-dialog', { canceled: false, filePaths: [filename] });
+    browse();
+    await waitFor(() => chosen.length === count + 1, 'MIME fixture was not selected: ' + name);
+    assert.equal(chosen[count].file.type, type || '', name);
+    assert.equal(await chosen[count].file.text(), contents);
+    // Selection grants the same file to publishing metadata through the main process.
+    const details = await ipcRenderer.invoke('get-file-details-from-path', filename);
+    assert.equal(details.mime, type || undefined, name);
+    assert.equal(details.name, name);
+    unmount();
+  }
+  return 'native dialog options/cancel/errors/retry, file and publishing MIME metadata, metadata-only folders/files, webUtils paths, repeat selection, missing paths, pending dialogs and unmounted selectors';
 }

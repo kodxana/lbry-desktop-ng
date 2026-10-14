@@ -30,6 +30,19 @@ than being launched through the renderer's file API.
 File grants last for the app session. Restored publishing drafts ask users to
 select their file again while keeping the title and other draft metadata.
 
+File selection and publishing metadata use `mime` 4.1.1 in the main process.
+Version 4 is ESM-only; the CommonJS services read its default export using the
+synchronous ESM loading supported by our Node 24 toolchain and Electron 44.
+The full database retains document and media types, including vendor types such
+as DOCX. Unknown extensions still produce no MIME type, and successful media
+probing can override the filename-based result. The updated database identifies
+JavaScript as `text/javascript`; file-opening permissions still depend on the
+existing extension allowlist, not the MIME database.
+The shared file fixtures cover document, image and audio/video types, uppercase
+extensions, Unicode paths and unknown types through both the SDK metadata path
+and the native picker/renderer path. See the upstream
+[migration notes](https://github.com/broofa/mime#mime).
+
 Password encryption and migration keep the existing main-process password store
 and OS keyring. The cookie adapter's OS-specific file-URL mapping is calculated
 in the main process to preserve existing cookie paths. Update acceptance, decline

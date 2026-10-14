@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const mime = require('mime');
+const mime = require('mime').default;
 const { createRendererGuard } = require('./rendererGuard.cjs');
 
 const MAX_BYTES = 500000000;
