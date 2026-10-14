@@ -4,7 +4,7 @@ import * as PAGES from 'constants/pages';
 import classnames from 'classnames';
 import React from 'react';
 import ChannelThumbnail from 'component/channelThumbnail';
-import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
+import { Menu, MenuList, MenuButton, MenuItem } from 'component/common/menu';
 import ChannelTitle from 'component/channelTitle';
 import Icon from 'component/common/icon';
 import { useHistory } from 'react-router';
@@ -77,16 +77,16 @@ function ChannelSelector(props: Props) {
         <MenuList className="menu__list channel__list">
           {channels &&
             channels.map((channel) => (
-              <MenuItem key={channel.permanent_url} onSelect={() => handleChannelSelect(channel)}>
+              <MenuItem key={channel.permanent_url} onClick={() => handleChannelSelect(channel)}>
                 <ChannelListItem uri={channel.permanent_url} />
               </MenuItem>
             ))}
           {!hideAnon && (
-            <MenuItem onSelect={() => doSetIncognito(true)}>
+            <MenuItem onClick={() => doSetIncognito(true)}>
               <IncognitoSelector />
             </MenuItem>
           )}
-          <MenuItem onSelect={() => push(`/$/${PAGES.CHANNEL_NEW}?redirect=${pathname}`)}>
+          <MenuItem onClick={() => push(`/$/${PAGES.CHANNEL_NEW}?redirect=${pathname}`)}>
             <div className="channel__list-item">
               <Icon sectionIcon icon={ICONS.CHANNEL} />
               <h2 className="channel__list-text">{__('Create a new channel')}</h2>

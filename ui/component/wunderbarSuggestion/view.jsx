@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import { ComboboxOption } from '@reach/combobox';
+import { ComboboxOption } from 'component/common/search-combobox';
 import FileThumbnail from 'component/fileThumbnail';
 import ChannelThumbnail from 'component/channelThumbnail';
 import FileProperties from 'component/previewOverlayProperties';

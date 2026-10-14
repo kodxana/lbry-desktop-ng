@@ -6,10 +6,11 @@ import * as MODALS from 'constants/modal_types';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
 import React from 'react';
 import classnames from 'classnames';
-import { Menu, MenuButton, MenuList, MenuItem } from '@reach/menu-button';
+import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 import { generateShareUrl, generateLbryContentUrl, formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 import { useHistory } from 'react-router';
+import { Link } from 'react-router-dom';
 import { buildURI, parseURI } from 'util/lbryURI';
 
 const SHARE_DOMAIN = SHARE_DOMAIN_URL || URL;
@@ -122,8 +123,8 @@ function ClaimMenuList(props: Props) {
       ? __('Unfollow @%channelName%', { channelName })
       : __('Follow @%channelName%', { channelName })
     : isSubscribed
-    ? __('Unfollow')
-    : __('Follow');
+      ? __('Unfollow')
+      : __('Follow');
 
   const { push, replace } = useHistory();
 
@@ -261,33 +262,13 @@ function ClaimMenuList(props: Props) {
     push(`/$/${PAGES.REPORT_CONTENT}?claimId=${contentClaim && contentClaim.claim_id}`);
   }
 
-  // changes MenuButton behavior to show/hide MenuList not on press but on click event
-  let isEventSimulated = false;
-  const menuButtonHandler = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      e.type = 'click';
-    }
-    if (!isEventSimulated && e.type === 'mousedown') {
-      e.preventDefault();
-    } else if (e.type === 'click') {
-      isEventSimulated = true;
-      e.target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-      isEventSimulated = false;
-    }
-  };
-
   return (
     <Menu>
       <MenuButton
         className={classnames('menu__button', { 'claim__menu-button': !inline, 'claim__menu-button--inline': inline })}
-        onMouseDown={menuButtonHandler}
         onClick={(e) => {
           e.stopPropagation();
-          e.preventDefault();
-          menuButtonHandler(e);
         }}
-        onKeyDown={menuButtonHandler}
       >
         <Icon size={20} icon={ICONS.MORE_VERTICAL} />
       </MenuButton>
@@ -296,16 +277,16 @@ function ClaimMenuList(props: Props) {
           {/* COLLECTION OPERATIONS */}
           {collectionId && isCollectionClaim ? (
             <>
-              <MenuItem className="comment__menu-option" onSelect={() => push(`/$/${PAGES.LIST}/${collectionId}`)}>
-                <a className="menu__link" href={`/$/${PAGES.LIST}/${collectionId}`}>
+              <MenuItem className="comment__menu-option" render={<Link to={`/$/${PAGES.LIST}/${collectionId}`} />}>
+                <div className="menu__link">
                   <Icon aria-hidden icon={ICONS.VIEW} />
                   {__('View List')}
-                </a>
+                </div>
               </MenuItem>
               {!isEmptyCollection && (
                 <MenuItem
                   className="comment__menu-option"
-                  onSelect={() => {
+                  onClick={() => {
                     if (!resolvedList) fetchItems();
                     setDoShuffle(true);
                   }}
@@ -320,7 +301,7 @@ function ClaimMenuList(props: Props) {
                 <>
                   <MenuItem
                     className="comment__menu-option"
-                    onSelect={() => push(`/$/${PAGES.LIST}/${collectionId}?view=edit`)}
+                    onClick={() => push(`/$/${PAGES.LIST}/${collectionId}?view=edit`)}
                   >
                     <div className="menu__link">
                       <Icon aria-hidden iconColor={'red'} icon={ICONS.PUBLISH} />
@@ -329,7 +310,7 @@ function ClaimMenuList(props: Props) {
                   </MenuItem>
                   <MenuItem
                     className="comment__menu-option"
-                    onSelect={() => openModal(MODALS.COLLECTION_DELETE, { collectionId })}
+                    onClick={() => openModal(MODALS.COLLECTION_DELETE, { collectionId })}
                   >
                     <div className="menu__link">
                       <Icon aria-hidden icon={ICONS.DELETE} />
@@ -345,7 +326,7 @@ function ClaimMenuList(props: Props) {
                 {/* WATCH LATER */}
                 <MenuItem
                   className="comment__menu-option"
-                  onSelect={() => handleAdd(hasClaimInWatchLater, __('Watch Later'), COLLECTIONS_CONSTS.WATCH_LATER_ID)}
+                  onClick={() => handleAdd(hasClaimInWatchLater, __('Watch Later'), COLLECTIONS_CONSTS.WATCH_LATER_ID)}
                 >
                   <div className="menu__link">
                     <Icon aria-hidden icon={hasClaimInWatchLater ? ICONS.DELETE : ICONS.TIME} />
@@ -355,7 +336,7 @@ function ClaimMenuList(props: Props) {
                 {/* FAVORITES LIST */}
                 <MenuItem
                   className="comment__menu-option"
-                  onSelect={() => handleAdd(hasClaimInFavorites, __('Favorites'), COLLECTIONS_CONSTS.FAVORITES_ID)}
+                  onClick={() => handleAdd(hasClaimInFavorites, __('Favorites'), COLLECTIONS_CONSTS.FAVORITES_ID)}
                 >
                   <div className="menu__link">
                     <Icon aria-hidden icon={hasClaimInFavorites ? ICONS.DELETE : ICONS.STAR} />
@@ -365,7 +346,7 @@ function ClaimMenuList(props: Props) {
                 {/* CURRENTLY ONLY SUPPORT PLAYLISTS FOR PLAYABLE; LATER DIFFERENT TYPES */}
                 <MenuItem
                   className="comment__menu-option"
-                  onSelect={() => openModal(MODALS.COLLECTION_ADD, { uri, type: 'playlist' })}
+                  onClick={() => openModal(MODALS.COLLECTION_ADD, { uri, type: 'playlist' })}
                 >
                   <div className="menu__link">
                     <Icon aria-hidden icon={ICONS.STACK} />
@@ -375,7 +356,7 @@ function ClaimMenuList(props: Props) {
                 {lastUsedCollection && lastUsedCollectionIsNotBuiltin && (
                   <MenuItem
                     className="comment__menu-option"
-                    onSelect={() =>
+                    onClick={() =>
                       handleAdd(hasClaimInLastUsedCollection, lastUsedCollection.name, lastUsedCollection.id)
                     }
                   >
@@ -395,7 +376,7 @@ function ClaimMenuList(props: Props) {
         </>
         {!isChannelPage && (
           <>
-            <MenuItem className="comment__menu-option" onSelect={handleSupport}>
+            <MenuItem className="comment__menu-option" onClick={handleSupport}>
               <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.LBC} />
                 {__('Support --[button to support a claim]--')}
@@ -407,7 +388,7 @@ function ClaimMenuList(props: Props) {
         {!incognitoClaim && !claimIsMine && !isChannelPage && (
           <>
             <hr className="menu__separator" />
-            <MenuItem className="comment__menu-option" onSelect={handleFollow}>
+            <MenuItem className="comment__menu-option" onClick={handleFollow}>
               <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.SUBSCRIBE} />
                 {subscriptionLabel}
@@ -422,7 +403,7 @@ function ClaimMenuList(props: Props) {
               !incognitoClaim && (
                 <>
                   <hr className="menu__separator" />
-                  <MenuItem className="comment__menu-option" onSelect={handleToggleBlock}>
+                  <MenuItem className="comment__menu-option" onClick={handleToggleBlock}>
                     <div className="menu__link">
                       <Icon aria-hidden icon={ICONS.BLOCK} />
                       {channelIsBlocked ? __('Unblock Channel') : __('Block Channel')}
@@ -430,7 +411,7 @@ function ClaimMenuList(props: Props) {
                   </MenuItem>
 
                   {isAdmin && (
-                    <MenuItem className="comment__menu-option" onSelect={handleToggleAdminBlock}>
+                    <MenuItem className="comment__menu-option" onClick={handleToggleAdminBlock}>
                       <div className="menu__link">
                         <Icon aria-hidden icon={ICONS.GLOBE} />
                         {channelIsAdminBlocked ? __('Global Unblock Channel') : __('Global Block Channel')}
@@ -438,7 +419,7 @@ function ClaimMenuList(props: Props) {
                     </MenuItem>
                   )}
 
-                  <MenuItem className="comment__menu-option" onSelect={handleToggleMute}>
+                  <MenuItem className="comment__menu-option" onClick={handleToggleMute}>
                     <div className="menu__link">
                       <Icon aria-hidden icon={ICONS.MUTE} />
                       {channelIsMuted ? __('Unmute Channel') : __('Mute Channel')}
@@ -449,7 +430,7 @@ function ClaimMenuList(props: Props) {
             ) : (
               <>
                 {!isChannelPage && !repostedClaim && (
-                  <MenuItem className="comment__menu-option" onSelect={handleEdit}>
+                  <MenuItem className="comment__menu-option" onClick={handleEdit}>
                     <div className="menu__link">
                       <Icon aria-hidden icon={ICONS.EDIT} />
                       {__('Edit')}
@@ -460,7 +441,7 @@ function ClaimMenuList(props: Props) {
             )}
 
             {showDelete && (
-              <MenuItem className="comment__menu-option" onSelect={handleDelete}>
+              <MenuItem className="comment__menu-option" onClick={handleDelete}>
                 <div className="menu__link">
                   <Icon aria-hidden icon={ICONS.DELETE} />
                   {__('Delete')}
@@ -470,14 +451,14 @@ function ClaimMenuList(props: Props) {
           </>
         )}
         <hr className="menu__separator" />
-        <MenuItem className="comment__menu-option" onSelect={handleCopyLink}>
+        <MenuItem className="comment__menu-option" onClick={handleCopyLink}>
           <div className="menu__link">
             <Icon aria-hidden icon={ICONS.COPY_LINK} />
             {__('Copy Link')}
           </div>
         </MenuItem>
         {!claimIsMine && !isMyCollection && (
-          <MenuItem className="comment__menu-option" onSelect={handleReportContent}>
+          <MenuItem className="comment__menu-option" onClick={handleReportContent}>
             <div className="menu__link">
               <Icon aria-hidden icon={ICONS.REPORT} />
               {__('Report Content')}

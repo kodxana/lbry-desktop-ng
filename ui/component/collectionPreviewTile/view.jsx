@@ -144,12 +144,14 @@ function CollectionPreviewTile(props: Props) {
           </React.Fragment>
         </FileThumbnail>
       </NavLink>
-      <NavLink {...navLinkProps}>
-        <h2 className="claim-tile__title">
-          <TruncatedText text={collectionName} lines={1} />
-          <CollectionMenuList collectionId={collectionId} />
-        </h2>
-      </NavLink>
+      <div className="claim-tile__header">
+        <NavLink {...navLinkProps}>
+          <h2 className="claim-tile__title">
+            <TruncatedText text={collectionName} lines={1} />
+          </h2>
+        </NavLink>
+        <CollectionMenuList collectionId={collectionId} />
+      </div>
       <div>
         <div className="claim-tile__info">
           <React.Fragment>

@@ -1,6 +1,6 @@
 // @flow
 
-import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
+import { Menu, MenuList, MenuButton, MenuItem } from 'component/common/menu';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import ChannelThumbnail from 'component/channelThumbnail';
@@ -45,7 +45,7 @@ export default function HeaderProfileMenuButton(props: HeaderMenuButtonProps) {
           <HeaderMenuLink page={PAGES.CREATOR_DASHBOARD} icon={ICONS.ANALYTICS} name={__('Creator Analytics')} />
 
           {authenticated ? (
-            <MenuItem onSelect={openSignOutModal}>
+            <MenuItem onClick={openSignOutModal}>
               <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.SIGN_OUT} />
                 {__('Sign Out')}
