@@ -102,6 +102,12 @@ async function main() {
     assert.equal(state.settings.clientSettings.video_playback_rate, 1, 'New defaults survive legacy rehydration');
   }
 
+  const { testSelectors, testSubscriptionsAndThunks, testPersistedState } = require('./stateManagement');
+  testSelectors();
+  await testSubscriptionsAndThunks(store);
+  assert.equal(state.wallet.draftTransaction.amount, undefined, 'A restart must discard unsent transactions');
+  assert.equal(state.wallet.draftTransaction.address, undefined);
+
   function Position({ positions }) {
     return <output id="position">{positions['fixture-claim'] && positions['fixture-claim']['fixture-tx:0']}</output>;
   }
@@ -151,6 +157,7 @@ async function main() {
   assert.equal(store.getState().wallet.totalBalance, 123);
   store.dispatch({ type: ACTIONS.DAEMON_READY });
   assert.equal(store.getState().app.daemonReady, true);
+  await testPersistedState(store, persistor);
   await persistor.flush();
   assert.equal(typeof (await localForage.getItem('persist:v0')), 'string');
   persistor.pause();
@@ -160,7 +167,7 @@ async function main() {
   history.push('/after-unmount');
   await tick();
   assert.deepEqual(store.getState().router.location, lastLocation, 'Unmount must remove the router history listener');
-  return phase + ': real store rehydration, IndexedDB persistence, React updates and router navigation';
+  return phase + ': legacy rehydration, persistence filters, selectors, thunks, nested React subscriptions and routing';
 }
 
 main()
