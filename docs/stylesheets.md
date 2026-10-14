@@ -27,6 +27,11 @@ thumbnail dimensions, storage bars and onboarding layout in dark/light themes
 and LTR/RTL directions. Existing renderer checks also verify theme colors,
 buttons, image paths, documents and interactive controls.
 
+The development smoke test edits an imported Sass partial and waits for the
+heading color to change, without reloading the document or losing an unfinished
+hub form. It restores the source in `finally` and checks that the original color
+returns. A concurrent source edit causes a failure instead of being overwritten.
+
 ## Remaining work and validation
 
 The Sass `@import` graph is retained. Its deprecation warnings remain visible;
