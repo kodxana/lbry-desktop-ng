@@ -30,8 +30,8 @@ assert.deepEqual(
   asar.extractFile(archive, 'licenses/electron-cookies.LICENSE'),
   fs.readFileSync(path.join(__dirname, '../ui/util/electron-cookies.LICENSE'))
 );
-for (const name of ['@electron/remote', '@meetfranz/electron-cookies']) {
-  assert(!entries.has('/node_modules/' + name + '/package.json'), 'Removed remote dependency shipped: ' + name);
+for (const name of ['@electron/remote', '@meetfranz/electron-cookies', 'electron-dl', 'tempy']) {
+  assert(!entries.has('/node_modules/' + name + '/package.json'), 'Removed dependency shipped: ' + name);
 }
 for (const name of [
   'electron',

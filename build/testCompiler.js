@@ -37,6 +37,12 @@ if (process.argv[2] !== '--child') {
   };
 
   const main = async () => {
+    const buildConfig = require('../webpack.base.config');
+    assert.equal(buildConfig.mode, process.env.NODE_ENV);
+    assert.equal(
+      buildConfig.devtool,
+      process.env.NODE_ENV === 'production' ? 'source-map' : 'eval-cheap-module-source-map'
+    );
     const { Form, transform, spread, values, reject } = evaluate(`
       type Props = { label: string };
       class Base {

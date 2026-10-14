@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const { WEBPACK_ELECTRON_PORT } = require('../config');
-const chalk = require('chalk');
+const chalk = require('chalk').default;
 const webpack = require('webpack');
 const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const { merge } = require('webpack-merge');

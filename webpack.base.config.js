@@ -2,16 +2,15 @@ const path = require('path');
 const webpack = require('webpack');
 const Dotenv = require('dotenv-webpack');
 const { DefinePlugin } = require('webpack');
-const { getIfUtils } = require('webpack-config-utils');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const { ifProduction } = getIfUtils(NODE_ENV);
+const isProduction = NODE_ENV === 'production';
 const UI_ROOT = path.resolve(__dirname, 'ui/');
 
 let baseConfig = {
-  mode: ifProduction('production', 'development'),
-  devtool: ifProduction('source-map', 'eval-cheap-module-source-map'),
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'eval-cheap-module-source-map',
   optimization: {
     minimizer: [
       new TerserPlugin({
