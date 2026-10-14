@@ -4,6 +4,7 @@ import shader from './fixtures/build-probe.glsl';
 import 'scss/third-party.scss';
 import 'scss/all.scss';
 import './fixtures/build-probe.scss';
+import stylesheets from './stylesheets';
 
 export default async function testBundling() {
   const root = document.documentElement;
@@ -36,5 +37,6 @@ export default async function testBundling() {
   assert(shader.includes('gl_FragColor'), 'Shader imports must remain source strings');
   assert.equal((await import('./fixtures/build-lazy')).default, 'lazy module loaded');
   assert.equal(typeof window.lbryDesktop.platform, 'string', 'Platform metadata comes from the desktop bridge');
-  return 'production styles, dark/light themes, RTL, emitted images, shader strings and lazy chunks';
+  await stylesheets();
+  return 'production styles, responsive settings/actions/thumbnails/storage/onboarding, dark/light themes, RTL, emitted images, shader strings and lazy chunks';
 }
