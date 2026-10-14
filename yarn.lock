@@ -6944,10 +6944,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron-log@npm:^4.4.8":
-  version: 4.4.8
-  resolution: "electron-log@npm:4.4.8"
-  checksum: 5a7958f8fd9a5c95987e885ffe1c5b88be15bb41d348b65c92e2d8664519faddf17ce0208cd4e7027b0908f92fecedfbef246a45061f53e4a53b5d2201aafbd9
+"electron-log@npm:5.4.4":
+  version: 5.4.4
+  resolution: "electron-log@npm:5.4.4"
+  checksum: 495b35a7172f9572f301f01279323738161159b7443211af57eedde5c2471c2371cc4d4a431b775588541d745b766a313a481f58e0624478183b9dbb31e93d59
   languageName: node
   linkType: hard
 
@@ -10851,7 +10851,7 @@ __metadata:
     electron-devtools-installer: ^3.1.1
     electron-dl: ^3.2.0
     electron-is-dev: ^0.3.0
-    electron-log: ^4.4.8
+    electron-log: 5.4.4
     electron-updater: 6.8.10
     electron-updater-legacy: "npm:electron-updater@4.6.5"
     electron-window-state: ^4.1.1

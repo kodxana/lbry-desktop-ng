@@ -387,7 +387,7 @@ process.on('uncaughtException', async error => {
   try { if (daemon) await daemon.quit(); } finally { app.exit(1) }
 });
 
-autoUpdater.logger = require('electron-log');
+autoUpdater.logger = require('./updaterLogger.cjs')(path.join(desktopProfile.desktop, 'logs'));
 const updates = new DesktopUpdater(autoUpdater, {
   enabled: app.isPackaged && desktopSettings.autoUpdates === true && process.platform === 'win32',
   version: pjson.version,

@@ -303,6 +303,11 @@ async function main() {
       "require('electron').ipcRenderer.invoke('remembered-password', 'save', " + JSON.stringify(password) + ')'
     );
     assert.equal(saved.ok, true);
+    const logger = "process.mainModule.require('electron-updater').autoUpdater.logger";
+    const updaterLog = await mainClient.evaluate(logger + '.transports.file.getFile().path');
+    assert.equal(updaterLog, path.join(profile.desktop, 'logs', 'main.log'));
+    await mainClient.evaluate(logger + ".info('Published RC3 log fixture'); true");
+    assert(fs.readFileSync(updaterLog, 'utf8').includes('Published RC3 log fixture'));
     for (let index = 0; index < candidates.length; index++) {
       const candidate = candidates[index];
       const legacy = index === 0;
@@ -331,7 +336,7 @@ async function main() {
                 ', ' +
                 JSON.stringify(value) +
                 '); true'
-            : "window.lbryDesktop.updater(" +
+            : 'window.lbryDesktop.updater(' +
                 JSON.stringify(name) +
                 ', ' +
                 JSON.stringify(value) +
@@ -410,6 +415,16 @@ async function main() {
       await launch();
       assert.equal(await mainClient.evaluate('process.versions.electron'), targetElectron);
       assert.equal(await client.evaluate('window.lbryDesktop.electron'), targetElectron);
+      assert.equal(await client.evaluate('typeof window.__electronLog'), 'undefined');
+      assert.equal(
+        await mainClient.evaluate("process.mainModule.require('electron').ipcMain.listenerCount('__ELECTRON_LOG__')"),
+        0
+      );
+      assert.equal(await mainClient.evaluate(logger + '.transports.file.getFile().path'), updaterLog);
+      await mainClient.evaluate(logger + ".info('Upgraded app log fixture'); true");
+      const logContent = fs.readFileSync(updaterLog, 'utf8');
+      assert(logContent.includes('Published RC3 log fixture') && logContent.includes('Upgraded app log fixture'));
+      console.log('PASS: installed upgrade retains the existing updater log and appends without a renderer logging bridge');
       assert.deepEqual(await client.evaluate(`({ node: typeof require, process: typeof process,
         sandboxed: window.lbryDesktop.sandboxed })`), {
         node: 'undefined', process: 'undefined', sandboxed: true,
@@ -450,6 +465,7 @@ async function main() {
         applicationArchiveMatched: true,
         sdkSha256: sdkCandidate.artifacts.win32.sha256,
         walletKeysPreserved: true,
+        updaterLogPreserved: true,
         addressCount: originalAddresses.length,
         balance: '0.0',
         encryptedWallet: true,
