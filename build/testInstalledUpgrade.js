@@ -291,6 +291,10 @@ async function main() {
     assert.equal(await mainClient.evaluate('process.versions.electron'), published.electron);
     const originalAddresses = (await rpc('address_list')).items.map((item) => item.address).sort();
     assert(originalAddresses.length > 0);
+    const nativeWindow = "process.mainModule.require('electron').BrowserWindow.getAllWindows()[0]";
+    await mainClient.evaluate(nativeWindow + '.setBounds({x:20,y:20,width:960,height:600}); true');
+    const originalBounds = await mainClient.evaluate(nativeWindow + '.getBounds()');
+    assert.deepEqual(originalBounds, { x: 20, y: 20, width: 960, height: 600 });
     await client.evaluate("localStorage.setItem('installed-upgrade-fixture', 'preserve desktop storage'); true");
     assert.equal(await indexedDBState(true), true);
     assert.deepEqual(await indexedDBState(), indexedState);
@@ -413,6 +417,11 @@ async function main() {
       );
       await assertPortsAvailable(settings);
       await launch();
+      assert.deepEqual(await mainClient.evaluate(nativeWindow + '.getBounds()'), originalBounds,
+        'The installed upgrade must preserve window geometry written by the previous version');
+      const savedWindow = JSON.parse(fs.readFileSync(path.join(profile.desktop, 'window-state.json')));
+      for (const [key, value] of Object.entries(originalBounds)) assert.equal(savedWindow[key], value);
+      console.log('PASS: installed upgrade preserves the previous window bounds in the existing profile');
       assert.equal(await mainClient.evaluate('process.versions.electron'), targetElectron);
       assert.equal(await client.evaluate('window.lbryDesktop.electron'), targetElectron);
       assert.equal(await client.evaluate('typeof window.__electronLog'), 'undefined');
@@ -466,6 +475,7 @@ async function main() {
         sdkSha256: sdkCandidate.artifacts.win32.sha256,
         walletKeysPreserved: true,
         updaterLogPreserved: true,
+        windowBoundsPreserved: true,
         addressCount: originalAddresses.length,
         balance: '0.0',
         encryptedWallet: true,
