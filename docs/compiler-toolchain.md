@@ -31,8 +31,11 @@ This does not remove every transitive core-js 2 dependency from the older UI sta
 `node build/testCompiler.js` checks both production and development compilation:
 Flow fields, React JSX, field descriptors and private brands, async error
 propagation/generators, object spread, native player inheritance, lazy imports
-and custom-hook hot-loader registration. The fixture was checked against the
-previous compiler before upgrading. It runs in the desktop regression suite.
+and custom-hook hot-loader registration. The core semantic checks were run
+against the previous compiler before upgrading. The suite also launches the
+standalone sandbox script through `@babel/register`, with explicit CommonJS
+conversion and the module's default export. It runs in the desktop regression
+suite.
 
 Windows/Linux CI also builds and launches both packaged and development apps,
 exercises the real renderer and sandbox, tests wallet ZIP/encrypted backup

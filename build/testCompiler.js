@@ -121,10 +121,17 @@ if (process.argv[2] !== '--child') {
       }
     );
     assert.equal(registrations.includes('Editor'), process.env.NODE_ENV === 'development');
+    const sandbox = spawnSync(process.execPath, [path.join(__dirname, '../electron/sandboxTest.js')], {
+      env: { ...process.env, BABEL_DISABLE_CACHE: '1' },
+      encoding: 'utf8',
+      timeout: 30000,
+    });
+    if (sandbox.error) throw sandbox.error;
+    assert.equal(sandbox.status, 0, sandbox.stdout + sandbox.stderr);
     console.log(
       'PASS: ' +
         process.env.NODE_ENV +
-        ' compiler: Flow fields, React JSX, public/private fields, async errors/generators, symbols, native player inheritance, lazy imports and hot-loader hooks'
+        ' compiler: Flow fields, React JSX, public/private fields, async errors/generators, symbols, native player inheritance, lazy imports, hot-loader hooks and register entry point'
     );
   };
   main().catch((error) => {
