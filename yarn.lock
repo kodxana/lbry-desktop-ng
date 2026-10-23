@@ -32,6 +32,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@ariakit/react-components@patch:@ariakit/react-components@npm:0.7.1#.yarn/patches/ariakit-react-components-npm-0.7.1.patch::locator=lbry-desktop-ng%40workspace%3A.":
+  version: 0.7.1
+  resolution: "@ariakit/react-components@patch:@ariakit/react-components@npm%3A0.7.1#.yarn/patches/ariakit-react-components-npm-0.7.1.patch::version=0.7.1&hash=838b2d&locator=lbry-desktop-ng%40workspace%3A."
+  dependencies:
+    "@ariakit/components": 0.1.15
+    "@ariakit/react-store": 0.1.13
+    "@ariakit/react-utils": 0.2.8
+    "@ariakit/store": 0.1.11
+    "@ariakit/utils": 0.2.2
+    "@floating-ui/dom": ^1.0.0
+  peerDependencies:
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: acff8ffc44ddb93eefcc9c84ea28745e3a013266b16c16ae2816c5959cf2b36c64d2dfb5b4a0c4d4a2021b129f2f3a9bf05cea5cbe6d0da242e8fd63d228723a
+  languageName: node
+  linkType: hard
+
 "@ariakit/react-store@npm:0.1.13":
   version: 0.1.13
   resolution: "@ariakit/react-store@npm:0.1.13"

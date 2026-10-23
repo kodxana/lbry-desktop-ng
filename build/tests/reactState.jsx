@@ -174,10 +174,11 @@ async function links(store, history) {
   await tick();
   assert.equal(history.location.pathname, '/$/backup', 'A prevented click must not navigate');
   // Prevent native browser navigation after React handles this modified click.
-  document.addEventListener('click', (event) => event.preventDefault(), { once: true });
-  document
-    .getElementById('wallet-nav')
-    .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+  // Button stops propagation at React's root, so document would not see the event.
+  document.getElementById('app').addEventListener('click', (event) => event.preventDefault(), { once: true });
+  const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+  document.getElementById('wallet-nav').dispatchEvent(modifiedClick);
+  assert(modifiedClick.defaultPrevented, 'The fixture must suppress native navigation after testing React');
   await tick();
   assert.equal(history.location.pathname, '/$/backup', 'Modified clicks must not change the current page');
   document.getElementById('query-nav').click();

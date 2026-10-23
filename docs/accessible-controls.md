@@ -18,6 +18,14 @@ stable focus targets while the popup animation finishes.
 Focus restoration checks the live open state, so a delayed callback from an
 earlier close cannot steal focus after the menu has reopened.
 
+The React Router migration exposed another rapid-reopen race in Ariakit's
+hovercard base. After Escape, it schedules a second hide two animation frames
+later to undo automatic reopening when focus returns to the trigger. That hide
+could also dismiss a menu the user had deliberately reopened with the keyboard.
+A small Yarn patch to `@ariakit/react-components` 0.7.1 skips that fallback when
+focus has entered the reopened popup. Trigger-focused automatic reopening still
+gets dismissed. The delayed-close regression drains both animation frames.
+
 Tabs retain their existing indexed API at all three callers. Each group has
 distinct tab/panel IDs, automatic arrow-key selection and RTL navigation. Disabled
 tabs are skipped. Hidden panels remain mounted so changing tabs does not discard

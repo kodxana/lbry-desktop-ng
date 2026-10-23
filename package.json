@@ -203,6 +203,7 @@
     "yauzl": "3.4.0"
   },
   "resolutions": {
+    "@ariakit/react-components@0.7.1": "patch:@ariakit/react-components@npm:0.7.1#.yarn/patches/ariakit-react-components-npm-0.7.1.patch",
     "@datapunt/matomo-tracker-js@0.5.1": "patch:@datapunt/matomo-tracker-js@npm:0.5.1#.yarn/patches/matomo-tracker-js-npm-0.5.1.patch",
     "react-is": "19.3.1",
     "video.js": "8.24.1",
