@@ -249,6 +249,7 @@ app
     });
     const blocked = [];
     const analyticsRequests = [];
+    const integrationRequests = [];
     media = await require('./mediaServer.cjs')();
     ipcMain.handle('fixture-media', (event) => {
       assert.equal(event.sender, activeWindow.webContents);
@@ -267,7 +268,9 @@ app
           callback({ cancel: false });
           return;
         }
-        if (['analytics', 'analyticsEnabled'].includes(activePhase)) {
+        if (activePhase === 'browserIntegrations' && ['subFrame', 'script'].includes(details.resourceType)) {
+          integrationRequests.push({ type: details.resourceType, url: details.url });
+        } else if (['analytics', 'analyticsEnabled'].includes(activePhase)) {
           analyticsRequests.push({ phase: activePhase, url: details.url });
         } else {
           blocked.push(details.url);
@@ -285,6 +288,7 @@ app
           'uiComponents',
           'accessibleControls',
           'collections',
+          'browserIntegrations',
           'formsAndDates',
           'markdownEditor',
           'documents',
@@ -317,6 +321,25 @@ app
       'Only explicit analytics opt-in may request the tracking script'
     );
     assert.deepEqual(blocked, [], 'Unexpected renderer requests: ' + JSON.stringify(blocked));
+    if (!graphics) {
+      const purchases = integrationRequests.filter((request) => request.type === 'subFrame');
+      assert(purchases.length >= 2, 'The purchase fixture must exercise signed iframe destinations');
+      for (const { url } of purchases) {
+        const destination = new URL(url);
+        assert.equal(destination.origin, 'https://buy.moonpay.io');
+        assert.match(destination.searchParams.get('walletAddress'), /^fixture-address-[abc]$/);
+        const [query, signature] = destination.search.split('&signature=');
+        assert.equal(
+          decodeURIComponent(signature),
+          require('crypto').createHmac('sha256', 'fixture-moonpay-key').update(query).digest('base64')
+        );
+      }
+      assert.deepEqual(
+        integrationRequests.filter((request) => request.type === 'script'),
+        [{ type: 'script', url: 'https://www.google.com/recaptcha/api.js?onload=onloadcallback&render=explicit' }]
+      );
+      console.log('PASS: purchase URLs and CAPTCHA script verified with all integration network requests blocked');
+    }
     console.log('PASS: external requests blocked; no SDK calls; disposable IndexedDB profile');
     await media.close();
     clearTimeout(timer);

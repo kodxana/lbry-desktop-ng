@@ -28,6 +28,10 @@ The [collection controls migration](collection-controls.md) adds real keyboard
 and mouse reordering in all three list editors, cancellation and focus checks,
 persisted order, and native radio selection in the dropped-file chooser.
 
+The [browser integration migration](browser-integrations.md) checks CAPTCHA
+callback and navigation races, legacy emoji compatibility, native SDK Proxy
+calls, and sandboxed HMAC signing with all external integration requests blocked.
+
 The [forms and dates upgrade](forms-and-dates.md) adds send confirmation/retry,
 publish date editing, timed blocks, locale and duration formatting checks.
 

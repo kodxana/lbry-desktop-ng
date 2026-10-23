@@ -5,7 +5,7 @@ import { SEARCH_OPTIONS } from 'constants/search';
 import * as KEYCODES from 'constants/keycodes';
 import Autocomplete from '@mui/material/Autocomplete';
 import BusyIndicator from 'component/common/busy-indicator';
-import EMOJIS from 'emoji-dictionary';
+import { get as getEmoji, search as searchEmojis } from 'node-emoji';
 import LbcSymbol from 'component/common/lbc-symbol';
 import React from 'react';
 import TextareaSuggestionsItem from 'component/textareaSuggestionsItem';
@@ -34,6 +34,7 @@ const LIGHTHOUSE_MIN_CHARACTERS = 3;
 const INPUT_DEBOUNCE_MS = 1000;
 
 const EMOJI_MIN_CHARACTERS = 2;
+const EMOJI_NAMES = searchEmojis('').map(({ name }) => name);
 
 type Props = {
   canonicalCommentors?: Array<string>,
@@ -134,7 +135,7 @@ export default function TextareaWithSuggestions(props: Props) {
     emoteNames = EMOTES.map(({ name }) => name.toLowerCase());
     const hasMinEmojiLength = suggestionTerm && suggestionTerm.length > EMOJI_MIN_CHARACTERS;
     // Filter because our emotes are priority from default emojis, like :eggplant:
-    emojiNames = hasMinEmojiLength ? EMOJIS.names.filter((name) => !emoteNames.includes(`:${name}:`)) : [];
+    emojiNames = hasMinEmojiLength ? EMOJI_NAMES.filter((name) => !emoteNames.includes(`:${name}:`)) : [];
     const emotesAndEmojis = [...emoteNames, ...emojiNames];
 
     allOptions.push(...emotesAndEmojis);
@@ -386,7 +387,7 @@ export default function TextareaWithSuggestions(props: Props) {
   const renderOption = (optionProps: any, label: string) => {
     const emoteFound = isEmote && EMOTES.find(({ name }) => name.toLowerCase() === label);
     const emoteValue = emoteFound ? { name: label, url: emoteFound.url } : undefined;
-    const emojiFound = isEmote && EMOJIS.getUnicode(label);
+    const emojiFound = isEmote && getEmoji(label);
     const emojiValue = emojiFound ? { name: label, unicode: emojiFound } : undefined;
 
     return <TextareaSuggestionsItem key={label} uri={label} emote={emoteValue || emojiValue} {...optionProps} />;

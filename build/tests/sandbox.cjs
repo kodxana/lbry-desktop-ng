@@ -144,6 +144,13 @@ app
     console.log('PASS: sandboxed Three.js loads authorized model bytes and renders with WebGL 2 without Node globals');
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
     const utilities = documents.utilities;
+    assert.equal(utilities.signatures.length, 5);
+    for (const { message, key, signature } of utilities.signatures) {
+      assert.equal(signature, require('crypto').createHmac('sha256', key).update(message).digest('base64'));
+    }
+    assert.equal(utilities.signatures[0].signature, 'sDRMYdjbOFNcqK/OrwvxK4gdwgDJgz2nJuk3bC4yz/c=');
+    assert.equal(utilities.signatures[1].signature, 'W9zBRr9gdU5qBCQmCJV1x1oAPwidJzmDnexYuWTsOEM=');
+    console.log('PASS: sandboxed Web Crypto HMAC matches RFC 4231 and Node for Unicode, empty messages and long keys');
     const expectedBytes = [0, 1, 127, 128, 254, 255];
     assert.equal(utilities.encoded, Buffer.from(expectedBytes).toString('base64'));
     assert.deepEqual(utilities.decoded, expectedBytes, 'Buffer views must preserve offsets and binary bytes');
