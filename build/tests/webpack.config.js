@@ -1,4 +1,6 @@
 const path = require('path');
+// The purchase integration tests sign locally with a synthetic key, never user configuration.
+process.env.MOONPAY_SECRET_KEY = 'fixture-moonpay-key';
 const [, renderer] = require('../../webpack.electron.config');
 
 // Exercise the desktop's real loader order, aliases and production React build.

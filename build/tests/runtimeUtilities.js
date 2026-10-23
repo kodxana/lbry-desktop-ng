@@ -3,6 +3,7 @@ import { PassThrough, Transform } from 'stream';
 import { inherits } from 'util';
 import { parse } from 'url/';
 import { v4 as uuid } from 'uuid';
+import signQuery from 'util/sign-query';
 
 // This module is bundled into the sandbox fixture, with the production browser
 // fallbacks. The main process independently checks its results using Node.
@@ -55,7 +56,17 @@ export default async function runtimeUtilities() {
     };
   }
   const url = parse('https://user:pass@example.org:8443/a%20b?q=hello#frag');
+  const signatures = await Promise.all(
+    [
+      ['Hi There', '\x0b'.repeat(20)],
+      ['what do ya want for nothing?', 'Jefe'],
+      ['?email=za%C5%BC%C3%B3%C5%82%C4%87%2B%F0%9F%90%A6%40example.org', 'fixture ł 🐦'],
+      ['', 'fixture-key'],
+      ['?walletAddress=fixture-address&currencyCode=lbc', 'x'.repeat(131)],
+    ].map(async ([message, key]) => ({ message, key, signature: await signQuery(message, key) }))
+  );
   return {
+    signatures,
     encoded,
     decoded: Array.from(Buffer.from(encoded, 'base64')),
     utf8: Buffer.from(text).toString(),

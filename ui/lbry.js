@@ -1,5 +1,4 @@
 // @flow
-require('proxy-polyfill');
 const desktopSettings = require('../desktop-settings.json');
 
 const CHECK_DAEMON_STARTED_TRY_NUMBER = 200;

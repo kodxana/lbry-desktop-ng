@@ -3,8 +3,7 @@ import React from 'react';
 import Page from 'component/page';
 import Card from 'component/common/card';
 import Spinner from 'component/spinner';
-import hmacSHA256 from 'crypto-js/hmac-sha256';
-import Base64 from 'crypto-js/enc-base64';
+import signQuery from 'util/sign-query';
 import { countries as countryData } from 'country-data';
 import { FormField } from 'component/common/form';
 import { SUPPORTED_MOONPAY_COUNTRIES } from 'constants/moonpay';
@@ -46,11 +45,16 @@ type Props = {
 export default function BuyPage(props: Props) {
   const { receiveAddress, gettingNewAddress, doGetNewAddress, email, user, doUserSetCountry } = props;
   const initialCountry = (user && user.country) || '';
-  const [url, setUrl] = React.useState();
+  const [signedPurchase, setSignedPurchase] = React.useState();
   const [country, setCountry] = React.useState(initialCountry);
   const [showPurchaseScreen, setShowPurchaseScreen] = React.useState(false);
   const isValid = SUPPORTED_MOONPAY_COUNTRIES.includes(country);
   const { goBack } = useHistory();
+  const currentPurchase =
+    signedPurchase && signedPurchase.address === receiveAddress && signedPurchase.email === email
+      ? signedPurchase
+      : null;
+  const url = currentPurchase && currentPurchase.url;
 
   React.useEffect(() => {
     if (country) {
@@ -65,7 +69,8 @@ export default function BuyPage(props: Props) {
   }, [doGetNewAddress, receiveAddress, gettingNewAddress]);
 
   React.useEffect(() => {
-    if (MOONPAY_KEY && !url && receiveAddress) {
+    let cancelled = false;
+    if (MOONPAY_KEY && receiveAddress) {
       let url = `https://buy.moonpay.io?apiKey=pk_live_xNFffrN5NWKy6fu0ggbV8VQIwRieRzy&colorCode=%23257761&currencyCode=lbc&showWalletAddressForm=true&walletAddress=${receiveAddress}`;
 
       if (email) {
@@ -75,11 +80,24 @@ export default function BuyPage(props: Props) {
       url += `&enabledPaymentMethods=${encodeURIComponent('credit_debit_card,sepa_bank_transfer,gbp_bank_transfer')}`;
 
       const query = new URL(url).search;
-      const signature = Base64.stringify(hmacSHA256(query, MOONPAY_KEY));
-
-      setUrl(`${url}&signature=${encodeURIComponent(signature)}`);
+      signQuery(query, MOONPAY_KEY)
+        .then((signature) => {
+          if (!cancelled) {
+            setSignedPurchase({
+              address: receiveAddress,
+              email,
+              url: `${url}&signature=${encodeURIComponent(signature)}`,
+            });
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setSignedPurchase({ address: receiveAddress, email, error: true });
+        });
     }
-  }, [url, setUrl, receiveAddress, email]);
+    return () => {
+      cancelled = true;
+    };
+  }, [receiveAddress, email]);
 
   const title = __('Buy Credits');
   const subtitle = (
@@ -125,6 +143,8 @@ export default function BuyPage(props: Props) {
                       >
                         <p>{__('Your browser does not support iframes.')}</p>
                       </iframe>
+                    ) : !MOONPAY_KEY || (currentPurchase && currentPurchase.error) ? (
+                      <p role="alert">{__('Unable to prepare the purchase. Please go back and try again.')}</p>
                     ) : (
                       <div className="main--empty">
                         <Spinner delayed />
