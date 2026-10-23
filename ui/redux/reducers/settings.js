@@ -86,45 +86,28 @@ reducers[ACTIONS.REHYDRATE] = (state, action) => {
     const persistedSettings = action.payload && action.payload.settings;
     const persistedClientSettings = persistedSettings.clientSettings;
     const newClientSettings = { ...clientSettings, ...persistedClientSettings };
-    return Object.assign({}, state, { ...persistedSettings, clientSettings: newClientSettings });
+    return { ...state, ...persistedSettings, clientSettings: newClientSettings };
   }
-  return Object.assign({}, state, { clientSettings });
+  return { ...state, clientSettings };
 };
 
-reducers[ACTIONS.FINDING_FFMPEG_STARTED] = (state) =>
-  Object.assign({}, state, {
-    findingFFmpeg: true,
-  });
+reducers[ACTIONS.FINDING_FFMPEG_STARTED] = (state) => ({ ...state, findingFFmpeg: true });
 
-reducers[ACTIONS.SETTING_DAEMON_SETTINGS] = (state, action) =>
-  Object.assign({}, state, {
-    isSettingDaemonSettings: action.data.val,
-  });
+reducers[ACTIONS.SETTING_DAEMON_SETTINGS] = (state, action) => ({ ...state, isSettingDaemonSettings: action.data.val });
 
-reducers[ACTIONS.FINDING_FFMPEG_COMPLETED] = (state) =>
-  Object.assign({}, state, {
-    findingFFmpeg: false,
-  });
+reducers[ACTIONS.FINDING_FFMPEG_COMPLETED] = (state) => ({ ...state, findingFFmpeg: false });
 
-reducers[ACTIONS.DAEMON_SETTINGS_RECEIVED] = (state, action) =>
-  Object.assign({}, state, {
-    daemonSettings: action.data.settings,
-  });
+reducers[ACTIONS.DAEMON_SETTINGS_RECEIVED] = (state, action) => ({ ...state, daemonSettings: action.data.settings });
 
-reducers[ACTIONS.DAEMON_STATUS_RECEIVED] = (state, action) =>
-  Object.assign({}, state, {
-    daemonStatus: action.data.status,
-  });
+reducers[ACTIONS.DAEMON_STATUS_RECEIVED] = (state, action) => ({ ...state, daemonStatus: action.data.status });
 
 reducers[ACTIONS.CLIENT_SETTING_CHANGED] = (state, action) => {
   const { key, value } = action.data;
-  const clientSettings = Object.assign({}, state.clientSettings);
+  const clientSettings = { ...state.clientSettings };
 
   clientSettings[key] = value;
 
-  return Object.assign({}, state, {
-    clientSettings,
-  });
+  return { ...state, clientSettings };
 };
 
 reducers[ACTIONS.UPDATE_IS_NIGHT] = (state) => {
@@ -134,9 +117,7 @@ reducers[ACTIONS.UPDATE_IS_NIGHT] = (state) => {
   const endNightMoment = moment(to.formattedTime, 'HH:mm');
   const isNight = !(momentNow.isAfter(endNightMoment) && momentNow.isBefore(startNightMoment));
 
-  return Object.assign({}, state, {
-    isNight,
-  });
+  return { ...state, isNight };
 };
 
 reducers[ACTIONS.DOWNLOAD_LANGUAGE_SUCCESS] = (state, action) => {
@@ -144,9 +125,7 @@ reducers[ACTIONS.DOWNLOAD_LANGUAGE_SUCCESS] = (state, action) => {
   const { language } = action.data;
 
   if (language && loadedLanguages && !loadedLanguages.includes(language)) {
-    return Object.assign({}, state, {
-      loadedLanguages: [...loadedLanguages, language],
-    });
+    return { ...state, loadedLanguages: [...loadedLanguages, language] };
   } else {
     return state;
   }
@@ -154,31 +133,26 @@ reducers[ACTIONS.DOWNLOAD_LANGUAGE_SUCCESS] = (state, action) => {
 
 reducers[ACTIONS.SHARED_PREFERENCE_SET] = (state, action) => {
   const { key, value } = action.data;
-  const sharedPreferences = Object.assign({}, state.sharedPreferences);
+  const sharedPreferences = { ...state.sharedPreferences };
   sharedPreferences[key] = value;
 
-  return Object.assign({}, state, {
-    sharedPreferences,
-  });
+  return { ...state, sharedPreferences };
 };
 
 reducers[ACTIONS.SYNC_CLIENT_SETTINGS] = (state, action) => {
   const { data } = action;
-  return Object.assign({}, state, { sharedPreferences: data });
+  return { ...state, sharedPreferences: data };
 };
 
 reducers[ACTIONS.SYNC_STATE_POPULATE] = (state, action) => {
   const { walletPrefSettings, mergedClientSettings } = action.data;
   const newSharedPreferences = walletPrefSettings || {};
 
-  return Object.assign({}, state, {
-    sharedPreferences: newSharedPreferences,
-    clientSettings: mergedClientSettings,
-  });
+  return { ...state, sharedPreferences: newSharedPreferences, clientSettings: mergedClientSettings };
 };
 
 reducers[ACTIONS.SAVE_CUSTOM_WALLET_SERVERS] = (state, action) => {
-  return Object.assign({}, state, { customWalletServers: action.data });
+  return { ...state, customWalletServers: action.data };
 };
 
 export default function reducer(state = defaultState, action) {

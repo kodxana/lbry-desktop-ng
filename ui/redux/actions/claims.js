@@ -1006,7 +1006,7 @@ export const doCheckPendingClaims = (onChannelConfirmed: Function) => (dispatch:
   clearInterval(checkPendingInterval);
   const checkTxoList = () => {
     const state = getState();
-    const pendingById = Object.assign({}, selectPendingClaimsById(state));
+    const pendingById = { ...selectPendingClaimsById(state) };
     const pendingTxos = (Object.values(pendingById): any).map((p) => p.txid);
     // use collections
     if (pendingTxos.length) {
