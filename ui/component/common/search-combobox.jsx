@@ -6,7 +6,7 @@ type Selection = { onSelect: (string) => void, openOnFocus: boolean };
 const SelectionContext = React.createContext<Selection>({ onSelect: () => {}, openOnFocus: false });
 
 type ComboboxProps = {
-  children: React$Node,
+  children: React.Node,
   onSelect: (string) => void,
   value: string,
   setValue: (string) => void,
@@ -55,7 +55,7 @@ function ComboboxList(props: any) {
   return <div {...props} className="search__list" />;
 }
 
-function ComboboxOption({ value, children, ...props }: { value: string, children?: React$Node, className?: string }) {
+function ComboboxOption({ value, children, ...props }: { value: string, children?: React.Node, className?: string }) {
   const { onSelect } = React.useContext(SelectionContext);
   return (
     <Ariakit.ComboboxItem

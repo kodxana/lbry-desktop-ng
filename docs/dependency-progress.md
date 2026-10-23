@@ -26,8 +26,10 @@ The checker runs again. Required checks load all 88 declaration files, reject
 duplicate modules and exercise nine maintained dependency contracts alongside
 the first-party global types. The declaration check is clean. The first
 application pass replaces fresh-object Redux copies with spreads, reducing full
-application diagnostics from 5,051 to 3,214. Remaining application errors and
-untyped dependency stubs still need work. These type migrations do not change
+application diagnostics from 5,051 to 3,214. Shared UI export and React type
+annotations reduce that to 2,908, with a required gate for ten source modules
+and 15 invalid prop contracts. Remaining application errors and untyped
+dependency stubs still need work. These type migrations do not change
 the package-version percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
 

@@ -17,9 +17,9 @@ type Props = {
   autoFocus?: boolean,
   blockWrap: boolean,
   charCount?: number,
-  children?: React$Node,
+  children?: React.Node,
   disabled?: boolean,
-  helper?: string | React$Node,
+  helper?: string | React.Node,
   hideSuggestions?: boolean,
   isLivestream?: boolean,
   label?: string | Node,
@@ -34,8 +34,8 @@ type Props = {
   onChange?: (any) => any,
   openEmoteMenu?: () => void,
   quickActionHandler?: (any) => any,
-  render?: () => React$Node,
-  header?: React$Node,
+  render?: () => React.Node,
+  header?: React.Node,
 };
 
 export class FormFieldAreaAdvanced extends React.PureComponent<Props> {

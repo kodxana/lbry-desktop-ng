@@ -8,11 +8,11 @@ type Props = {
   multirow?: boolean, // Displays the Value widget(s) below the Label instead of on the right.
   useVerticalSeparator?: boolean, // Show a separator line between Label and Value. Useful when there are multiple Values.
   disabled?: boolean,
-  children?: React$Node,
-  footer?: React$Node,
+  children?: React.Node,
+  footer?: React.Node,
 };
 
-export default function SettingsRow(props: Props) {
+export default function SettingsRow(props: Props): React.Node {
   const { title, subtitle, multirow, useVerticalSeparator, disabled, children, footer } = props;
   return (
     <div

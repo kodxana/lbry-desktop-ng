@@ -7,7 +7,7 @@ type Props = {
   padded?: boolean,
 };
 
-export default function Empty(props: Props) {
+export default function Empty(props: Props): React.Node {
   const { text = '', padded = false } = props;
 
   return (

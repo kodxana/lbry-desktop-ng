@@ -7,7 +7,7 @@ type Props = {
   onChange: (File | void) => void,
 };
 
-function FileList(props: Props) {
+function FileList(props: Props): React.Node {
   const { files, onChange } = props;
   const [name] = React.useState(uuid);
   const [selectedIndex, setSelectedIndex] = React.useState(0);

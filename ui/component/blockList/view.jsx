@@ -39,7 +39,7 @@ type Props = {
   help: string,
   titleEmptyList: string,
   subtitleEmptyList: string,
-  getActionButtons?: (url: string) => React$Node,
+  getActionButtons?: (url: string) => React.Node,
   className: ?string,
 };
 

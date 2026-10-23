@@ -9,12 +9,12 @@ type Props = {
   autoFocus?: boolean,
   blockWrap: boolean,
   charCount?: number,
-  children?: React$Node,
+  children?: React.Node,
   defaultValue?: string | number,
   disabled?: boolean,
   error?: string | boolean,
-  helper?: string | React$Node,
-  inputButton?: React$Node,
+  helper?: string | React.Node,
+  inputButton?: React.Node,
   inputName?: string,
   label?: string | Node,
   labelOnLeft: boolean,
@@ -31,7 +31,7 @@ type Props = {
   type?: string,
   value?: string | number,
   onChange?: (any) => any,
-  render?: () => React$Node,
+  render?: () => React.Node,
 };
 
 export class FormField extends React.PureComponent<Props> {

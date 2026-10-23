@@ -155,12 +155,26 @@ and transaction entries, failed sends, update choices, password status, sync
 retries and copied claim/comment/download maps. Existing wallet backup,
 encryption, password migration and updater tests remain required.
 
-**The application is not yet type-clean.** The full check now reports 3,214
+The shared UI pass replaces internal `React$Node` references with the public
+`React.Node` type and adds explicit icon, sticker and display-component exports.
+Icon props preserve optional size/color defaults, nullable titles and SVG refs.
+The icon builder's separate ref parameter is excluded from its ordinary props.
+
+`node build/testUiTypes.js` checks ten actual UI/constants source modules in an
+isolated project with the real classnames/i18n declarations and installed UUID
+package. Valid callers must pass; 15 invalid icon, sticker and component prop
+contracts must fail. The renderer also mounts every registered icon and checks
+ref forwarding, default/explicit size and color, title removal, unknown-icon
+fallback and free/paid sticker data. The application changes in this pass are
+annotations only; compiling JSX and stripping Flow produces identical runtime
+JavaScript to the previous revision.
+
+**The application is not yet type-clean.** The full check now reports 2,908
 application diagnostics and zero library-definition diagnostics, down from
-5,051 application diagnostics before this pass (1,837 fewer). Missing export
-annotations, mismatched state shapes, nullable results, exact-object rules,
-old utility types and casts still need work. Inherited `any` stubs remain, so a
-clean declaration check does not mean every dependency API is fully typed.
+3,214 before the shared UI pass (306 fewer). Missing export annotations,
+mismatched state shapes, nullable results, exact-object rules, old utility types
+and casts still need work. Inherited `any` stubs remain, so a clean declaration
+check does not mean every dependency API is fully typed.
 
 No application errors are baselined, suppressed or converted into a successful
 exit. These counts describe this revision, not a baseline that permits new

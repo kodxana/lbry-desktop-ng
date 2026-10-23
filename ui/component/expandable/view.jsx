@@ -6,7 +6,7 @@ import Button from 'component/button';
 const COLLAPSED_HEIGHT = 120;
 
 type Props = {
-  children: React$Node | Array<React$Node>,
+  children: React.Node | Array<React.Node>,
 };
 
 export default function Expandable(props: Props) {

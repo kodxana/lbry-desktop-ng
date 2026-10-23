@@ -9,7 +9,7 @@ const TabsContext = createContext('');
 type TabsProps = {
   index?: number,
   onChange?: (number) => void,
-  children: Array<React$Node>,
+  children: Array<React.Node>,
   className?: string,
 };
 
@@ -64,16 +64,16 @@ function Tabs({ index, onChange, children, className, ...props }: TabsProps) {
   );
 }
 
-function TabList({ className, ...props }: { className?: string, children: React$Node }) {
+function TabList({ className, ...props }: { className?: string, children: React.Node }) {
   return <Ariakit.TabList {...props} className={classnames('tabs__list', className)} />;
 }
 
-function Tab({ index, ...props }: { index: number, disabled?: boolean, children: React$Node }) {
+function Tab({ index, ...props }: { index: number, disabled?: boolean, children: React.Node }) {
   const id = useContext(TabsContext);
   return <Ariakit.Tab {...props} id={`${id}-${index}`} className="tab" type="button" accessibleWhenDisabled={false} />;
 }
 
-function TabPanels({ header, children, ...props }: { header?: React$Node, children: React$Node }) {
+function TabPanels({ header, children, ...props }: { header?: React.Node, children: React.Node }) {
   const id = useContext(TabsContext);
   return (
     <>
