@@ -307,6 +307,7 @@ app
             'fresh',
             'legacy',
             'restart',
+            'stateUpdates',
             'reactState',
             'uiComponents',
             'accessibleControls',

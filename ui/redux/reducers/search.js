@@ -46,10 +46,8 @@ export default handleActions(
       return {
         ...state,
         searching: false,
-        resultsByQuery: Object.assign({}, state.resultsByQuery, { [normalizedQuery]: results }),
-        hasReachedMaxResultsLength: Object.assign({}, state.hasReachedMaxResultsLength, {
-          [normalizedQuery]: noMoreResults,
-        }),
+        resultsByQuery: { ...state.resultsByQuery, [normalizedQuery]: results },
+        hasReachedMaxResultsLength: { ...state.hasReachedMaxResultsLength, [normalizedQuery]: noMoreResults },
       };
     },
 

@@ -8,15 +8,12 @@ const defaultState = {
   fileListDownloadedSort: SORT_OPTIONS.DATE_NEW,
 };
 
-reducers[ACTIONS.FILE_LIST_STARTED] = (state) =>
-  Object.assign({}, state, {
-    isFetchingFileList: true,
-  });
+reducers[ACTIONS.FILE_LIST_STARTED] = (state) => ({ ...state, isFetchingFileList: true });
 
 reducers[ACTIONS.FILE_LIST_SUCCEEDED] = (state, action) => {
   const { fileInfos } = action.data;
-  const newByOutpoint = Object.assign({}, state.byOutpoint);
-  const pendingByOutpoint = Object.assign({}, state.pendingByOutpoint);
+  const newByOutpoint = { ...state.byOutpoint };
+  const pendingByOutpoint = { ...state.pendingByOutpoint };
 
   fileInfos.forEach((fileInfo) => {
     const { outpoint } = fileInfo;
@@ -24,118 +21,93 @@ reducers[ACTIONS.FILE_LIST_SUCCEEDED] = (state, action) => {
     if (outpoint) newByOutpoint[fileInfo.outpoint] = fileInfo;
   });
 
-  return Object.assign({}, state, {
-    isFetchingFileList: false,
-    byOutpoint: newByOutpoint,
-    pendingByOutpoint,
-  });
+  return { ...state, isFetchingFileList: false, byOutpoint: newByOutpoint, pendingByOutpoint };
 };
 
 reducers[ACTIONS.FETCH_FILE_INFO_STARTED] = (state, action) => {
   const { outpoint } = action.data;
-  const newFetching = Object.assign({}, state.fetching);
+  const newFetching = { ...state.fetching };
 
   newFetching[outpoint] = true;
 
-  return Object.assign({}, state, {
-    fetching: newFetching,
-  });
+  return { ...state, fetching: newFetching };
 };
 
 reducers[ACTIONS.FETCH_FILE_INFO_COMPLETED] = (state, action) => {
   const { fileInfo, outpoint } = action.data;
 
-  const newByOutpoint = Object.assign({}, state.byOutpoint);
-  const newFetching = Object.assign({}, state.fetching);
+  const newByOutpoint = { ...state.byOutpoint };
+  const newFetching = { ...state.fetching };
 
   newByOutpoint[outpoint] = fileInfo;
   delete newFetching[outpoint];
 
-  return Object.assign({}, state, {
-    byOutpoint: newByOutpoint,
-    fetching: newFetching,
-  });
+  return { ...state, byOutpoint: newByOutpoint, fetching: newFetching };
 };
 
 reducers[ACTIONS.FETCH_FILE_INFO_FAILED] = (state, action) => {
   const { outpoint } = action.data;
-  const newFetching = Object.assign({}, state.fetching);
+  const newFetching = { ...state.fetching };
   delete newFetching[outpoint];
 
-  return Object.assign({}, state, {
-    fetching: newFetching,
-  });
+  return { ...state, fetching: newFetching };
 };
 
 reducers[ACTIONS.DOWNLOADING_STARTED] = (state, action) => {
   const { outpoint, fileInfo } = action.data;
 
-  const newByOutpoint = Object.assign({}, state.byOutpoint);
-  const newDownloading = Object.assign({}, state.downloadingByOutpoint);
+  const newByOutpoint = { ...state.byOutpoint };
+  const newDownloading = { ...state.downloadingByOutpoint };
 
   newDownloading[outpoint] = true;
   newByOutpoint[outpoint] = fileInfo;
 
-  return Object.assign({}, state, {
-    downloadingByOutpoint: newDownloading,
-    byOutpoint: newByOutpoint,
-  });
+  return { ...state, downloadingByOutpoint: newDownloading, byOutpoint: newByOutpoint };
 };
 
 reducers[ACTIONS.DOWNLOADING_PROGRESSED] = (state, action) => {
   const { outpoint, fileInfo } = action.data;
 
-  const newByOutpoint = Object.assign({}, state.byOutpoint);
-  const newDownloading = Object.assign({}, state.downloadingByOutpoint);
+  const newByOutpoint = { ...state.byOutpoint };
+  const newDownloading = { ...state.downloadingByOutpoint };
 
   newByOutpoint[outpoint] = fileInfo;
   newDownloading[outpoint] = true;
 
-  return Object.assign({}, state, {
-    byOutpoint: newByOutpoint,
-    downloadingByOutpoint: newDownloading,
-  });
+  return { ...state, byOutpoint: newByOutpoint, downloadingByOutpoint: newDownloading };
 };
 
 reducers[ACTIONS.DOWNLOADING_CANCELED] = (state, action) => {
   const { outpoint } = action.data;
 
-  const newDownloading = Object.assign({}, state.downloadingByOutpoint);
+  const newDownloading = { ...state.downloadingByOutpoint };
   delete newDownloading[outpoint];
 
-  return Object.assign({}, state, {
-    downloadingByOutpoint: newDownloading,
-  });
+  return { ...state, downloadingByOutpoint: newDownloading };
 };
 
 reducers[ACTIONS.DOWNLOADING_COMPLETED] = (state, action) => {
   const { outpoint, fileInfo } = action.data;
 
-  const newByOutpoint = Object.assign({}, state.byOutpoint);
-  const newDownloading = Object.assign({}, state.downloadingByOutpoint);
+  const newByOutpoint = { ...state.byOutpoint };
+  const newDownloading = { ...state.downloadingByOutpoint };
 
   newByOutpoint[outpoint] = fileInfo;
   delete newDownloading[outpoint];
 
-  return Object.assign({}, state, {
-    byOutpoint: newByOutpoint,
-    downloadingByOutpoint: newDownloading,
-  });
+  return { ...state, byOutpoint: newByOutpoint, downloadingByOutpoint: newDownloading };
 };
 
 reducers[ACTIONS.FILE_DELETE] = (state, action) => {
   const { outpoint } = action.data;
 
-  const newByOutpoint = Object.assign({}, state.byOutpoint);
-  const downloadingByOutpoint = Object.assign({}, state.downloadingByOutpoint);
+  const newByOutpoint = { ...state.byOutpoint };
+  const downloadingByOutpoint = { ...state.downloadingByOutpoint };
 
   delete newByOutpoint[outpoint];
   delete downloadingByOutpoint[outpoint];
 
-  return Object.assign({}, state, {
-    byOutpoint: newByOutpoint,
-    downloadingByOutpoint,
-  });
+  return { ...state, byOutpoint: newByOutpoint, downloadingByOutpoint };
 };
 
 reducers[ACTIONS.SET_FILE_LIST_SORT] = (state, action) => {
@@ -146,9 +118,7 @@ reducers[ACTIONS.SET_FILE_LIST_SORT] = (state, action) => {
   const pageSortState = pageSortStates[action.data.page];
   const { value } = action.data;
 
-  return Object.assign({}, state, {
-    [pageSortState]: value,
-  });
+  return { ...state, [pageSortState]: value };
 };
 
 export function fileInfoReducer(state = defaultState, action) {

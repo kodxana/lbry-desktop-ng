@@ -45,6 +45,7 @@ async function main() {
     return message;
   }
   if (
+    phase === 'stateUpdates' ||
     phase === 'reactState' ||
     phase === 'uiComponents' ||
     phase === 'accessibleControls' ||
@@ -70,6 +71,7 @@ async function main() {
     // Follow the desktop component import order to resolve its existing app/router cycle.
     require('component/app');
     const tests = {
+      stateUpdates: () => require('./stateUpdates'),
       reactState: () => require('./reactState'),
       uiComponents: () => require('./uiComponents'),
       accessibleControls: () => require('./accessibleControls'),

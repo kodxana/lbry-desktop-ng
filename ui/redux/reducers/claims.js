@@ -120,10 +120,10 @@ const defaultState = {
 function handleClaimAction(state: State, action: any): State {
   const { resolveInfo }: ClaimActionResolveInfo = action.data;
 
-  const blacklistedByUri = Object.assign({}, state.blacklistedByUri);
-  const byUri = Object.assign({}, state.claimsByUri);
-  const byId = Object.assign({}, state.byId);
-  const channelClaimCounts = Object.assign({}, state.channelClaimCounts);
+  const blacklistedByUri = { ...state.blacklistedByUri };
+  const byUri = { ...state.claimsByUri };
+  const byId = { ...state.byId };
+  const channelClaimCounts = { ...state.channelClaimCounts };
   const pendingById = state.pendingById;
   let newResolvingUrls = new Set(state.resolvingUris);
   let myClaimIds = new Set(state.myClaims);
@@ -201,14 +201,15 @@ function handleClaimAction(state: State, action: any): State {
     }
   });
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     blacklistedByUri,
     byId,
     claimsByUri: byUri,
     channelClaimCounts,
     resolvingUris: Array.from(newResolvingUrls),
     myClaims: Array.from(myClaimIds),
-  });
+  };
 }
 
 reducers[ACTIONS.RESOLVE_URIS_STARTED] = (state: State, action: any): State => {
@@ -223,9 +224,7 @@ reducers[ACTIONS.RESOLVE_URIS_STARTED] = (state: State, action: any): State => {
     }
   });
 
-  return Object.assign({}, state, {
-    resolvingUris: newResolving,
-  });
+  return { ...state, resolvingUris: newResolving };
 };
 
 reducers[ACTIONS.RESOLVE_URIS_COMPLETED] = (state: State, action: any): State => {
@@ -234,10 +233,10 @@ reducers[ACTIONS.RESOLVE_URIS_COMPLETED] = (state: State, action: any): State =>
   };
 };
 
-reducers[ACTIONS.FETCH_CLAIM_LIST_MINE_STARTED] = (state: State): State =>
-  Object.assign({}, state, {
-    isFetchingClaimListMine: true,
-  });
+reducers[ACTIONS.FETCH_CLAIM_LIST_MINE_STARTED] = (state: State): State => ({
+  ...state,
+  isFetchingClaimListMine: true,
+});
 
 reducers[ACTIONS.FETCH_CLAIM_LIST_MINE_COMPLETED] = (state: State, action: any): State => {
   const { result }: { result: ClaimListResponse } = action.data;
@@ -245,9 +244,9 @@ reducers[ACTIONS.FETCH_CLAIM_LIST_MINE_COMPLETED] = (state: State, action: any):
   const page = result.page;
   const totalItems = result.total_items;
 
-  const byId = Object.assign({}, state.byId);
-  const byUri = Object.assign({}, state.claimsByUri);
-  const pendingById = Object.assign({}, state.pendingById);
+  const byId = { ...state.byId };
+  const byUri = { ...state.claimsByUri };
+  const pendingById = { ...state.pendingById };
   let myClaimIds = new Set(state.myClaims);
   let urlsForCurrentPage = [];
 
@@ -271,7 +270,8 @@ reducers[ACTIONS.FETCH_CLAIM_LIST_MINE_COMPLETED] = (state: State, action: any):
     }
   });
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     isFetchingClaimListMine: false,
     myClaims: Array.from(myClaimIds),
     byId,
@@ -280,31 +280,30 @@ reducers[ACTIONS.FETCH_CLAIM_LIST_MINE_COMPLETED] = (state: State, action: any):
     myClaimsPageResults: urlsForCurrentPage,
     myClaimsPageNumber: page,
     myClaimsPageTotalResults: totalItems,
-  });
+  };
 };
 
-reducers[ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_STARTED] = (state: State): State =>
-  Object.assign({}, state, {
-    isFetchingAllClaimListMine: true,
-  });
+reducers[ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_STARTED] = (state: State): State => ({
+  ...state,
+  isFetchingAllClaimListMine: true,
+});
 
-reducers[ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_COMPLETED] = (state: State, action: any): State =>
-  Object.assign({}, state, {
-    isFetchingAllClaimListMine: false,
-    allClaimListMine: action.data.result.items,
-  });
+reducers[ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_COMPLETED] = (state: State, action: any): State => ({
+  ...state,
+  isFetchingAllClaimListMine: false,
+  allClaimListMine: action.data.result.items,
+});
 
-reducers[ACTIONS.FETCH_CHANNEL_LIST_STARTED] = (state: State): State =>
-  Object.assign({}, state, { fetchingMyChannels: true });
+reducers[ACTIONS.FETCH_CHANNEL_LIST_STARTED] = (state: State): State => ({ ...state, fetchingMyChannels: true });
 
 reducers[ACTIONS.FETCH_CHANNEL_LIST_COMPLETED] = (state: State, action: any): State => {
   const { claims }: { claims: Array<ChannelClaim> } = action.data;
   let myClaimIds = new Set(state.myClaims);
-  const pendingById = Object.assign({}, state.pendingById);
+  const pendingById = { ...state.pendingById };
   let myChannelClaims;
-  const byId = Object.assign({}, state.byId);
-  const byUri = Object.assign({}, state.claimsByUri);
-  const channelClaimCounts = Object.assign({}, state.channelClaimCounts);
+  const byId = { ...state.byId };
+  const byUri = { ...state.claimsByUri };
+  const channelClaimCounts = { ...state.channelClaimCounts };
 
   if (!claims.length) {
     // $FlowFixMe
@@ -337,7 +336,8 @@ reducers[ACTIONS.FETCH_CHANNEL_LIST_COMPLETED] = (state: State, action: any): St
     });
   }
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     byId,
     pendingById,
     claimsByUri: byUri,
@@ -345,13 +345,11 @@ reducers[ACTIONS.FETCH_CHANNEL_LIST_COMPLETED] = (state: State, action: any): St
     fetchingMyChannels: false,
     myChannelClaims: myChannelClaims ? Array.from(myChannelClaims) : null,
     myClaims: myClaimIds ? Array.from(myClaimIds) : null,
-  });
+  };
 };
 
 reducers[ACTIONS.FETCH_CHANNEL_LIST_FAILED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    fetchingMyChannels: false,
-  });
+  return { ...state, fetchingMyChannels: false };
 };
 
 reducers[ACTIONS.FETCH_COLLECTION_LIST_STARTED] = (state: State): State => ({
@@ -363,10 +361,10 @@ reducers[ACTIONS.FETCH_COLLECTION_LIST_COMPLETED] = (state: State, action: any):
   const { claims }: { claims: Array<CollectionClaim> } = action.data;
   const myClaims = state.myClaims || [];
   let myClaimIds = new Set(myClaims);
-  const pendingById = Object.assign({}, state.pendingById);
+  const pendingById = { ...state.pendingById };
   let myCollectionClaimsSet = new Set([]);
-  const byId = Object.assign({}, state.byId);
-  const byUri = Object.assign({}, state.claimsByUri);
+  const byId = { ...state.byId };
+  const byUri = { ...state.claimsByUri };
 
   if (claims.length) {
     myCollectionClaimsSet = new Set(state.myCollectionClaims);
@@ -410,14 +408,11 @@ reducers[ACTIONS.FETCH_COLLECTION_LIST_FAILED] = (state: State): State => {
 
 reducers[ACTIONS.FETCH_CHANNEL_CLAIMS_STARTED] = (state: State, action: any): State => {
   const { uri, page } = action.data;
-  const fetchingChannelClaims = Object.assign({}, state.fetchingChannelClaims);
+  const fetchingChannelClaims = { ...state.fetchingChannelClaims };
 
   fetchingChannelClaims[uri] = page;
 
-  return Object.assign({}, state, {
-    fetchingChannelClaims,
-    currentChannelPage: page,
-  });
+  return { ...state, fetchingChannelClaims, currentChannelPage: page };
 };
 
 reducers[ACTIONS.FETCH_CHANNEL_CLAIMS_COMPLETED] = (state: State, action: any): State => {
@@ -436,17 +431,17 @@ reducers[ACTIONS.FETCH_CHANNEL_CLAIMS_COMPLETED] = (state: State, action: any): 
   } = action.data;
 
   // byChannel keeps claim_search relevant results by page. If the total changes, erase it.
-  const channelClaimCounts = Object.assign({}, state.channelClaimCounts);
+  const channelClaimCounts = { ...state.channelClaimCounts };
 
-  const paginatedClaimsByChannel = Object.assign({}, state.paginatedClaimsByChannel);
+  const paginatedClaimsByChannel = { ...state.paginatedClaimsByChannel };
   // check if count has changed - that means cached pagination will be wrong, so clear it
   const previousCount = paginatedClaimsByChannel[uri] && paginatedClaimsByChannel[uri]['itemCount'];
-  const byChannel = claimsInChannel === previousCount ? Object.assign({}, paginatedClaimsByChannel[uri]) : {};
+  const byChannel = claimsInChannel === previousCount ? { ...paginatedClaimsByChannel[uri] } : {};
   const allClaimIds = new Set(byChannel.all);
   const currentPageClaimIds = [];
-  const byId = Object.assign({}, state.byId);
-  const fetchingChannelClaims = Object.assign({}, state.fetchingChannelClaims);
-  const claimsByUri = Object.assign({}, state.claimsByUri);
+  const byId = { ...state.byId };
+  const fetchingChannelClaims = { ...state.fetchingChannelClaims };
+  const claimsByUri = { ...state.claimsByUri };
 
   if (claims !== undefined) {
     claims.forEach((claim) => {
@@ -464,32 +459,31 @@ reducers[ACTIONS.FETCH_CHANNEL_CLAIMS_COMPLETED] = (state: State, action: any): 
   paginatedClaimsByChannel[uri] = byChannel;
   delete fetchingChannelClaims[uri];
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     paginatedClaimsByChannel,
     byId,
     fetchingChannelClaims,
     claimsByUri,
     channelClaimCounts,
     currentChannelPage: page,
-  });
+  };
 };
 
 reducers[ACTIONS.ABANDON_CLAIM_STARTED] = (state: State, action: any): State => {
   const { claimId }: { claimId: string } = action.data;
-  const abandoningById = Object.assign({}, state.abandoningById);
+  const abandoningById = { ...state.abandoningById };
 
   abandoningById[claimId] = true;
 
-  return Object.assign({}, state, {
-    abandoningById,
-  });
+  return { ...state, abandoningById };
 };
 
 reducers[ACTIONS.UPDATE_PENDING_CLAIMS] = (state: State, action: any): State => {
   const { claims: pendingClaims }: { claims: Array<Claim> } = action.data;
-  const byId = Object.assign({}, state.byId);
-  const pendingById = Object.assign({}, state.pendingById);
-  const byUri = Object.assign({}, state.claimsByUri);
+  const byId = { ...state.byId };
+  const pendingById = { ...state.pendingById };
+  const byUri = { ...state.claimsByUri };
   let myClaimIds = new Set(state.myClaims);
   const myChannelClaims = new Set(state.myChannelClaims);
 
@@ -514,20 +508,21 @@ reducers[ACTIONS.UPDATE_PENDING_CLAIMS] = (state: State, action: any): State => 
     }
     myClaimIds.add(claimId);
   });
-  return Object.assign({}, state, {
+  return {
+    ...state,
     myClaims: Array.from(myClaimIds),
     byId,
     pendingById,
     myChannelClaims: Array.from(myChannelClaims),
     claimsByUri: byUri,
-  });
+  };
 };
 
 reducers[ACTIONS.UPDATE_CONFIRMED_CLAIMS] = (state: State, action: any): State => {
   const { claims: confirmedClaims, pending: pendingClaims }: { claims: Array<Claim>, pending: { [string]: Claim } } =
     action.data;
-  const byId = Object.assign({}, state.byId);
-  const byUri = Object.assign({}, state.claimsByUri);
+  const byId = { ...state.byId };
+  const byUri = { ...state.claimsByUri };
   //
   confirmedClaims.forEach((claim: GenericClaim) => {
     const { claim_id: claimId, type } = claim;
@@ -540,21 +535,17 @@ reducers[ACTIONS.UPDATE_CONFIRMED_CLAIMS] = (state: State, action: any): State =
       byId[claimId] = newClaim;
     }
   });
-  return Object.assign({}, state, {
-    pendingById: pendingClaims,
-    byId,
-    claimsByUri: byUri,
-  });
+  return { ...state, pendingById: pendingClaims, byId, claimsByUri: byUri };
 };
 
 reducers[ACTIONS.ABANDON_CLAIM_SUCCEEDED] = (state: State, action: any): State => {
   const { claimId }: { claimId: string } = action.data;
-  const byId = Object.assign({}, state.byId);
+  const byId = { ...state.byId };
   const newMyClaims = state.myClaims ? state.myClaims.slice() : [];
   let myClaimsPageResults = null;
   const newMyChannelClaims = state.myChannelClaims ? state.myChannelClaims.slice() : [];
-  const claimsByUri = Object.assign({}, state.claimsByUri);
-  const abandoningById = Object.assign({}, state.abandoningById);
+  const claimsByUri = { ...state.claimsByUri };
+  const abandoningById = { ...state.abandoningById };
   const newMyCollectionClaims = state.myCollectionClaims ? state.myCollectionClaims.slice() : [];
 
   let abandonedUris = [];
@@ -580,7 +571,8 @@ reducers[ACTIONS.ABANDON_CLAIM_SUCCEEDED] = (state: State, action: any): State =
 
   delete byId[claimId];
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     myClaims,
     myChannelClaims,
     myCollectionClaims,
@@ -588,7 +580,7 @@ reducers[ACTIONS.ABANDON_CLAIM_SUCCEEDED] = (state: State, action: any): State =
     claimsByUri,
     abandoningById,
     myClaimsPageResults: myClaimsPageResults || state.myClaimsPageResults,
-  });
+  };
 };
 
 reducers[ACTIONS.CLEAR_CHANNEL_ERRORS] = (state: State): State => ({
@@ -604,37 +596,23 @@ reducers[ACTIONS.CREATE_CHANNEL_STARTED] = (state: State): State => ({
 });
 
 reducers[ACTIONS.CREATE_CHANNEL_COMPLETED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    creatingChannel: false,
-  });
+  return { ...state, creatingChannel: false };
 };
 
 reducers[ACTIONS.CREATE_CHANNEL_FAILED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    creatingChannel: false,
-    createChannelError: action.data,
-  });
+  return { ...state, creatingChannel: false, createChannelError: action.data };
 };
 
 reducers[ACTIONS.UPDATE_CHANNEL_STARTED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    updateChannelError: '',
-    updatingChannel: true,
-  });
+  return { ...state, updateChannelError: '', updatingChannel: true };
 };
 
 reducers[ACTIONS.UPDATE_CHANNEL_COMPLETED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    updateChannelError: '',
-    updatingChannel: false,
-  });
+  return { ...state, updateChannelError: '', updatingChannel: false };
 };
 
 reducers[ACTIONS.UPDATE_CHANNEL_FAILED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    updateChannelError: action.data.message,
-    updatingChannel: false,
-  });
+  return { ...state, updateChannelError: action.data.message, updatingChannel: false };
 };
 
 reducers[ACTIONS.CLEAR_COLLECTION_ERRORS] = (state: State): State => ({
@@ -657,60 +635,45 @@ reducers[ACTIONS.COLLECTION_PUBLISH_COMPLETED] = (state: State, action: any): St
   let myCollectionClaimsSet = new Set(myCollections);
   myClaimIds.add(claimId);
   myCollectionClaimsSet.add(claimId);
-  return Object.assign({}, state, {
+  return {
+    ...state,
     creatingCollection: false,
     myClaims: Array.from(myClaimIds),
     myCollectionClaims: Array.from(myCollectionClaimsSet),
-  });
+  };
 };
 
 reducers[ACTIONS.COLLECTION_PUBLISH_FAILED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    creatingCollection: false,
-    createCollectionError: action.data.error,
-  });
+  return { ...state, creatingCollection: false, createCollectionError: action.data.error };
 };
 
 reducers[ACTIONS.COLLECTION_PUBLISH_UPDATE_STARTED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    updateCollectionError: '',
-    updatingCollection: true,
-  });
+  return { ...state, updateCollectionError: '', updatingCollection: true };
 };
 
 reducers[ACTIONS.COLLECTION_PUBLISH_UPDATE_COMPLETED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    updateCollectionError: '',
-    updatingCollection: false,
-  });
+  return { ...state, updateCollectionError: '', updatingCollection: false };
 };
 
 reducers[ACTIONS.COLLECTION_PUBLISH_UPDATE_FAILED] = (state: State, action: any): State => {
-  return Object.assign({}, state, {
-    updateCollectionError: action.data.error,
-    updatingCollection: false,
-  });
+  return { ...state, updateCollectionError: action.data.error, updatingCollection: false };
 };
 
-reducers[ACTIONS.IMPORT_CHANNEL_STARTED] = (state: State): State =>
-  Object.assign({}, state, { pendingChannelImports: true });
+reducers[ACTIONS.IMPORT_CHANNEL_STARTED] = (state: State): State => ({ ...state, pendingChannelImports: true });
 
-reducers[ACTIONS.IMPORT_CHANNEL_COMPLETED] = (state: State): State =>
-  Object.assign({}, state, { pendingChannelImports: false });
+reducers[ACTIONS.IMPORT_CHANNEL_COMPLETED] = (state: State): State => ({ ...state, pendingChannelImports: false });
 
 reducers[ACTIONS.CLAIM_SEARCH_STARTED] = (state: State, action: any): State => {
-  const fetchingClaimSearchByQuery = Object.assign({}, state.fetchingClaimSearchByQuery);
+  const fetchingClaimSearchByQuery = { ...state.fetchingClaimSearchByQuery };
   fetchingClaimSearchByQuery[action.data.query] = true;
 
-  return Object.assign({}, state, {
-    fetchingClaimSearchByQuery,
-  });
+  return { ...state, fetchingClaimSearchByQuery };
 };
 
 reducers[ACTIONS.CLAIM_SEARCH_COMPLETED] = (state: State, action: any): State => {
-  const fetchingClaimSearchByQuery = Object.assign({}, state.fetchingClaimSearchByQuery);
-  const claimSearchByQuery = Object.assign({}, state.claimSearchByQuery);
-  const claimSearchByQueryLastPageReached = Object.assign({}, state.claimSearchByQueryLastPageReached);
+  const fetchingClaimSearchByQuery = { ...state.fetchingClaimSearchByQuery };
+  const claimSearchByQuery = { ...state.claimSearchByQuery };
+  const claimSearchByQueryLastPageReached = { ...state.claimSearchByQueryLastPageReached };
   const { append, query, urls, pageSize } = action.data;
 
   if (append) {
@@ -726,19 +689,20 @@ reducers[ACTIONS.CLAIM_SEARCH_COMPLETED] = (state: State, action: any): State =>
 
   delete fetchingClaimSearchByQuery[query];
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     ...handleClaimAction(state, action),
     claimSearchByQuery,
     claimSearchByQueryLastPageReached,
     fetchingClaimSearchByQuery,
-  });
+  };
 };
 
 reducers[ACTIONS.CLAIM_SEARCH_FAILED] = (state: State, action: any): State => {
   const { query } = action.data;
-  const claimSearchByQuery = Object.assign({}, state.claimSearchByQuery);
-  const fetchingClaimSearchByQuery = Object.assign({}, state.fetchingClaimSearchByQuery);
-  const claimSearchByQueryLastPageReached = Object.assign({}, state.claimSearchByQueryLastPageReached);
+  const claimSearchByQuery = { ...state.claimSearchByQuery };
+  const fetchingClaimSearchByQuery = { ...state.fetchingClaimSearchByQuery };
+  const claimSearchByQueryLastPageReached = { ...state.claimSearchByQueryLastPageReached };
 
   delete fetchingClaimSearchByQuery[query];
 
@@ -748,11 +712,7 @@ reducers[ACTIONS.CLAIM_SEARCH_FAILED] = (state: State, action: any): State => {
     claimSearchByQuery[query] = null;
   }
 
-  return Object.assign({}, state, {
-    fetchingClaimSearchByQuery,
-    claimSearchByQuery,
-    claimSearchByQueryLastPageReached,
-  });
+  return { ...state, fetchingClaimSearchByQuery, claimSearchByQuery, claimSearchByQueryLastPageReached };
 };
 
 reducers[ACTIONS.CLAIM_REPOST_STARTED] = (state: State): State => {
@@ -802,34 +762,22 @@ reducers[ACTIONS.ADD_FILES_REFLECTING] = (state: State, action): State => {
 
   reflectingById[claimId] = { fileListItem: pendingClaim, progress: 0, stalled: false };
 
-  return Object.assign({}, state, {
-    ...state,
-    reflectingById: reflectingById,
-  });
+  return { ...state, ...state, reflectingById: reflectingById };
 };
 reducers[ACTIONS.UPDATE_FILES_REFLECTING] = (state: State, action): State => {
   const newReflectingById = action.data;
 
-  return Object.assign({}, state, {
-    ...state,
-    reflectingById: newReflectingById,
-  });
+  return { ...state, ...state, reflectingById: newReflectingById };
 };
 reducers[ACTIONS.TOGGLE_CHECKING_REFLECTING] = (state: State, action): State => {
   const checkingReflecting = action.data;
 
-  return Object.assign({}, state, {
-    ...state,
-    checkingReflecting,
-  });
+  return { ...state, ...state, checkingReflecting };
 };
 reducers[ACTIONS.TOGGLE_CHECKING_PENDING] = (state: State, action): State => {
   const checking = action.data;
 
-  return Object.assign({}, state, {
-    ...state,
-    checkingPending: checking,
-  });
+  return { ...state, ...state, checkingPending: checking };
 };
 
 reducers[ACTIONS.PURCHASE_LIST_STARTED] = (state: State): State => {
@@ -845,8 +793,8 @@ reducers[ACTIONS.PURCHASE_LIST_COMPLETED] = (state: State, action: any): State =
   const page = result.page;
   const totalItems = result.total_items;
 
-  let byId = Object.assign({}, state.byId);
-  let byUri = Object.assign({}, state.claimsByUri);
+  let byId = { ...state.byId };
+  let byUri = { ...state.claimsByUri };
   let urlsForCurrentPage = [];
 
   result.items.forEach((item) => {
@@ -865,14 +813,15 @@ reducers[ACTIONS.PURCHASE_LIST_COMPLETED] = (state: State, action: any): State =
     urlsForCurrentPage.push(uri);
   });
 
-  return Object.assign({}, state, {
+  return {
+    ...state,
     byId,
     claimsByUri: byUri,
     myPurchases: urlsForCurrentPage,
     myPurchasesPageNumber: page,
     myPurchasesPageTotalResults: totalItems,
     fetchingMyPurchases: false,
-  });
+  };
 };
 
 reducers[ACTIONS.PURCHASE_LIST_FAILED] = (state: State, action: any): State => {
@@ -888,8 +837,8 @@ reducers[ACTIONS.PURCHASE_LIST_FAILED] = (state: State, action: any): State => {
 reducers[ACTIONS.PURCHASE_URI_COMPLETED] = (state: State, action: any): State => {
   const { uri, purchaseReceipt } = action.data;
 
-  let byId = Object.assign({}, state.byId);
-  let byUri = Object.assign({}, state.claimsByUri);
+  let byId = { ...state.byId };
+  let byUri = { ...state.claimsByUri };
   let myPurchases = state.myPurchases ? state.myPurchases.slice() : [];
 
   const claimId = byUri[uri];

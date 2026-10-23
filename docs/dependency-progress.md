@@ -23,12 +23,12 @@ dependency set has 149 packages, including 51 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
 The checker runs again. Required checks load all 88 declaration files, reject
-duplicate modules and
-exercise nine maintained dependency contracts alongside the first-party global
-types. The declaration check is clean, but the full application still has type
-errors and some packages retain untyped stubs. Updating declarations does not
-change the package-version
-percentages above; see
+duplicate modules and exercise nine maintained dependency contracts alongside
+the first-party global types. The declaration check is clean. The first
+application pass replaces fresh-object Redux copies with spreads, reducing full
+application diagnostics from 5,051 to 3,214. Remaining application errors and
+untyped dependency stubs still need work. These type migrations do not change
+the package-version percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
 
 The six unchanged packages are country-data, ffmpeg-probe, localforage,

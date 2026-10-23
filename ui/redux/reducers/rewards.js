@@ -9,10 +9,7 @@ const defaultState = {
   rewardedContentClaimIds: [],
 };
 
-reducers[ACTIONS.FETCH_REWARDS_STARTED] = (state) =>
-  Object.assign({}, state, {
-    fetching: true,
-  });
+reducers[ACTIONS.FETCH_REWARDS_STARTED] = (state) => ({ ...state, fetching: true });
 
 reducers[ACTIONS.FETCH_REWARDS_COMPLETED] = (state, action) => {
   const { userRewards } = action.data;
@@ -27,16 +24,12 @@ reducers[ACTIONS.FETCH_REWARDS_COMPLETED] = (state, action) => {
     }
   });
 
-  return Object.assign({}, state, {
-    claimedRewardsById: claimedRewards,
-    unclaimedRewards,
-    fetching: false,
-  });
+  return { ...state, claimedRewardsById: claimedRewards, unclaimedRewards, fetching: false };
 };
 
 function setClaimRewardState(state, reward, isClaiming, errorMessage = '') {
-  const newClaimPendingByType = Object.assign({}, state.claimPendingByType);
-  const newClaimErrorsByType = Object.assign({}, state.claimErrorsByType);
+  const newClaimPendingByType = { ...state.claimPendingByType };
+  const newClaimErrorsByType = { ...state.claimErrorsByType };
 
   // Currently, for multiple rewards of the same type, they will both show "claiming" when one is beacuse we track this by `reward_type`
   // To fix this we will need to use `claim_code` instead, and change all selectors to match
@@ -53,10 +46,7 @@ function setClaimRewardState(state, reward, isClaiming, errorMessage = '') {
     }
   }
 
-  return Object.assign({}, state, {
-    claimPendingByType: newClaimPendingByType,
-    claimErrorsByType: newClaimErrorsByType,
-  });
+  return { ...state, claimPendingByType: newClaimPendingByType, claimErrorsByType: newClaimErrorsByType };
 }
 
 reducers[ACTIONS.CLAIM_REWARD_STARTED] = (state, action) => {
@@ -99,9 +89,7 @@ reducers[ACTIONS.CLAIM_REWARD_CLEAR_ERROR] = (state, action) => {
 reducers[ACTIONS.FETCH_REWARD_CONTENT_COMPLETED] = (state, action) => {
   const { claimIds } = action.data;
 
-  return Object.assign({}, state, {
-    rewardedContentClaimIds: claimIds,
-  });
+  return { ...state, rewardedContentClaimIds: claimIds };
 };
 
 export default function rewardsReducer(state = defaultState, action) {

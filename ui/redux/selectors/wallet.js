@@ -99,28 +99,24 @@ export const selectTransactionItems = createSelector(selectTransactionsById, (by
     const append = [];
 
     append.push(
-      ...tx.claim_info.map((item) =>
-        Object.assign({}, tx, item, {
-          type: item.claim_name[0] === '@' ? TRANSACTIONS.CHANNEL : TRANSACTIONS.PUBLISH,
-        })
-      )
+      ...tx.claim_info.map((item) => ({
+        ...tx,
+        ...item,
+        type: item.claim_name[0] === '@' ? TRANSACTIONS.CHANNEL : TRANSACTIONS.PUBLISH,
+      }))
     );
     append.push(
-      ...tx.support_info.map((item) =>
-        Object.assign({}, tx, item, {
-          type: !item.is_tip ? TRANSACTIONS.SUPPORT : TRANSACTIONS.TIP,
-        })
-      )
+      ...tx.support_info.map((item) => ({
+        ...tx,
+        ...item,
+        type: !item.is_tip ? TRANSACTIONS.SUPPORT : TRANSACTIONS.TIP,
+      }))
     );
-    append.push(...tx.update_info.map((item) => Object.assign({}, tx, item, { type: TRANSACTIONS.UPDATE })));
-    append.push(...tx.abandon_info.map((item) => Object.assign({}, tx, item, { type: TRANSACTIONS.ABANDON })));
+    append.push(...tx.update_info.map((item) => ({ ...tx, ...item, type: TRANSACTIONS.UPDATE })));
+    append.push(...tx.abandon_info.map((item) => ({ ...tx, ...item, type: TRANSACTIONS.ABANDON })));
 
     if (!append.length) {
-      append.push(
-        Object.assign({}, tx, {
-          type: tx.value < 0 ? TRANSACTIONS.SPEND : TRANSACTIONS.RECEIVE,
-        })
-      );
+      append.push({ ...tx, type: tx.value < 0 ? TRANSACTIONS.SPEND : TRANSACTIONS.RECEIVE });
     }
 
     items.push(

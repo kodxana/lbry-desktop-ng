@@ -143,14 +143,24 @@ its bundled TypeScript definitions differ: missing keys are nullable, `clear`
 resolves without a value, failure callbacks omit the result, undefined writes
 become null, and configuration can return an error or a promise.
 
-**The application is not yet type-clean.** The full check reports 5,051
-application diagnostics and zero library-definition diagnostics, compared with
-5,031 total and 24 library diagnostics before this batch. Stronger selector
-contracts expose additional application errors, including mismatched state
-shapes, nullable results and incorrect return annotations. Missing export
-annotations, exact-object rules, old utility types and casts also need work.
-Inherited `any` stubs remain, so a clean declaration check does not mean every
-dependency API is fully typed.
+The first application pass replaces 346 fresh-object `Object.assign({}, ...)`
+copies across 20 Redux and helper files with object spreads. Calls that mutate
+an existing target are unchanged. The shared action helpers retain the original
+state reference for unknown actions, which redux-persist relies on; handled
+actions still shallow-merge partial state into a fresh object.
+
+The renderer's state-update fixture checks those identities, merge order,
+explicit undefined and symbol properties, persisted settings, wallet balances
+and transaction entries, failed sends, update choices, password status, sync
+retries and copied claim/comment/download maps. Existing wallet backup,
+encryption, password migration and updater tests remain required.
+
+**The application is not yet type-clean.** The full check now reports 3,214
+application diagnostics and zero library-definition diagnostics, down from
+5,051 application diagnostics before this pass (1,837 fewer). Missing export
+annotations, mismatched state shapes, nullable results, exact-object rules,
+old utility types and casts still need work. Inherited `any` stubs remain, so a
+clean declaration check does not mean every dependency API is fully typed.
 
 No application errors are baselined, suppressed or converted into a successful
 exit. These counts describe this revision, not a baseline that permits new

@@ -325,7 +325,7 @@ export const walletReducer = handleActions(
     [ACTIONS.ABANDON_CLAIM_SUPPORT_COMPLETED]: (state: WalletState, action: any): WalletState => {
       const { claimId, type, txid, effective }: { claimId: string, type: string, txid: string, effective: string } =
         action.data;
-      const pendingtxs = Object.assign({}, state.pendingSupportTransactions);
+      const pendingtxs = { ...state.pendingSupportTransactions };
 
       pendingtxs[claimId] = { txid, type, effective };
 
@@ -404,16 +404,13 @@ export const walletReducer = handleActions(
       return { ...state, draftTransaction: newDraftTransaction };
     },
 
-    [ACTIONS.SEND_TRANSACTION_COMPLETED]: (state: WalletState) =>
-      Object.assign({}, state, {
-        draftTransaction: buildDraftTransaction(),
-      }),
+    [ACTIONS.SEND_TRANSACTION_COMPLETED]: (state: WalletState) => ({
+      ...state,
+      draftTransaction: buildDraftTransaction(),
+    }),
 
     [ACTIONS.SEND_TRANSACTION_FAILED]: (state: WalletState, action) => {
-      const newDraftTransaction = Object.assign({}, state.draftTransaction, {
-        sending: false,
-        error: action.data.error,
-      });
+      const newDraftTransaction = { ...state.draftTransaction, sending: false, error: action.data.error };
 
       return { ...state, draftTransaction: newDraftTransaction };
     },
