@@ -34,5 +34,9 @@ latest release does not establish that a package is maintained.
 auto-launch 5.0.6 adds FreeBSD platform recognition; its Windows and Linux
 registration implementations are unchanged. The desktop's scoped IPC regression
 continues to cover the exposed commands without changing the user's login items.
-source-map-explorer 2.5.3 updates dependencies for modern Node; validate the
-existing analysis command against the production bundle and source maps.
+source-map-explorer 2.5.3 updates dependencies for modern Node. Its span checker
+misinterprets the source-map library's `Infinity` end-of-line marker. A pinned
+patch treats that marker like its existing open-ended span representation,
+keeping invalid-column and invalid-line checks enabled. `testBundleAnalysis.js`
+checks exact UTF-8 byte attribution, HTML output and rejection of invalid maps.
+The existing analysis command is also checked against the production bundle.

@@ -1,0 +1,7 @@
+diff --git a/lib/explore.js b/lib/explore.js
+--- a/lib/explore.js
++++ b/lib/explore.js
+@@ -136,1 +136,3 @@
+   consumer.eachMapping(({ source, generatedLine, generatedColumn, lastGeneratedColumn }) => {
++    // source-map uses Infinity for a span ending at the end of a line.
++    if (lastGeneratedColumn === Infinity) lastGeneratedColumn = null;

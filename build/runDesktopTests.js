@@ -7,6 +7,7 @@ for (const file of [
   'testArtifactDownload.js',
   'testYaml.js',
   'testBuildHelpers.js',
+  'testBundleAnalysis.js',
   'testCompiler.js',
   'testDesktopRoutes.js',
   'testDesktopHistory.js',

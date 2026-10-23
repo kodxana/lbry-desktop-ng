@@ -12343,6 +12343,29 @@ __metadata:
   languageName: node
   linkType: hard
 
+"source-map-explorer@patch:source-map-explorer@npm:2.5.3#.yarn/patches/source-map-explorer-npm-2.5.3.patch::locator=lbry-desktop-ng%40workspace%3A.":
+  version: 2.5.3
+  resolution: "source-map-explorer@patch:source-map-explorer@npm%3A2.5.3#.yarn/patches/source-map-explorer-npm-2.5.3.patch::version=2.5.3&hash=dddd8e&locator=lbry-desktop-ng%40workspace%3A."
+  dependencies:
+    btoa: ^1.2.1
+    chalk: ^4.1.0
+    convert-source-map: ^1.7.0
+    ejs: ^3.1.5
+    escape-html: ^1.0.3
+    glob: ^7.1.6
+    gzip-size: ^6.0.0
+    lodash: ^4.17.20
+    open: ^7.3.1
+    source-map: ^0.7.4
+    temp: ^0.9.4
+    yargs: ^16.2.0
+  bin:
+    sme: bin/cli.js
+    source-map-explorer: bin/cli.js
+  checksum: b28a91dbe4c6e981718917212709ac294e46f8fd7cd4f2a68a09cb2e0afeada36c8edb2a3970903f7563ca894501035e59e5ccdbad29680c8813f797f2861a0c
+  languageName: node
+  linkType: hard
+
 "source-map-js@npm:>=0.6.2 <2.0.0":
   version: 1.0.2
   resolution: "source-map-js@npm:1.0.2"
