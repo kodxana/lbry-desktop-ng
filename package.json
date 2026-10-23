@@ -55,7 +55,7 @@
     "@emotion/styled": "11.14.1",
     "@hello-pangea/dnd": "18.0.1",
     "@mui/material": "9.5.0",
-    "auto-launch": "^5.0.5",
+    "auto-launch": "5.0.6",
     "core-js": "3.50.0",
     "electron-log": "5.4.4",
     "electron-updater": "6.8.10",
@@ -70,7 +70,7 @@
     "react-calendar": "6.0.1",
     "react-datetime-picker": "7.1.0",
     "regenerator-runtime": "0.14.1",
-    "source-map-explorer": "^2.5.2"
+    "source-map-explorer": "2.5.3"
   },
   "devDependencies": {
     "@ariakit/react": "0.4.42",
@@ -128,7 +128,7 @@
     "hast-util-sanitize": "5.0.2",
     "hast-util-to-jsx-runtime": "2.3.6",
     "hermes-eslint": "0.37.0",
-    "history": "^4.9.0",
+    "history": "5.3.0",
     "husky": "9.1.7",
     "imagesloaded": "5.0.0",
     "jsqr": "1.4.0",

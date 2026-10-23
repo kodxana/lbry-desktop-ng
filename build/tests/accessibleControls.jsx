@@ -345,7 +345,7 @@ async function nestedMenus(store, history) {
   let disabledClicks = 0;
   let submissions = 0;
   const visits = [];
-  const stop = history.listen((location) => visits.push(location.pathname));
+  const stop = history.listen(({ location }) => visits.push(location.pathname));
   render(
     <form
       onSubmit={(event) => {

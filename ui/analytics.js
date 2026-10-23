@@ -270,7 +270,7 @@ analytics.pageView(generateInitialUrl(window.location.hash));
 
 // Listen for url changes and report
 // This will include search queries
-history.listen((location) => {
+history.listen(({ location }) => {
   const { pathname, search } = location;
 
   const page = `${pathname}${search}`;

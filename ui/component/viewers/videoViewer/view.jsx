@@ -181,11 +181,10 @@ function VideoViewer(props: Props) {
       setDoNavigate(false);
       if (!isFloating) {
         const navigateUrl = formatLbryUrlForWeb(playUri);
-        push({
-          pathname: navigateUrl,
-          search: collectionId && generateListSearchUrlParams(collectionId),
-          state: { collectionId, forceAutoplay: true, hideFloatingPlayer: true },
-        });
+        push(
+          { pathname: navigateUrl, search: (collectionId && generateListSearchUrlParams(collectionId)) || '' },
+          { collectionId, forceAutoplay: true, hideFloatingPlayer: true }
+        );
       } else {
         doPlayUri(playUri, collectionId);
       }

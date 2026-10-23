@@ -139,11 +139,10 @@ function ClaimMenuList(props: Props) {
       doToggleShuffleList(collectionId);
       if (playNextUri) {
         const navigateUrl = formatLbryUrlForWeb(playNextUri);
-        push({
-          pathname: navigateUrl,
-          search: generateListSearchUrlParams(collectionId),
-          state: { collectionId, forceAutoplay: true },
-        });
+        push(
+          { pathname: navigateUrl, search: generateListSearchUrlParams(collectionId) },
+          { collectionId, forceAutoplay: true }
+        );
       }
     }
   }, [collectionId, doShuffle, doToggleShuffleList, playNextUri, push, resolvedList]);

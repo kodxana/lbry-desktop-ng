@@ -9,6 +9,7 @@ for (const file of [
   'testBuildHelpers.js',
   'testCompiler.js',
   'testDesktopRoutes.js',
+  'testDesktopHistory.js',
   'testDesktopSetup.js',
   'testDesktopUpdates.js',
   'testUpdaterIpc.js',
