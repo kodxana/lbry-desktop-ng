@@ -13,9 +13,9 @@ import useFetched from 'effects/use-fetched';
 import { RULE } from 'constants/notifications';
 
 type Props = {
-  notifications: Array<Notification>,
-  notificationsFiltered: Array<Notification>,
-  notificationCategories: Array<NotificationCategory>,
+  notifications: Array<WebNotification>,
+  notificationsFiltered: Array<WebNotification>,
+  notificationCategories: void | Array<NotificationCategory>,
   fetching: boolean,
   unreadCount: number,
   unseenCount: number,

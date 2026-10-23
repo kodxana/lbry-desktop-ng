@@ -6,6 +6,7 @@ declare type UpdatePublishFormData = {
   fee?: {
     amount: string,
     currency: string,
+    ...
   },
   title?: string,
   thumbnail_url?: string,
@@ -26,6 +27,7 @@ declare type UpdatePublishFormData = {
   uri?: string,
   nsfw: boolean,
   isMarkdownPost?: boolean,
+  ...
 };
 
 declare type PublishParams = {
@@ -47,8 +49,10 @@ declare type PublishParams = {
   fee?: {
     amount: string,
     currency: string,
+    ...
   },
   claim: StreamClaim,
   nsfw: boolean,
   tags: Array<Tag>,
+  ...
 };

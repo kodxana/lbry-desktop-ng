@@ -16,19 +16,22 @@ declare type LivestreamReplayItem = {
     service: string,
     thumbnails: Array<string>,
     uploadedAt: string, // Date?
+    ...
   },
   id: string,
-}
+  ...
+};
 declare type LivestreamReplayData = Array<LivestreamReplayItem>;
 
 declare type LivestreamState = {
-  fetchingById: {},
-  viewersById: {},
+  fetchingById: { ... },
+  viewersById: { ... },
   fetchingActiveLivestreams: boolean,
   activeLivestreams: ?LivestreamInfo,
   activeLivestreamsLastFetchedDate: number,
-  activeLivestreamsLastFetchedOptions: {},
-}
+  activeLivestreamsLastFetchedOptions: { ... },
+  ...
+};
 
 declare type LivestreamInfo = {
   [/* creatorId */ string]: {
@@ -37,5 +40,6 @@ declare type LivestreamInfo = {
     creatorId: string,
     latestClaimId: string,
     latestClaimUri: string,
-  }
-}
+    ...
+  },
+};

@@ -6,4 +6,5 @@ declare type FileWithPath = {
   // the application. For browser, the name
   // of the file will be used.
   path: string,
-}
+  ...
+};

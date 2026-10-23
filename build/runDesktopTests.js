@@ -4,6 +4,7 @@ const path = require('path');
 for (const file of [
   'testLintTooling.js',
   'testFlowTooling.js',
+  'testFlowContracts.js',
   'testAccountClient.js',
   'testArtifactDownload.js',
   'testYaml.js',

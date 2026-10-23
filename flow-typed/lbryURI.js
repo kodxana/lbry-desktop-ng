@@ -18,4 +18,5 @@ declare type LbryUrlObj = {
   claimName?: string,
   claimId?: string,
   contentName?: string,
+  ...
 };

@@ -8,6 +8,7 @@ declare type Transaction = {
   txid: string,
   type: string,
   date: Date,
+  ...
 };
 
 declare type Support = {
@@ -25,4 +26,5 @@ declare type Support = {
   timestamp: number,
   txid: string,
   type: string,
+  ...
 };
