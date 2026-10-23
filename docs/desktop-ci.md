@@ -2,6 +2,9 @@
 
 The [React and Material UI migration](react-and-material.md) adds autocomplete
 and tooltip interaction, comic-page rendering and real Fast Refresh checks.
+React 18 checks cover automatic batching, consistent Redux/router locations,
+redirects, history menus, fast wallet encryption/unlock completion, leaving
+pending password dialogs, and image-viewer zoom, rotation and keyboard focus.
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the

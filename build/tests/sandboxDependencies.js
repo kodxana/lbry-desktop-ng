@@ -5,7 +5,7 @@ import markdownRenderer from 'util/markdown-renderer';
 import ReactDOMServer from 'react-dom/server';
 import React from 'react';
 import { readComic } from 'util/comic-archive';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import ThreeViewer from 'component/viewers/threeViewer';
@@ -36,8 +36,9 @@ window.probeThree = async (filename) => {
   document.body.append(container);
   window.__ = (text) => text;
   let viewer;
+  const root = createRoot(container);
   try {
-    ReactDOM.render(
+    root.render(
       React.createElement(
         Provider,
         { store },
@@ -47,13 +48,13 @@ window.probeThree = async (filename) => {
           },
           source: { fileType: 'stl', downloadPath: filename },
         })
-      ),
-      container
+      )
     );
-    for (let count = 0; count < 200 && !viewer.state.isReady && !viewer.state.error; count++) {
+    for (let count = 0; count < 200; count++) {
+      if (viewer && (viewer.state.isReady || viewer.state.error)) break;
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
-    if (!viewer.state.isReady) throw new Error(viewer.state.error || 'Sandbox model timed out');
+    if (!viewer || !viewer.state.isReady) throw new Error((viewer && viewer.state.error) || 'Sandbox model timed out');
     viewer.renderer.render(viewer.scene, viewer.camera);
     return {
       node: typeof window.require,
@@ -62,7 +63,7 @@ window.probeThree = async (filename) => {
       vertices: viewer.mesh.geometry.getAttribute('position').count,
     };
   } finally {
-    ReactDOM.unmountComponentAtNode(container);
+    root.unmount();
     container.remove();
   }
 };

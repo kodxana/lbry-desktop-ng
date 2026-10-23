@@ -23,7 +23,10 @@ export default async function updater(store, history) {
     return { ok: true, json: async () => ({ tag_name: 'v0.55.0', body: 'Synthetic release notes' }) };
   };
   let stop = () => {};
-  const open = () => store.dispatch(doOpenModal(MODALS.AUTO_UPDATE_DOWNLOADED));
+  const open = async () => {
+    store.dispatch(doOpenModal(MODALS.AUTO_UPDATE_DOWNLOADED));
+    await waitFor(() => button('Upgrade Now'), 'The update prompt must render before accepting');
+  };
   const reset = async () => {
     stop();
     store.dispatch(doHideModal());
@@ -39,7 +42,7 @@ export default async function updater(store, history) {
     render(<UpdateScreen />, store, history);
     await reset();
     assert.equal(store.getState().app.remoteVersion, '0.55.0');
-    open();
+    await open();
     const confirm = button('Upgrade Now');
     confirm.click();
     confirm.click();
@@ -70,7 +73,7 @@ export default async function updater(store, history) {
     assert.equal(store.getState().app.modal, null, 'A declined background download must not reopen the prompt');
     assert.equal((await fixture()).calls.stops, 0);
 
-    open();
+    await open();
     button('Upgrade Now').click();
     await waitFor(() => !!button('Installing...'), 'Manual acceptance of a cached update did not start SDK shutdown');
     assert(button('Installing...').disabled);
@@ -92,12 +95,12 @@ export default async function updater(store, history) {
     );
 
     await reset();
-    open();
+    await open();
     button('Upgrade Now').click();
     await waitFor(async () => (await fixture()).calls.downloads === 1, 'Download did not start');
     await fixture('fail-download');
     await waitFor(
-      () => store.getState().app.autoUpdateFailed && !button('Upgrade Now').disabled,
+      () => store.getState().app.autoUpdateFailed && button('Upgrade Now')?.disabled === false,
       'Download failure must allow retry'
     );
     button('Upgrade Now').click();

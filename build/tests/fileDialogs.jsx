@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import { flushSync } from 'react-dom';
 import fs from 'fs';
 import path from 'path';
 import { ipcRenderer } from 'electron';
@@ -13,7 +14,7 @@ export default async function fileDialogs(store, history, root) {
   fs.writeFileSync(selected, contents);
   const chosen = [];
   const onFileChosen = (value) => chosen.push(value);
-  const browse = () => document.querySelector('button').click();
+  const browse = () => flushSync(() => document.querySelector('button').click());
   const filters = [{ name: 'Text', extensions: ['txt'] }];
   render(<FileSelector type="openFile" filters={filters} onFileChosen={onFileChosen} />, store, history);
   await ipcRenderer.invoke('fixture-dialog', { canceled: true, filePaths: [selected] });
@@ -67,7 +68,10 @@ export default async function fileDialogs(store, history, root) {
   document.querySelector('input[type=file]').files = transfer.files;
   document.querySelector('input[type=file]').dispatchEvent(new Event('change', { bubbles: true }));
   assert.equal(chosen.length, 5, 'A synthetic File must not become a guessed local path');
-  assert(document.body.textContent.includes('could not be opened'));
+  await waitFor(
+    () => document.body.textContent.includes('could not be opened'),
+    'Missing local paths must report an error'
+  );
   unmount();
   render(<FileSelector type="openFile" disabled onFileChosen={onFileChosen} />, store, history);
   calls = await ipcRenderer.invoke('fixture-dialog', null);

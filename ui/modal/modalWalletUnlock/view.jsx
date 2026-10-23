@@ -8,7 +8,7 @@ import { getSavedPasswordState, setSavedPassword } from 'util/saved-passwords';
 type Props = {
   quit: () => void,
   closeModal: () => void,
-  unlockWallet: (?string) => void,
+  unlockWallet: (?string) => Promise<boolean>,
   walletUnlockSucceded: boolean,
   shouldTryWithBlankPassword: boolean,
 };
@@ -17,21 +17,23 @@ type State = {
   password: string,
   rememberPassword: boolean,
   submittedPassword: ?string,
-  submittedRememberPassword: boolean,
+  pending: boolean,
 };
 
 class ModalWalletUnlock extends React.PureComponent<Props, State> {
   unmounted = false;
   saving = false;
+  pendingRequest = false;
 
   state = {
     password: '',
     rememberPassword: false,
     submittedPassword: null,
-    submittedRememberPassword: false,
+    pending: false,
   };
 
   componentDidMount() {
+    this.unmounted = false;
     const { shouldTryWithBlankPassword } = this.props;
 
     getSavedPasswordState().then(({ password: p, remembered: rememberPassword }) => {
@@ -48,25 +50,19 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
     this.unmounted = true;
   }
 
-  componentDidUpdate(prevProps: Props) {
-    const { props } = this;
-
-    if (
-      this.state.submittedPassword !== null &&
-      props.walletUnlockSucceded === true &&
-      prevProps.walletUnlockSucceded !== true
-    ) {
+  async submitPassword(password: string, rememberPassword: boolean = this.state.rememberPassword) {
+    if (this.saving || this.pendingRequest || this.unmounted) return;
+    this.pendingRequest = true;
+    this.setState({ submittedPassword: password, pending: true });
+    try {
+      if (!(await this.props.unlockWallet(password)) || this.unmounted) return;
       this.saving = true;
-      setSavedPassword(this.state.submittedPassword, this.state.submittedRememberPassword).then(() => {
-        if (!this.unmounted) props.closeModal();
-      });
+      await setSavedPassword(password, rememberPassword);
+      if (!this.unmounted) this.props.closeModal();
+    } finally {
+      this.pendingRequest = false;
+      if (!this.unmounted) this.setState({ pending: false });
     }
-  }
-
-  submitPassword(password: string, rememberPassword: boolean = this.state.rememberPassword) {
-    if (this.saving) return;
-    this.props.unlockWallet(password);
-    this.setState({ submittedPassword: password, submittedRememberPassword: rememberPassword });
   }
 
   onChangePassword(event: SyntheticInputEvent<*>) {
@@ -89,6 +85,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
         type="confirm"
         shouldCloseOnOverlayClick={false}
         confirmButtonLabel={__('Unlock')}
+        confirmButtonDisabled={this.state.pending}
         abortButtonLabel={__('Exit')}
         onConfirmed={() => this.submitPassword(password)}
         onAborted={quit}

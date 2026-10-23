@@ -24,7 +24,7 @@ import { doClearPublish, doPrepareEdit } from 'redux/actions/publish';
 import { doFetchItemsInCollection } from 'redux/actions/collections';
 import { normalizeURI } from 'util/lbryURI';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
-import { push } from 'connected-react-router';
+import { push } from 'redux-first-history';
 import { makeSelectChannelInSubscriptions } from 'redux/selectors/subscriptions';
 import ShowPage from './view';
 

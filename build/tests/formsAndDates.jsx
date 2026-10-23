@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import { flushSync } from 'react-dom';
 import moment from 'moment';
 import WalletSend from 'component/walletSend/view';
 import ConfirmTransaction from 'modal/modalConfirmTransaction/view';
@@ -20,7 +21,7 @@ const change = (field, value) => {
   assert(field, 'Missing input');
   const prototype = field.tagName === 'SELECT' ? HTMLSelectElement.prototype : HTMLInputElement.prototype;
   Object.getOwnPropertyDescriptor(prototype, 'value').set.call(field, value);
-  field.dispatchEvent(new Event(field.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }));
+  flushSync(() => field.dispatchEvent(new Event(field.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })));
 };
 
 async function walletSend(store, history, uri) {
@@ -152,7 +153,7 @@ async function publishDate(store, history) {
   change(field('Day'), '29');
   await waitFor(() => changes.length === 1, 'Leap-day input did not update the publish draft');
   assert.equal(changes[0], stamp(new Date(2024, 1, 29, 23, 45)), 'Local date/time must become Unix seconds');
-  // React 17 schedules the picker's prop-sync effect after the draft callback.
+  // The picker's prop-sync effect follows the draft callback.
   await tick();
   change(field('Minute'), '30');
   await waitFor(() => changes.length === 2, 'Minute input did not update the publish draft');
@@ -184,11 +185,11 @@ async function publishDate(store, history) {
   render(<Editor />, store, history);
   assert(!document.querySelector('.react-datetime-picker'));
   button('Edit').click();
-  assert(document.querySelector('.react-datetime-picker'));
+  await waitFor(() => document.querySelector('.react-datetime-picker'), 'Editing must show the date picker');
   assert(Number.isInteger(changes[changes.length - 1]));
   button('Default').click();
   assert.equal(changes[changes.length - 1], undefined);
-  assert(!document.querySelector('.react-datetime-picker'));
+  await waitFor(() => !document.querySelector('.react-datetime-picker'), 'Default must hide the date picker');
   unmount();
 }
 
@@ -233,6 +234,7 @@ async function durations(store, history, uri) {
     assert.equal(blocks.length, count);
   }
   document.getElementById('permanent').click();
+  await waitFor(() => !document.getElementById('time_out'), 'Permanent blocking must clear the timeout input');
   button('Block').click();
   assert.deepEqual(blocks[blocks.length - 1], [uri, undefined], 'Permanent blocking has no timeout');
   unmount();

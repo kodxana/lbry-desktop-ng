@@ -420,54 +420,42 @@ export function doClearSupport() {
 }
 
 export function doWalletEncrypt(newPassword) {
-  return (dispatch) => {
+  return async (dispatch) => {
     dispatch({
       type: ACTIONS.WALLET_ENCRYPT_START,
     });
 
-    return Lbry.wallet_encrypt({ new_password: newPassword })
-      .then((result) => {
-        if (result === true) {
-          dispatch({
-            type: ACTIONS.WALLET_ENCRYPT_COMPLETED,
-            result,
-          });
-        } else {
-          dispatch({
-            type: ACTIONS.WALLET_ENCRYPT_FAILED,
-            result,
-          });
-        }
-      })
-      .catch(() => {
-        dispatch({ type: ACTIONS.WALLET_ENCRYPT_FAILED, result: false });
+    try {
+      const result = await Lbry.wallet_encrypt({ new_password: newPassword });
+      dispatch({
+        type: result === true ? ACTIONS.WALLET_ENCRYPT_COMPLETED : ACTIONS.WALLET_ENCRYPT_FAILED,
+        result,
       });
+      return result === true;
+    } catch (_) {
+      dispatch({ type: ACTIONS.WALLET_ENCRYPT_FAILED, result: false });
+      return false;
+    }
   };
 }
 
 export function doWalletUnlock(password) {
-  return (dispatch) => {
+  return async (dispatch) => {
     dispatch({
       type: ACTIONS.WALLET_UNLOCK_START,
     });
 
-    return Lbry.wallet_unlock({ password })
-      .then((result) => {
-        if (result === true) {
-          dispatch({
-            type: ACTIONS.WALLET_UNLOCK_COMPLETED,
-            result,
-          });
-        } else {
-          dispatch({
-            type: ACTIONS.WALLET_UNLOCK_FAILED,
-            result,
-          });
-        }
-      })
-      .catch(() => {
-        dispatch({ type: ACTIONS.WALLET_UNLOCK_FAILED, result: false });
+    try {
+      const result = await Lbry.wallet_unlock({ password });
+      dispatch({
+        type: result === true ? ACTIONS.WALLET_UNLOCK_COMPLETED : ACTIONS.WALLET_UNLOCK_FAILED,
+        result,
       });
+      return result === true;
+    } catch (_) {
+      dispatch({ type: ACTIONS.WALLET_UNLOCK_FAILED, result: false });
+      return false;
+    }
   };
 }
 

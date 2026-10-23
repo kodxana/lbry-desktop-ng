@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider, connect } from 'react-redux';
 import localForage from 'localforage';
 import createCompressor from 'redux-persist-transform-compress';
@@ -15,7 +15,7 @@ import {
 import { doLocalCollectionCreate } from 'redux/actions/collections';
 import { doToast } from 'redux/actions/notifications';
 import { collectionsReducer } from 'redux/reducers/collections';
-import { tick } from './helpers';
+import { tick, waitFor } from './helpers';
 
 export function testSelectors() {
   const confirmed = Object.freeze({ claim_id: 'abc', name: 'fixture', title: 'Confirmed' });
@@ -160,13 +160,13 @@ export async function testSubscriptionsAndThunks(store) {
   );
   const container = document.createElement('div');
   document.body.appendChild(container);
-  ReactDOM.render(
+  const root = createRoot(container);
+  root.render(
     <Provider store={store}>
       <Rows />
-    </Provider>,
-    container
+    </Provider>
   );
-  await tick();
+  await waitFor(() => container.textContent === '40', 'Connected rows must render with a modern root');
   assert.equal(container.textContent, '40');
   store.dispatch(position(50));
   await tick();
@@ -174,7 +174,7 @@ export async function testSubscriptionsAndThunks(store) {
   store.dispatch(clear);
   await tick();
   assert.equal(container.textContent, 'Removed', 'Parent subscriptions must update before removed children');
-  ReactDOM.unmountComponentAtNode(container);
+  root.unmount();
   const readsAfterUnmount = childReads;
   store.dispatch(position(60));
   await tick();

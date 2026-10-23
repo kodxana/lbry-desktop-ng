@@ -1,5 +1,4 @@
 import { combineReducers } from 'redux';
-import { connectRouter } from 'connected-react-router';
 import { costInfoReducer, blacklistReducer, filteredReducer, statsReducer } from 'lbryinc';
 import { claimsReducer } from 'redux/reducers/claims';
 import { fileInfoReducer } from 'redux/reducers/file_info';
@@ -21,9 +20,9 @@ import reactionsReducer from 'redux/reducers/reactions';
 import syncReducer from 'redux/reducers/sync';
 import reportContentReducer from 'redux/reducers/reportContent';
 
-export default (history) =>
+export default (routerReducer) =>
   combineReducers({
-    router: connectRouter(history),
+    router: routerReducer,
     app: appReducer,
     blacklist: blacklistReducer,
     filtered: filteredReducer,

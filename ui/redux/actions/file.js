@@ -10,7 +10,7 @@ import { doAbandonClaim } from 'redux/actions/claims';
 import { batchActions } from 'util/batch-actions';
 
 import { doHideModal } from 'redux/actions/app';
-import { goBack } from 'connected-react-router';
+import { goBack } from 'redux-first-history';
 import { doSetPlayingUri } from 'redux/actions/content';
 import { selectPlayingUri } from 'redux/selectors/content';
 import { doToast } from 'redux/actions/notifications';

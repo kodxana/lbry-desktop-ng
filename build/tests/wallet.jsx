@@ -25,10 +25,11 @@ export default async function wallet(store, history, root) {
     revealed = result.revealed;
     return result;
   };
-  const waitForBackups = (count, message) => waitFor(async () => {
-    await fixture();
-    return revealed.length === count;
-  }, message);
+  const waitForBackups = (count, message) =>
+    waitFor(async () => {
+      await fixture();
+      return revealed.length === count;
+    }, message);
   const { downloads, home } = await fixture('downloads');
   const drawBackup = (directory) => render(<WalletBackup daemonSettings={{ wallet_dir: directory }} />, store, history);
   const backup = () =>
@@ -46,10 +47,16 @@ export default async function wallet(store, history, root) {
     assert.deepEqual(zip.readFile('wallets/default_wallet'), bytes, 'Wallet bytes must round-trip unchanged');
     assert(zip.getEntry('preferences.json'));
     assert.equal(zip.getEntries().filter((entry) => !entry.isDirectory).length, 2);
-    assert(document.querySelector('.card__message--success').textContent.includes(archive));
+    await waitFor(
+      () => document.querySelector('.card__message--success').textContent.includes(archive),
+      'The finished backup must display its archive path'
+    );
     drawBackup(undefined);
     backup();
-    assert(document.body.textContent.includes('No wallet folder was found'));
+    await waitFor(
+      () => document.body.textContent.includes('No wallet folder was found'),
+      'A missing wallet folder must report an error'
+    );
     assert.equal(document.querySelector('.card__message--success').textContent, '');
     drawBackup(path.join(root, 'missing-wallet'));
     await fixture('downloads', path.join(root, 'missing-wallet'));
@@ -136,7 +143,8 @@ export default async function wallet(store, history, root) {
         assert.equal(store.getState().wallet[field + 'Succeded'], null);
         assert(pending && typeof pending.then === 'function', name + ' must expose completion');
         settle();
-        await pending;
+        const succeeded = await pending;
+        if (name === 'wallet_encrypt' || name === 'wallet_unlock') assert.equal(succeeded, outcome === true);
         assert.equal(store.getState().wallet[field + 'Pending'], false, name + ' must clear pending after errors');
         assert.equal(store.getState().wallet[field + 'Succeded'], outcome === true);
       }
@@ -149,6 +157,7 @@ export default async function wallet(store, history, root) {
   let closed = 0;
   let refreshed = 0;
   const submitted = [];
+  let settleEncrypt;
   const encryptProps = {
     closeModal: () => {
       closed++;
@@ -156,9 +165,20 @@ export default async function wallet(store, history, root) {
     updateWalletStatus: () => {
       refreshed++;
     },
-    encryptWallet: (value) => submitted.push(value),
+    encryptWallet: (value) => {
+      submitted.push(value);
+      return new Promise((resolve) => {
+        settleEncrypt = resolve;
+      });
+    },
   };
-  const drawEncrypt = (result) => render(<Encrypt {...encryptProps} walletEncryptSucceded={result} />, store, history);
+  const drawEncrypt = (result) => {
+    render(<Encrypt {...encryptProps} />, store, history);
+    if (typeof result === 'boolean' && settleEncrypt) {
+      settleEncrypt(result);
+      settleEncrypt = null;
+    }
+  };
   drawEncrypt(undefined);
   assert.equal(document.getElementById('wallet-remember-password').checked, false);
   submit();
@@ -178,7 +198,10 @@ export default async function wallet(store, history, root) {
   assert.equal(submitted.length, 1, 'Pending encryption must not be submitted twice');
   assert.equal(await getSavedPassword(), null, 'Do not save a password before encryption succeeds');
   drawEncrypt(false);
-  assert(document.body.textContent.includes('Unable to encrypt wallet'));
+  await waitFor(
+    () => document.body.textContent.includes('Unable to encrypt wallet'),
+    'Encryption failure must be retryable'
+  );
   assert.equal(closed, 0);
   assert.equal(await getSavedPassword(), null, 'Failed encryption must not cache the attempted password');
   submit();
@@ -192,9 +215,15 @@ export default async function wallet(store, history, root) {
   unmount();
 
   const attempts = [];
+  let settleUnlock;
   let exited = 0;
   const unlockProps = {
-    unlockWallet: (value) => attempts.push(value),
+    unlockWallet: (value) => {
+      attempts.push(value);
+      return new Promise((resolve) => {
+        settleUnlock = resolve;
+      });
+    },
     closeModal: () => {
       closed++;
     },
@@ -202,7 +231,13 @@ export default async function wallet(store, history, root) {
       exited++;
     },
   };
-  const drawUnlock = (result) => render(<Unlock {...unlockProps} walletUnlockSucceded={result} />, store, history);
+  const drawUnlock = (result) => {
+    render(<Unlock {...unlockProps} walletUnlockSucceded={result} />, store, history);
+    if (typeof result === 'boolean' && settleUnlock) {
+      settleUnlock(result);
+      settleUnlock = null;
+    }
+  };
   drawUnlock(true);
   await waitFor(() => attempts.length === 1, 'Session password should be tried on unlock');
   assert.equal(attempts[0], 'fixture-password');
@@ -213,6 +248,7 @@ export default async function wallet(store, history, root) {
   );
   assert.equal(closed, 1, 'A previous unlock result must not close a new attempt');
   drawUnlock(false);
+  await tick();
   assert(document.body.textContent.includes('Incorrect Password'));
   input('wallet-password', 'retry-password');
   submit();

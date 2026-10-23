@@ -5,12 +5,12 @@ import { strict as assert } from 'assert';
 import { ipcRenderer } from 'electron';
 import localForage from 'localforage';
 import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider, connect } from 'react-redux';
-import { ConnectedRouter, push, goBack } from 'connected-react-router';
+import { connect } from 'react-redux';
+import { push, goBack } from 'redux-first-history';
 import { Route, Link } from 'react-router-dom';
 import * as ACTIONS from 'constants/action_types';
 import fixture from './fixtures/persist-v0.json';
+import { render, unmount } from './helpers';
 
 const phase = new URLSearchParams(window.location.search).get('phase');
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -45,6 +45,7 @@ async function main() {
     return message;
   }
   if (
+    phase === 'reactState' ||
     phase === 'uiComponents' ||
     phase === 'accessibleControls' ||
     phase === 'collections' ||
@@ -69,6 +70,7 @@ async function main() {
     // Follow the desktop component import order to resolve its existing app/router cycle.
     require('component/app');
     const tests = {
+      reactState: () => require('./reactState'),
       uiComponents: () => require('./uiComponents'),
       accessibleControls: () => require('./accessibleControls'),
       collections: () => require('./collections'),
@@ -136,19 +138,16 @@ async function main() {
   }
   const ConnectedPosition = connect((value) => ({ positions: value.content.positions }))(Position);
   const container = document.getElementById('app');
-  ReactDOM.render(
-    <Provider store={store}>
-      <ConnectedRouter history={history}>
-        <div>
-          <Link id="wallet-link" to="/$/wallet?tab=history">
-            Wallet
-          </Link>
-          <Route path="/$/wallet" render={() => <div id="wallet-page">Wallet route</div>} />
-          <ConnectedPosition />
-        </div>
-      </ConnectedRouter>
-    </Provider>,
-    container
+  render(
+    <div>
+      <Link id="wallet-link" to="/$/wallet?tab=history">
+        Wallet
+      </Link>
+      <Route path="/$/wallet" render={() => <div id="wallet-page">Wallet route</div>} />
+      <ConnectedPosition />
+    </div>,
+    store,
+    history
   );
   await tick();
   document.getElementById('wallet-link').click();
@@ -184,12 +183,16 @@ async function main() {
   await persistor.flush();
   assert.equal(typeof (await localForage.getItem('persist:v0')), 'string');
   persistor.pause();
-  ReactDOM.unmountComponentAtNode(container);
+  unmount();
   assert.equal(container.childElementCount, 0);
-  const lastLocation = store.getState().router.location;
   history.push('/after-unmount');
   await tick();
-  assert.deepEqual(store.getState().router.location, lastLocation, 'Unmount must remove the router history listener');
+  assert.equal(
+    store.getState().router.location,
+    history.location,
+    'Navigation remains owned by the store after UI unmount'
+  );
+  assert.equal(container.childElementCount, 0, 'Unmounted routes must not render after navigation');
   return phase + ': legacy rehydration, persistence filters, selectors, thunks, nested React subscriptions and routing';
 }
 
