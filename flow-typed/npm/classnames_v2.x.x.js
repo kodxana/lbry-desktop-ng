@@ -1,23 +1,15 @@
-// flow-typed signature: cf86673cc32d185bdab1d2ea90578d37
-// flow-typed version: 614bf49aa8/classnames_v2.x.x/flow_>=v0.25.x
-
-type $npm$classnames$Classes =
-  | string
-  | { [className: string]: * }
-  | false
-  | void
-  | null;
-
-declare module "classnames" {
-  declare module.exports: (
-    ...classes: Array<$npm$classnames$Classes | $npm$classnames$Classes[]>
-  ) => string;
+// Classnames 2 accepts nested arrays and truthy/falsy dictionary values.
+declare module 'classnames' {
+  declare type Argument = string | number | boolean | null | void | { [string]: unknown } | Array<Argument>;
+  declare module.exports: (...classes: Array<Argument>) => string;
 }
 
-declare module "classnames/bind" {
-  declare module.exports: $Exports<"classnames">;
+declare module 'classnames/bind' {
+  import typeof classNames from 'classnames';
+  declare module.exports: classNames;
 }
 
-declare module "classnames/dedupe" {
-  declare module.exports: $Exports<"classnames">;
+declare module 'classnames/dedupe' {
+  import typeof classNames from 'classnames';
+  declare module.exports: classNames;
 }

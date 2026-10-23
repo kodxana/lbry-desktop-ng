@@ -22,8 +22,10 @@ remaining engineering effort, security or release readiness. The current direct
 dependency set has 149 packages, including 51 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
-The checker runs again. The first migration batch checks all first-party global
-definitions, but the full application still has type errors; see
+The checker runs again. Required checks now cover all first-party global
+definitions and six maintained dependency definitions, but the full application
+still has type errors. Updating declarations does not change the package-version
+percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
 
 The six unchanged packages are country-data, ffmpeg-probe, localforage,

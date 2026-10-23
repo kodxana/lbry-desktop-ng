@@ -5,6 +5,8 @@ for (const file of [
   'testLintTooling.js',
   'testFlowTooling.js',
   'testFlowContracts.js',
+  'testDependencyTypes.js',
+  'testDependencyContracts.js',
   'testAccountClient.js',
   'testArtifactDownload.js',
   'testYaml.js',
