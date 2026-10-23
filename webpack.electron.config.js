@@ -50,6 +50,18 @@ const mainConfig = {
     new CopyWebpackPlugin({
       patterns: [
         {
+          from: path.resolve(__dirname, 'node_modules/libarchive.js/dist/worker-bundle.js'),
+          to: `${DIST_ROOT}/electron/static/webworkers/worker-bundle.js`,
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/libarchive.js/dist/libarchive.wasm'),
+          to: `${DIST_ROOT}/electron/static/webworkers/libarchive.wasm`,
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/libarchive.js/LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/libarchive.LICENSE`,
+        },
+        {
           from: path.resolve(__dirname, 'node_modules/font-awesome/README.md'),
           to: `${DIST_ROOT}/electron/static/licenses/font-awesome-README.md`,
         },

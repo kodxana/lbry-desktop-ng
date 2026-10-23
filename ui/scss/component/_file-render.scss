@@ -272,9 +272,94 @@
   position: relative;
   overflow: hidden;
   .comic-viewer {
+    position: relative;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: calc(100vh - var(--header-height) - var(--spacing-m) * 2);
     max-height: var(--inline-player-max-height);
+    background: var(--color-background);
+    color: var(--color-text);
+    &[data-theme='dark'] {
+      background: #202326;
+      color: #eee;
+    }
+    &[data-theme='light'] {
+      background: #f7f7f7;
+      color: #222;
+    }
+    &:fullscreen {
+      height: 100vh;
+      max-height: none;
+    }
+  }
+  .comic-viewer__pages {
+    flex: 1;
+    min-height: 0;
+  }
+  .comic-viewer__controls,
+  .comic-viewer__navigation {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+  .comic-viewer__controls {
+    flex-wrap: wrap;
+    padding: var(--spacing-s);
+    background: inherit;
+    .button {
+      color: inherit;
+      min-width: 2rem;
+    }
+    input[type='number'] {
+      width: 4.5rem;
+      padding: var(--spacing-xs);
+      color: inherit;
+      background: transparent;
+    }
+    .comic-viewer__slider {
+      flex: 1;
+      min-width: 5rem;
+      padding: 0;
+    }
+  }
+  .comic-viewer--unpinned .comic-viewer__controls {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    opacity: 0;
+    &:hover,
+    &:focus-within {
+      opacity: 1;
+    }
+  }
+  .comic-viewer--unpinned:hover .comic-viewer__controls {
+    opacity: 1;
+  }
+  .comic-viewer__error {
+    position: absolute;
+    top: var(--spacing-s);
+    padding: var(--spacing-s);
+    background: inherit;
+  }
+  .comic-viewer__settings {
+    padding: var(--spacing-xs);
+    [role='menuitemcheckbox'] {
+      padding: var(--spacing-s);
+      cursor: pointer;
+      &[data-active-item] {
+        background: var(--color-menu-background--active);
+      }
+      &::before {
+        content: '✓';
+        display: inline-block;
+        width: 1.5rem;
+        visibility: hidden;
+      }
+      &[aria-checked='true']::before {
+        visibility: visible;
+      }
+    }
   }
 }
 

@@ -3,8 +3,8 @@
 This compatibility step moves the renderer from React 16.14 to 17.0.2 and
 Material UI 5.8.7 to 9.5.0. Emotion moves to 11.14.0 (`react`) and 11.14.1
 (`styled`). React DOM, `react-is` and the React type definitions use the same
-React major. Reakit still constrains the next React upgrade; Reach has since been
-[replaced with Ariakit](accessible-controls.md).
+React major. Reach has since been [replaced with Ariakit](accessible-controls.md),
+and the [comic reader migration](comic-reader.md) removes Villain and Reakit.
 
 ## Compatibility
 
@@ -36,18 +36,11 @@ middleware. Refresh instrumentation is limited to UI modules in development;
 production and Electron main-process modules have no refresh hooks. Hub setup
 restores its mounted flag when effects rerun after a component edit.
 
-Villain 1.0.9 still declares React 16 peers and has no newer npm release. Its
-peer warning remains visible. The real comic viewer is exercised with React 17,
-using a module-scoped adapter for its two obsolete Reakit animation hooks. The
-[file chooser now uses native radio inputs](collection-controls.md), leaving
-Reakit in the comic reader only. The adapter repairs the reader's
-`unstable_stopAnimation is not a function` failure without changing its archive
-decoder or shipping a second React/React DOM implementation. Tests use
-the shipped archive worker and a generated CBZ: both pages must paint the
-expected pixels, navigation must work, and a file-read failure must show an
-error. This is limited compatibility evidence, not a declaration that its
-entire old dependency tree supports newer React versions. It needs replacement
-or maintenance before a further React upgrade.
+This step originally used a module-scoped adapter for Villain's obsolete Reakit
+animation hooks. The later [comic reader migration](comic-reader.md) removes that
+adapter and both dependencies, replacing their UI with the app's controls while
+upgrading the archive decoder and image viewer. The
+[file chooser uses native radio inputs](collection-controls.md).
 
 ## Validation
 

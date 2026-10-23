@@ -15,7 +15,10 @@ for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels
 }
 const output = path.resolve('dist/renderer-tests');
 fs.mkdirSync(output, { recursive: true });
-fs.cpSync(path.resolve('static/webworkers'), path.join(output, 'webworkers'), { recursive: true });
+fs.mkdirSync(path.join(output, 'webworkers'), { recursive: true });
+for (const name of ['worker-bundle.js', 'libarchive.wasm']) {
+  fs.copyFileSync(path.resolve('node_modules/libarchive.js/dist', name), path.join(output, 'webworkers', name));
+}
 fs.mkdirSync(path.resolve('dist/ci'), { recursive: true });
 fs.writeFileSync(
   path.join(output, 'index.html'),
@@ -25,6 +28,7 @@ fs.writeFileSync(
 for (const [command, args] of [
   [process.execPath, ['node_modules/webpack/bin/webpack.js', '--config', 'build/tests/webpack.config.js']],
   [require('electron'), ['build/tests/electron.cjs']],
+  [require('electron'), ['build/tests/electron.cjs', '--comics']],
   [require('electron'), ['build/tests/electron.cjs', '--three']],
   [require('electron'), ['build/tests/sandbox.cjs']],
   [require('electron'), ['build/tests/devtools.cjs']],
@@ -45,13 +49,15 @@ for (const [command, args] of [
       'dist/ci',
       command === process.execPath
         ? 'renderer-build.log'
-        : args.includes('--three')
-        ? 'three-tests.log'
-        : args[0].endsWith('sandbox.cjs')
-        ? 'sandbox-tests.log'
-        : args[0].endsWith('devtools.cjs')
-        ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
-        : 'renderer-tests.log'
+        : args.includes('--comics')
+          ? 'comic-tests.log'
+          : args.includes('--three')
+            ? 'three-tests.log'
+            : args[0].endsWith('sandbox.cjs')
+              ? 'sandbox-tests.log'
+              : args[0].endsWith('devtools.cjs')
+                ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
+                : 'renderer-tests.log'
     ),
     log
   );

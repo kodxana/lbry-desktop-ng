@@ -132,6 +132,7 @@
     "husky": "9.1.7",
     "imagesloaded": "5.0.0",
     "jsqr": "1.4.0",
+    "libarchive.js": "2.0.2",
     "lil-gui": "0.21.0",
     "lint-staged": "17.6.0",
     "localforage": "1.10.0",
@@ -141,6 +142,7 @@
     "moment": "2.31.0",
     "node-emoji": "2.2.0",
     "node-fetch": "3.3.2",
+    "openseadragon": "6.1.1",
     "path-browserify": "1.0.1",
     "postcss": "8.5.29",
     "postcss-loader": "8.2.1",
@@ -165,7 +167,6 @@
     "react-router": "^5.1.0",
     "react-router-dom": "^5.1.0",
     "react-simplemde-editor": "5.2.0",
-    "reakit": "1.3.11",
     "redux": "4.2.1",
     "redux-persist": "6.0.0",
     "redux-persist-transform-compress": "^4.2.0",
@@ -194,7 +195,6 @@
     "video.js": "8.24.1",
     "videojs-contrib-quality-levels": "4.1.0",
     "videojs-event-tracking": "1.0.3",
-    "villain-react": "1.0.9",
     "webpack": "5.111.1",
     "webpack-cli": "7.2.3",
     "webpack-dev-middleware": "8.3.0",
@@ -207,7 +207,8 @@
     "@datapunt/matomo-tracker-js@0.5.1": "patch:@datapunt/matomo-tracker-js@npm:0.5.1#.yarn/patches/matomo-tracker-js-npm-0.5.1.patch",
     "react-is": "17.0.2",
     "video.js": "8.24.1",
-    "tough-cookie-web-storage-store@1.0.0": "patch:tough-cookie-web-storage-store@npm:1.0.0#.yarn/patches/tough-cookie-web-storage-store-npm-1.0.0-d9f89f8966.patch"
+    "tough-cookie-web-storage-store@1.0.0": "patch:tough-cookie-web-storage-store@npm:1.0.0#.yarn/patches/tough-cookie-web-storage-store-npm-1.0.0-d9f89f8966.patch",
+    "libarchive.js@2.0.2": "patch:libarchive.js@npm:2.0.2#.yarn/patches/libarchive.js-npm-2.0.2-c4660a3d89.patch"
   },
   "engines": {
     "node": "24.x",

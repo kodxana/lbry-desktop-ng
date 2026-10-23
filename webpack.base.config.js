@@ -24,8 +24,9 @@ let baseConfig = {
   module: {
     rules: [
       {
-        test: /[\\/]node_modules[\\/]villain-react[\\/]dist[\\/]villain\.js$/,
-        resolve: { alias: { reakit$: path.resolve(__dirname, 'ui/util/villain-reakit.js') } },
+        test: /[\\/]node_modules[\\/]libarchive\.js[\\/]dist[\\/]libarchive\.js$/,
+        // Archive workers and WASM are copied together to webworkers/.
+        parser: { url: false },
       },
       {
         test: /\.jsx?$/,
