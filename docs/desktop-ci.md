@@ -2,7 +2,8 @@
 
 The [React and Material UI migration](react-and-material.md) adds autocomplete
 and tooltip interaction, comic-page rendering and real Fast Refresh checks.
-React 18 checks cover automatic batching, consistent Redux/router locations,
+React 19 checks cover tooltip defaults, error-boundary reporting/recovery,
+automatic batching, consistent Redux/router locations,
 redirects, history menus, fast wallet encryption/unlock completion, leaving
 pending password dialogs, and image-viewer zoom, rotation and keyboard focus.
 

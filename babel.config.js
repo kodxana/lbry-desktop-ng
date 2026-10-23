@@ -25,7 +25,7 @@ module.exports = (api) => {
     },
     presets: [
       ['@babel/env', { modules: false, exclude: ['@babel/transform-typeof-symbol'] }],
-      ['@babel/react', { runtime: 'classic', development: false }],
+      ['@babel/react', { runtime: 'automatic', development: false }],
       '@babel/flow',
     ],
     overrides: [

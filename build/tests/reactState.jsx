@@ -9,6 +9,10 @@ import NavigationButton from 'component/navigationButton/view';
 import ViewImage from 'modal/modalViewImage/view';
 import Unlock from 'modal/modalWalletUnlock/view';
 import Encrypt from 'modal/modalWalletEncrypt/view';
+import ErrorBoundary from 'component/errorBoundary/view';
+import TruncatedText from 'component/common/truncated-text';
+import analytics from 'analytics';
+import Native from 'native';
 import Lbry from 'lbry';
 import { doWalletEncrypt, doWalletUnlock } from 'redux/actions/wallet';
 import { selectWalletUnlockSucceeded } from 'redux/selectors/wallet';
@@ -63,7 +67,7 @@ async function navigation(store, history) {
       [0, 0],
       [1, 2],
     ],
-    'The fixture must use React 18 automatic batching'
+    'The fixture must use automatic batching'
   );
   store.dispatch(push('/second'));
   await waitFor(() => document.querySelector('output').textContent.startsWith('/second:'), 'Redux push must render');
@@ -304,13 +308,74 @@ async function lightbox(store, history) {
   opener.remove();
 }
 
+async function renderingCompatibility(store, history) {
+  render(
+    <>
+      <TruncatedText text="A long title" lines={2} />
+      <TruncatedText text="No tooltip" lines={1} showTooltip={false} />
+    </>,
+    store,
+    history
+  );
+  const titles = document.querySelectorAll('.truncated-text');
+  assert.equal(titles[0].title, 'A long title', 'Omitted tooltip preference must retain the default');
+  assert.equal(titles[0].style.webkitLineClamp, '2');
+  assert.equal(titles[1].title, '', 'Explicitly disabling tooltips must still work');
+  unmount();
+
+  const originalVersion = Native.getAppVersionInfo;
+  const originalSdkVersion = Lbry.version;
+  const originalError = analytics.error;
+  const reports = [];
+  let broken = true;
+  function Page() {
+    if (broken) throw new Error('Fixture render failure');
+    return <output>Recovered page</output>;
+  }
+  try {
+    Native.getAppVersionInfo = async () => ({ localVersion: 'fixture-desktop' });
+    Lbry.version = async () => ({ lbrynet_version: 'fixture-sdk' });
+    analytics.error = async (message) => {
+      reports.push(message);
+      return false;
+    };
+    history.replace('/broken');
+    render(
+      <ErrorBoundary>
+        <Page />
+      </ErrorBoundary>,
+      store,
+      history
+    );
+    await waitFor(() => reports.length === 1, 'Caught rendering errors must reach the existing diagnostic handler');
+    assert(reports[0].includes('Fixture render failure'));
+    assert(reports[0].includes('fixture-desktop'));
+    assert(reports[0].includes('fixture-sdk'));
+    assert(document.querySelector('.error__text').textContent.includes('not reported'));
+    broken = false;
+    document.querySelector('.load-screen__button').click();
+    await waitFor(
+      () => document.querySelector('output')?.textContent === 'Recovered page',
+      'Error fallback must recover'
+    );
+    assert.equal(reports.length, 1, 'Recovery must not duplicate the diagnostic report');
+  } finally {
+    unmount();
+    Native.getAppVersionInfo = originalVersion;
+    Lbry.version = originalSdkVersion;
+    analytics.error = originalError;
+  }
+}
+
 export default async function reactState(store, history) {
   try {
+    assert.match(React.version, /^19\./, 'Exercise the upgraded React runtime');
+    await renderingCompatibility(store, history);
     await navigation(store, history);
     await fastUnlock(store, history);
     await encryptionCompletion(store, history);
     await lightbox(store, history);
-    return 'React 18 batching, Redux/router consistency, history menus/blocking, fast wallet completion/cancellation and lightbox zoom/rotation/focus/error cleanup';
+    return 'React 19 defaults/error recovery/batching, Redux/router consistency, history menus/blocking, fast wallet completion/cancellation and lightbox zoom/rotation/focus/error cleanup';
   } finally {
     unmount();
   }

@@ -1,14 +1,15 @@
 # React and Material UI
 
-The renderer now uses React and React DOM 18.3.1, Material UI 9.5.0,
+The renderer now uses React and React DOM 19.3.1, Material UI 9.5.0,
 Emotion 11.14.0 (`react`) and 11.14.1 (`styled`). `react-is` is pinned to
-18.3.1 and the React types to 18.3.31. Reach has been [replaced with Ariakit](accessible-controls.md),
-and the [comic reader migration](comic-reader.md) removes Villain and Reakit.
+19.3.1 and the React types to 19.3.0. Reach has been
+[replaced with Ariakit](accessible-controls.md), and the
+[comic reader migration](comic-reader.md) removes Villain and Reakit.
 
 ## Compatibility
 
 The application starts with `createRoot`. Promise, timer and native-event
-updates therefore use React 18 automatic batching. Tests also use modern
+updates therefore use automatic batching. Tests also use modern
 roots; only fixture mounting and discrete input helpers flush synchronously
 to let assertions inspect a settled user action. A separate test verifies
 actual promise batching without a synchronous override. Strict Mode is not
@@ -22,11 +23,24 @@ result. Immediate submission guards prevent overlapping requests, and password
 storage uses the submitted password/opt-in snapshot. Leaving before completion
 prevents a late result from saving credentials or closing a later modal.
 
-The same batch upgrades React-Redux to 9.3.0, Redux to 5.0.1, Redux Thunk to
-3.1.0 and drag-and-drop to @hello-pangea/dnd 18.0.1. React Router 5.3.4 removes
+The renderer uses React-Redux 9.3.0, Redux 5.0.1, Redux Thunk 3.1.0 and
+@hello-pangea/dnd 18.0.1 for collection drag-and-drop. React Router 5.3.4 removes
 its obsolete context polyfill. Its state binding changes are described in
-[state management](state-management.md). React 19 and the Router 6+ API
-migration remain separate upgrades.
+[state management](state-management.md). The Router 6+ API migration remains
+a separate upgrade.
+
+React 19 requires the automatic JSX transform, enabled in the shared Babel
+configuration for production, development and real renderer tests. The remaining
+function-component default uses a parameter default so truncated titles keep
+their tooltips. The thumbnail wrapper uses Flow props instead of ignored
+`propTypes`, removing the application's direct dependency. Class defaults remain
+supported. Viewer ref callbacks assign their nodes without returning a value,
+reserving return values for React 19's ref cleanup functions.
+
+React 19 reports caught rendering errors without rethrowing them. The existing
+error boundary still reports through the opt-in diagnostics handler and offers
+page recovery; its test uses stubbed diagnostics and a deliberate rendering
+failure. No new error collection or Strict Mode behavior is enabled.
 
 React Awesome Lightbox 2.0.0 needs React 18 and changes its default to a portal.
 The app keeps it inline inside its existing modal so focus and background
@@ -53,9 +67,8 @@ effect so navigation still disposes the player, removes keyboard handlers and
 cancels pending source detection before a late network reply can recreate it.
 The existing immediate-unmount and delayed-source regressions remain unchanged.
 
-Material UI recommends resolving `react-is` to the installed React version for
-React 18 and earlier. The lockfile resolution prevents its newer default from
-misidentifying React 18 elements.
+The lockfile keeps `react-is` on the same version as React, including for Material
+UI's transitive import. Compiler tests verify element recognition through both.
 
 React Hot Loader and its patched React DOM fork are removed. Development uses
 `react-refresh` 0.19.0 and the Webpack plugin 0.6.3 with the existing hot
@@ -80,8 +93,9 @@ Existing form, document, upload, navigation and persistence tests run on the new
 React event system. Wallet backup/encryption, password migration/restart and
 update consent/decline/shutdown tests remain required.
 
-The React 18 fixture checks promise batching, consistent router/Redux locations,
-back/forward history titles, replacement, navigation blocking and subscription
+The React runtime fixture checks tooltip defaults, error recovery, promise
+batching, consistent router/Redux locations, back/forward history titles,
+replacement, navigation blocking and subscription
 cleanup. It also checks fast saved-password unlock, fast encryption after an
 earlier success, duplicate submission and leaving while a request is pending.
 Lightbox checks cover decoding, zoom, rotation, native Escape/Tab behavior,
@@ -102,7 +116,8 @@ No personal wallet or funded transaction is used. macOS and exhaustive comic
 formats, assistive technologies and third-party controls are outside these
 fixtures.
 
-References: [React 18 migration](https://react.dev/blog/2022/03/08/react-18-upgrade-guide),
+References: [React 19 migration](https://react.dev/blog/2024/04/25/react-19-upgrade-guide),
+[React 19.3.1 release](https://github.com/react/react/releases/tag/v19.3.1),
 [Lightbox 2 migration](https://github.com/theanam/react-awesome-lightbox#-migrating-from-1x),
 [Material UI 6](https://mui.com/material-ui/migration/upgrade-to-v6/),
 [Material UI 7 and react-is](https://mui.com/material-ui/migration/upgrade-to-v7/),

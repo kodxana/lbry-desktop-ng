@@ -9,7 +9,7 @@ function load(relativePath, dependencies, globals = {}) {
   const { code } = transformFileSync(path.join(__dirname, '../ui', relativePath), {
     babelrc: false,
     configFile: false,
-    presets: [['@babel/preset-react', { runtime: 'classic', development: false }], '@babel/preset-flow'],
+    presets: [['@babel/preset-react', { runtime: 'automatic', development: false }], '@babel/preset-flow'],
     plugins: ['@babel/plugin-transform-modules-commonjs'],
   });
   const context = {
@@ -19,6 +19,7 @@ function load(relativePath, dependencies, globals = {}) {
     process: { env: { NODE_ENV: 'production' } },
     ...globals,
     require: (name) => {
+      if (name === 'react/jsx-runtime') return require(name);
       assert(Object.prototype.hasOwnProperty.call(dependencies, name), 'Unexpected import: ' + name);
       return dependencies[name];
     },

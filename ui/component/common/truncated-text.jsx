@@ -9,17 +9,13 @@ type Props = {
 };
 
 const TruncatedText = (props: Props) => {
-  const { text, children, lines, showTooltip } = props;
+  const { text, children, lines, showTooltip = true } = props;
   const tooltip = showTooltip ? children || text : '';
   return (
     <span title={tooltip} className="truncated-text" style={{ WebkitLineClamp: lines }}>
       {children || text}
     </span>
   );
-};
-
-TruncatedText.defaultProps = {
-  showTooltip: true,
 };
 
 export default TruncatedText;

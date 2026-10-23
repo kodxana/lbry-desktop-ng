@@ -1,13 +1,18 @@
+// @flow
 import React, { useEffect } from 'react';
 import classnames from 'classnames';
-import PropTypes from 'prop-types';
 import Freezeframe from './FreezeframeLite';
 import useLazyLoading from 'effects/use-lazy-loading';
 
-const FreezeframeWrapper = (props) => {
+type Props = {
+  src: string,
+  className?: string,
+  children?: React.Node,
+};
+
+const FreezeframeWrapper = (props: Props) => {
   const imgRef = React.useRef();
   const freezeframe = React.useRef();
-  // eslint-disable-next-line
   const { src, className, children } = props;
 
   const srcLoaded = useLazyLoading(imgRef);
@@ -26,11 +31,6 @@ const FreezeframeWrapper = (props) => {
       </>
     </div>
   );
-};
-
-FreezeframeWrapper.propTypes = {
-  src: PropTypes.string.isRequired,
-  className: PropTypes.string.isRequired,
 };
 
 export default FreezeframeWrapper;

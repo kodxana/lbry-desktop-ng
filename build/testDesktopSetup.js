@@ -16,6 +16,7 @@ async function hostingTests() {
   const label = (props) => React.createElement('label', null, props.label, props.helper);
   const dependencies = {
     react: React,
+    'react/jsx-runtime': require('react/jsx-runtime'),
     'util/desktop': { requestDiskSpace() {} },
     'component/button': label,
     'component/common/form-components/form-field': { FormField: label },
@@ -35,7 +36,7 @@ async function hostingTests() {
   const { code } = transformFileSync(path.join(__dirname, '../ui/component/hostingSplash/view.jsx'), {
     babelrc: false,
     configFile: false,
-    presets: [['@babel/preset-react', { runtime: 'classic', development: false }], '@babel/preset-flow'],
+    presets: [['@babel/preset-react', { runtime: 'automatic', development: false }], '@babel/preset-flow'],
     plugins: ['@babel/plugin-transform-modules-commonjs'],
   });
   const context = {
