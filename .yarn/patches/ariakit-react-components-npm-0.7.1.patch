@@ -1,0 +1,16 @@
+diff --git a/dist/__chunks/C0hvEg6i.js b/dist/__chunks/C0hvEg6i.js
+--- a/dist/__chunks/C0hvEg6i.js
++++ b/dist/__chunks/C0hvEg6i.js
+@@ -254,2 +254,4 @@
+ 					if (!store?.getState().open) return;
++					const content = store.getState().contentElement;
++					if (content && hasFocusWithin(content)) return;
+ 					store.hide();
+diff --git a/src/hovercard/hovercard.tsx b/src/hovercard/hovercard.tsx
+--- a/src/hovercard/hovercard.tsx
++++ b/src/hovercard/hovercard.tsx
+@@ -407,2 +407,4 @@
+             if (!store?.getState().open) return;
++            const content = store.getState().contentElement;
++            if (content && hasFocusWithin(content)) return;
+             store.hide();

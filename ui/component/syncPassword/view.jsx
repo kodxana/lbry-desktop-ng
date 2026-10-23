@@ -5,7 +5,7 @@ import Button from 'component/button';
 import Card from 'component/common/card';
 import { setSavedPassword } from 'util/saved-passwords';
 import I18nMessage from 'component/i18nMessage';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { SITE_HELP_EMAIL } from 'config';
 
 type Props = {
@@ -22,7 +22,7 @@ function SyncPassword(props: Props) {
   const {
     push,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
   const urlParams = new URLSearchParams(search);
   const redirect = urlParams.get('redirect');
   const [password, setPassword] = React.useState('');

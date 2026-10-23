@@ -4,7 +4,7 @@ import * as ICONS from 'constants/icons';
 import { SETTINGS_GRP } from 'constants/settings';
 import type { Node } from 'react';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import classnames from 'classnames';
 import Button from 'component/button';
 import { IS_MAC } from 'component/app/view';
@@ -53,7 +53,7 @@ export default function SettingsSideNavigation() {
   const isMediumScreen = useIsMediumScreen();
   const isAbsolute = isMediumScreen;
   const microNavigation = !sidebarOpen || isMediumScreen;
-  const { location, goBack } = useHistory();
+  const { location, goBack } = useDesktopHistory();
 
   function scrollToSection(section: string) {
     const TOP_MARGIN_PX = 20;

@@ -6,8 +6,8 @@ import classnames from 'classnames';
 import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 import * as PAGES from 'constants/pages';
-import { useHistory } from 'react-router';
-import { Link } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
+import { Link } from 'react-router';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
 type Props = {
@@ -23,7 +23,7 @@ function CollectionMenuList(props: Props) {
   const { inline = false, collectionId, collectionName, doOpenModal, playNextUri, doToggleShuffleList } = props;
   const [doShuffle, setDoShuffle] = React.useState(false);
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
 
   React.useEffect(() => {
     if (playNextUri && doShuffle) {

@@ -5,7 +5,7 @@ import Page from 'component/page';
 import Spinner from 'component/spinner';
 import DownloadList from 'page/fileListDownloaded';
 import Yrbl from 'component/yrbl';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 // https://github.com/lbryio/lbry-sdk/issues/2964
 export const PURCHASES_PAGE_SIZE = 10;
@@ -20,7 +20,7 @@ type Props = {
 
 function LibraryPage(props: Props) {
   const { allDownloadedUrlsCount, myPurchases, fetchingMyPurchases, fetchingFileList, doPurchaseList } = props;
-  const { location } = useHistory();
+  const { location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const page = Number(urlParams.get('page')) || 1;
   const hasDownloads = allDownloadedUrlsCount > 0 || (myPurchases && myPurchases.length > 0);

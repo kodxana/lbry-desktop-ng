@@ -10,7 +10,7 @@ import {
   selectTxoPageNumber,
   selectTxoItemCount,
 } from 'redux/selectors/wallet';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import TxoList from './view';
 
 const select = (state) => ({
@@ -30,4 +30,4 @@ const perform = (dispatch) => ({
   updateTxoPageParams: (params) => dispatch(doUpdateTxoPageParams(params)),
 });
 
-export default withRouter(connect(select, perform)(TxoList));
+export default withDesktopRouter(connect(select, perform)(TxoList));

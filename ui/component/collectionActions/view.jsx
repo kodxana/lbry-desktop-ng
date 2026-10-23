@@ -7,7 +7,7 @@ import Button from 'component/button';
 import { useIsMobile } from 'effects/use-screensize';
 import ClaimSupportButton from 'component/claimSupportButton';
 import FileReactions from 'component/fileReactions';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { EDIT_PAGE, PAGE_VIEW_QUERY } from 'page/collection/view';
 import classnames from 'classnames';
 import { ENABLE_FILE_REACTIONS } from 'config';
@@ -50,7 +50,7 @@ function CollectionActions(props: Props) {
     setShowEdit,
   } = props;
   const [doShuffle, setDoShuffle] = React.useState(false);
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const isMobile = useIsMobile();
   const claimId = claim && claim.claim_id;
   const webShareable = true; // collections have cost?

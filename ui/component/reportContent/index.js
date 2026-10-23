@@ -4,7 +4,7 @@ import { selectActiveChannelClaim, selectIncognito } from 'redux/selectors/app';
 import { selectIsReportingContent, selectReportContentError } from 'redux/selectors/reportContent';
 import { doClaimSearch } from 'redux/actions/claims';
 import { makeSelectClaimForClaimId } from 'redux/selectors/claims';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import ReportContent from './view';
 
 const select = (state, props) => {
@@ -27,4 +27,4 @@ const perform = (dispatch) => ({
   doReportContent: (category, params) => dispatch(doReportContent(category, params)),
 });
 
-export default withRouter(connect(select, perform)(ReportContent));
+export default withDesktopRouter(connect(select, perform)(ReportContent));

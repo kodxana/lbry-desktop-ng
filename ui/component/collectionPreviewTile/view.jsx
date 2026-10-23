@@ -1,7 +1,8 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import { NavLink, useHistory } from 'react-router-dom';
+import { NavLink } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import ClaimPreviewTile from 'component/claimPreviewTile';
 import TruncatedText from 'component/common/truncated-text';
 import CollectionCount from './collectionCount';
@@ -55,7 +56,7 @@ function CollectionPreviewTile(props: Props) {
     resolveCollectionItems,
   } = props;
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const hasClaim = Boolean(claim);
   React.useEffect(() => {
     if (collectionId && hasClaim && resolveCollectionItems) {

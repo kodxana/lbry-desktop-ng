@@ -6,7 +6,7 @@ import type { Node } from 'react';
 import classnames from 'classnames';
 import React from 'react';
 import usePersistedState from 'effects/use-persisted-state';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { FormField } from 'component/common/form';
 import Button from 'component/button';
 import { toCapitalCase } from 'util/string';
@@ -60,7 +60,7 @@ function ClaimListHeader(props: Props) {
     languageSetting,
     scrollAnchor,
   } = props;
-  const { action, push, location } = useHistory();
+  const { action, push, location } = useDesktopHistory();
   const { search } = location;
   const [expanded, setExpanded] = usePersistedState(`expanded-${location.pathname}`, false);
   const [orderParamEntry, setOrderParamEntry] = usePersistedState(`entry-${location.pathname}`, CS.ORDER_BY_TRENDING);

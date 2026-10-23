@@ -7,7 +7,7 @@ import React from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';
 import ChannelThumbnail from 'component/channelThumbnail';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { useIsMobile } from 'effects/use-screensize';
 import { formatNumber } from 'util/number';
 
@@ -43,7 +43,7 @@ export default function CommentReactions(props: Props) {
   const {
     push,
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const isMobile = useIsMobile();
 

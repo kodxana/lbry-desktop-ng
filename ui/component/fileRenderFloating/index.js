@@ -17,7 +17,7 @@ import { selectCostInfoForUri } from 'lbryinc';
 import { doPlayUri, doSetPlayingUri } from 'redux/actions/content';
 import { doFetchRecommendedContent } from 'redux/actions/search';
 import { doAnaltyicsPurchaseEvent } from 'redux/actions/app';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import FileRenderFloating from './view';
 
 const select = (state, props) => {
@@ -65,4 +65,4 @@ const perform = (dispatch) => ({
   clearSecondarySource: (uri) => dispatch(doSetPlayingUri({ uri })),
 });
 
-export default withRouter(connect(select, perform)(FileRenderFloating));
+export default withDesktopRouter(connect(select, perform)(FileRenderFloating));

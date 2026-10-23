@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import Button from 'component/button';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import I18nMessage from 'component/i18nMessage';
 // $FlowFixMe cannot resolve ...
 import YrblHappy from 'static/img/yrblhappy.svg';
@@ -45,4 +45,4 @@ function WelcomePage(props: Props) {
   );
 }
 
-export default withRouter(WelcomePage);
+export default withDesktopRouter(WelcomePage);

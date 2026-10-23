@@ -9,7 +9,7 @@ import { PAGE_SIZE } from 'constants/claim';
 import { Form } from 'component/common/form-components/form';
 import Icon from 'component/common/icon';
 import { FormField } from 'component/common/form-components/form-field';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import classnames from 'classnames';
 import { PURCHASES_PAGE_SIZE } from 'page/library/view';
 import Spinner from 'component/spinner';
@@ -114,4 +114,4 @@ function FileListDownloaded(props: Props) {
   );
 }
 
-export default withRouter(FileListDownloaded);
+export default withDesktopRouter(FileListDownloaded);

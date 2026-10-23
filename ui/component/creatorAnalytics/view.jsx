@@ -9,7 +9,7 @@ import Spinner from 'component/spinner';
 import Icon from 'component/common/icon';
 import Button from 'component/button';
 import Yrbl from 'component/yrbl';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import analytics from 'analytics';
 
 type Props = {
@@ -22,7 +22,7 @@ const GENERIC_ERROR = 'error';
 
 export default function CreatorAnalytics(props: Props) {
   const { claim } = props;
-  const history = useHistory();
+  const history = useDesktopHistory();
   const [stats, setStats] = React.useState();
   const [error, setError] = React.useState();
   const [fetchingStats, setFetchingStats] = React.useState(false);

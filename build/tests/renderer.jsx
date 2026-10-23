@@ -7,7 +7,7 @@ import localForage from 'localforage';
 import React from 'react';
 import { connect } from 'react-redux';
 import { push, goBack } from 'redux-first-history';
-import { Route, Link } from 'react-router-dom';
+import { Route, Routes, Link } from 'react-router';
 import * as ACTIONS from 'constants/action_types';
 import fixture from './fixtures/persist-v0.json';
 import { render, unmount } from './helpers';
@@ -143,7 +143,10 @@ async function main() {
       <Link id="wallet-link" to="/$/wallet?tab=history">
         Wallet
       </Link>
-      <Route path="/$/wallet" render={() => <div id="wallet-page">Wallet route</div>} />
+      <Routes>
+        <Route path="/$/wallet" element={<div id="wallet-page">Wallet route</div>} />
+        <Route path="*" element={null} />
+      </Routes>
       <ConnectedPosition />
     </div>,
     store,

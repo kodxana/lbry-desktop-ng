@@ -10,7 +10,7 @@ import { doSendTip } from 'redux/actions/wallet';
 import { makeSelectClientSetting } from 'redux/selectors/settings';
 import { selectActiveChannelClaim, selectIncognito } from 'redux/selectors/app';
 import { selectBalance, selectIsSendingSupport } from 'redux/selectors/wallet';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as SETTINGS from 'constants/settings';
 import WalletSendTip from './view';
 
@@ -27,4 +27,4 @@ const select = (state, props) => ({
   title: selectTitleForUri(state, props.uri),
 });
 
-export default withRouter(connect(select, { doHideModal, doSendTip })(WalletSendTip)); // doSendCashTip gone
+export default withDesktopRouter(connect(select, { doHideModal, doSendTip })(WalletSendTip)); // doSendCashTip gone

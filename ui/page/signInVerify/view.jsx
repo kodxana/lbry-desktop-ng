@@ -1,7 +1,7 @@
 // @flow
 import * as PAGES from 'constants/pages';
 import React, { useState } from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import Page from 'component/page';
 import ReCAPTCHA from 'react-google-recaptcha';
 import Button from 'component/button';
@@ -158,4 +158,4 @@ function SignInVerifyPage(props: Props) {
   );
 }
 
-export default withRouter(SignInVerifyPage);
+export default withDesktopRouter(SignInVerifyPage);

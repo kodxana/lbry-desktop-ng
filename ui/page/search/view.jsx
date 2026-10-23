@@ -7,7 +7,7 @@ import Page from 'component/page';
 import SearchOptions from 'component/searchOptions';
 import SearchTopClaim from 'component/searchTopClaim';
 import { formatLbryUrlForWeb } from 'util/url';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { SEARCH_PAGE_SIZE } from 'constants/search';
 
 type Props = {
@@ -21,7 +21,7 @@ type Props = {
 
 export default function SearchPage(props: Props) {
   const { urlQuery, searchOptions, search, uris, isSearching, hasReachedMaxResultsLength } = props;
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const [from, setFrom] = React.useState(0);
 
   const modifiedUrlQuery = urlQuery.trim().replace(/\s+/g, '').replace(/:/g, '#');

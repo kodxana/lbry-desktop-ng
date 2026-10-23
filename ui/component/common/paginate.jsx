@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { Form, FormField } from 'component/common/form';
 import ReactPaginate from 'react-paginate';
 import { useIsMobile } from 'effects/use-screensize';
@@ -96,4 +96,4 @@ function Paginate(props: Props) {
   );
 }
 
-export default withRouter(Paginate);
+export default withDesktopRouter(Paginate);

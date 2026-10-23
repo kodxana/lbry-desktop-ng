@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import * as RENDER_MODES from 'constants/file_render_modes';
 import * as KEYCODES from 'constants/keycodes';
 import VideoViewer from 'component/viewers/videoViewer';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import desktop from 'util/desktop';
 import analytics from 'analytics';
 
@@ -162,4 +162,4 @@ class FileRender extends React.PureComponent<Props> {
   }
 }
 
-export default withRouter(FileRender);
+export default withDesktopRouter(FileRender);

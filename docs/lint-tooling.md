@@ -15,6 +15,10 @@ the current React, import and Flow plugins declare support through ESLint 9.
 - `node build/testLintTooling.js`: test linting, formatting and real commits in a
   disposable repository under `dist/lint-tests`.
 
+Staged commands are split at 4,000 characters so large migrations also work
+through Yarn's Windows command shims. The hook test commits an 80-file batch
+whose full paths exceed the Windows shell's 8,191-character limit.
+
 Hook installation is explicit. Yarn 3 does not use npm's `prepare` lifecycle,
 and CI installs with lifecycle scripts disabled. Run `yarn hooks:install` after
 installing dependencies in a new checkout, or when migrating from Husky 3.

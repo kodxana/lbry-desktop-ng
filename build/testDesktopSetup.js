@@ -26,7 +26,7 @@ async function hostingTests() {
         return props.children;
       },
     },
-    'react-router-dom': { withRouter: (component) => component },
+    'component/common/desktop-router': { withDesktopRouter: (component) => component },
     'static/img/yrblhappy.svg': '',
     'constants/daemon_settings': {
       BLOB_STORAGE_LIMIT_MB: 'blob_storage_limit',

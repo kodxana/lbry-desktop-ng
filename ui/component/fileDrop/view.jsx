@@ -7,7 +7,7 @@ import classnames from 'classnames';
 import useDragDrop from 'effects/use-drag-drop';
 import { getTree } from 'util/web-file-system';
 import { getFilePath } from 'util/file-path';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import Icon from 'component/common/icon';
 import Button from 'component/button';
 
@@ -163,4 +163,4 @@ function FileDrop(props: Props) {
   );
 }
 
-export default withRouter(FileDrop);
+export default withDesktopRouter(FileDrop);

@@ -7,7 +7,7 @@ import React from 'react';
 import ClaimList from 'component/claimList';
 import Page from 'component/page';
 import * as PAGES from 'constants/pages';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import CollectionEdit from 'component/collectionEdit';
 import Card from 'component/common/card';
 import Button from 'component/button';
@@ -66,7 +66,7 @@ export default function CollectionPage(props: Props) {
   const {
     replace,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const [didTryResolve, setDidTryResolve] = React.useState(false);
   const [showInfo, setShowInfo] = React.useState(false);

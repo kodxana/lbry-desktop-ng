@@ -11,7 +11,7 @@ import DebouncedInput from 'component/common/debounced-input';
 import ChannelThumbnail from 'component/channelThumbnail';
 import { useIsMobile, isTouch } from 'effects/use-screensize';
 import { IS_MAC } from 'component/app/view';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { ENABLE_UI_NOTIFICATIONS } from 'config';
 
 const FOLLOWED_ITEM_INITIAL_LIMIT = 10;
@@ -65,7 +65,7 @@ function SideNavigation(props: Props) {
 
   const {
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const HOME = {
     title: 'Home',

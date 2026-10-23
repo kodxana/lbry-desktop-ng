@@ -7,7 +7,7 @@ import signQuery from 'util/sign-query';
 import { countries as countryData } from 'country-data';
 import { FormField } from 'component/common/form';
 import { SUPPORTED_MOONPAY_COUNTRIES } from 'constants/moonpay';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Button from 'component/button';
 import Nag from 'component/common/nag';
 import I18nMessage from 'component/i18nMessage';
@@ -49,7 +49,7 @@ export default function BuyPage(props: Props) {
   const [country, setCountry] = React.useState(initialCountry);
   const [showPurchaseScreen, setShowPurchaseScreen] = React.useState(false);
   const isValid = SUPPORTED_MOONPAY_COUNTRIES.includes(country);
-  const { goBack } = useHistory();
+  const { goBack } = useDesktopHistory();
   const currentPurchase =
     signedPurchase && signedPurchase.address === receiveAddress && signedPurchase.email === email
       ? signedPurchase

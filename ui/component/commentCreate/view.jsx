@@ -7,7 +7,7 @@ import { FF_MAX_CHARS_IN_COMMENT } from 'constants/form-field';
 import { FormFieldAreaAdvanced, Form } from 'component/common/form';
 import { getChannelIdFromClaim } from 'util/claim';
 import { Lbryio } from 'lbryinc';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import * as ICONS from 'constants/icons';
 import * as KEYCODES from 'constants/keycodes';
 import * as PAGES from 'constants/pages';
@@ -94,7 +94,7 @@ export function CommentCreate(props: Props) {
   const {
     push,
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const [isSubmitting, setSubmitting] = React.useState(false);
   const [commentFailure, setCommentFailure] = React.useState(false);
@@ -504,8 +504,8 @@ export function CommentCreate(props: Props) {
               isSubmitting
                 ? __('Sending...')
                 : commentFailure && tipAmount === successTip.tipAmount
-                ? __('Re-submit')
-                : __('Send')
+                  ? __('Re-submit')
+                  : __('Send')
             }
             onClick={handleSupportComment}
           />
@@ -548,8 +548,8 @@ export function CommentCreate(props: Props) {
                     ? __('Replying...')
                     : __('Reply')
                   : isSubmitting
-                  ? __('Commenting...')
-                  : __('Comment --[button to submit something]--')
+                    ? __('Commenting...')
+                    : __('Comment --[button to submit something]--')
               }
               onClick={() => activeChannelClaim && commentValue.length && handleCreateComment()}
             />
@@ -641,8 +641,8 @@ export function CommentCreate(props: Props) {
                 minTip
                   ? __('This channel requires a minimum tip for each comment.')
                   : minSuper
-                  ? __('This channel requires a minimum amount for HyperChats to be visible.')
-                  : ''
+                    ? __('This channel requires a minimum amount for HyperChats to be visible.')
+                    : ''
               }
               className="icon--help"
               icon={ICONS.HELP}

@@ -3,7 +3,7 @@ import React from 'react';
 import Button from 'component/button';
 import UriIndicator from 'component/uriIndicator';
 import I18nMessage from 'component/i18nMessage';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import debounce from 'util/debounce';
 import * as ICONS from 'constants/icons';
 
@@ -158,4 +158,4 @@ function AutoplayCountdown(props: Props) {
   );
 }
 
-export default withRouter(AutoplayCountdown);
+export default withDesktopRouter(AutoplayCountdown);

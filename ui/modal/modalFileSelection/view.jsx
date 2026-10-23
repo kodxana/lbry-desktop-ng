@@ -3,7 +3,7 @@ import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import React from 'react';
 import { Modal } from 'modal/modal';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import Card from 'component/common/card';
 import Button from 'component/button';
 import FileList from 'component/common/file-list';
@@ -80,4 +80,4 @@ const ModalFileSelection = (props: Props) => {
   );
 };
 
-export default withRouter(ModalFileSelection);
+export default withDesktopRouter(ModalFileSelection);

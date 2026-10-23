@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { doSetContentHistoryItem, doSetPrimaryUri, clearPosition } from 'redux/actions/content';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import {
   makeSelectMetadataForUri,
   makeSelectClaimIsNsfw,
@@ -47,4 +47,4 @@ const perform = (dispatch) => ({
   clearPosition: (uri) => dispatch(clearPosition(uri)),
 });
 
-export default withRouter(connect(select, perform)(FilePage));
+export default withDesktopRouter(connect(select, perform)(FilePage));

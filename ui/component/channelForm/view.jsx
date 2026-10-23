@@ -10,7 +10,7 @@ import ErrorText from 'component/common/error-text';
 import ChannelThumbnail from 'component/channelThumbnail';
 import { isNameValid, parseURI } from 'util/lbryURI';
 import ClaimAbandonButton from 'component/claimAbandonButton';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { MINIMUM_PUBLISH_BID, INVALID_NAME_ERROR, ESTIMATED_FEE } from 'constants/claim';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
 import Card from 'component/common/card';
@@ -102,7 +102,7 @@ function ChannelForm(props: Props) {
   const { channelName } = parseURI(uri);
   const name = params.name;
   const isNewChannel = !uri;
-  const { replace } = useHistory();
+  const { replace } = useDesktopHistory();
   const languageParam = params.languages;
   const primaryLanguage = Array.isArray(languageParam) && languageParam.length && languageParam[0];
   const secondaryLanguage = Array.isArray(languageParam) && languageParam.length >= 2 && languageParam[1];

@@ -317,7 +317,8 @@ async function menus(store, history) {
     triggers[0].disabled = false;
     menu = await open(triggers[0]);
     for (const callback of deferred.values()) callback(performance.now());
-    await tick();
+    // Escape's hovercard fallback schedules another frame after the first one.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     assert.equal(
       triggers[0].getAttribute('aria-expanded'),
       'true',

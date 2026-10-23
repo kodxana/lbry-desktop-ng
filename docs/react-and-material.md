@@ -24,10 +24,9 @@ storage uses the submitted password/opt-in snapshot. Leaving before completion
 prevents a late result from saving credentials or closing a later modal.
 
 The renderer uses React-Redux 9.3.0, Redux 5.0.1, Redux Thunk 3.1.0 and
-@hello-pangea/dnd 18.0.1 for collection drag-and-drop. React Router 5.3.4 removes
-its obsolete context polyfill. Its state binding changes are described in
-[state management](state-management.md). The Router 6+ API migration remains
-a separate upgrade.
+@hello-pangea/dnd 18.0.1 for collection drag-and-drop. React Router is now
+8.5.0; its route migration is described in [navigation](navigation.md), and
+its Redux binding in [state management](state-management.md).
 
 React 19 requires the automatic JSX transform, enabled in the shared Babel
 configuration for production, development and real renderer tests. The remaining

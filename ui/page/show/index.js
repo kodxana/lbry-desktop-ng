@@ -1,7 +1,7 @@
 import * as PAGES from 'constants/pages';
 import { DOMAIN } from 'config';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { PAGE_SIZE } from 'constants/claim';
 import {
   selectIsUriResolving,
@@ -99,4 +99,4 @@ const perform = (dispatch) => ({
   fetchCollectionItems: (claimId) => dispatch(doFetchItemsInCollection({ collectionId: claimId })),
 });
 
-export default withRouter(connect(select, perform)(ShowPage));
+export default withDesktopRouter(connect(select, perform)(ShowPage));

@@ -3,7 +3,7 @@ import type { Node } from 'react';
 import React, { forwardRef, useRef } from 'react';
 import Icon from 'component/common/icon';
 import classnames from 'classnames';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 import { formatLbryUrlForWeb } from 'util/url';
 import useCombinedRefs from 'effects/use-combined-refs';
 
@@ -182,7 +182,7 @@ const Button = forwardRef<any, {}>((props: Props, ref: any) => {
 
   return path ? (
     <NavLink
-      exact
+      end
       to={path}
       title={title || defaultTooltip}
       disabled={disable}
@@ -192,8 +192,7 @@ const Button = forwardRef<any, {}>((props: Props, ref: any) => {
           onClick();
         }
       }}
-      className={combinedClassName}
-      activeClassName={activeClass}
+      className={({ isActive }) => classnames(combinedClassName, isActive && (activeClass || 'active'))}
       aria-label={ariaLabel}
       {...otherProps}
     >

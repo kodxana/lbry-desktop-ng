@@ -5,7 +5,7 @@ import HostingSplash from 'component/hostingSplash';
 import HostingSplashCustom from 'component/hostingSplashCustom';
 import WelcomeSplash from 'component/welcomeSplash';
 import Page from 'component/page';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 const SPLASH_PAGE = 0;
 const PRIVACY_PAGE = 1;
@@ -42,7 +42,7 @@ export default function Welcome(props: Props) {
   const { updateWelcomeVersion } = props;
   // const { save_blobs: saveBlobs } = daemonSettings || {};
   const [welcomePage, setWelcomePage] = React.useState(SPLASH_PAGE);
-  const { replace } = useHistory();
+  const { replace } = useDesktopHistory();
 
   const handleNextPage = () => {
     if (welcomePage === SPLASH_PAGE) {

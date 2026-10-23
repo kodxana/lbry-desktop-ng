@@ -3,7 +3,7 @@ import * as PAGES from 'constants/pages';
 import * as SETTINGS from 'constants/settings';
 import React from 'react';
 import classnames from 'classnames';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import UserEmailNew from 'component/userEmailNew';
 import UserEmailVerify from 'component/userEmailVerify';
 import UserChannelFollowIntro from 'component/userChannelFollowIntro';
@@ -69,7 +69,7 @@ function UserSignUp(props: Props) {
   const {
     location: { search, pathname },
     replace,
-  } = useHistory();
+  } = useDesktopHistory();
   const urlParams = new URLSearchParams(search);
   const redirect = urlParams.get(REDIRECT_PARAM);
   const step = urlParams.get(STEP_PARAM);

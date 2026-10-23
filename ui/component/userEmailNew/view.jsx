@@ -7,7 +7,7 @@ import Button from 'component/button';
 import analytics from 'analytics';
 import { EMAIL_REGEX } from 'constants/email';
 import I18nMessage from 'component/i18nMessage';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Card from 'component/common/card';
 import ErrorText from 'component/common/error-text';
 import Nag from 'component/common/nag';
@@ -40,7 +40,7 @@ function UserEmailNew(props: Props) {
     emailExists,
   } = props;
   const { share_usage_data: shareUsageData } = daemonSettings;
-  const { push, location } = useHistory();
+  const { push, location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const defaultEmail = emailFromUrl ? decodeURIComponent(emailFromUrl) : '';

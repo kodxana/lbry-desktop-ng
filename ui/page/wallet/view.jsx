@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import TxoList from 'component/txoList';
 import Page from 'component/page';
 import WalletBalance from 'component/walletBalance';
@@ -19,7 +19,7 @@ type Props = {
 const WalletPage = (props: Props) => {
   const {
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const { totalBalance, syncStatus } = props;
   const showIntro = totalBalance === 0 && !walletSyncProgress(syncStatus).pending;
