@@ -7,9 +7,7 @@ import { setSavedPassword } from 'util/saved-passwords';
 
 type Props = {
   closeModal: () => void,
-  walletEncryptSucceded: boolean,
-  updateWalletStatus: boolean,
-  encryptWallet: (?string) => void,
+  encryptWallet: (?string) => Promise<boolean>,
   updateWalletStatus: () => void,
 };
 
@@ -19,9 +17,7 @@ type State = {
   passwordMismatch: boolean,
   understandConfirmed: boolean,
   understandError: boolean,
-  submitted: boolean,
-  submittedPassword: ?string,
-  submittedRememberPassword: boolean,
+  pending: boolean,
   failMessage: ?string,
   rememberPassword: boolean,
 };
@@ -30,6 +26,8 @@ const acknowledgementText = __('I Understand');
 
 class ModalWalletEncrypt extends React.PureComponent<Props, State> {
   saving = false;
+  pendingRequest = false;
+  unmounted = false;
 
   state = {
     newPassword: null,
@@ -37,26 +35,17 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
     passwordMismatch: false,
     understandConfirmed: false,
     understandError: false,
-    submitted: false, // Prior actions could be marked complete
-    submittedPassword: null,
-    submittedRememberPassword: false,
+    pending: false,
     failMessage: undefined,
     rememberPassword: false,
   };
 
-  componentDidUpdate(prevProps: Props) {
-    const { props, state } = this;
+  componentDidMount() {
+    this.unmounted = false;
+  }
 
-    if (state.submitted) {
-      if (props.walletEncryptSucceded === true && prevProps.walletEncryptSucceded !== true) {
-        this.saving = true;
-        props.updateWalletStatus();
-        setSavedPassword(state.submittedPassword, state.submittedRememberPassword).then(() => props.closeModal());
-      } else if (props.walletEncryptSucceded === false) {
-        // See https://github.com/lbryio/lbry/issues/1307
-        this.setState({ failMessage: 'Unable to encrypt wallet.' });
-      }
-    }
+  componentWillUnmount() {
+    this.unmounted = true;
   }
 
   onChangeNewPassword(event: SyntheticInputEvent<>) {
@@ -78,10 +67,10 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
     });
   }
 
-  submitEncryptForm() {
+  async submitEncryptForm() {
     const { state } = this;
 
-    if (this.saving || !state.newPassword || (state.submitted && this.props.walletEncryptSucceded == null)) {
+    if (this.saving || this.pendingRequest || this.unmounted || !state.newPassword) {
       return;
     }
 
@@ -101,22 +90,36 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
       return;
     }
 
-    this.props.encryptWallet(state.newPassword);
+    const { newPassword, rememberPassword } = state;
+    this.pendingRequest = true;
     this.setState({
-      submitted: true,
-      submittedPassword: state.newPassword,
-      submittedRememberPassword: state.rememberPassword,
+      pending: true,
       passwordMismatch: false,
       understandError: false,
       failMessage: undefined,
     });
+    try {
+      const succeeded = await this.props.encryptWallet(newPassword);
+      if (this.unmounted) return;
+      if (succeeded) {
+        this.saving = true;
+        this.props.updateWalletStatus();
+        await setSavedPassword(newPassword, rememberPassword);
+        if (!this.unmounted) this.props.closeModal();
+      } else {
+        this.setState({ failMessage: 'Unable to encrypt wallet.' });
+      }
+    } finally {
+      this.pendingRequest = false;
+      if (!this.unmounted) this.setState({ pending: false });
+    }
   }
 
   render() {
     const { closeModal } = this.props;
 
     const { passwordMismatch, understandError, failMessage } = this.state;
-    const pending = this.state.submitted && this.props.walletEncryptSucceded == null;
+    const pending = this.state.pending;
     return (
       <Modal
         isOpen

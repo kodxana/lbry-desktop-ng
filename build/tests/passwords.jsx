@@ -49,17 +49,27 @@ export default async function passwords(store, history, root) {
   let closed = 0;
   let encrypted = 0;
   let refreshed = 0;
-  const drawEncrypt = (result) =>
+  let settleEncrypt;
+  const drawEncrypt = (result) => {
     render(
       <Encrypt
-        walletEncryptSucceded={result}
-        encryptWallet={() => encrypted++}
+        encryptWallet={() => {
+          encrypted++;
+          return new Promise((resolve) => {
+            settleEncrypt = resolve;
+          });
+        }}
         closeModal={() => closed++}
         updateWalletStatus={() => refreshed++}
       />,
       store,
       history
     );
+    if (typeof result === 'boolean' && settleEncrypt) {
+      settleEncrypt(result);
+      settleEncrypt = null;
+    }
+  };
   drawEncrypt(null);
   input('wallet-new-password', 'fixture-encryption-password');
   input('wallet-new-password-confirm', 'fixture-encryption-password');
@@ -90,18 +100,29 @@ export default async function passwords(store, history, root) {
 
   await control('available');
   const attempts = [];
-  const drawUnlock = (result) =>
+  let settleUnlock;
+  const drawUnlock = (result) => {
     render(
       <Unlock
         walletUnlockSucceded={result}
         shouldTryWithBlankPassword={false}
-        unlockWallet={(value) => attempts.push(value)}
+        unlockWallet={(value) => {
+          attempts.push(value);
+          return new Promise((resolve) => {
+            settleUnlock = resolve;
+          });
+        }}
         closeModal={() => closed++}
         quit={() => {}}
       />,
       store,
       history
     );
+    if (typeof result === 'boolean' && settleUnlock) {
+      settleUnlock(result);
+      settleUnlock = null;
+    }
+  };
   drawUnlock(null);
   await waitFor(() => attempts.length === 1, 'Load the session password');
   assert.equal(
@@ -110,6 +131,7 @@ export default async function passwords(store, history, root) {
     'Session passwords must not silently opt in'
   );
   drawUnlock(false);
+  await tick();
   input('wallet-password', 'fixture-unlock-password');
   document.getElementById('wallet-remember-password').click();
   submit();
