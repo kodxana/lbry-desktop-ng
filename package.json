@@ -74,6 +74,7 @@
     "source-map-explorer": "^2.5.2"
   },
   "devDependencies": {
+    "@ariakit/react": "0.4.42",
     "@babel/core": "8.0.7",
     "@babel/plugin-transform-class-properties": "8.0.1",
     "@babel/plugin-transform-flow-strip-types": "8.0.1",
@@ -89,10 +90,6 @@
     "@electron/asar": "4.3.1",
     "@eslint/compat": "2.1.1",
     "@pmmmwh/react-refresh-webpack-plugin": "0.6.3",
-    "@reach/combobox": "0.18.0",
-    "@reach/menu-button": "0.18.0",
-    "@reach/rect": "0.18.0",
-    "@reach/tabs": "0.18.0",
     "@types/react": "17.0.93",
     "adm-zip": "0.6.1",
     "assert": "2.1.0",

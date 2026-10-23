@@ -1,6 +1,6 @@
 // @flow
 import { formatLbryUrlForWeb } from 'util/url';
-import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
+import { Menu, MenuList, MenuButton, MenuItem } from 'component/common/menu';
 import { NavLink } from 'react-router-dom';
 import { PAGE_VIEW_QUERY, DISCUSSION_PAGE } from 'page/channel/view';
 import { parseSticker } from 'util/comments';
@@ -147,93 +147,93 @@ export default function Notification(props: Props) {
 
   const Wrapper = menuButton
     ? (props: { children: any }) => (
-        <MenuItem className="menu__link--notification" onSelect={handleNotificationClick}>
+        <MenuItem className="menu__link--notification" onClick={handleNotificationClick}>
           {props.children}
         </MenuItem>
       )
     : notificationLink
-    ? (props: { children: any }) => (
-        <NavLink {...navLinkProps} className="menu__link--notification" onClick={handleNotificationClick}>
-          {props.children}
-        </NavLink>
-      )
-    : (props: { children: any }) => (
-        <span
-          className={is_read ? 'menu__link--notification-nolink' : 'menu__link--notification'}
-          onClick={handleNotificationClick}
-        >
-          {props.children}
-        </span>
-      );
+      ? (props: { children: any }) => (
+          <NavLink {...navLinkProps} className="menu__link--notification" onClick={handleNotificationClick}>
+            {props.children}
+          </NavLink>
+        )
+      : (props: { children: any }) => (
+          <span
+            className={is_read ? 'menu__link--notification-nolink' : 'menu__link--notification'}
+            onClick={handleNotificationClick}
+          >
+            {props.children}
+          </span>
+        );
 
   return (
     <div className={classnames('notification__wrapper', { 'notification__wrapper--unread': !is_read })}>
-      <Wrapper>
-        <div className="notification__icon">{icon}</div>
+      <div className="notification__row">
+        <Wrapper>
+          <div className="notification__icon">{icon}</div>
 
-        <div className="notificationContent__wrapper">
-          <div className="notification__content">
-            <div className="notificationText__wrapper">
-              <div className="notification__title">{title}</div>
+          <div className="notificationContent__wrapper">
+            <div className="notification__content">
+              <div className="notificationText__wrapper">
+                <div className="notification__title">{title}</div>
 
-              {!commentText ? (
-                <div
-                  title={notification_parameters.device.text.replace(/\sLBC/g, ' Credits')}
-                  className="notification__text"
-                >
-                  <LbcMessage>{notification_parameters.device.text}</LbcMessage>
-                </div>
-              ) : stickerFromComment ? (
-                <div className="sticker__comment">
-                  <OptimizedImage src={stickerFromComment.url} waitLoad loading="lazy" />
-                </div>
-              ) : (
-                <div title={commentText} className="notification__text">
-                  {commentText}
-                </div>
+                {!commentText ? (
+                  <div
+                    title={notification_parameters.device.text.replace(/\sLBC/g, ' Credits')}
+                    className="notification__text"
+                  >
+                    <LbcMessage>{notification_parameters.device.text}</LbcMessage>
+                  </div>
+                ) : stickerFromComment ? (
+                  <div className="sticker__comment">
+                    <OptimizedImage src={stickerFromComment.url} waitLoad loading="lazy" />
+                  </div>
+                ) : (
+                  <div title={commentText} className="notification__text">
+                    {commentText}
+                  </div>
+                )}
+              </div>
+
+              {notification_rule === RULE.NEW_CONTENT && (
+                <FileThumbnail uri={notification_parameters.device.target} className="notificationContent__thumbnail" />
+              )}
+              {notification_rule === RULE.NEW_LIVESTREAM && (
+                <FileThumbnail
+                  thumbnail={notification_parameters.device.image_url}
+                  className="notificationContent__thumbnail"
+                />
               )}
             </div>
 
-            {notification_rule === RULE.NEW_CONTENT && (
-              <FileThumbnail uri={notification_parameters.device.target} className="notificationContent__thumbnail" />
-            )}
-            {notification_rule === RULE.NEW_LIVESTREAM && (
-              <FileThumbnail
-                thumbnail={notification_parameters.device.image_url}
-                className="notificationContent__thumbnail"
-              />
-            )}
-          </div>
-
-          <div className="notification__extra">
-            {!is_read && (
-              <Button
-                className="notification__markSeen"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  readNotification();
-                }}
-              />
-            )}
-            <div className="notification__time">
-              <DateTime timeAgo date={notification.active_at} />
+            <div className="notification__extra">
+              {!is_read && (
+                <Button
+                  className="notification__markSeen"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    readNotification();
+                  }}
+                />
+              )}
+              <div className="notification__time">
+                <DateTime timeAgo date={notification.active_at} />
+              </div>
             </div>
           </div>
-        </div>
-
+        </Wrapper>
         <div className="notification__menu">
           <Menu>
             <MenuButton
               className="menu__button notification__menuButton"
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
               }}
             >
               <Icon size={18} icon={ICONS.MORE_VERTICAL} />
             </MenuButton>
             <MenuList className="menu__list">
-              <MenuItem className="menu__link" onSelect={() => deleteNotification()}>
+              <MenuItem className="menu__link" onClick={() => deleteNotification()}>
                 <Icon aria-hidden icon={ICONS.DELETE} />
                 {__('Delete')}
               </MenuItem>
@@ -243,7 +243,7 @@ export default function Notification(props: Props) {
             </MenuList>
           </Menu>
         </div>
-      </Wrapper>
+      </div>
 
       {isCommentNotification && (
         <div>

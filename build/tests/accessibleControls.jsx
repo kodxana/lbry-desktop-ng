@@ -3,6 +3,10 @@ import React from 'react';
 import { ipcRenderer } from 'electron';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
 import HeaderMenuButtons from 'component/headerMenuButtons/view';
+import CollectionMenuList from 'component/collectionMenuList/view';
+import CollectionPreviewTile from 'component/collectionPreviewTile/view';
+import Notification from 'component/notification/view';
+import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import BlockList from 'component/blockList/view';
 import WunderbarSuggestions from 'component/wunderbarSuggestions/view';
 import TextareaWithSuggestions from 'component/textareaWithSuggestions/view';
@@ -59,7 +63,10 @@ async function tabs(store, history) {
             <Tab index={3}>Community</Tab>
           </TabList>
           <TabPanels header={<p>Editor header</p>}>
-            <TabPanel>Content panel</TabPanel>
+            <TabPanel>
+              Content panel
+              <input aria-label="Draft" defaultValue="Unsaved channel description" />
+            </TabPanel>
             <TabPanel>Playlists panel</TabPanel>
             <TabPanel>About panel</TabPanel>
             <TabPanel>Community panel</TabPanel>
@@ -73,7 +80,7 @@ async function tabs(store, history) {
   const panels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
   const indicator = document.querySelector('.tab__divider');
   const check = async (index) => {
-    await waitFor(() => labels[index].getAttribute('aria-selected') === 'true', 'Selected tab must change');
+    await waitFor(() => labels[index].getAttribute('aria-selected') === 'true', `Selected tab must change to ${index}`);
     await waitFor(() => {
       const rect = labels[index].getBoundingClientRect();
       const parent = document.querySelector('.tabs').getBoundingClientRect();
@@ -82,15 +89,30 @@ async function tabs(store, history) {
         Math.abs(parseFloat(indicator.style.left) - (rect.left - parent.left)) < 1
       );
     }, 'The active underline must follow the selected tab and its size');
+    await waitFor(
+      () => panels.every((panel, position) => panel.hidden === (position !== index)),
+      `Only panel ${index} must be visible`
+    );
     panels.forEach((panel, position) => {
       assert.equal(panel.hidden, position !== index);
       assert.equal(panel.getAttribute('aria-labelledby'), labels[position].id);
       assert.equal(labels[position].getAttribute('aria-controls'), panel.id);
-      assert.equal(labels[position].tabIndex, position === index ? 0 : -1);
+      if (position === 1) {
+        assert(labels[position].disabled, 'Unavailable tabs must be natively disabled');
+      } else {
+        assert.equal(
+          labels[position].tabIndex,
+          position === index ? 0 : -1,
+          `Tab stop ${position} with selected tab ${index}`
+        );
+      }
     });
   };
   await check(0);
+  const draft = document.querySelector('[aria-label="Draft"]');
   labels[0].focus();
+  labels[1].focus();
+  assert.equal(document.activeElement, labels[0], 'Disabled tabs must not take focus');
   key(labels[0], 'ArrowRight', 39);
   await check(2);
   assert.equal(document.activeElement, labels[2], 'Arrow navigation skips disabled tabs');
@@ -106,8 +128,55 @@ async function tabs(store, history) {
   await check(2);
   select(3);
   await check(3);
+  rename('About');
+  await check(3);
+  select(0);
+  await check(0);
+  assert.equal(document.querySelector('[aria-label="Draft"]'), draft, 'Switching tabs must retain the form instance');
+  assert.equal(draft.value, 'Unsaved channel description');
   assert.deepEqual(changes, [2, 3, 0, 2]);
   assert.equal(submissions, 0, 'Tab buttons inside channel forms must never submit');
+  unmount();
+
+  document.documentElement.dir = 'rtl';
+  render(<Editor />, store, history);
+  const rtlTabs = Array.from(document.querySelectorAll('[role="tab"]'));
+  await waitFor(() => rtlTabs.every((tab) => tab.getAttribute('aria-controls')), 'RTL tab panels must register');
+  rtlTabs[0].focus();
+  key(rtlTabs[0], 'ArrowLeft', 37);
+  await waitFor(() => rtlTabs[2].getAttribute('aria-selected') === 'true', 'RTL arrows must skip disabled tabs');
+  unmount();
+  document.documentElement.dir = 'ltr';
+
+  const group = () => (
+    <Tabs>
+      <TabList aria-label="Independent tabs">
+        <Tab index={0}>One</Tab>
+        <Tab index={1}>Two</Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel>First</TabPanel>
+        <TabPanel>Second</TabPanel>
+      </TabPanels>
+    </Tabs>
+  );
+  render(
+    <>
+      {group()}
+      {group()}
+    </>,
+    store,
+    history
+  );
+  const independent = Array.from(document.querySelectorAll('[role="tab"]'));
+  await waitFor(
+    () => independent.every((tab) => tab.getAttribute('aria-controls')),
+    'Independent panels must register'
+  );
+  assert.equal(new Set(independent.map((tab) => tab.id)).size, 4, 'Tab groups need distinct accessible IDs');
+  independent[1].click();
+  await waitFor(() => independent[1].getAttribute('aria-selected') === 'true', 'Uncontrolled tabs must select');
+  assert.equal(independent[2].getAttribute('aria-selected'), 'true', 'Changing one group must not change another');
   unmount();
 }
 
@@ -115,42 +184,84 @@ async function menus(store, history) {
   const toggles = [];
   history.replace('/controls');
   render(
-    <HeaderMenuButtons
-      currentTheme="dark"
-      automaticDarkModeEnabled={false}
-      handleThemeToggle={(...args) => toggles.push(args)}
-    />,
+    <>
+      <HeaderMenuButtons
+        currentTheme="dark"
+        automaticDarkModeEnabled={false}
+        handleThemeToggle={(...args) => toggles.push(args)}
+      />
+      <div id="outside-menu" style={{ position: 'fixed', bottom: 0, right: 0, width: 100, height: 100 }} />
+    </>,
     store,
     history
   );
-  const triggers = Array.from(document.querySelectorAll('[data-reach-menu-button]'));
+  const triggers = Array.from(document.querySelectorAll('[aria-haspopup="menu"]'));
   assert.equal(triggers.length, 2);
   assert.notEqual(triggers[0].id, triggers[1].id, 'Multiple menus require distinct accessible IDs');
+  let opening = 0;
   const open = async (trigger) => {
+    opening++;
     trigger.focus();
-    key(trigger, 'ArrowDown', 40);
-    await waitFor(() => trigger.getAttribute('aria-expanded') === 'true', 'Menu must open from keyboard');
-    const menu = document.querySelector(`[role="menu"][aria-labelledby="${trigger.id}"]`);
-    assert.equal(menu.getAttribute('aria-labelledby'), trigger.id);
-    await waitFor(() => document.activeElement === menu, 'Menu receives focus');
+    await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+    await waitFor(
+      () => trigger.getAttribute('aria-expanded') === 'true',
+      `Menu must open from keyboard (open ${opening})`
+    );
+    let menu;
+    await waitFor(
+      () => {
+        menu = document.querySelector(`[role="menu"][aria-labelledby="${trigger.id}"]`);
+        return (
+          menu && menu.contains(document.activeElement) && document.activeElement.getAttribute('role') === 'menuitem'
+        );
+      },
+      `Menu ${trigger.getAttribute('aria-label')} receives focus (open ${opening})`
+    );
+    await Promise.all(menu.getAnimations().map((animation) => animation.finished));
     return menu;
   };
   const closed = async (trigger) => {
     await waitFor(() => trigger.getAttribute('aria-expanded') !== 'true', 'Menu must close');
-    assert.equal(document.activeElement, trigger, 'Closing returns focus to the trigger');
+    await waitFor(() => document.activeElement === trigger, 'Closing returns focus to the trigger');
   };
   let menu = await open(triggers[0]);
-  key(menu, 'Escape', 27);
+  for (const theme of ['dark', 'light']) {
+    document.documentElement.setAttribute('theme', theme);
+    await Promise.all(menu.getAnimations().map((animation) => animation.finished));
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const rect = menu.getBoundingClientRect();
+    assert(
+      rect.width > 0 && rect.height > 50 && rect.right <= window.innerWidth && rect.left >= 0,
+      'Menu must fit within the viewport'
+    );
+    assert.notEqual(
+      getComputedStyle(menu).backgroundColor,
+      'rgba(0, 0, 0, 0)',
+      'The menu retains its theme background'
+    );
+    const active = menu.querySelector('[data-active-item]');
+    const contrast = document.createElement('span');
+    contrast.style.color = 'var(--color-primary-contrast)';
+    menu.appendChild(contrast);
+    await waitFor(
+      () => getComputedStyle(active).color === getComputedStyle(contrast).color,
+      'Keyboard selection retains contrast after theme transitions'
+    );
+    contrast.remove();
+    await ipcRenderer.invoke('fixture-controls-capture', theme);
+  }
+  document.documentElement.setAttribute('theme', 'dark');
+  await ipcRenderer.invoke('fixture-controls-key', 'Escape');
   await closed(triggers[0]);
   assert.equal(history.location.pathname, '/controls', 'Dismissal must not navigate');
   menu = await open(triggers[0]);
-  key(menu, 'ArrowDown', 40);
-  key(menu, 'Enter', 13);
+  await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+  await ipcRenderer.invoke('fixture-controls-key', 'Enter');
   await closed(triggers[0]);
   assert.equal(history.location.pathname, '/$/channel/new', 'MenuLink must retain React Router navigation');
   menu = await open(triggers[1]);
-  key(menu, 'End', 35);
-  key(menu, 'Enter', 13);
+  await ipcRenderer.invoke('fixture-controls-key', 'End');
+  await ipcRenderer.invoke('fixture-controls-key', 'Enter');
   await closed(triggers[1]);
   assert.deepEqual(toggles, [[false, 'dark']], 'A menu action runs exactly once');
   menu = await open(triggers[1]);
@@ -158,12 +269,142 @@ async function menus(store, history) {
   help.click();
   await closed(triggers[1]);
   assert.equal(history.location.pathname, '/$/help');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await open(triggers[0]);
+    await ipcRenderer.invoke('fixture-controls-key', 'Escape');
+    await closed(triggers[0]);
+  }
   await open(triggers[1]);
-  document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+  await ipcRenderer.invoke('fixture-controls-click-outside');
   await waitFor(() => triggers[1].getAttribute('aria-expanded') !== 'true', 'Outside click dismisses the menu');
   assert.equal(toggles.length, 1);
   unmount();
   assert(!document.querySelector('[role="menu"]'), 'Menu portals must be cleaned up');
+}
+
+async function nestedMenus(store, history) {
+  let cardClicks = 0;
+  let disabledClicks = 0;
+  let submissions = 0;
+  const visits = [];
+  const stop = history.listen((location) => visits.push(location.pathname));
+  render(
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        submissions++;
+      }}
+    >
+      <div onClick={() => cardClicks++}>
+        <CollectionMenuList
+          collectionId="fixture-list"
+          collectionName="Fixture"
+          doOpenModal={noop}
+          doToggleShuffleList={noop}
+        />
+      </div>
+      <Menu>
+        <MenuButton>Actions</MenuButton>
+        <MenuList className="menu__list">
+          <MenuItem disabled onClick={() => disabledClicks++}>
+            Unavailable
+          </MenuItem>
+          <MenuItem onClick={noop}>Enabled</MenuItem>
+        </MenuList>
+      </Menu>
+      <button type="button" id="after-menu">
+        Next field
+      </button>
+    </form>,
+    store,
+    history
+  );
+  try {
+    const [collection, actions] = document.querySelectorAll('[aria-haspopup="menu"]');
+    collection.click();
+    await waitFor(() => collection.getAttribute('aria-expanded') === 'true', 'Collection menu must open with a click');
+    await waitFor(() => document.querySelector('.menu__popup[data-open] a'), 'The collection link must mount');
+    const link = document.querySelector('.menu__popup[data-open] a');
+    assert(link);
+    assert.equal(
+      link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 })),
+      false,
+      'Nested menu links must not reload the renderer'
+    );
+    await waitFor(() => collection.getAttribute('aria-expanded') !== 'true', 'Selection dismisses the collection menu');
+    assert.deepEqual(visits, ['/$/list/fixture-list']);
+    assert.equal(cardClicks, 0, 'Neither opening nor selecting a menu may activate the enclosing card');
+    actions.click();
+    await waitFor(() => actions.getAttribute('aria-expanded') === 'true', 'Action menu opens');
+    await waitFor(
+      () => document.activeElement.getAttribute('role') === 'menuitem',
+      'The action menu must receive focus before Tab navigation'
+    );
+    document.querySelector('.menu__popup[data-open] [role="menuitem"][aria-disabled="true"]').click();
+    assert.equal(disabledClicks, 0);
+    assert.equal(actions.getAttribute('aria-expanded'), 'true');
+    await ipcRenderer.invoke('fixture-controls-key', 'Tab');
+    await waitFor(() => actions.getAttribute('aria-expanded') !== 'true', 'Tab dismisses the menu');
+    await waitFor(() => document.activeElement.id === 'after-menu', 'Tab continues through the form');
+    assert.equal(submissions, 0, 'Opening menus must not submit their parent form');
+  } finally {
+    stop();
+    unmount();
+  }
+}
+
+async function linkedCards(store, history) {
+  let reads = 0;
+  let deletes = 0;
+  history.replace('/controls');
+  render(
+    <>
+      <CollectionPreviewTile
+        collectionId="fixture-list"
+        collectionName="Fixture"
+        collectionCount={0}
+        collectionItemUrls={[]}
+      />
+      <Notification
+        notification={{
+          notification_rule: 'weekly_watch_reminder',
+          is_read: false,
+          active_at: '2026-01-01T00:00:00Z',
+          notification_parameters: {
+            device: { title: 'Fixture reminder', text: 'Fixture text', target: 'lbry://fixture#1234' },
+          },
+        }}
+        readNotification={() => reads++}
+        deleteNotification={() => deletes++}
+      />
+    </>,
+    store,
+    history
+  );
+  const triggers = Array.from(document.querySelectorAll('[aria-haspopup="menu"]'));
+  assert.equal(triggers.length, 2);
+  for (const trigger of triggers) {
+    assert.equal(trigger.closest('a'), null, 'A menu button must not activate an enclosing navigation link');
+    trigger.click();
+    await waitFor(() => trigger.getAttribute('aria-expanded') === 'true', 'Card menu opens');
+    await waitFor(
+      () => document.querySelector(`[role="menu"][aria-labelledby="${trigger.id}"]`)?.contains(document.activeElement),
+      'Card menu receives focus'
+    );
+    assert.equal(history.location.pathname, '/controls');
+    await ipcRenderer.invoke('fixture-controls-key', 'Escape');
+    await waitFor(() => trigger.getAttribute('aria-expanded') === 'false', 'Card menu dismisses');
+  }
+  triggers[1].click();
+  await waitFor(
+    () => document.querySelector('.menu__popup[data-open] [role="menuitem"]'),
+    'Notification actions appear'
+  );
+  document.querySelector('.menu__popup[data-open] [role="menuitem"]').click();
+  assert.equal(deletes, 1);
+  assert.equal(reads, 0, 'Opening and deleting a notification must not activate its content link');
+  assert.equal(history.location.pathname, '/controls');
+  unmount();
 }
 
 async function blockedChannels(store, history) {
@@ -177,8 +418,8 @@ async function blockedChannels(store, history) {
     store,
     history
   );
-  await waitFor(() => document.querySelector('[data-reach-combobox-input]'), 'Blocked-channel search must mount');
-  const field = document.querySelector('[data-reach-combobox-input]');
+  await waitFor(() => document.querySelector('input[role="combobox"]'), 'Blocked-channel search must mount');
+  const field = document.querySelector('input[role="combobox"]');
   type(field, 'al');
   await waitFor(() => options().length === 2, 'Substring search must find both matching channels');
   assert.deepEqual(
@@ -226,23 +467,47 @@ async function searchBar(store, history) {
       store,
       history
     );
-    const field = document.querySelector('[data-reach-combobox-input]');
+    const field = document.querySelector('input[role="combobox"]');
     type(field, 'cats');
     await waitFor(() => options().length === 2, 'Search actions must appear');
-    key(field, 'ArrowDown', 40);
-    key(field, 'Enter', 13);
+    field.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, isComposing: true, bubbles: true, cancelable: true })
+    );
+    assert.equal(searches.length, 0, 'Confirming composed text must not select a search action');
+    await ipcRenderer.invoke('fixture-controls-key', 'Home');
+    await waitFor(() => field.selectionStart === 0, 'Home moves the text caret');
+    await ipcRenderer.invoke('fixture-controls-key', 'End');
+    await waitFor(() => field.selectionStart === 4, 'End moves the text caret');
+    await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+    field.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, isComposing: true, bubbles: true, cancelable: true })
+    );
+    assert.equal(searches.length, 0, 'Composing text must not select the highlighted action');
+    await ipcRenderer.invoke('fixture-controls-key', 'Enter');
     assert.deepEqual(searches, ['cats']);
+    field.focus();
+    await waitFor(() => options().length === 2, 'Focusing search reopens suggestions');
+    options()[0].click();
+    assert.deepEqual(searches, ['cats', 'cats'], 'The same search can be selected again, once per click');
     type(field, 'dogs');
     await waitFor(() => options().length === 2, 'Search actions must reopen');
-    key(field, 'ArrowDown', 40);
-    key(field, 'ArrowDown', 40);
-    key(field, 'Enter', 13);
+    await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+    await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+    await ipcRenderer.invoke('fixture-controls-key', 'Enter');
     assert.equal(history.location.pathname, '/$/discover');
     assert.equal(new URLSearchParams(history.location.search).get('t'), 'dogs');
     type(field, 'lbry://fixture#1234');
     submit();
     assert.equal(history.location.pathname, '/fixture:1234', 'Typed LBRY links retain claim IDs');
-    assert.equal(searches.length, 1, 'Choosing a tag or URI must not submit a duplicate text search');
+    assert.equal(searches.length, 2, 'Choosing a tag or URI must not submit a duplicate text search');
+    type(field, 'clear me');
+    await ipcRenderer.invoke('fixture-controls-key', 'Escape');
+    await waitFor(
+      () => field.value === '' && field.getAttribute('aria-expanded') === 'false',
+      'Escape clears search state and closes suggestions'
+    );
+    await ipcRenderer.invoke('fixture-controls-key', 'Escape');
+    assert.notEqual(document.activeElement, field, 'Escape on an empty search moves focus away');
     unmount();
   } finally {
     lighthouse.search = remoteSearch;
@@ -432,6 +697,8 @@ export default async function accessibleControls(store, history) {
   document.documentElement.setAttribute('dir', 'ltr');
   await tabs(store, history);
   await menus(store, history);
+  await nestedMenus(store, history);
+  await linkedCards(store, history);
   await blockedChannels(store, history);
   await searchBar(store, history);
   await suggestions(store, history);

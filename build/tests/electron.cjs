@@ -87,13 +87,53 @@ app
     ipcMain.handle('fixture-three-capture', async (event) => {
       assert.equal(activePhase, 'three');
       assert.equal(event.sender, activeWindow.webContents);
-      fs.writeFileSync(path.resolve('dist/ci/three-preview.png'), (await activeWindow.webContents.capturePage()).toPNG());
+      fs.writeFileSync(
+        path.resolve('dist/ci/three-preview.png'),
+        (await activeWindow.webContents.capturePage()).toPNG()
+      );
     });
     ipcMain.handle('fixture-controls-focus', async (event) => {
       assert.equal(activePhase, 'accessibleControls');
       assert.equal(event.sender, activeWindow.webContents);
       activeWindow.webContents.debugger.attach('1.3');
       await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
+    });
+    ipcMain.handle('fixture-controls-key', async (event, key) => {
+      assert.equal(activePhase, 'accessibleControls');
+      assert.equal(event.sender, activeWindow.webContents);
+      const codes = { Tab: 9, Home: 36, End: 35, ArrowDown: 40, Enter: 13, Escape: 27 };
+      assert(Object.hasOwn(codes, key));
+      for (const type of ['keyDown', 'keyUp']) {
+        await activeWindow.webContents.debugger.sendCommand('Input.dispatchKeyEvent', {
+          type,
+          key,
+          code: key,
+          windowsVirtualKeyCode: codes[key],
+        });
+      }
+    });
+    ipcMain.handle('fixture-controls-click-outside', async (event) => {
+      assert.equal(activePhase, 'accessibleControls');
+      assert.equal(event.sender, activeWindow.webContents);
+      const [width, height] = activeWindow.getContentSize();
+      for (const type of ['mousePressed', 'mouseReleased']) {
+        await activeWindow.webContents.debugger.sendCommand('Input.dispatchMouseEvent', {
+          type,
+          x: width - 8,
+          y: height - 8,
+          button: 'left',
+          clickCount: 1,
+        });
+      }
+    });
+    ipcMain.handle('fixture-controls-capture', async (event, theme) => {
+      assert.equal(activePhase, 'accessibleControls');
+      assert.equal(event.sender, activeWindow.webContents);
+      assert(['dark', 'light'].includes(theme));
+      fs.writeFileSync(
+        path.resolve(`dist/ci/controls-${theme}.png`),
+        (await activeWindow.webContents.capturePage()).toPNG()
+      );
     });
     ipcMain.handle('fixture-editor-input', async (event, input) => {
       assert.equal(activePhase, 'markdownEditor');
