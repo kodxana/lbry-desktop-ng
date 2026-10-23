@@ -146,6 +146,44 @@ module.exports = async function walletSyncTests() {
       return balance;
     },
   };
+  let finishStatus;
+  let balanceReads = 0;
+  const pendingSnapshot = sync.readWalletSnapshot({
+    status: () =>
+      new Promise((resolve) => {
+        finishStatus = resolve;
+      }),
+    wallet_balance: async () => {
+      balanceReads++;
+      return balance;
+    },
+  });
+  await Promise.resolve();
+  assert.equal(balanceReads, 0, 'A balance read must wait until the status read finishes');
+  finishStatus(status);
+  const snapshot = await pendingSnapshot;
+  assert.equal(balanceReads, 1);
+  assert.equal(snapshot.status, status);
+  assert.equal(snapshot.balance, balance, 'Snapshot reads must preserve string-valued amounts');
+  const unknown = await sync.readWalletSnapshot({
+    ...sdk,
+    status: async () => {
+      throw Error('offline');
+    },
+  });
+  assert.equal(unknown.status, null);
+  assert.equal(unknown.balance, balance);
+  const locked = Error('wallet locked');
+  await assert.rejects(
+    sync.readWalletSnapshot({
+      ...sdk,
+      wallet_balance: async () => {
+        throw locked;
+      },
+    }),
+    (error) => error === locked
+  );
+  order = [];
   const dependencies = {
     'constants/action_types': { UPDATE_BALANCE: 'balance', WALLET_SYNC_STATUS_UNAVAILABLE: 'unavailable' },
     lbry: sdk,

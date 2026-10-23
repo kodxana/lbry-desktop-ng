@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import React from 'react';
 import Icon from 'component/common/icon';
+import CreditAmount from 'component/common/credit-amount';
 import { icons } from 'component/common/icon-custom';
 import * as ICONS from 'constants/icons';
 import { FREE_GLOBAL_STICKERS, PAID_GLOBAL_STICKERS } from 'constants/stickers';
@@ -53,6 +54,26 @@ export default function sharedUi(store, history) {
   assert.equal(section.getAttribute('stroke'), '#e2495e');
   assert.equal(section.querySelector('title').textContent, 'Locked wallet');
   unmount();
+
+  const language = localStorage.getItem('language');
+  localStorage.setItem('language', 'en');
+  try {
+    render(<CreditAmount amount={0.00000001} />, store, history);
+    assert.equal(document.querySelector('.credit-amount').textContent, '<0.01');
+    assert(document.querySelector('.credit-amount svg'), 'Tiny amounts keep the LBC symbol');
+    render(<CreditAmount amount={12.5} isFiat />, store, history);
+    assert.equal(document.querySelector('.credit-amount').textContent.trim(), '$12.50');
+    render(<CreditAmount amount={12.5} showPlus showLBC={false} />, store, history);
+    assert.equal(document.querySelector('.credit-amount').textContent, '+12.50');
+    render(<CreditAmount amount={0.00000001} noFormat showLBC={false} />, store, history);
+    assert.equal(document.querySelector('.credit-amount').textContent, '1e-8');
+    render(<CreditAmount />, store, history);
+    assert.equal(document.querySelector('#app').textContent, '');
+  } finally {
+    unmount();
+    if (language === null) localStorage.removeItem('language');
+    else localStorage.setItem('language', language);
+  }
 
   const stickers = [...FREE_GLOBAL_STICKERS, ...PAID_GLOBAL_STICKERS];
   assert(FREE_GLOBAL_STICKERS.length > 0 && PAID_GLOBAL_STICKERS.length > 0);

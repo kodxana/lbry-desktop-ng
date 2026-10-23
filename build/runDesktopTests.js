@@ -7,6 +7,8 @@ for (const file of [
   'testFlowContracts.js',
   'testDependencyTypes.js',
   'testUiTypes.js',
+  'testUtilityTypes.js',
+  'testUtilityContracts.js',
   'testDependencyContracts.js',
   'testRemainingDependencyContracts.js',
   'testAccountClient.js',

@@ -13,7 +13,7 @@ type Props = {
   postfix?: string | number | Node,
 };
 
-const LbcSymbol = (props: Props) => {
+const LbcSymbol = (props: Props): Node => {
   const { prefix, postfix, size, isTitle = false } = props;
   return (
     <>

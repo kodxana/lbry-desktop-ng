@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import CreditAmount from 'component/common/credit-amount';
 import Icon from 'component/common/icon';
 import { icons } from 'component/common/icon-custom';
 import type { IconProps } from 'component/common/icon-custom';
@@ -12,6 +13,8 @@ import Thumbnail from 'component/common/thumbnail';
 import TruncatedText from 'component/common/truncated-text';
 import FileList from 'component/common/file-list';
 import SettingsRow from 'component/settingsRow/view';
+export const creditDisplay: React.Node = <CreditAmount amount={0.00000001} />;
+export const fiatDisplay: React.Node = <CreditAmount customAmounts={{ amountFiat: 1.25, amountLBC: 100 }} />;
 const Lock = icons[ICONS.LOCK];
 const ref = React.createRef<SVGSVGElement>();
 const onChange = (file: File | void): void => {

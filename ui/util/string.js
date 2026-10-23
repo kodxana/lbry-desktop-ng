@@ -1,10 +1,14 @@
 // @flow
 
-export function toCapitalCase(string: string) {
+export function toCapitalCase(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function toCompactNotation(number: string | number, lang: ?string, minThresholdToApply?: string | number) {
+export function toCompactNotation(
+  number: string | number,
+  lang: ?string,
+  minThresholdToApply?: string | number
+): string {
   const locale = lang || 'en';
 
   if (minThresholdToApply && Number(number) >= Number(minThresholdToApply)) {

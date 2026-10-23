@@ -160,19 +160,41 @@ The shared UI pass replaces internal `React$Node` references with the public
 Icon props preserve optional size/color defaults, nullable titles and SVG refs.
 The icon builder's separate ref parameter is excluded from its ordinary props.
 
-`node build/testUiTypes.js` checks ten actual UI/constants source modules in an
-isolated project with the real classnames/i18n declarations and installed UUID
-package. Valid callers must pass; 15 invalid icon, sticker and component prop
+`node build/testUiTypes.js` checks fourteen actual UI/constants/formatter source
+modules in an isolated project with the real classnames/i18n declarations and installed UUID
+package. Valid callers must pass; 18 invalid icon, sticker and component prop
 contracts must fail. The renderer also mounts every registered icon and checks
 ref forwarding, default/explicit size and color, title removal, unknown-icon
-fallback and free/paid sticker data. The application changes in this pass are
-annotations only; compiling JSX and stripping Flow produces identical runtime
+fallback and free/paid sticker data. The original shared UI pass changed
+annotations only; compiling JSX and stripping Flow produced identical runtime
 JavaScript to the previous revision.
 
-**The application is not yet type-clean.** The full check now reports 2,908
+The utility pass gives the number/credit/byte/string/time helpers and wallet
+snapshot/progress functions explicit contracts. The credit formatter is now
+checked rather than treated as an untyped module. SDK amounts remain strings,
+failed status reads remain nullable, and the balance read still waits for status.
+Credit display text is kept separate from its rendered React content.
+
+`node build/testUtilityTypes.js` checks eight real utility source files with the
+first-party declarations and rejects 18 invalid formatting, progress and wallet
+snapshot contracts. The UI gate also checks credit display props and defaults.
+`node build/testUtilityContracts.js` covers formatter caching, locale changes,
+tiny amounts, display rounding versus transaction serialization, bytes and time.
+Wallet tests exercise pending and rejected status/balance reads; renderer tests
+exercise tiny credits, fiat values, plus signs, raw amounts and missing values.
+
+The formatter types exposed an optional collection-update bid being converted
+into the string `"NaN"`. An absent bid now stays absent in the JSON request,
+which makes the SDK retain the existing claim amount. Explicit bids, including
+zero and tiny amounts, retain their previous serialization; SDK validation is
+unchanged. A payload regression covers manual and background collection updates
+without submitting transactions. It fails against the previous implementation.
+
+**The application is not yet type-clean.** The full check now reports 2,891
 application diagnostics and zero library-definition diagnostics, down from
-3,214 before the shared UI pass (306 fewer). Missing export annotations,
-mismatched state shapes, nullable results, exact-object rules, old utility types
+2,908 before the utility pass (17 fewer, with no newly introduced diagnostics).
+Missing export annotations, mismatched state shapes, nullable results,
+exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration
 check does not mean every dependency API is fully typed.
 
