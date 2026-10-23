@@ -1,7 +1,7 @@
 // @flow
 
 // $FlowFixMe
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import React from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';

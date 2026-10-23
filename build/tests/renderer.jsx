@@ -47,6 +47,7 @@ async function main() {
   if (
     phase === 'uiComponents' ||
     phase === 'accessibleControls' ||
+    phase === 'collections' ||
     phase === 'formsAndDates' ||
     phase === 'markdownEditor' ||
     phase === 'documents' ||
@@ -68,6 +69,7 @@ async function main() {
     const tests = {
       uiComponents: () => require('./uiComponents'),
       accessibleControls: () => require('./accessibleControls'),
+      collections: () => require('./collections'),
       formsAndDates: () => require('./formsAndDates'),
       markdownEditor: () => require('./markdownEditor'),
       documents: () => require('./documents'),

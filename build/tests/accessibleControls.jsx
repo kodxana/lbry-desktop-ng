@@ -201,12 +201,28 @@ async function menus(store, history) {
   let opening = 0;
   const open = async (trigger) => {
     opening++;
-    trigger.focus();
-    await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
-    await waitFor(
-      () => trigger.getAttribute('aria-expanded') === 'true',
-      `Menu must open from keyboard (open ${opening})`
-    );
+    const events = [];
+    const record = (event) =>
+      events.push({
+        type: event.type,
+        key: event.key,
+        target: event.target.id,
+        active: document.activeElement && document.activeElement.id,
+        expanded: trigger.getAttribute('aria-expanded'),
+      });
+    for (const type of ['keydown', 'focusin', 'focusout']) document.addEventListener(type, record, true);
+    try {
+      trigger.focus();
+      await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+      await waitFor(
+        () => trigger.getAttribute('aria-expanded') === 'true',
+        `Menu must open from keyboard (open ${opening})`
+      );
+    } catch (error) {
+      throw new Error(`${error.message}; trigger=${trigger.id}; events=${JSON.stringify(events)}`);
+    } finally {
+      for (const type of ['keydown', 'focusin', 'focusout']) document.removeEventListener(type, record, true);
+    }
     let menu;
     await waitFor(
       () => {
@@ -274,6 +290,44 @@ async function menus(store, history) {
     await ipcRenderer.invoke('fixture-controls-key', 'Escape');
     await closed(triggers[0]);
   }
+  await open(triggers[0]);
+  const requestFrame = window.requestAnimationFrame;
+  const cancelFrame = window.cancelAnimationFrame;
+  const deferred = new Map();
+  let frameId = 0;
+  try {
+    // A temporarily unavailable trigger makes focus restoration retry on the next frame.
+    triggers[0].disabled = true;
+    window.requestAnimationFrame = (callback) => {
+      deferred.set(--frameId, callback);
+      return frameId;
+    };
+    window.cancelAnimationFrame = (id) => {
+      if (id < 0) deferred.delete(id);
+      else cancelFrame.call(window, id);
+    };
+    key(document.activeElement, 'Escape', 27);
+    await waitFor(() => triggers[0].getAttribute('aria-expanded') === 'false', 'Menu closes before delayed focus');
+    assert(deferred.size > 0, 'Closing with a disabled trigger must defer focus restoration');
+    window.requestAnimationFrame = requestFrame;
+    window.cancelAnimationFrame = cancelFrame;
+    triggers[0].disabled = false;
+    menu = await open(triggers[0]);
+    for (const callback of deferred.values()) callback(performance.now());
+    await tick();
+    assert.equal(
+      triggers[0].getAttribute('aria-expanded'),
+      'true',
+      'An earlier close must not dismiss a reopened menu'
+    );
+    assert(menu.contains(document.activeElement), 'Delayed close must not steal focus from the reopened menu');
+  } finally {
+    window.requestAnimationFrame = requestFrame;
+    window.cancelAnimationFrame = cancelFrame;
+    triggers[0].disabled = false;
+  }
+  await ipcRenderer.invoke('fixture-controls-key', 'Escape');
+  await closed(triggers[0]);
   await open(triggers[1]);
   await ipcRenderer.invoke('fixture-controls-click-outside');
   await waitFor(() => triggers[1].getAttribute('aria-expanded') !== 'true', 'Outside click dismisses the menu');

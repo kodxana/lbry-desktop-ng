@@ -7,6 +7,7 @@ import * as MODALS from 'constants/modal_types';
 import * as THUMBNAIL_STATUSES from 'constants/thumbnail_upload_statuses';
 import FileDrop from 'component/fileDrop/view';
 import ModalFileSelection from 'modal/modalFileSelection/view';
+import FileList from 'component/common/file-list';
 import SelectThumbnail from 'component/selectThumbnail/view';
 import ModalConfirmThumbnailUpload from 'modal/modalConfirmThumbnailUpload/view';
 import PublishFile from 'component/publishFile/view';
@@ -81,8 +82,15 @@ export default async function fileUploads(store, history, root) {
   await waitFor(() => button('Accept') && !button('Accept').disabled, 'Chooser did not become ready');
   await ipcRenderer.invoke('fixture-file-focus');
   const radios = document.querySelectorAll('input[type=radio]');
-  radios[1].focus();
-  radios[1].click();
+  assert(radios[0].checked && !radios[1].checked);
+  assert.equal(radios[0].name, radios[1].name, 'The chooser must expose a native radio group');
+  radios[0].focus();
+  await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+  await waitFor(() => radios[1].checked, 'Native arrow navigation must select the next file');
+  assert.equal(document.activeElement, radios[1]);
+  await ipcRenderer.invoke('fixture-controls-key', 'ArrowUp');
+  await waitFor(() => radios[0].checked, 'Native arrow navigation must return to the first file');
+  document.querySelector(`label[for="${radios[1].id}"]`).click();
   await tick();
   button('Accept').click();
   assert.equal(closed, 2);
@@ -92,6 +100,44 @@ export default async function fileUploads(store, history, root) {
   mountChooser([new File(['memory'], 'no-local-path.txt')]);
   await tick();
   assert(button('Accept').disabled, 'Files without a native path must not be submitted');
+  unmount();
+
+  mountChooser([]);
+  await tick();
+  assert(button('Accept').disabled, 'An empty chooser must not submit an old selection');
+  unmount();
+
+  const selections = [];
+  const choose = (file) => selections.push(file);
+  const ignore = () => {};
+  const mountGroups = (choices) =>
+    render(
+      <>
+        <FileList files={choices} onChange={choose} />
+        <FileList files={files} onChange={ignore} />
+      </>,
+      store,
+      history
+    );
+  mountGroups(files);
+  await tick();
+  const groups = document.querySelectorAll('[role="radiogroup"]');
+  const firstGroup = groups[0].querySelectorAll('input');
+  const secondGroup = groups[1].querySelectorAll('input');
+  assert.notEqual(firstGroup[0].name, secondGroup[0].name, 'Independent file lists need independent radio names');
+  assert.equal(new Set(Array.from(document.querySelectorAll('input'), (field) => field.id)).size, 4);
+  firstGroup[1].click();
+  await tick();
+  assert.equal(selections[selections.length - 1], files[1]);
+  assert(secondGroup[0].checked, 'Selecting a file must not clear another list');
+  mountGroups([files[0]]);
+  await waitFor(
+    () => selections[selections.length - 1] === files[0],
+    'Removing the selected row must select the remaining file'
+  );
+  assert(document.querySelector('input').checked);
+  mountGroups([]);
+  await waitFor(() => selections[selections.length - 1] === undefined, 'An emptied file list must clear its selection');
   unmount();
 
   mountDrop();
@@ -184,28 +230,38 @@ export default async function fileUploads(store, history, root) {
   const draft = path.join(root, 'restored-draft.mp4');
   fs.writeFileSync(draft, 'Synthetic draft file');
   const draftUpdates = [];
-  const mountDraft = (filePath) => render(
-    <PublishFile
-      filePath={filePath}
-      mode={PUBLISH_MODES.FILE}
-      name="restored-draft"
-      title="Keep my title"
-      updatePublishForm={(value) => draftUpdates.push(value)}
-      setPublishMode={() => {}}
-      setPrevFileText={() => {}}
-      balance={1}
-    />,
-    store,
-    history
-  );
+  const mountDraft = (filePath) =>
+    render(
+      <PublishFile
+        filePath={filePath}
+        mode={PUBLISH_MODES.FILE}
+        name="restored-draft"
+        title="Keep my title"
+        updatePublishForm={(value) => draftUpdates.push(value)}
+        setPublishMode={() => {}}
+        setPrevFileText={() => {}}
+        balance={1}
+      />,
+      store,
+      history
+    );
   mountDraft(draft);
-  await waitFor(() => document.querySelector('[role=alert]'), 'A draft must explain that its file needs selecting again');
+  await waitFor(
+    () => document.querySelector('[role=alert]'),
+    'A draft must explain that its file needs selecting again'
+  );
   assert(draftUpdates.some((value) => value.filePath === ''));
-  assert(!draftUpdates.some((value) => 'title' in value || 'name' in value), 'Keep draft metadata after denied file access');
+  assert(
+    !draftUpdates.some((value) => 'title' in value || 'name' in value),
+    'Keep draft metadata after denied file access'
+  );
   mountDraft('');
   await ipcRenderer.invoke('fixture-grant-file', draft);
   mountDraft(draft);
-  await waitFor(() => draftUpdates.some((value) => value.fileSize === fs.statSync(draft).size), 'A newly selected draft file must load');
+  await waitFor(
+    () => draftUpdates.some((value) => value.fileSize === fs.statSync(draft).size),
+    'A newly selected draft file must load'
+  );
   assert.equal(document.querySelector('[role=alert]'), null);
   unmount();
   return 'native file drops, duplicate filenames, chooser cancel/accept, pending navigation cleanup, thumbnails and restored draft file selection';

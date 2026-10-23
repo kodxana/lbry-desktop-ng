@@ -1,7 +1,7 @@
 // @flow
 
 // $FlowFixMe
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import { MAIN_CLASS } from 'constants/classnames';
 import type { Node } from 'react';
 import React, { useEffect } from 'react';

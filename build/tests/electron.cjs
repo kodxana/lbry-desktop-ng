@@ -36,6 +36,7 @@ async function run(phase) {
   const window = new BrowserWindow({
     show: false,
     ...(phase === 'uiComponents' ? { width: 1280, height: 800 } : {}),
+    ...(phase === 'collections' ? { width: 1280, height: 900 } : {}),
     webPreferences: {
       nodeIntegration: true,
       // Fixture code creates files and inspects ZIPs. A separate sandbox suite
@@ -93,24 +94,56 @@ app
       );
     });
     ipcMain.handle('fixture-controls-focus', async (event) => {
-      assert.equal(activePhase, 'accessibleControls');
+      assert(['accessibleControls', 'collections'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
       activeWindow.webContents.debugger.attach('1.3');
       await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
     });
     ipcMain.handle('fixture-controls-key', async (event, key) => {
-      assert.equal(activePhase, 'accessibleControls');
+      assert(['accessibleControls', 'collections', 'fileUploads'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
-      const codes = { Tab: 9, Home: 36, End: 35, ArrowDown: 40, Enter: 13, Escape: 27 };
+      const codes = {
+        Tab: 9,
+        Home: 36,
+        End: 35,
+        ArrowDown: 40,
+        ArrowUp: 38,
+        Enter: 13,
+        Escape: 27,
+        ' ': 32,
+      };
       assert(Object.hasOwn(codes, key));
-      for (const type of ['keyDown', 'keyUp']) {
-        await activeWindow.webContents.debugger.sendCommand('Input.dispatchKeyEvent', {
-          type,
-          key,
-          code: key,
-          windowsVirtualKeyCode: codes[key],
-        });
+      const debuggerApi = activeWindow.webContents.debugger;
+      const attached = debuggerApi.isAttached();
+      if (!attached) debuggerApi.attach('1.3');
+      try {
+        for (const type of ['keyDown', 'keyUp']) {
+          await debuggerApi.sendCommand('Input.dispatchKeyEvent', {
+            type,
+            key,
+            code: key === ' ' ? 'Space' : key,
+            windowsVirtualKeyCode: codes[key],
+          });
+        }
+      } finally {
+        if (!attached) debuggerApi.detach();
       }
+    });
+    ipcMain.handle('fixture-collection-mouse', async (event, { type, x, y }) => {
+      assert.equal(activePhase, 'collections');
+      assert.equal(event.sender, activeWindow.webContents);
+      assert(['mousePressed', 'mouseMoved', 'mouseReleased'].includes(type));
+      const [width, height] = activeWindow.getContentSize();
+      assert(Number.isFinite(x) && x >= 0 && x < width);
+      assert(Number.isFinite(y) && y >= 0 && y < height);
+      await activeWindow.webContents.debugger.sendCommand('Input.dispatchMouseEvent', {
+        type,
+        x,
+        y,
+        button: 'left',
+        buttons: type === 'mouseReleased' ? 0 : 1,
+        clickCount: 1,
+      });
     });
     ipcMain.handle('fixture-controls-click-outside', async (event) => {
       assert.equal(activePhase, 'accessibleControls');
@@ -132,7 +165,7 @@ app
       assert(['dark', 'light'].includes(theme));
       fs.writeFileSync(
         path.resolve(`dist/ci/controls-${theme}.png`),
-        (await activeWindow.webContents.capturePage()).toPNG()
+        (await activeWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
       );
     });
     ipcMain.handle('fixture-editor-input', async (event, input) => {
@@ -251,6 +284,7 @@ app
           'restart',
           'uiComponents',
           'accessibleControls',
+          'collections',
           'formsAndDates',
           'markdownEditor',
           'documents',
