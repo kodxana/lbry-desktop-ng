@@ -60,13 +60,14 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     const geometries = new Set();
     const materials = new Set();
     if (this.material) materials.add(this.material);
-    if (this.scene)
-      { this.scene.traverse((child) => {
+    if (this.scene) {
+      this.scene.traverse((child) => {
         if (child.geometry) geometries.add(child.geometry);
         if (child.material) {
           for (const material of [].concat(child.material)) materials.add(material);
         }
-      }); }
+      });
+    }
     geometries.forEach((geometry) => geometry.dispose());
     materials.forEach((material) => material.dispose());
     if (this.renderer) {
@@ -113,8 +114,9 @@ class ThreeViewer extends React.PureComponent<Props, State> {
         if (!child.isMesh) return;
         meshes++;
         const positions = child.geometry.getAttribute('position');
-        if (!positions || positions.count < 3 || !positions.array.every(Number.isFinite))
-          { throw new Error('Invalid model') }
+        if (!positions || positions.count < 3 || !positions.array.every(Number.isFinite)) {
+          throw new Error('Invalid model');
+        }
         // Replace removed Geometry.mergeVertices while retaining smooth-shading controls.
         child.geometry.deleteAttribute('normal');
         const indexed = mergeVertices(child.geometry);
@@ -251,8 +253,18 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     const { error, isReady, isLoading } = this.state;
     return (
       <div className="file-render__viewer file-render__viewer--three">
-        <div ref={(element) => (this.guiContainer = element)} className="gui-container" />
-        <div className="three-viewer" ref={(viewer) => (this.viewer = viewer)}>
+        <div
+          ref={(element) => {
+            this.guiContainer = element;
+          }}
+          className="gui-container"
+        />
+        <div
+          className="three-viewer"
+          ref={(viewer) => {
+            this.viewer = viewer;
+          }}
+        >
           {error && <LoadingScreen status={error} spinner={false} />}
           {isLoading && !error && !isReady && <LoadingScreen status={__('Loading 3D model.')} spinner />}
         </div>

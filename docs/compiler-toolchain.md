@@ -9,9 +9,10 @@ interop, including the default export of `@babel/register`.
 
 The [Babel migration guide](https://babeljs.io/docs/v8-migration) describes the
 removed preset options and changed defaults. Our configuration explicitly keeps
-the previous browser target range, classic React JSX and production JSX metadata
-behavior in both build modes. Named assumptions replace `preset-env`'s `loose`
-option, with strict public/private fields kept separately: fields must not call
+the previous browser target range and production JSX metadata behavior in both
+build modes. The [React 19 upgrade](react-and-material.md) enables the automatic
+JSX transform, required by the new runtime. Named assumptions replace
+`preset-env`'s `loose` option, with strict public/private fields kept separately: fields must not call
 inherited setters, and private members must remain hidden and brand-checked.
 The Video.js override still preserves native classes. Type-only Flow fields
 continue to become own properties initialized to `undefined`.
@@ -31,8 +32,8 @@ The renderer and sandbox fixtures load the same polyfills as the application.
 This does not remove every transitive core-js 2 dependency from the older UI stack.
 
 `node build/testCompiler.js` checks both production and development compilation:
-Flow fields, React JSX spread precedence and keys, field descriptors and private
-brands, async error propagation/generators, object spread, native player
+Flow fields, automatic JSX runtime imports, spread precedence and keys, field
+descriptors and private brands, async error propagation/generators, object spread, native player
 inheritance and lazy imports. Fast Refresh registration is restricted to UI
 modules in development. These semantic checks passed on Babel 7 with both the
 old configuration and the replacement assumptions before the upgrade. The suite
@@ -40,7 +41,7 @@ also loads the devtools installer through `@babel/register`, with explicit
 CommonJS conversion. It runs in the desktop regression suite.
 
 The setup/startup fixtures that compile without the project configuration also
-select classic JSX explicitly. Real renderer tests exercise document/media
+select the automatic JSX runtime explicitly. Real renderer tests exercise document/media
 components, sandboxing and Electron's use of Babel for cached devtools loading.
 The development-app smoke test checks state-preserving Fast Refresh. Babel 7 may
 still be present transitively for dependencies that declare it; those are not

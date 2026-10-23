@@ -58,8 +58,10 @@ export default async function markdownEditor(store, history) {
   };
   try {
     render(<Editor />, store, history);
-    await waitFor(currentEditor, 'Markdown editor did not mount');
-    await tick();
+    await waitFor(
+      () => currentEditor()?.getInputField().getAttribute('aria-label') === 'Post text',
+      'Markdown editor must finish initialization and receive its accessible label'
+    );
     const editor = currentEditor();
     const wrapper = editor.getWrapperElement();
     assert.equal(editor.getValue(), 'Draft ł');

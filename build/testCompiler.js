@@ -91,7 +91,11 @@ if (process.argv[2] !== '--child') {
     assert.equal(element.props.label, 'Backup');
     assert.equal(element.props.children, 'Save');
     assert.equal(element.props.disabled, false);
-    assert(element._source == null, 'Keep the classic JSX production preset in both build modes');
+    assert.match(
+      compile('export const element = <button />;'),
+      /react\/jsx-runtime/,
+      'Both build modes must use the modern JSX runtime required by React 19'
+    );
     const { jsxProps } = evaluate(`
       export const jsxProps = input => <button {...input} label="last" />;
     `);
