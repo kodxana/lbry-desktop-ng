@@ -23,7 +23,7 @@ function scaleToDevicePixelRatio(value) {
 
 type Props = {
   activeChannelClaim: ?ChannelClaim,
-  allComments: Array<Comment>,
+  allComments: Array<LbryComment>,
   totalComments: number,
   topLevelTotalPages: number,
   isFetchingComments: boolean,
@@ -173,8 +173,8 @@ export default function OwnComments(props: Props) {
               ? __('1 comment')
               : __('%total_comments% comments', { total_comments: totalComments })
             : isFetchingComments
-            ? ''
-            : __('No comments')
+              ? ''
+              : __('No comments')
         }
         titleActions={
           <Button

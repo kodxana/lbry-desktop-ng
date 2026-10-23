@@ -1,4 +1,4 @@
-declare type Comment = {
+declare type LbryComment = {
   comment: string, // comment body
   comment_id: string, // sha256 digest
   claim_id: string, // id linking to the claim this comment
@@ -18,6 +18,7 @@ declare type Comment = {
   is_creator: boolean,
   is_global_mod: boolean,
   is_fiat?: boolean,
+  ...
 };
 
 declare type PerChannelSettings = {
@@ -26,22 +27,23 @@ declare type PerChannelSettings = {
   min_tip_amount_comment?: number,
   min_tip_amount_super_chat?: number,
   slow_mode_min_gap?: number,
+  ...
 };
 
 // todo: relate individual comments to their commentId
 declare type CommentsState = {
   commentsByUri: { [string]: string },
-  superChatsByUri: { [string]: { totalAmount: number, comments: Array<Comment> } },
+  superChatsByUri: { [string]: { totalAmount: number, comments: Array<LbryComment>, ... } },
   byId: { [string]: Array<string> }, // ClaimID -> list of fetched comment IDs.
-  totalCommentsById: {}, // ClaimId -> ultimate total (including replies) in commentron.
+  totalCommentsById: { ... }, // ClaimId -> ultimate total (including replies) in commentron.
   repliesByParentId: { [string]: Array<string> }, // ParentCommentID -> list of fetched replies.
-  repliesTotalPagesByParentId: {}, // ParentCommentID -> total number of reply pages for a parentId in commentron.
+  repliesTotalPagesByParentId: { ... }, // ParentCommentID -> total number of reply pages for a parentId in commentron.
   topLevelCommentsById: { [string]: Array<string> }, // ClaimID -> list of fetched top level comments.
   topLevelTotalPagesById: { [string]: number }, // ClaimID -> total number of top-level pages in commentron. Based on COMMENT_PAGE_SIZE_TOP_LEVEL.
   topLevelTotalCommentsById: { [string]: number }, // ClaimID -> total top level comments in commentron.
-  commentById: { [string]: Comment },
+  commentById: { [string]: LbryComment },
   linkedCommentAncestors: { [string]: Array<string> }, // {"linkedCommentId": ["parentId", "grandParentId", ...]}
-  pinnedCommentsById: {}, // ClaimId -> array of pinned comment IDs
+  pinnedCommentsById: { ... }, // ClaimId -> array of pinned comment IDs
   isLoading: boolean,
   isLoadingById: boolean,
   isLoadingByParentId: { [string]: boolean },
@@ -54,21 +56,22 @@ declare type CommentsState = {
   moderationBlockList: ?Array<string>, // @KP rename to "personalBlockList"?
   adminBlockList: ?Array<string>,
   moderatorBlockList: ?Array<string>,
-  moderatorBlockListDelegatorsMap: {[string]: Array<string>}, // {"blockedUri": ["delegatorUri1", ""delegatorUri2", ...]}
+  moderatorBlockListDelegatorsMap: { [string]: Array<string> }, // {"blockedUri": ["delegatorUri1", ""delegatorUri2", ...]}
   fetchingModerationBlockList: boolean,
-  moderationDelegatesById: { [string]: Array<{ channelId: string, channelName: string }> },
+  moderationDelegatesById: { [string]: Array<{ channelId: string, channelName: string, ... }> },
   fetchingModerationDelegates: boolean,
-  moderationDelegatorsById: { [string]: { global: boolean, delegators: { name: string, claimId: string } }},
+  moderationDelegatorsById: { [string]: { global: boolean, delegators: { name: string, claimId: string, ... }, ... } },
   fetchingModerationDelegators: boolean,
-  blockingByUri: {},
-  unBlockingByUri: {},
-  personalTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number } },
-  adminTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number } },
-  moderatorTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number } },
-  togglingForDelegatorMap: {[string]: Array<string>}, // {"blockedUri": ["delegatorUri1", ""delegatorUri2", ...]}
+  blockingByUri: { ... },
+  unBlockingByUri: { ... },
+  personalTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number, ... } },
+  adminTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number, ... } },
+  moderatorTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number, ... } },
+  togglingForDelegatorMap: { [string]: Array<string> }, // {"blockedUri": ["delegatorUri1", ""delegatorUri2", ...]}
   settingsByChannelId: { [string]: PerChannelSettings }, // ChannelID -> settings
   fetchingSettings: boolean,
   fetchingBlockedWords: boolean,
+  ...
 };
 
 declare type CommentReactParams = {
@@ -78,6 +81,7 @@ declare type CommentReactParams = {
   react_type: string,
   clear_types?: string,
   remove?: boolean,
+  ...
 };
 
 declare type ReactionReactParams = {
@@ -89,10 +93,12 @@ declare type ReactionReactParams = {
   type: string,
   channel_id: string,
   channel_name: string,
+  ...
 };
 
 declare type ReactionReactResponse = {
-  Reactions: { [string]: { [string]: number} },
+  Reactions: { [string]: { [string]: number } },
+  ...
 };
 
 declare type ReactionListParams = {
@@ -102,46 +108,52 @@ declare type ReactionListParams = {
   signature?: string,
   signing_ts?: string,
   types?: string,
+  ...
 };
 
 declare type ReactionListResponse = {
   my_reactions: Array<MyReactions>,
   others_reactions: Array<OthersReactions>,
+  ...
 };
 
 declare type CommentListParams = {
-  page: number,             // pagination: which page of results
-  page_size: number,        // pagination: nr of comments to show in a page (max 200)
-  claim_id?: string,        // claim id of claim being commented on
-  channel_name?: string,    // signing channel name of claim (enables 'commentsEnabled' check)
-  channel_id?: string,      // signing channel claim id of claim (enables 'commentsEnabled' check)
+  page: number, // pagination: which page of results
+  page_size: number, // pagination: nr of comments to show in a page (max 200)
+  claim_id?: string, // claim id of claim being commented on
+  channel_name?: string, // signing channel name of claim (enables 'commentsEnabled' check)
+  channel_id?: string, // signing channel claim id of claim (enables 'commentsEnabled' check)
   author_claim_id?: string, // filters comments to just this author
-  parent_id?: string,       // filters comments to those under this thread
-  top_level?: boolean,      // filters to only top level comments
-  hidden?: boolean,         // if true, will show hidden comments as well
-  sort_by?: number,         // @see: ui/constants/comments.js::SORT_BY
+  parent_id?: string, // filters comments to those under this thread
+  top_level?: boolean, // filters to only top level comments
+  hidden?: boolean, // if true, will show hidden comments as well
+  sort_by?: number, // @see: ui/constants/comments.js::SORT_BY
+  ...
 };
 
 declare type CommentListResponse = {
-  items: Array<Comment>,
+  items: Array<LbryComment>,
   page: number,
   page_size: number,
-  total_items: number,          // Grand total for the claim being commented on.
+  total_items: number, // Grand total for the claim being commented on.
   total_filtered_items: number, // Total for filtered queries (e.g. top_level=true, parent_id=xxx, etc.).
   total_pages: number,
   has_hidden_comments: boolean,
+  ...
 };
 
 declare type CommentByIdParams = {
   comment_id: string,
   with_ancestors: boolean,
-}
+  ...
+};
 
 declare type CommentByIdResponse = {
-  item: Comment,
-  items: Comment,
-  ancestors: Array<Comment>,
-}
+  item: LbryComment,
+  items: LbryComment,
+  ancestors: Array<LbryComment>,
+  ...
+};
 
 declare type CommentPinParams = {
   comment_id: string,
@@ -150,20 +162,23 @@ declare type CommentPinParams = {
   remove?: boolean,
   signature: string,
   signing_ts: string,
-}
+  ...
+};
 
 declare type CommentPinResponse = {
-  items: Comment, // "items" is an inherited typo to match SDK. Will be "item" in a new version.
-}
+  items: LbryComment, // "items" is an inherited typo to match SDK. Will be "item" in a new version.
+  ...
+};
 
 declare type CommentEditParams = {
   comment: string,
   comment_id: string,
   signature: string,
   signing_ts: string,
-}
+  ...
+};
 
-declare type CommentEditResponse = Comment
+declare type CommentEditResponse = LbryComment;
 
 declare type CommentAbandonParams = {
   comment_id: string,
@@ -171,6 +186,7 @@ declare type CommentAbandonParams = {
   creator_channel_name?: string,
   channel_id?: string,
   hexdata?: string,
+  ...
 };
 
 declare type CommentCreateParams = {
@@ -180,9 +196,10 @@ declare type CommentCreateParams = {
   signature: string,
   signing_ts: string,
   support_tx_id?: string,
+  ...
 };
 
-declare type SuperListParams = {};
+declare type SuperListParams = { ... };
 
 declare type SuperListResponse = {
   page: number,
@@ -190,8 +207,9 @@ declare type SuperListResponse = {
   total_pages: number,
   total_items: number,
   total_amount: number,
-  items: Array<Comment>,
+  items: Array<LbryComment>,
   has_hidden_comments: boolean,
+  ...
 };
 
 declare type ModerationBlockParams = {
@@ -212,6 +230,7 @@ declare type ModerationBlockParams = {
   // The usual signature stuff
   signature: string,
   signing_ts: string,
+  ...
 };
 
 declare type ModerationBlockResponse = {
@@ -219,6 +238,7 @@ declare type ModerationBlockResponse = {
   banned_channel_id: string,
   all_blocked: boolean,
   banned_from: string,
+  ...
 };
 
 declare type BlockedListArgs = {
@@ -230,6 +250,7 @@ declare type BlockedListArgs = {
   creator_channel_name?: string,
   signature: string,
   signing_ts: string,
+  ...
 };
 
 declare type ModerationAddDelegateParams = {
@@ -239,6 +260,7 @@ declare type ModerationAddDelegateParams = {
   creator_channel_name: string,
   signature: string,
   signing_ts: string,
+  ...
 };
 
 declare type ModerationRemoveDelegateParams = {
@@ -248,6 +270,7 @@ declare type ModerationRemoveDelegateParams = {
   creator_channel_name: string,
   signature: string,
   signing_ts: string,
+  ...
 };
 
 declare type ModerationListDelegatesParams = {
@@ -255,13 +278,15 @@ declare type ModerationListDelegatesParams = {
   creator_channel_name: string,
   signature: string,
   signing_ts: string,
+  ...
 };
 
 declare type ModerationAmIParams = {
   channel_name: string,
   channel_id: string,
   signature: string,
-  signing_ts: string
+  signing_ts: string,
+  ...
 };
 
 declare type SettingsParams = {
@@ -269,6 +294,7 @@ declare type SettingsParams = {
   channel_id: string,
   signature?: string,
   signing_ts?: string,
+  ...
 };
 
 declare type SettingsResponse = {
@@ -279,6 +305,7 @@ declare type SettingsResponse = {
   slow_mode_min_gap: number,
   curse_jar_amount: number,
   filters_enabled?: boolean,
+  ...
 };
 
 declare type UpdateSettingsParams = {
@@ -290,7 +317,8 @@ declare type UpdateSettingsParams = {
   min_tip_amount_comment?: number,
   min_tip_amount_super_chat?: number,
   slow_mode_min_gap?: number,
-}
+  ...
+};
 
 declare type BlockWordParams = {
   channel_name: string,
@@ -298,4 +326,5 @@ declare type BlockWordParams = {
   signature: string,
   signing_ts: string,
   words: string, // CSV list of containing words to block comment on content
+  ...
 };

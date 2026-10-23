@@ -87,12 +87,33 @@ and incorrect calls through a custom definition must fail. It also exercises
 flow-typed's public CLI and verifies that regenerating a modified definition is
 rejected without changing the file.
 
+`node build/testFlowContracts.js` adds a required check for all 31 first-party
+global definition files. It loads the real declarations and action constants in
+an isolated project. Valid SDK balances, download states, claim metadata,
+notifications and search actions must pass; malformed fields and action payloads
+must fail. Browser `Comment`, `Location` and `Notification` types are checked too.
+Third-party `declare module` files are outside this gate; mixed global/module
+files are rejected so new globals cannot silently escape it.
+
+The shared types now explicitly preserve their original open-object contracts
+under Flow's exact-by-default rules. SDK responses may include additional fields,
+but declared fields still have to match their types, including string amounts.
+Domain names no longer overwrite browser types. Action types use checked string
+discriminants, the duplicate comment-pin definition is removed, and the SDK's
+existing `items` response field is preserved. Download flags accept both states;
+the notifications page uses the web notification format; search options use
+their actual keys, with a separate action for mention results. These changes
+affect annotations only, not application behavior.
+
 **The application is not yet type-clean.** The full check now completes, but
 reports thousands of diagnostics in application code and legacy definitions.
 Missing export annotations, exact-object rules, old utility types, casts and
 definitions for earlier React/Redux versions need a separate migration. No
 application errors are baselined, suppressed or converted into a successful exit.
-The fixture test validates the tools; it does not establish whole-app type safety.
+The tool and contract tests do not establish whole-app type safety. This first
+migration batch reduces the full report from 5,694 to 5,307 diagnostics, including
+32 fewer library-definition diagnostics. Legacy npm definitions and application
+export annotations are the next work; inherited `any` types are not all removed.
 Full application checking remains outside the required CI gates and commit hook.
 
 Hermes and the Flow lint rules check syntax and lint behavior. Desktop, renderer,

@@ -7,7 +7,6 @@ import { LIGHTHOUSE_DEFAULT_TYPES } from 'config';
 const defaultSearchTypes = LIGHTHOUSE_DEFAULT_TYPES && LIGHTHOUSE_DEFAULT_TYPES.split(',');
 
 const defaultState: SearchState = {
-  // $FlowFixMe
   options: {
     [SEARCH_OPTIONS.RESULT_COUNT]: SEARCH_PAGE_SIZE,
     [SEARCH_OPTIONS.CLAIM_TYPE]: SEARCH_OPTIONS.INCLUDE_FILES_AND_CHANNELS,
@@ -69,7 +68,7 @@ export default handleActions(
       };
     },
 
-    [ACTIONS.SET_MENTION_SEARCH_RESULTS]: (state: SearchState, action: SearchSuccess): SearchState => ({
+    [ACTIONS.SET_MENTION_SEARCH_RESULTS]: (state: SearchState, action: MentionSearchResults): SearchState => ({
       ...state,
       results: action.data.uris,
       mentionQuery: action.data.query,

@@ -6,4 +6,5 @@ declare type PlayingUri = {
   pathname: string,
   commentId?: string,
   source?: string,
+  ...
 };

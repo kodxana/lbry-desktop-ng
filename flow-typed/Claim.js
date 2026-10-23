@@ -4,14 +4,17 @@ declare type Claim = StreamClaim | ChannelClaim | CollectionClaim;
 
 declare type ChannelClaim = GenericClaim & {
   value: ChannelMetadata,
+  ...
 };
 
 declare type CollectionClaim = GenericClaim & {
   value: CollectionMetadata,
+  ...
 };
 
 declare type StreamClaim = GenericClaim & {
   value: StreamMetadata,
+  ...
 };
 
 declare type GenericClaim = {
@@ -55,7 +58,9 @@ declare type GenericClaim = {
     trending_group: number,
     trending_local: number,
     trending_mixed: number,
+    ...
   },
+  ...
 };
 
 declare type GenericMetadata = {
@@ -63,10 +68,12 @@ declare type GenericMetadata = {
   description?: string,
   thumbnail?: {
     url?: string,
+    ...
   },
   languages?: Array<string>,
   tags?: Array<string>,
-  locations?: Array<Location>,
+  locations?: Array<ClaimLocation>,
+  ...
 };
 
 declare type ChannelMetadata = GenericMetadata & {
@@ -76,11 +83,13 @@ declare type ChannelMetadata = GenericMetadata & {
   email?: string,
   website_url?: string,
   featured?: Array<string>,
+  ...
 };
 
 declare type CollectionMetadata = GenericMetadata & {
   claims: Array<string>,
-}
+  ...
+};
 
 declare type StreamMetadata = GenericMetadata & {
   license?: string, // License "title" ex: Creative Commons, Custom copyright
@@ -94,6 +103,7 @@ declare type StreamMetadata = GenericMetadata & {
     hash?: string,
     name?: string, // file name
     size?: number, // size of file in bytes
+    ...
   },
 
   // Only exists if a stream has a fee
@@ -105,32 +115,39 @@ declare type StreamMetadata = GenericMetadata & {
     duration: number,
     height: number,
     width: number,
+    ...
   },
   audio?: {
     duration: number,
+    ...
   },
   image?: {
     height: number,
     width: number,
+    ...
   },
   software?: {
     os: string,
+    ...
   },
+  ...
 };
 
-declare type Location = {
+declare type ClaimLocation = {
   latitude?: number,
   longitude?: number,
   country?: string,
   state?: string,
   city?: string,
   code?: string,
+  ...
 };
 
 declare type Fee = {
   amount: string,
   currency: string,
   address: string,
+  ...
 };
 
 declare type PurchaseReceipt = {
@@ -143,6 +160,7 @@ declare type PurchaseReceipt = {
   timestamp: number,
   txid: string,
   type: 'purchase',
+  ...
 };
 
 declare type ClaimErrorCensor = {
@@ -165,6 +183,7 @@ declare type ClaimErrorCensor = {
     reposted: number,
     support_amount: string,
     take_over_height: number,
+    ...
   },
   name: string,
   normalized_name: string,
@@ -177,9 +196,11 @@ declare type ClaimErrorCensor = {
   value: {
     public_key: string,
     public_key_id: string,
+    ...
   },
   value_type: string,
-}
+  ...
+};
 
 declare type ClaimActionResolveInfo = {
   [string]: {
@@ -188,8 +209,9 @@ declare type ClaimActionResolveInfo = {
     claimsInChannel: ?number,
     collection: ?CollectionClaim,
     errorCensor: ?ClaimErrorCensor,
+    ...
   },
-}
+};
 
 declare type ChannelUpdateParams = {
   claim_id: string,
@@ -205,7 +227,8 @@ declare type ChannelUpdateParams = {
   languages?: Array<string>,
   locations?: Array<string>,
   blocking?: boolean,
-}
+  ...
+};
 
 declare type ChannelPublishParams = {
   name: string,
@@ -219,7 +242,8 @@ declare type ChannelPublishParams = {
   email?: string,
   tags?: Array<string>,
   languages?: Array<string>,
-}
+  ...
+};
 
 declare type CollectionUpdateParams = {
   claim_id: string,
@@ -236,7 +260,8 @@ declare type CollectionUpdateParams = {
   languages?: Array<string>,
   locations?: Array<string>,
   blocking?: boolean,
-}
+  ...
+};
 
 declare type CollectionPublishParams = {
   name: string,
@@ -248,4 +273,5 @@ declare type CollectionPublishParams = {
   description?: string,
   tags?: Array<string>,
   languages?: Array<string>,
-}
+  ...
+};

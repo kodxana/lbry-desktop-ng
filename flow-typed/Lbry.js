@@ -2,17 +2,21 @@
 declare type StatusResponse = {
   blob_manager: {
     finished_blobs: number,
+    ...
   },
   blockchain_headers: {
     download_progress: number,
     downloading_headers: boolean,
+    ...
   },
   dht: {
     node_id: string,
     peers_in_routing_table: number,
+    ...
   },
   hash_announcer: {
     announce_queue_size: number,
+    ...
   },
   installation_id: string,
   is_running: boolean,
@@ -28,9 +32,11 @@ declare type StatusResponse = {
     stream_manager: boolean,
     upnp: boolean,
     wallet: boolean,
+    ...
   },
   stream_manager: {
     managed_files: number,
+    ...
   },
   upnp: {
     aioupnp_version: string,
@@ -38,7 +44,8 @@ declare type StatusResponse = {
     external_ip: string,
     gateway: string,
     peer_redirect_set: boolean,
-    redirects: {},
+    redirects: { ... },
+    ...
   },
   wallet: ?{
     connected: string,
@@ -54,9 +61,12 @@ declare type StatusResponse = {
       entries_completed: number,
       entries_total: number,
       pending_operations: number,
+      ...
     },
     available_servers: number,
+    ...
   },
+  ...
 };
 
 declare type VersionResponse = {
@@ -67,6 +77,7 @@ declare type VersionResponse = {
   platform: string,
   processor: string,
   python_version: string,
+  ...
 };
 
 declare type BalanceResponse = {
@@ -76,32 +87,43 @@ declare type BalanceResponse = {
     claims: string,
     supports: string,
     tips: string,
+    ...
   },
   total: string,
+  ...
 };
 
 declare type ResolveResponse = {
   // Keys are the url(s) passed to resolve
-  [string]: { error?: {}, stream?: StreamClaim, channel?: ChannelClaim, collection?: CollectionClaim, claimsInChannel?: number },
+  [string]: {
+    error?: { ... },
+    stream?: StreamClaim,
+    channel?: ChannelClaim,
+    collection?: CollectionClaim,
+    claimsInChannel?: number,
+    ...
+  },
 };
 
-declare type GetResponse = FileListItem & { error?: string };
+declare type GetResponse = FileListItem & { error?: string, ... };
 
 declare type GenericTxResponse = {
   height: number,
   hex: string,
-  inputs: Array<{}>,
-  outputs: Array<{}>,
+  inputs: Array<{ ... }>,
+  outputs: Array<{ ... }>,
   total_fee: string,
   total_input: string,
   total_output: string,
   txid: string,
+  ...
 };
 
 declare type PublishResponse = GenericTxResponse & {
   // Only first value in outputs is a claim
   // That's the only value we care about
   outputs: Array<Claim>,
+  ...
 };
 
 declare type ClaimSearchResponse = {
@@ -110,6 +132,7 @@ declare type ClaimSearchResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type ClaimListResponse = {
@@ -118,18 +141,21 @@ declare type ClaimListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type ChannelCreateResponse = GenericTxResponse & {
   outputs: Array<ChannelClaim>,
+  ...
 };
 
 declare type ChannelUpdateResponse = GenericTxResponse & {
   outputs: Array<ChannelClaim>,
+  ...
 };
 
-declare type CommentCreateResponse = Comment;
-declare type CommentUpdateResponse = Comment;
+declare type CommentCreateResponse = LbryComment;
+declare type CommentUpdateResponse = LbryComment;
 
 declare type MyReactions = {
   // Keys are the commentId
@@ -147,21 +173,18 @@ declare type OthersReactions = {
 declare type CommentReactListResponse = {
   my_reactions: Array<MyReactions>,
   others_reactions: Array<OthersReactions>,
+  ...
 };
 
 declare type CommentHideResponse = {
   // keyed by the CommentIds entered
-  [string]: { hidden: boolean },
-};
-
-declare type CommentPinResponse = {
-  // keyed by the CommentIds entered
-  items: Comment,
+  [string]: { hidden: boolean, ... },
 };
 
 declare type CommentAbandonResponse = {
   // keyed by the CommentId given
   abandoned: boolean,
+  ...
 };
 
 declare type ChannelListResponse = {
@@ -170,11 +193,13 @@ declare type ChannelListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type ChannelSignResponse = {
   signature: string,
   signing_ts: string,
+  ...
 };
 
 declare type CollectionCreateResponse = {
@@ -183,7 +208,8 @@ declare type CollectionCreateResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
-}
+  ...
+};
 
 declare type CollectionListResponse = {
   items: Array<Claim>,
@@ -191,21 +217,25 @@ declare type CollectionListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type CollectionResolveResponse = {
   items: Array<Claim>,
   total_items: number,
+  ...
 };
 
 declare type CollectionResolveOptions = {
   claim_id: string,
+  ...
 };
 
 declare type CollectionListOptions = {
   page: number,
   page_size: number,
   resolve?: boolean,
+  ...
 };
 
 declare type FileListResponse = {
@@ -214,6 +244,7 @@ declare type FileListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type TxListResponse = {
@@ -222,6 +253,7 @@ declare type TxListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type SupportListResponse = {
@@ -230,24 +262,28 @@ declare type SupportListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
-declare type BlobListResponse = { items: Array<string> };
+declare type BlobListResponse = { items: Array<string>, ... };
 
 declare type WalletListResponse = Array<{
   id: string,
   name: string,
+  ...
 }>;
 
 declare type WalletStatusResponse = {
   is_encrypted: boolean,
   is_locked: boolean,
   is_syncing: boolean,
+  ...
 };
 
 declare type SyncApplyResponse = {
   hash: string,
   data: string,
+  ...
 };
 
 declare type SupportAbandonResponse = GenericTxResponse;
@@ -258,6 +294,7 @@ declare type StreamListResponse = {
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type StreamRepostOptions = {
@@ -265,16 +302,18 @@ declare type StreamRepostOptions = {
   bid: string,
   claim_id: string,
   channel_id?: string,
+  ...
 };
 
 declare type StreamRepostResponse = GenericTxResponse;
 
 declare type PurchaseListResponse = {
-  items: Array<PurchaseReceipt & { claim: StreamClaim }>,
+  items: Array<PurchaseReceipt & { claim: StreamClaim, ... }>,
   page: number,
   page_size: number,
   total_items: number,
   total_pages: number,
+  ...
 };
 
 declare type PurchaseListOptions = {
@@ -283,6 +322,7 @@ declare type PurchaseListOptions = {
   resolve: boolean,
   claim_id?: string,
   channel_id?: string,
+  ...
 };
 
 //
@@ -296,9 +336,9 @@ declare type LbryTypes = {
   alternateConnectionString: string,
   methodsUsingAlternateConnectionString: Array<string>,
   apiRequestHeaders: { [key: string]: string },
-  setDaemonConnectionString: string => void,
+  setDaemonConnectionString: (string) => void,
   setApiHeader: (string, string) => void,
-  unsetApiHeader: string => void,
+  unsetApiHeader: (string) => void,
   overrides: { [string]: ?Function },
   setOverride: (string, Function) => void,
   // getMediaType: (?string, ?string) => string,
@@ -307,70 +347,71 @@ declare type LbryTypes = {
   stop: () => Promise<string>,
   status: () => Promise<StatusResponse>,
   version: () => Promise<VersionResponse>,
-  resolve: (params: {}) => Promise<ResolveResponse>,
-  get: (params: {}) => Promise<GetResponse>,
-  publish: (params: {}) => Promise<PublishResponse>,
+  resolve: (params: { ... }) => Promise<ResolveResponse>,
+  get: (params: { ... }) => Promise<GetResponse>,
+  publish: (params: { ... }) => Promise<PublishResponse>,
 
-  claim_search: (params: {}) => Promise<ClaimSearchResponse>,
-  claim_list: (params: {}) => Promise<ClaimListResponse>,
-  channel_create: (params: {}) => Promise<ChannelCreateResponse>,
-  channel_update: (params: {}) => Promise<ChannelUpdateResponse>,
-  channel_import: (params: {}) => Promise<string>,
-  channel_list: (params: {}) => Promise<ChannelListResponse>,
-  channel_sign: (params: {}) => Promise<ChannelSignResponse>,
-  stream_abandon: (params: {}) => Promise<GenericTxResponse>,
-  stream_list: (params: {}) => Promise<StreamListResponse>,
-  channel_abandon: (params: {}) => Promise<GenericTxResponse>,
-  support_create: (params: {}) => Promise<GenericTxResponse>,
-  support_list: (params: {}) => Promise<SupportListResponse>,
-  support_abandon: (params: {}) => Promise<SupportAbandonResponse>,
+  claim_search: (params: { ... }) => Promise<ClaimSearchResponse>,
+  claim_list: (params: { ... }) => Promise<ClaimListResponse>,
+  channel_create: (params: { ... }) => Promise<ChannelCreateResponse>,
+  channel_update: (params: { ... }) => Promise<ChannelUpdateResponse>,
+  channel_import: (params: { ... }) => Promise<string>,
+  channel_list: (params: { ... }) => Promise<ChannelListResponse>,
+  channel_sign: (params: { ... }) => Promise<ChannelSignResponse>,
+  stream_abandon: (params: { ... }) => Promise<GenericTxResponse>,
+  stream_list: (params: { ... }) => Promise<StreamListResponse>,
+  channel_abandon: (params: { ... }) => Promise<GenericTxResponse>,
+  support_create: (params: { ... }) => Promise<GenericTxResponse>,
+  support_list: (params: { ... }) => Promise<SupportListResponse>,
+  support_abandon: (params: { ... }) => Promise<SupportAbandonResponse>,
   stream_repost: (params: StreamRepostOptions) => Promise<StreamRepostResponse>,
   purchase_list: (params: PurchaseListOptions) => Promise<PurchaseListResponse>,
   collection_resolve: (params: CollectionResolveOptions) => Promise<CollectionResolveResponse>,
   collection_list: (params: CollectionListOptions) => Promise<CollectionListResponse>,
-  collection_create: (params: {}) => Promise<CollectionCreateResponse>,
-  collection_update: (params: {}) => Promise<CollectionCreateResponse>,
+  collection_create: (params: { ... }) => Promise<CollectionCreateResponse>,
+  collection_update: (params: { ... }) => Promise<CollectionCreateResponse>,
 
   // File fetching and manipulation
-  file_list: (params: {}) => Promise<FileListResponse>,
-  file_delete: (params: {}) => Promise<boolean>,
-  blob_delete: (params: {}) => Promise<string>,
-  blob_list: (params: {}) => Promise<BlobListResponse>,
-  file_set_status: (params: {}) => Promise<any>,
-  file_reflect: (params: {}) => Promise<any>,
+  file_list: (params: { ... }) => Promise<FileListResponse>,
+  file_delete: (params: { ... }) => Promise<boolean>,
+  blob_delete: (params: { ... }) => Promise<string>,
+  blob_list: (params: { ... }) => Promise<BlobListResponse>,
+  file_set_status: (params: { ... }) => Promise<any>,
+  file_reflect: (params: { ... }) => Promise<any>,
 
   // Preferences
-  preference_get: (params?: {}) => Promise<any>,
-  preference_set: (params: {}) => Promise<any>,
+  preference_get: (params?: { ... }) => Promise<any>,
+  preference_set: (params: { ... }) => Promise<any>,
 
   // Commenting
-  comment_update: (params: {}) => Promise<CommentUpdateResponse>,
-  comment_hide: (params: {}) => Promise<CommentHideResponse>,
-  comment_abandon: (params: {}) => Promise<CommentAbandonResponse>,
-  comment_list: (params: {}) => Promise<any>,
-  comment_create: (params: {}) => Promise<any>,
+  comment_update: (params: { ... }) => Promise<CommentUpdateResponse>,
+  comment_hide: (params: { ... }) => Promise<CommentHideResponse>,
+  comment_abandon: (params: { ... }) => Promise<CommentAbandonResponse>,
+  comment_list: (params: { ... }) => Promise<any>,
+  comment_create: (params: { ... }) => Promise<any>,
 
   // Wallet utilities
-  wallet_balance: (params: {}) => Promise<BalanceResponse>,
-  wallet_decrypt: (prams: {}) => Promise<boolean>,
-  wallet_encrypt: (params: {}) => Promise<boolean>,
-  wallet_unlock: (params: {}) => Promise<boolean>,
-  wallet_list: (params: {}) => Promise<WalletListResponse>,
-  wallet_send: (params: {}) => Promise<GenericTxResponse>,
-  wallet_status: (params?: {}) => Promise<WalletStatusResponse>,
-  address_is_mine: (params: {}) => Promise<boolean>,
-  address_unused: (params: {}) => Promise<string>, // New address
-  address_list: (params: {}) => Promise<string>,
-  transaction_list: (params: {}) => Promise<TxListResponse>,
-  txo_list: (params: {}) => Promise<any>,
-  account_set: (params: {}) => Promise<any>,
-  account_list: (params?: {}) => Promise<any>,
+  wallet_balance: (params: { ... }) => Promise<BalanceResponse>,
+  wallet_decrypt: (prams: { ... }) => Promise<boolean>,
+  wallet_encrypt: (params: { ... }) => Promise<boolean>,
+  wallet_unlock: (params: { ... }) => Promise<boolean>,
+  wallet_list: (params: { ... }) => Promise<WalletListResponse>,
+  wallet_send: (params: { ... }) => Promise<GenericTxResponse>,
+  wallet_status: (params?: { ... }) => Promise<WalletStatusResponse>,
+  address_is_mine: (params: { ... }) => Promise<boolean>,
+  address_unused: (params: { ... }) => Promise<string>, // New address
+  address_list: (params: { ... }) => Promise<string>,
+  transaction_list: (params: { ... }) => Promise<TxListResponse>,
+  txo_list: (params: { ... }) => Promise<any>,
+  account_set: (params: { ... }) => Promise<any>,
+  account_list: (params?: { ... }) => Promise<any>,
 
   // Sync
-  sync_hash: (params?: {}) => Promise<string>,
-  sync_apply: (params: {}) => Promise<SyncApplyResponse>,
+  sync_hash: (params?: { ... }) => Promise<string>,
+  sync_apply: (params: { ... }) => Promise<SyncApplyResponse>,
   // syncGet
 
   // The app shouldn't need to do this
   utxo_release: () => Promise<any>,
+  ...
 };

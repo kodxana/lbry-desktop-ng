@@ -6,6 +6,7 @@ declare type Collection = {
   updatedAt: number,
   totalItems?: number,
   sourceId?: string, // if copied, claimId of original collection
+  ...
 };
 
 declare type CollectionState = {
@@ -17,17 +18,19 @@ declare type CollectionState = {
   saved: Array<string>,
   isResolvingCollectionById: { [string]: boolean },
   error?: string | null,
+  ...
 };
 
 declare type CollectionGroup = {
   [string]: Collection,
-}
+};
 
 declare type CollectionEditParams = {
   uris?: Array<string>,
   remove?: boolean,
   replace?: boolean,
-  order?: { from: number, to: number },
+  order?: { from: number, to: number, ... },
   type?: string,
   name?: string,
-}
+  ...
+};

@@ -4,6 +4,7 @@ declare type LbryFirstStatusResponse = {
   Message: string,
   Running: boolean,
   Commit: string,
+  ...
 };
 
 declare type LbryFirstVersionResponse = {
@@ -14,6 +15,7 @@ declare type LbryFirstVersionResponse = {
   platform: string,
   processor: string,
   python_version: string,
+  ...
 };
 /* SAMPLE UPLOAD RESPONSE (FULL)
 "Video": {
@@ -62,18 +64,23 @@ declare type UploadResponse = {
     id: string,
     snippet: {
       channelId: string,
+      ...
     },
     status: {
       uploadStatus: string,
+      ...
     },
+    ...
   },
+  ...
 };
 
 declare type HasYTAuthResponse = {
   HashAuth: boolean,
+  ...
 };
 
-declare type YTSignupResponse = {};
+declare type YTSignupResponse = { ... };
 
 //
 // Types used in the generic LbryFirst object that is exported
@@ -85,7 +92,7 @@ declare type LbryFirstTypes = {
   lbryFirstConnectionString: string,
   apiRequestHeaders: { [key: string]: string },
   setApiHeader: (string, string) => void,
-  unsetApiHeader: string => void,
+  unsetApiHeader: (string) => void,
   overrides: { [string]: ?Function },
   setOverride: (string, Function) => void,
 
@@ -93,7 +100,8 @@ declare type LbryFirstTypes = {
   stop: () => Promise<string>,
   status: () => Promise<StatusResponse>,
   version: () => Promise<VersionResponse>,
-  upload: any => Promise<?UploadResponse>,
-  hasYTAuth: string => Promise<HasYTAuthResponse>,
+  upload: (any) => Promise<?UploadResponse>,
+  hasYTAuth: (string) => Promise<HasYTAuthResponse>,
   ytSignup: () => Promise<YTSignupResponse>,
+  ...
 };

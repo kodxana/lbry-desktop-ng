@@ -7,24 +7,24 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After merged PR #55 (`b03916f18bb557630b1732724bcf46ad790b44c4`):
+After merged PR #56 (`9efa640cad40f3653d8573c421904a929c9b5c32`):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
-| Upgraded to a newer resolved version   |    90 |
+| Upgraded to a newer resolved version   |    92 |
 | Removed or replaced                    |    71 |
-| Still at the original resolved version |     8 |
+| Still at the original resolved version |     6 |
 | Total                                  |   169 |
 
-That is **95.3% upgraded, removed or replaced** (161/169). Strict version upgrades
-alone account for 53.3% (90/169). This is package-count progress, not a measure of
+That is **96.4% upgraded, removed or replaced** (163/169). Strict version upgrades
+alone account for 54.4% (92/169). This is package-count progress, not a measure of
 remaining engineering effort, security or release readiness. The current direct
 dependency set has 149 packages, including 51 additions/replacements.
 
-This batch upgrades Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
-Once merged, the same measure becomes **96.4%** (163/169): 92 upgraded,
-71 removed/replaced and six unchanged. The checker runs again, but the application
-still needs a type migration; see [Flow tooling](lint-tooling.md#flow-is-separate).
+PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
+The checker runs again. The first migration batch checks all first-party global
+definitions, but the full application still has type errors; see
+[Flow tooling](lint-tooling.md#flow-is-separate).
 
 The six unchanged packages are country-data, ffmpeg-probe, localforage,
 preprocess-loader, redux-persist-transform-compress and videojs-event-tracking.

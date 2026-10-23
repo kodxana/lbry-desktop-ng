@@ -4,11 +4,12 @@ declare type HomepageObject = {
   options: any,
   route: string,
   title: string,
+  ...
 };
 
 declare type HomepageData = {
   [string]: HomepageObject,
-  default: any => any,
+  default: (any) => any,
 };
 
 declare type RowDataItem = {
@@ -23,7 +24,9 @@ declare type RowDataItem = {
     limitClaimsPerChannel?: number,
     pageSize?: number,
     languages?: Array<string>,
+    ...
   },
   route?: string,
   hideForUnauth?: boolean,
+  ...
 };

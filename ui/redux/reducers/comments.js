@@ -71,7 +71,7 @@ export default handleActions(
     }),
 
     [ACTIONS.COMMENT_CREATE_COMPLETED]: (state: CommentsState, action: any): CommentsState => {
-      const { comment, claimId, uri }: { comment: Comment, claimId: string, uri: string } = action.data;
+      const { comment, claimId, uri }: { comment: LbryComment, claimId: string, uri: string } = action.data;
 
       const commentById = Object.assign({}, state.commentById);
       const byId = Object.assign({}, state.byId);
@@ -229,17 +229,8 @@ export default handleActions(
     },
 
     [ACTIONS.COMMENT_LIST_COMPLETED]: (state: CommentsState, action: any) => {
-      const {
-        comments,
-        parentId,
-        totalItems,
-        totalFilteredItems,
-        totalPages,
-        claimId,
-        uri,
-        disabled,
-        creatorClaimId,
-      } = action.data;
+      const { comments, parentId, totalItems, totalFilteredItems, totalPages, claimId, uri, disabled, creatorClaimId } =
+        action.data;
 
       const commentById = Object.assign({}, state.commentById);
       const byId = Object.assign({}, state.byId);
