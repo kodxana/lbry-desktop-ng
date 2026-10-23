@@ -105,7 +105,10 @@ export default function TextareaWithSuggestions(props: Props) {
   const isMention = suggestionValue && !suggestionValue.isEmote;
   const invalidTerm = suggestionTerm && isMention && suggestionTerm.charAt(1) === ':';
 
-  const additionalOptions = { isBackgroundSearch: false, [SEARCH_OPTIONS.CLAIM_TYPE]: SEARCH_OPTIONS.INCLUDE_CHANNELS };
+  const additionalOptions: SearchOptions = {
+    isBackgroundSearch: false,
+    [SEARCH_OPTIONS.CLAIM_TYPE]: SEARCH_OPTIONS.INCLUDE_CHANNELS,
+  };
   const { results, loading } = useLighthouse(debouncedTerm, showMature, SEARCH_SIZE, additionalOptions, 0);
   const stringifiedResults = JSON.stringify(results);
 

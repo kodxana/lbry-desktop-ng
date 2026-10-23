@@ -76,7 +76,7 @@ export default function WunderBarSuggestions(props: Props) {
   const [term, setTerm] = React.useState(queryFromUrl);
   const [debouncedTerm, setDebouncedTerm] = React.useState('');
   const searchSize = isMobile ? 20 : 5;
-  const additionalOptions = channelsOnly
+  const additionalOptions: SearchOptions = channelsOnly
     ? { isBackgroundSearch: false, [SEARCH_OPTIONS.CLAIM_TYPE]: SEARCH_OPTIONS.INCLUDE_CHANNELS }
     : {};
   const { results, loading } = useLighthouse(debouncedTerm, showMature, searchSize, additionalOptions, 0);
@@ -120,7 +120,7 @@ export default function WunderBarSuggestions(props: Props) {
 
     if (customSelectAction) {
       // Give them full results, as our resolved one might truncate the claimId.
-      customSelectAction(results ? results.find((r) => r.startsWith(value)) : '');
+      customSelectAction(results ? results.find((r) => r.startsWith(value)) || '' : '');
       return;
     }
 

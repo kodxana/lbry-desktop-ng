@@ -14,6 +14,8 @@ import TextareaWithSuggestions from 'component/textareaWithSuggestions/view';
 import Expandable from 'component/expandable/view';
 import Tooltip from 'component/common/tooltip';
 import { lighthouse } from 'redux/actions/search';
+import SearchOptionsView from 'component/searchOptions/view';
+import useLighthouse from 'effects/use-lighthouse';
 import * as ACTIONS from 'constants/action_types';
 import { render, unmount, tick, waitFor, submit } from './helpers';
 import 'scss/third-party.scss';
@@ -572,6 +574,94 @@ async function searchBar(store, history) {
   }
 }
 
+async function searchContracts(store, history) {
+  const changed = [];
+  const options = {
+    size: 20,
+    claimType: 'file',
+    video: true,
+    audio: false,
+    image: true,
+    application: false,
+    text: true,
+  };
+  const show = (simple) =>
+    render(
+      <SearchOptionsView
+        options={options}
+        simple={simple}
+        expanded
+        setSearchOption={(key, value) => changed.push([key, value])}
+        toggleSearchExpanded={noop}
+      />,
+      store,
+      history
+    );
+  show(true);
+  assert(!document.querySelector('input[id="image"]'), 'Simplified filters omit Image');
+  assert(!document.querySelector('input[id="application"]'), 'Simplified filters omit Other');
+  assert(document.querySelector('input[id="video"]').checked);
+  document.querySelector('input[id="audio"]').click();
+  assert.deepEqual(changed.at(-1), ['audio', true]);
+  show(false);
+  assert(document.querySelector('input[id="image"]'), 'Full filters regain Image after a simplified render');
+  assert(document.querySelector('input[id="application"]'), 'Full filters regain Other after a simplified render');
+  assert.equal(document.querySelectorAll('.media-types input').length, 5);
+  show(true);
+  unmount();
+  show(false);
+  assert.equal(document.querySelectorAll('.media-types input').length, 5, 'Remounting keeps the full media list');
+  unmount();
+
+  const originalSearch = lighthouse.search;
+  const requests = [];
+  let snapshot;
+  lighthouse.search = (query) => new Promise((resolve, reject) => requests.push({ query, resolve, reject }));
+  // eslint-disable-next-line react/prop-types -- Runtime fixture for the typed search hook.
+  function Probe({ query }) {
+    snapshot = useLighthouse(query, false, 5, { isBackgroundSearch: true }, 0);
+    return <span>{snapshot.loading ? 'Loading' : 'Ready'}</span>;
+  }
+  try {
+    render(<Probe query="" />, store, history);
+    assert.equal(snapshot.results, undefined);
+    assert.equal(requests.length, 0, 'Empty suggestions do not make requests');
+    render(<Probe query="first" />, store, history);
+    await waitFor(() => requests.length === 1 && snapshot.loading === true, 'Search must enter its loading state');
+    assert.equal(snapshot.results, null);
+    assert.equal(requests[0].query, 's=first&size=5&from=0&nsfw=false');
+    render(<Probe query="second" />, store, history);
+    await waitFor(() => requests.length === 2, 'Changing the query must start the next search');
+    requests[0].resolve({ body: [{ name: 'stale', claimId: 'abc' }], poweredBy: null });
+    await tick();
+    assert.equal(snapshot.results, null, 'An old response must not overwrite current results');
+    requests[1].resolve({
+      body: [
+        { name: '@channel', claimId: 'abc' },
+        { name: 'bad', claimId: 'zz' },
+      ],
+      poweredBy: null,
+    });
+    await waitFor(() => snapshot.loading === false, 'Successful search must finish loading');
+    assert.deepEqual(snapshot.results, ['lbry://@channel#abc'], 'Suggestions retain valid LBRY links');
+    render(<Probe query="failed" />, store, history);
+    await waitFor(() => requests.length === 3, 'A later search must be issued');
+    requests[2].reject(new Error('Fixture search failure'));
+    await waitFor(() => snapshot.loading === false, 'Failed search must finish loading');
+    assert.equal(snapshot.results, null);
+    render(<Probe query="unmounted" />, store, history);
+    await waitFor(() => requests.length === 4, 'The final request must start before unmounting');
+    unmount();
+    const previous = snapshot;
+    requests[3].resolve({ body: [{ name: 'late', claimId: 'abc' }], poweredBy: null });
+    await tick();
+    assert.equal(snapshot, previous, 'A response after unmount must not render again');
+  } finally {
+    unmount();
+    lighthouse.search = originalSearch;
+  }
+}
+
 async function suggestions(store, history) {
   const uri = 'lbry://@fixture#' + 'a'.repeat(40);
   const channel = {
@@ -759,8 +849,9 @@ export default async function accessibleControls(store, history) {
   await linkedCards(store, history);
   await blockedChannels(store, history);
   await searchBar(store, history);
+  await searchContracts(store, history);
   await suggestions(store, history);
   await tooltips(store, history);
   await measurement(store, history);
-  return 'accessible controls: tabs, menus, search, LBRY links, emoji mouse/Enter/Tab/Escape, input refs/props, multiline/free text, tooltip hover/focus/dismissal and measured descriptions';
+  return 'accessible controls: tabs, menus, search filters/loading/stale responses, LBRY links, emoji mouse/Enter/Tab/Escape, input refs/props, multiline/free text, tooltip hover/focus/dismissal and measured descriptions';
 }

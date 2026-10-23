@@ -21,8 +21,10 @@ declare type SearchOptions = {
 };
 
 declare type SearchState = {
+  // Search-option updates read this optional query; the reducer does not populate it.
+  searchQuery?: string,
   options: SearchOptions,
-  resultsByQuery: { [string]: { uris: Array<string>, recsys: string, ... } },
+  resultsByQuery: { [string]: { uris: Array<string>, recsys: string | null, ... } },
   results: Array<string>,
   // The reducer's size && comparison also preserves zero and omitted sizes.
   hasReachedMaxResultsLength: { [string]: boolean | 0 | void },
@@ -38,7 +40,7 @@ declare type SearchSuccess = {
     from: number | void,
     size: number | void,
     uris: Array<string>,
-    recsys: string,
+    recsys: string | null,
     ...
   },
   ...

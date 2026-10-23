@@ -4,15 +4,12 @@ import { SEARCH_OPTIONS } from 'constants/search';
 const DEFAULT_SEARCH_RESULT_FROM = 0;
 const DEFAULT_SEARCH_SIZE = 20;
 
-export function parseQueryParams(queryString: string) {
+export function parseQueryParams(queryString: string): { [string]: string | void } {
   if (queryString === '') return {};
-  const parts = queryString
-    .split('?')
-    .pop()
-    .split('&')
-    .map((p) => p.split('='));
+  const query = queryString.slice(queryString.lastIndexOf('?') + 1);
+  const parts = query.split('&').map((p) => p.split('='));
 
-  const params = {};
+  const params: { [string]: string | void } = {};
   parts.forEach((array) => {
     const [first, second] = array;
     params[first] = second;
@@ -21,7 +18,7 @@ export function parseQueryParams(queryString: string) {
 }
 
 // https://stackoverflow.com/questions/5999118/how-can-i-add-or-update-a-query-string-parameter
-export function updateQueryParam(uri: string, key: string, value: string) {
+export function updateQueryParam(uri: string, key: string, value: string): string {
   const re = new RegExp('([?&])' + key + '=.*?(&|$)', 'i');
   const separator = uri.includes('?') ? '&' : '?';
   if (uri.match(re)) {
@@ -31,8 +28,8 @@ export function updateQueryParam(uri: string, key: string, value: string) {
   }
 }
 
-export const getSearchQueryString = (query: string, options: any = {}) => {
-  const isSurroundedByQuotes = (str) => str[0] === '"' && str[str.length - 1] === '"';
+export const getSearchQueryString = (query: string, options: SearchOptions = {}): string => {
+  const isSurroundedByQuotes = (str: string): boolean => str[0] === '"' && str[str.length - 1] === '"';
   const encodedQuery = encodeURIComponent(query);
   const queryParams = [
     options.exact && !isSurroundedByQuotes(encodedQuery) ? `s="${encodedQuery}"` : `s=${encodedQuery}`,
@@ -54,7 +51,6 @@ export const getSearchQueryString = (query: string, options: any = {}) => {
       if (!claimType.includes(SEARCH_OPTIONS.INCLUDE_CHANNELS)) {
         queryParams.push(
           `mediaType=${[
-            SEARCH_OPTIONS.MEDIA_FILE,
             SEARCH_OPTIONS.MEDIA_AUDIO,
             SEARCH_OPTIONS.MEDIA_VIDEO,
             SEARCH_OPTIONS.MEDIA_TEXT,
@@ -76,7 +72,7 @@ export const getSearchQueryString = (query: string, options: any = {}) => {
     }
   }
 
-  const additionalOptions = {};
+  const additionalOptions: { [string]: string | boolean } = {};
   const { related_to } = options;
   const { nsfw } = options;
   const { free_only } = options;
@@ -85,12 +81,10 @@ export const getSearchQueryString = (query: string, options: any = {}) => {
   if (free_only) additionalOptions[SEARCH_OPTIONS.PRICE_FILTER_FREE] = true;
   if (nsfw === false) additionalOptions[SEARCH_OPTIONS.INCLUDE_MATURE] = false;
 
-  if (additionalOptions) {
-    Object.keys(additionalOptions).forEach((key) => {
-      const option = additionalOptions[key];
-      queryParams.push(`${key}=${option}`);
-    });
-  }
+  Object.keys(additionalOptions).forEach((key) => {
+    const option = additionalOptions[key];
+    queryParams.push(`${key}=${String(option)}`);
+  });
 
   return queryParams.join('&');
 };

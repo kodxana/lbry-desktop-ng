@@ -38,14 +38,14 @@ const SORT_BY = {
 
 type Props = {
   setSearchOption: (string, boolean | string | number) => void,
-  options: {},
+  options: SearchOptions,
   simple: boolean,
   expanded: boolean,
   toggleSearchExpanded: () => void,
-  onSearchOptionsChanged: (string) => void,
+  onSearchOptionsChanged?: (string) => void,
 };
 
-const SearchOptions = (props: Props) => {
+const SearchOptionsView = (props: Props): React.Node => {
   const { options, simple, setSearchOption, expanded, toggleSearchExpanded, onSearchOptionsChanged } = props;
 
   const stringifiedOptions = JSON.stringify(options);
@@ -56,11 +56,6 @@ const SearchOptions = (props: Props) => {
     return claimType.includes(SEARCH_OPTIONS.INCLUDE_CHANNELS);
   }, [stringifiedOptions]);
 
-  if (simple) {
-    delete TYPES_ADVANCED[SEARCH_OPTIONS.MEDIA_APPLICATION];
-    delete TYPES_ADVANCED[SEARCH_OPTIONS.MEDIA_IMAGE];
-  }
-
   React.useEffect(() => {
     // We no longer let the user set the search results count, but the value
     // will be in local storage for existing users. Override that.
@@ -69,14 +64,14 @@ const SearchOptions = (props: Props) => {
     }
   }, []);
 
-  function updateSearchOptions(option, value) {
+  function updateSearchOptions(option: string, value: boolean | string | number): void {
     setSearchOption(option, value);
     if (onSearchOptionsChanged) {
       onSearchOptionsChanged(option);
     }
   }
 
-  function addRow(label: string, value: any) {
+  function addRow(label: string, value: React.Node): React.Node {
     return (
       <tr>
         <td>
@@ -87,7 +82,7 @@ const SearchOptions = (props: Props) => {
     );
   }
 
-  const OBJ_TO_OPTION_ELEM = (obj) => {
+  const OBJ_TO_OPTION_ELEM = (obj: { [string]: string }): Array<React.Node> => {
     return Object.entries(obj).map((x) => {
       return (
         <option key={x[0]} value={x[0]}>
@@ -129,21 +124,26 @@ const SearchOptions = (props: Props) => {
       </div>
       {options[SEARCH_OPTIONS.CLAIM_TYPE] === SEARCH_OPTIONS.INCLUDE_FILES && (
         <div className="media-types">
-          {Object.entries(TYPES_ADVANCED).map((t) => {
-            const option = t[0];
-            return (
-              <FormField
-                key={option}
-                name={option}
-                type="checkbox"
-                blockWrap={false}
-                disabled={options[SEARCH_OPTIONS.CLAIM_TYPE] !== SEARCH_OPTIONS.INCLUDE_FILES}
-                label={t[1]}
-                checked={!isFilteringByChannel && options[option]}
-                onChange={() => updateSearchOptions(option, !options[option])}
-              />
-            );
-          })}
+          {Object.entries(TYPES_ADVANCED)
+            .filter(
+              ([option]) =>
+                !simple || (option !== SEARCH_OPTIONS.MEDIA_APPLICATION && option !== SEARCH_OPTIONS.MEDIA_IMAGE)
+            )
+            .map((t) => {
+              const option = t[0];
+              return (
+                <FormField
+                  key={option}
+                  name={option}
+                  type="checkbox"
+                  blockWrap={false}
+                  disabled={options[SEARCH_OPTIONS.CLAIM_TYPE] !== SEARCH_OPTIONS.INCLUDE_FILES}
+                  label={t[1]}
+                  checked={!isFilteringByChannel && options[option]}
+                  onChange={() => updateSearchOptions(option, !options[option])}
+                />
+              );
+            })}
         </div>
       )}
     </>
@@ -238,4 +238,4 @@ const SearchOptions = (props: Props) => {
   );
 };
 
-export default SearchOptions;
+export default SearchOptionsView;

@@ -9,11 +9,11 @@ export default function useLighthouse(
   query: string,
   showMature: boolean,
   size: number = 5,
-  additionalOptions: any = {},
+  additionalOptions: SearchOptions = {},
   throttleMs: number = 500
-) {
-  const [results, setResults] = React.useState();
-  const [loading, setLoading] = React.useState();
+): { results: ?Array<string>, loading: boolean | void } {
+  const [results, setResults] = React.useState<?Array<string>>();
+  const [loading, setLoading] = React.useState<boolean | void>();
   const queryString = query ? getSearchQueryString(query, { nsfw: showMature, size, ...additionalOptions }) : '';
   const throttledQuery = useThrottle(queryString, throttleMs);
 
