@@ -105,44 +105,57 @@ the notifications page uses the web notification format; search options use
 their actual keys, with a separate action for mention results. These changes
 affect annotations only, not application behavior.
 
-`node build/testDependencyTypes.js` checks the maintained definitions for React
-Redux 9.3.0, Express 5.3.0, localForage 1.10.0, Prettier 3.9.10, classnames 2.5.1
-and Chalk 6.0.1. It loads the real definitions, rejects duplicate declarations
-and requires a contract review when one of these package versions changes.
-Valid connected components, own props, thunk results, hooks, middleware and
-asynchronous APIs must pass. Twenty-eight incorrect contracts must fail,
-including removed APIs and unsafe assumptions about nullable storage results.
-The duplicate untyped classnames override is removed.
+`node build/testDependencyTypes.js` loads all 88 checked-in declaration files,
+rejects duplicate module declarations and checks contracts for nine packages:
+React Redux 9.3.0, Express 5.3.0, localForage 1.10.0, Prettier 3.9.10,
+classnames 2.5.1, Chalk 6.0.1, Reselect 5.3.0, webpack 5.111.1 and
+react-modal 3.16.3. These package versions require a contract review on upgrade.
+Valid application patterns must pass and 53 incorrect contracts must fail,
+including removed APIs, nullable storage results, wrong selector arguments,
+unsafe compiler callbacks and invalid modal props. The Reselect 3, webpack 4
+and older modal definitions are replaced. Seven more duplicate untyped
+overrides are removed; other inherited untyped package stubs remain.
 
-`node build/testDependencyContracts.js` checks the corresponding behavior against
-the installed packages: connected Redux components and thunk results, Prettier's
-promises, Express async error forwarding, wildcard parameters and listen errors,
-and localForage's configuration, callback and storage results. Storage runs in a
-private in-memory browser fixture; HTTP binds only to loopback on an assigned
-port. Both tests run in the required Windows and Linux desktop suite.
+`node build/testDependencyContracts.js` checks connected Redux components and
+thunk results, Prettier's promises, Express async error forwarding, wildcard
+parameters and listen errors, and localForage's configuration, callback and
+storage results. Storage runs in a private in-memory browser fixture; HTTP
+binds only to loopback on an assigned port.
+
+`node build/testRemainingDependencyContracts.js` checks the installed Reselect
+and webpack APIs: string wallet balances, composed selectors, required and
+optional parameters, cache invalidation and eviction, compiler output,
+multiple compilers, missing-entry errors, fatal errors without stats, invalid
+configuration and compiler shutdown. The renderer suite checks modal open/close
+callbacks, their actual elements and close events, focus restoration and
+Escape/overlay/confirmation choices. These checks run in Windows and Linux CI.
 
 The declarations cover the desktop's APIs and the related contracts exercised by
 these tests. Express includes a structural subset of HTTP types because Flow
 no longer supplies Node declarations. Prettier covers formatting/configuration,
 not plugin AST/printer authoring. This is not complete coverage of every upstream
-API. In particular, localForage's implementation is the source of truth where
+API. Reselect covers the desktop's selectors with up to five inputs and three
+arguments, using its built-in memoizers. Webpack covers the desktop compiler
+and configuration surface, not arbitrary plugin authoring. Extend these
+declarations and their fixtures when new callers need more. In particular,
+localForage's implementation is the source of truth where
 its bundled TypeScript definitions differ: missing keys are nullable, `clear`
 resolves without a value, failure callbacks omit the result, undefined writes
 become null, and configuration can return an error or a promise.
 
-**The application is not yet type-clean.** The full check now completes, but
-reports thousands of diagnostics in application code and legacy definitions.
-Missing export annotations, exact-object rules, old utility types, casts and
-definitions for earlier React/Redux versions need a separate migration. No
-application errors are baselined, suppressed or converted into a successful exit.
-The tool and contract tests do not establish whole-app type safety. The first
-migration batch reduced the report from 5,694 to 5,307 diagnostics. The dependency
-batch reduces it to 5,031, with library-definition diagnostics falling from 294
-to 24. Remaining legacy definitions (including webpack and reselect), duplicate
-declarations and application export annotations need further work; inherited
-`any` types are not all removed. These counts describe this revision, not a
-baseline that permits new errors.
-Full application checking remains outside the required CI gates and commit hook.
+**The application is not yet type-clean.** The full check reports 5,051
+application diagnostics and zero library-definition diagnostics, compared with
+5,031 total and 24 library diagnostics before this batch. Stronger selector
+contracts expose additional application errors, including mismatched state
+shapes, nullable results and incorrect return annotations. Missing export
+annotations, exact-object rules, old utility types and casts also need work.
+Inherited `any` stubs remain, so a clean declaration check does not mean every
+dependency API is fully typed.
+
+No application errors are baselined, suppressed or converted into a successful
+exit. These counts describe this revision, not a baseline that permits new
+errors. Full application checking remains outside the required CI gates and
+commit hook; the tool and contract tests do not establish whole-app type safety.
 
 Hermes and the Flow lint rules check syntax and lint behavior. Desktop, renderer,
 native password, SDK backup/encryption and installed-upgrade regressions remain
@@ -160,5 +173,8 @@ required for dependency upgrades.
 - [React Redux connect API](https://redux.js.org/react-redux/api/connect)
 - [Express 5 API](https://expressjs.com/en/5x/api/)
 - [localForage implementation](https://github.com/localForage/localForage/tree/1.10.0/src)
+- [Reselect selector API](https://redux.js.org/reselect/api/createselector/)
+- [webpack Node API](https://webpack.js.org/api/node/)
+- [react-modal props](https://reactcommunity.org/react-modal/)
 - [Husky setup](https://typicode.github.io/husky/get-started.html)
 - [lint-staged configuration and staging behavior](https://github.com/lint-staged/lint-staged)
