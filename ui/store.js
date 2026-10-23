@@ -6,7 +6,8 @@ import { createFilter, createBlacklistFilter } from 'redux-persist-transform-fil
 import localForage from 'localforage';
 import { createStore, applyMiddleware, compose } from 'redux';
 import { thunk } from 'redux-thunk';
-import { createMemoryHistory, createBrowserHistory } from 'history';
+import { createBrowserHistory } from 'history';
+import createDesktopHistory from 'util/desktop-history';
 import { createReduxHistoryContext } from 'redux-first-history';
 import createRootReducer from './reducers';
 import Lbry from 'lbry';
@@ -115,10 +116,7 @@ const persistOptions = {
 
 let baseHistory;
 // @if TARGET='app'
-baseHistory = createMemoryHistory({
-  initialEntries: [generateInitialUrl(window.location.hash)],
-  initialIndex: 0,
-});
+baseHistory = createDesktopHistory(generateInitialUrl(window.location.hash));
 // @endif
 // @if TARGET='web'
 baseHistory = createBrowserHistory();

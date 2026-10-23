@@ -29,11 +29,7 @@ function CollectionMenuList(props: Props) {
     if (playNextUri && doShuffle) {
       setDoShuffle(false);
       const navigateUrl = formatLbryUrlForWeb(playNextUri);
-      push({
-        pathname: navigateUrl,
-        search: generateListSearchUrlParams(collectionId),
-        state: { forceAutoplay: true },
-      });
+      push({ pathname: navigateUrl, search: generateListSearchUrlParams(collectionId) }, { forceAutoplay: true });
     }
   }, [collectionId, doShuffle, playNextUri, push]);
 

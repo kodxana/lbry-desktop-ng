@@ -13,8 +13,9 @@ retained rather than rewritten as part of this dependency upgrade.
 
 The store now owns navigation from startup, including while the SDK setup UI
 is mounted. Redux history actions keep their existing names. The exported
-history retains live memory-history `index` and `entries` getters for the back
-and forward menus, mouse buttons and page titles. React Router 8.5.0 receives
+history exposes the live memory index and separate menu entries for the back
+and forward menus, mouse buttons and page titles. History 5's immutable locations
+are never used to store titles. React Router 8.5.0 receives
 the Redux location and action through its public `Router` API. The former
 Router 5 private-context adapter is removed. There is still one authoritative
 navigation state, with no synchronous rendering override in the application.

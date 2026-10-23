@@ -54,7 +54,7 @@ class ErrorBoundary extends React.Component<Props, State> {
     const { history } = this.props;
 
     // use history.replace instead of history.push so the user can't click back to the errored page
-    history.replace('');
+    history.replace('/');
     this.setState({ hasError: false });
   }
 

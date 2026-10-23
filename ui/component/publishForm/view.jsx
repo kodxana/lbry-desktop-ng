@@ -361,7 +361,7 @@ function PublishForm(props: Props) {
     if (!_uploadType) return;
     const newParams = new URLSearchParams();
     newParams.set(TYPE_PARAM, mode.toLowerCase());
-    replace({ search: newParams.toString() });
+    replace({ search: '?' + newParams.toString() });
   }, [mode, _uploadType]);
 
   // @if TARGET='app'

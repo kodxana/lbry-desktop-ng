@@ -9,6 +9,7 @@ import { ipcRenderer } from 'electron';
 import ReactModal from 'react-modal';
 import NavigationButton from 'component/navigationButton/view';
 import Button from 'component/button/view';
+import CollectionActions from 'component/collectionActions/view';
 import { AppRoutes } from 'component/router/view';
 import usePersistedState from 'effects/use-persisted-state';
 import { WELCOME_VERSION } from 'config';
@@ -102,11 +103,17 @@ async function navigation(store, history) {
   assert.equal(history.length, length, 'Replace must not append to the back stack');
   store.dispatch(goBack());
   assert.equal(history.location.pathname, '/first');
-  const stopBlocking = history.block(() => false);
+  let pendingNavigation;
+  const stopBlocking = history.block((transition) => {
+    pendingNavigation = transition;
+  });
   const blocked = history.location;
   store.dispatch(push('/blocked'));
   assert.equal(history.location, blocked, 'Blocked navigation must not change Redux');
+  assert.equal(pendingNavigation.location.pathname, '/blocked');
   stopBlocking();
+  pendingNavigation.retry();
+  assert.equal(history.location.pathname, '/blocked', 'Accepted navigation must retry through Redux');
   let visits = 0;
   const stop = history.listen(() => visits++);
   history.push('/after-block');
@@ -267,6 +274,33 @@ async function discoveryNavigation(store, history) {
     localStorage.removeItem(key(first));
     localStorage.removeItem(key(second));
   }
+}
+
+async function collectionPlayback(store, history) {
+  const shuffle = [];
+  render(
+    <CollectionActions
+      collectionId="fixture-list"
+      isBuiltin
+      firstItem="lbry://first:abc"
+      playNextUri="lbry://next:def"
+      doToggleShuffleList={(...args) => shuffle.push(args)}
+    />,
+    store,
+    history
+  );
+  document.querySelector('button[title="Play"]').click();
+  await waitFor(() => history.location.pathname === '/first:abc', 'Collection Play must navigate');
+  assert.equal(history.location.state.forceAutoplay, true, 'Collection Play must retain autoplay state');
+  assert(history.location.search.includes('fixture-list'), 'Collection Play must retain the list query');
+  document.querySelector('button[title="Shuffle Play"]').click();
+  await waitFor(() => history.location.pathname === '/next:def', 'Shuffle must navigate to the chosen item');
+  assert.equal(history.location.state.forceAutoplay, true, 'Shuffle must retain autoplay state');
+  assert.deepEqual(shuffle, [
+    ['fixture-list', false],
+    ['fixture-list', true],
+  ]);
+  unmount();
 }
 
 async function fastUnlock(store, history) {
@@ -490,6 +524,7 @@ async function renderingCompatibility(store, history) {
       () => document.querySelector('output')?.textContent === 'Recovered page',
       'Error fallback must recover'
     );
+    assert.equal(history.location.pathname, '/', 'Error recovery must return home');
     assert.equal(reports.length, 1, 'Recovery must not duplicate the diagnostic report');
   } finally {
     unmount();
@@ -505,6 +540,7 @@ export default async function reactState(store, history) {
     await renderingCompatibility(store, history);
     await navigation(store, history);
     await links(store, history);
+    await collectionPlayback(store, history);
     await discoveryNavigation(store, history);
     await fastUnlock(store, history);
     await encryptionCompletion(store, history);

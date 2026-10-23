@@ -62,11 +62,7 @@ function CollectionActions(props: Props) {
         return;
       }
       const navigateUrl = formatLbryUrlForWeb(playUri);
-      push({
-        pathname: navigateUrl,
-        search: generateListSearchUrlParams(collectionId),
-        state: { forceAutoplay: true },
-      });
+      push({ pathname: navigateUrl, search: generateListSearchUrlParams(collectionId) }, { forceAutoplay: true });
     },
     [collectionId, push]
   );

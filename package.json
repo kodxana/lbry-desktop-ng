@@ -55,7 +55,7 @@
     "@emotion/styled": "11.14.1",
     "@hello-pangea/dnd": "18.0.1",
     "@mui/material": "9.5.0",
-    "auto-launch": "^5.0.5",
+    "auto-launch": "5.0.6",
     "core-js": "3.50.0",
     "electron-log": "5.4.4",
     "electron-updater": "6.8.10",
@@ -70,7 +70,7 @@
     "react-calendar": "6.0.1",
     "react-datetime-picker": "7.1.0",
     "regenerator-runtime": "0.14.1",
-    "source-map-explorer": "^2.5.2"
+    "source-map-explorer": "2.5.3"
   },
   "devDependencies": {
     "@ariakit/react": "0.4.42",
@@ -128,7 +128,7 @@
     "hast-util-sanitize": "5.0.2",
     "hast-util-to-jsx-runtime": "2.3.6",
     "hermes-eslint": "0.37.0",
-    "history": "^4.9.0",
+    "history": "5.3.0",
     "husky": "9.1.7",
     "imagesloaded": "5.0.0",
     "jsqr": "1.4.0",
@@ -203,6 +203,7 @@
     "yauzl": "3.4.0"
   },
   "resolutions": {
+    "source-map-explorer@2.5.3": "patch:source-map-explorer@npm:2.5.3#.yarn/patches/source-map-explorer-npm-2.5.3.patch",
     "@ariakit/react-components@0.7.1": "patch:@ariakit/react-components@npm:0.7.1#.yarn/patches/ariakit-react-components-npm-0.7.1.patch",
     "@datapunt/matomo-tracker-js@0.5.1": "patch:@datapunt/matomo-tracker-js@npm:0.5.1#.yarn/patches/matomo-tracker-js-npm-0.5.1.patch",
     "react-is": "19.3.1",

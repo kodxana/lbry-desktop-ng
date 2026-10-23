@@ -123,7 +123,7 @@ function AppRouter(props: Props) {
 
   // For people arriving at settings page from deeplinks, know whether they can "go back"
   useEffect(() => {
-    const unlisten = listen((location, action) => {
+    const unlisten = listen(({ action }) => {
       if (action === 'PUSH') {
         if (!hasNavigated && setHasNavigated) setHasNavigated();
       }
