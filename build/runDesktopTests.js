@@ -3,6 +3,7 @@ const path = require('path');
 
 for (const file of [
   'testLintTooling.js',
+  'testFlowTooling.js',
   'testAccountClient.js',
   'testArtifactDownload.js',
   'testYaml.js',

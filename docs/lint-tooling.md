@@ -60,18 +60,53 @@ remain visible and are not blanket-suppressed.
 
 ## Flow is separate
 
-`yarn flow` still invokes the inherited Flow 0.97 type checker. It stalls on the
-modern dependency tree and needs its own migration. It is no longer coupled to
-`yarn lint` or every commit. The Hermes parser and Flow lint rules check syntax
-and lint behavior; they do not replace whole-project type checking. Desktop,
-renderer, native password, SDK backup/encryption and installed-upgrade regressions
-remain required for dependency upgrades.
+Flow 0.337.0 and flow-typed 4.1.1 replace the inherited tools. `yarn flow` runs
+the foreground `full-check` command with two workers and exits nonzero when it
+finds errors. In this Flow release, `check` starts a server; on Windows that
+server can keep a captured output pipe open after reporting results. The
+foreground command finishes without starting a background server.
+
+The configuration uses current project-relative ignore globs, excludes generated
+output and the definition cache, removes unsupported suppression/proposal
+options, and pins the checker version. `config` resolves to the desktop's
+`configValues.js`; `lbryinc` resolves to the bundled account client instead of
+the retired package's `any` stub. Forty-seven declarations for retired packages
+are removed. Definitions for still-used packages are retained for migration.
+
+`yarn flow-defs` installs available definitions without generating untyped stubs,
+overwriting hand-written definitions or restarting Flow. Its cache stays in
+`.yarn/flow-typed`. Review generated definitions before committing them: a
+package/version match does not guarantee compatibility with the current checker.
+The installer was also exercised against the actual package manifest with output
+redirected to a disposable directory.
+
+`node build/testFlowTooling.js` runs offline in the desktop regression suite. It
+checks the real configuration with JSX, global storage types, desktop aliases,
+optional chaining and ignored generated files. Incorrect types, invalid syntax
+and incorrect calls through a custom definition must fail. It also exercises
+flow-typed's public CLI and verifies that regenerating a modified definition is
+rejected without changing the file.
+
+**The application is not yet type-clean.** The full check now completes, but
+reports thousands of diagnostics in application code and legacy definitions.
+Missing export annotations, exact-object rules, old utility types, casts and
+definitions for earlier React/Redux versions need a separate migration. No
+application errors are baselined, suppressed or converted into a successful exit.
+The fixture test validates the tools; it does not establish whole-app type safety.
+Full application checking remains outside the required CI gates and commit hook.
+
+Hermes and the Flow lint rules check syntax and lint behavior. Desktop, renderer,
+native password, SDK backup/encryption and installed-upgrade regressions remain
+required for dependency upgrades.
 
 ## References
 
 - [ESLint flat-config migration](https://eslint.org/docs/latest/use/configure/migration-guide)
 - [ESLint compatibility utilities](https://eslint.org/blog/2024/05/eslint-compatibility-utilities/)
 - [Flow lint tooling](https://flow.org/en/docs/tools/eslint/)
+- [Flow ignore-pattern migration](https://flow.org/en/docs/config/ignore/)
+- [Flow legacy syntax migration](https://flow.org/en/docs/modernizing-legacy-syntax/)
+- [flow-typed](https://github.com/flow-typed/flow-typed)
 - [Prettier 3 breaking changes](https://prettier.io/blog/2023/07/05/3.0.0.html)
 - [Husky setup](https://typicode.github.io/husky/get-started.html)
 - [lint-staged configuration and staging behavior](https://github.com/lint-staged/lint-staged)

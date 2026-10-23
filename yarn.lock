@@ -2355,6 +2355,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@kwsites/file-exists@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@kwsites/file-exists@npm:1.1.1"
+  dependencies:
+    debug: ^4.1.1
+  checksum: 4ff945de7293285133aeae759caddc71e73c4a44a12fac710fdd4f574cce2671a3f89d8165fdb03d383cfc97f3f96f677d8de3c95133da3d0e12a123a23109fe
+  languageName: node
+  linkType: hard
+
+"@kwsites/promise-deferred@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@kwsites/promise-deferred@npm:1.1.1"
+  checksum: 07455477a0123d9a38afb503739eeff2c5424afa8d3dbdcc7f9502f13604488a4b1d9742fc7288832a52a6422cf1e1c0a1d51f69a39052f14d27c9a0420b6629
+  languageName: node
+  linkType: hard
+
 "@malept/cross-spawn-promise@npm:^2.0.0":
   version: 2.0.0
   resolution: "@malept/cross-spawn-promise@npm:2.0.0"
@@ -2918,6 +2934,22 @@ __metadata:
   version: 1.1.0
   resolution: "@rtsao/scc@npm:1.1.0"
   checksum: 17d04adf404e04c1e61391ed97bca5117d4c2767a76ae3e879390d6dec7b317fcae68afbf9e98badee075d0b64fa60f287729c4942021b4d19cd01db77385c01
+  languageName: node
+  linkType: hard
+
+"@simple-git/args-pathspec@npm:^1.0.3":
+  version: 1.0.4
+  resolution: "@simple-git/args-pathspec@npm:1.0.4"
+  checksum: 9d46cc712a7edd138a792be083e77c4843d8424165d02fddee2cdbb69d42b824f0a93fec5d0a37b2b78f6199f69e6686271fd9a5ae6dcb06df92588ff50ae659
+  languageName: node
+  linkType: hard
+
+"@simple-git/argv-parser@npm:^1.1.0":
+  version: 1.1.1
+  resolution: "@simple-git/argv-parser@npm:1.1.1"
+  dependencies:
+    "@simple-git/args-pathspec": ^1.0.3
+  checksum: 889202319c3d2a9143287ba0951dc5d6b9d6892c70679049722174eb8e10af658bc2c8cff06b75a5a3e3a84485b85fec828b0cd85db34d6868750ae646d1fd99
   languageName: node
   linkType: hard
 
@@ -6461,18 +6493,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flow-bin@npm:^0.97.0":
-  version: 0.97.0
-  resolution: "flow-bin@npm:0.97.0"
+"flow-bin@npm:0.337.0":
+  version: 0.337.0
+  resolution: "flow-bin@npm:0.337.0"
   bin:
     flow: cli.js
-  checksum: dd4b39d8d72465ff867e77cdb37b62ee09f406ff88c344fff48f610943d14d473bb21a4c1cf628c91143f12f2d509112f77753edfb40235d56d98be14d3e20b9
+  checksum: 67d80065d0f9d9a040ff1d3ea96438ae1b629e41902a297721034327377e1fa6b4a7070461d5bc3dfbe15c2cbf285fc52b3016af1a7a766fbaac22d6f3e9ef02
   languageName: node
   linkType: hard
 
-"flow-typed@npm:^3.7.0":
-  version: 3.8.0
-  resolution: "flow-typed@npm:3.8.0"
+"flow-typed@npm:4.1.1":
+  version: 4.1.1
+  resolution: "flow-typed@npm:4.1.1"
   dependencies:
     "@octokit/rest": ^18.12.0
     colors: 1.4.0
@@ -6480,18 +6512,20 @@ __metadata:
     fs-extra: ^8.1.0
     glob: ^7.1.6
     got: ^11.8.5
+    js-yaml: ^4.1.0
     md5: ^2.2.1
     mkdirp: ^1.0.3
     node-stream-zip: ^1.15.0
     prettier: ^1.19.1
     rimraf: ^3.0.2
-    semver: 7.3.2
+    semver: ^7.6.3
+    simple-git: ^3.10.0
     table: ^6.7.3
     which: ^2.0.2
     yargs: ^15.1.0
   bin:
     flow-typed: dist/cli.js
-  checksum: f3b93888434b5b55613fcf13ede49c62c5541d70fdb06343ffe2f438b14e8aa34b5778df266679cf842efa1be8ebc75ca75f63a559e6cc7bc25eb5a337763b90
+  checksum: d0b835e57e297395bce8c625284c685b1c113c766f2319455be98330a5407116d984c20a204e50cc0ace1638d769275dcbd2af495e66526eb2a259f04c246e81
   languageName: node
   linkType: hard
 
@@ -8431,8 +8465,8 @@ __metadata:
     eslint-plugin-react-hooks: 7.1.1
     express: 5.3.0
     ffmpeg-probe: ^1.0.6
-    flow-bin: ^0.97.0
-    flow-typed: ^3.7.0
+    flow-bin: 0.337.0
+    flow-typed: 4.1.1
     font-awesome: 4.7.0
     formik: 2.4.9
     globals: 17.13.0
@@ -11973,15 +12007,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semver@npm:7.3.2":
-  version: 7.3.2
-  resolution: "semver@npm:7.3.2"
-  bin:
-    semver: bin/semver.js
-  checksum: 692f4900dadb43919614b0df9af23fe05743051cda0d1735b5e4d76f93c9e43a266fae73cfc928f5d1489f022c5c0e65dfd2900fcf5b1839c4e9a239729afa7b
-  languageName: node
-  linkType: hard
-
 "semver@npm:7.8.5, semver@npm:^7.5.3, semver@npm:^7.5.4, semver@npm:^7.6.2, semver@npm:^7.6.3":
   version: 7.8.5
   resolution: "semver@npm:7.8.5"
@@ -12260,6 +12285,19 @@ __metadata:
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
   checksum: a2f098f247adc367dffc27845853e9959b9e88b01cb301658cfe4194352d8d2bb32e18467c786a7fe15f1d44b233ea35633d076d5e737870b7139949d1ab6318
+  languageName: node
+  linkType: hard
+
+"simple-git@npm:^3.10.0":
+  version: 3.36.0
+  resolution: "simple-git@npm:3.36.0"
+  dependencies:
+    "@kwsites/file-exists": ^1.1.1
+    "@kwsites/promise-deferred": ^1.1.1
+    "@simple-git/args-pathspec": ^1.0.3
+    "@simple-git/argv-parser": ^1.1.0
+    debug: ^4.4.0
+  checksum: 43e0c7383aa8b6917ba15aec5a0533a3490d8c0987d3a4410d8d3f3dc4436a2ce6ca32d7c5751578e3e37a2e57e22eae755891fdb1aac3ac7024c50b4551dca2
   languageName: node
   linkType: hard
 
