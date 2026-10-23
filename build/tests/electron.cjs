@@ -114,13 +114,13 @@ app
       );
     });
     ipcMain.handle('fixture-controls-focus', async (event) => {
-      assert(['accessibleControls', 'collections'].includes(activePhase));
+      assert(['accessibleControls', 'collections', 'reactState'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
       activeWindow.webContents.debugger.attach('1.3');
       await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
     });
     ipcMain.handle('fixture-controls-key', async (event, key) => {
-      assert(['accessibleControls', 'collections', 'fileUploads'].includes(activePhase));
+      assert(['accessibleControls', 'collections', 'fileUploads', 'reactState'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
       const codes = {
         Tab: 9,
@@ -307,6 +307,7 @@ app
             'fresh',
             'legacy',
             'restart',
+            'reactState',
             'uiComponents',
             'accessibleControls',
             'collections',

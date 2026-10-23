@@ -190,9 +190,21 @@ export default async function collections(store, history) {
         );
         const remove = document.querySelector('.button-collection-delete');
         remove.click();
+        await waitFor(
+          () => document.querySelector('.button-collection-delete-cancel'),
+          'Removal must offer cancellation'
+        );
         document.querySelector('.button-collection-delete-cancel').click();
+        await waitFor(
+          () => !document.querySelector('.button-collection-delete-cancel'),
+          'Cancellation must close the prompt'
+        );
         assert.equal(store.getState().collections.unpublished[id].items.length, 3, 'Cancel removal retains the item');
         document.querySelector('.button-collection-delete').click();
+        await waitFor(
+          () => document.querySelector('.button-collection-delete-confirm'),
+          'Removal must require confirmation'
+        );
         document.querySelector('.button-collection-delete-confirm').click();
         await waitFor(
           () => store.getState().collections.unpublished[id].items.length === 2,

@@ -4,7 +4,7 @@ import { doResolveUris } from 'redux/actions/claims';
 import { selectPendingIds, makeSelectClaimForUri } from 'redux/selectors/claims';
 import { makeSelectWinningUriForQuery, selectIsResolvingWinningUri } from 'redux/selectors/search';
 import SearchTopClaim from './view';
-import { push } from 'connected-react-router';
+import { push } from 'redux-first-history';
 import * as PAGES from 'constants/pages';
 
 const select = (state, props) => {

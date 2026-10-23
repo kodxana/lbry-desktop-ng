@@ -36,7 +36,13 @@ export default async function markdownEditor(store, history) {
   const currentEditor = () => document.querySelector('.CodeMirror')?.CodeMirror;
   const change = async (next) => {
     update(next);
-    await tick();
+    await waitFor(() => Object.entries(next).every(([key, value]) => form[key] === value), 'Editor props must update');
+    await waitFor(() => {
+      const editor = currentEditor();
+      return form.type === 'markdown'
+        ? editor && editor.getValue() === form.value && editor.getOption('readOnly') === form.disabled
+        : !editor && document.getElementById('editor-fixture')?.value === form.value;
+    }, 'The editor must apply loaded values and disabled state before another user action');
     await tick();
   };
   const input = async (text) => {

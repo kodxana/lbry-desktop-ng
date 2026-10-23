@@ -66,7 +66,7 @@ async function walletQR(store, history) {
   assert.equal(decoded(), addresses[1], 'An address change must redraw the QR without retaining the previous address');
   assert(document.querySelector('.qr-code').classList.contains('qr-code--top-padding'));
   button('Hide QR code').click();
-  assert(!document.querySelector('.qr-code'));
+  await waitFor(() => !document.querySelector('.qr-code'), 'Hide must remove the QR code');
   unmount();
   show(undefined, true);
   button('Show QR code').click();
@@ -273,7 +273,9 @@ async function dragging(store, history) {
     const x = rect.left + 5;
     const y = rect.top + 5;
     mouse(handle, 'mousedown', x, y);
+    await tick();
     mouse(document, 'mousemove', x + dx, y + dy);
+    await tick();
     mouse(document, 'mouseup', x + dx, y + dy);
     await tick();
   };

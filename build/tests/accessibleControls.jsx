@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import { flushSync } from 'react-dom';
 import { ipcRenderer } from 'electron';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
 import HeaderMenuButtons from 'component/headerMenuButtons/view';
@@ -19,13 +20,15 @@ import 'scss/third-party.scss';
 import 'scss/all.scss';
 
 const key = (node, value, keyCode) =>
-  node.dispatchEvent(new KeyboardEvent('keydown', { key: value, keyCode, bubbles: true, cancelable: true }));
+  flushSync(() =>
+    node.dispatchEvent(new KeyboardEvent('keydown', { key: value, keyCode, bubbles: true, cancelable: true }))
+  );
 const type = (field, value, cursor = value.length) => {
   field.focus();
   const prototype = field.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
   Object.getOwnPropertyDescriptor(prototype, 'value').set.call(field, value);
   field.setSelectionRange(cursor, cursor);
-  field.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync(() => field.dispatchEvent(new Event('input', { bubbles: true })));
 };
 const options = () => Array.from(document.querySelectorAll('[role="option"]'));
 const noop = () => {};
@@ -683,7 +686,7 @@ async function suggestions(store, history) {
   field.blur();
   assert.deepEqual(focus, ['focus', 'blur']);
   setDisabled(true);
-  assert.equal(field.disabled, true);
+  await waitFor(() => field.disabled, 'Disabled suggestions must stop accepting input');
   unmount();
   assert(!document.querySelector('[role="listbox"]'), 'Suggestion portals must be cleaned up');
 }
@@ -730,11 +733,11 @@ async function measurement(store, history) {
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   assert.equal(document.querySelector('.expandable__button'), button, 'Clipping must not remove the expand control');
   button.click();
-  assert(document.querySelector('.expandable--open'));
+  await waitFor(() => document.querySelector('.expandable--open'), 'Expand must reveal the comment');
   assert.equal(button.textContent, 'Less');
   assert.equal(button.getAttribute('aria-expanded'), 'true');
   button.click();
-  assert(document.querySelector('.expandable--closed'));
+  await waitFor(() => document.querySelector('.expandable--closed'), 'Collapse must clip the comment');
   show(40);
   await waitFor(
     () => !document.querySelector('.expandable__button'),

@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import { flushSync } from 'react-dom';
 import AdmZip from 'adm-zip';
 import { Buffer } from 'buffer';
 import fs from 'fs';
@@ -14,10 +15,10 @@ import 'scss/all.scss';
 
 const control = (label) => document.querySelector('[aria-label="' + label + '"]');
 const key = (target, value) =>
-  target.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true }));
+  flushSync(() => target.dispatchEvent(new KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true })));
 function change(field, value) {
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(field, value);
-  field.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync(() => field.dispatchEvent(new Event('input', { bubbles: true })));
 }
 function pixel(x = 0.5) {
   const canvas = document.querySelector('.openseadragon-canvas canvas');
@@ -34,6 +35,7 @@ export default async function comics(store, history) {
   document.documentElement.dir = 'ltr';
   const NativeWorker = window.Worker;
   const activeWorkers = new Set();
+  let onWorkerStarted;
   const createUrl = URL.createObjectURL;
   const revokeUrl = URL.revokeObjectURL;
   const liveUrls = new Set();
@@ -45,6 +47,7 @@ export default async function comics(store, history) {
       terminate();
     };
     activeWorkers.add(worker);
+    if (onWorkerStarted) onWorkerStarted();
     return worker;
   };
   URL.createObjectURL = (blob) => {
@@ -125,9 +128,10 @@ export default async function comics(store, history) {
     await waitFor(() => painted([0, 255, 0], 0.3) && painted([0, 0, 255], 0.7), 'Manga mode must reverse the spread');
     if (control('Reader settings').getAttribute('aria-expanded') !== 'true') control('Reader settings').click();
     option('Pin toolbar').click();
-    assert(document.querySelector('.comic-viewer--unpinned'));
+    await waitFor(() => document.querySelector('.comic-viewer--unpinned'), 'Unpinning must release the toolbar');
     if (control('Reader settings').getAttribute('aria-expanded') !== 'true') control('Reader settings').click();
     option('Pin toolbar').click();
+    await waitFor(() => !document.querySelector('.comic-viewer--unpinned'), 'Pinning must restore the toolbar');
     if (control('Reader settings').getAttribute('aria-expanded') === 'true') key(document.activeElement, 'Escape');
     await waitFor(() => control('Reader settings').getAttribute('aria-expanded') === 'false', 'Escape closes settings');
     await ipcRenderer.invoke('fixture-comic-capture', 'dark');
@@ -346,8 +350,14 @@ export default async function comics(store, history) {
     await tick();
     assert(control('Go to page number'), 'A stale file read cannot replace the current comic');
     unmount();
+    const starting = new Promise((resolve) => {
+      onWorkerStarted = resolve;
+    });
     show();
-    await waitFor(() => activeWorkers.size === 1, 'Extraction must start before cancellation');
+    // Cancel on worker creation; polling can miss an archive that finishes between polls.
+    await starting;
+    onWorkerStarted = null;
+    assert.equal(activeWorkers.size, 1, 'Extraction must start before cancellation');
     unmount();
     await waitFor(
       () => activeWorkers.size === 0 && liveUrls.size === 0,

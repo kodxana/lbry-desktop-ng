@@ -15,7 +15,7 @@ import { requestUpdater } from 'util/updater-client';
 import moment from 'moment';
 import * as MODALS from 'constants/modal_types';
 import React, { Fragment, useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import * as SETTINGS from 'constants/settings';
 import {
@@ -33,7 +33,8 @@ import rewards from 'rewards';
 import { store, persistor, history } from 'store';
 import app from './app';
 import doLogWarningConsoleMessage from './logWarningConsoleMessage';
-import { ConnectedRouter, push } from 'connected-react-router';
+import { push } from 'redux-first-history';
+import DesktopRouter from 'component/common/desktop-router';
 import { formatLbryUrlForWeb, formatInAppUrl } from 'util/url';
 import { PersistGate } from 'redux-persist/integration/react';
 import analytics from 'analytics';
@@ -242,12 +243,12 @@ function AppWrapper() {
       >
         <Fragment>
           {readyToLaunch ? (
-            <ConnectedRouter history={history}>
+            <DesktopRouter history={history}>
               <ErrorBoundary>
                 <App />
                 <SnackBar />
               </ErrorBoundary>
-            </ConnectedRouter>
+            </DesktopRouter>
           ) : (
             <Fragment>
               <SdkStartup onReadyToLaunch={() => setReadyToLaunch(true)} />
@@ -260,4 +261,4 @@ function AppWrapper() {
   );
 }
 
-ReactDOM.render(<AppWrapper />, document.getElementById('app'));
+createRoot(document.getElementById('app')).render(<AppWrapper />);

@@ -3,7 +3,8 @@
 The desktop now uses OpenSeadragon 6.1.1 and libarchive.js 2.0.2 directly.
 Villain 1.0.9, Reakit and their obsolete React slider, animation and localization
 dependencies are removed. This removes the remaining Reakit restriction on a
-future React upgrade; React itself remains 17.0.2 in this change.
+React upgrade. The subsequent [React/state batch](react-and-material.md) moves
+the renderer to React 18.3.1.
 
 The reader retains previous/next, a page field and slider, zoom controls,
 single-page/book layout, manga direction, fullscreen, dark/light backgrounds

@@ -147,7 +147,10 @@ export default async function fileUploads(store, history, root) {
   document.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }));
   await waitFor(() => document.querySelector('[role=alert]'), 'A drop without a local path must show an error');
   button('Dismiss').click();
-  assert.equal(document.querySelector('.file-drop').getAttribute('aria-hidden'), 'true');
+  await waitFor(
+    () => document.querySelector('.file-drop').getAttribute('aria-hidden') === 'true',
+    'Dismiss must hide the invalid-drop message'
+  );
   assert.equal(updates.length, 3, 'An invalid drop must not replace the selected file');
   await drop([first]);
   await waitFor(

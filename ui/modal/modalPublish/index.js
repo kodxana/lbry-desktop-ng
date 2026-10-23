@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import { doHideModal } from 'redux/actions/app';
 import ModalPublishSuccess from './view';
 import { doClearPublish } from 'redux/actions/publish';
-import { push } from 'connected-react-router';
+import { push } from 'redux-first-history';
 
 const perform = (dispatch) => ({
   closeModal: () => dispatch(doHideModal()),

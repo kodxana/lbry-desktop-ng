@@ -1,12 +1,39 @@
 # React and Material UI
 
-This compatibility step moves the renderer from React 16.14 to 17.0.2 and
-Material UI 5.8.7 to 9.5.0. Emotion moves to 11.14.0 (`react`) and 11.14.1
-(`styled`). React DOM, `react-is` and the React type definitions use the same
-React major. Reach has since been [replaced with Ariakit](accessible-controls.md),
+The renderer now uses React and React DOM 18.3.1, Material UI 9.5.0,
+Emotion 11.14.0 (`react`) and 11.14.1 (`styled`). `react-is` is pinned to
+18.3.1 and the React types to 18.3.31. Reach has been [replaced with Ariakit](accessible-controls.md),
 and the [comic reader migration](comic-reader.md) removes Villain and Reakit.
 
 ## Compatibility
+
+The application starts with `createRoot`. Promise, timer and native-event
+updates therefore use React 18 automatic batching. Tests also use modern
+roots; only fixture mounting and discrete input helpers flush synchronously
+to let assertions inspect a settled user action. A separate test verifies
+actual promise batching without a synchronous override. Strict Mode is not
+newly enabled across the legacy application.
+
+Encryption and unlock dialogs now await the result of their own SDK request.
+A fast request can otherwise batch pending and completed Redux updates into
+one render, hiding the status transition that the old dialogs relied on.
+The actions retain the same Redux events and additionally return a boolean
+result. Immediate submission guards prevent overlapping requests, and password
+storage uses the submitted password/opt-in snapshot. Leaving before completion
+prevents a late result from saving credentials or closing a later modal.
+
+The same batch upgrades React-Redux to 9.3.0, Redux to 5.0.1, Redux Thunk to
+3.1.0 and drag-and-drop to @hello-pangea/dnd 18.0.1. React Router 5.3.4 removes
+its obsolete context polyfill. Its state binding changes are described in
+[state management](state-management.md). React 19 and the Router 6+ API
+migration remain separate upgrades.
+
+React Awesome Lightbox 2.0.0 needs React 18 and changes its default to a portal.
+The app keeps it inline inside its existing modal so focus and background
+accessibility stay in one boundary. The outer modal no longer handles Escape;
+the viewer first resets a transformed image, then closes on Escape. The
+backdrop-filter fix uses an explicit modal class because the library renamed
+its body class. Zoom is now capped at the library's default 10×.
 
 Material UI 9 removes the old TextField input props and Autocomplete popper
 component prop. The comment input now passes the supplied input refs, handlers
@@ -28,7 +55,7 @@ The existing immediate-unmount and delayed-source regressions remain unchanged.
 
 Material UI recommends resolving `react-is` to the installed React version for
 React 18 and earlier. The lockfile resolution prevents its newer default from
-misidentifying React 17 elements.
+misidentifying React 18 elements.
 
 React Hot Loader and its patched React DOM fork are removed. Development uses
 `react-refresh` 0.19.0 and the Webpack plugin 0.6.3 with the existing hot
@@ -53,6 +80,13 @@ Existing form, document, upload, navigation and persistence tests run on the new
 React event system. Wallet backup/encryption, password migration/restart and
 update consent/decline/shutdown tests remain required.
 
+The React 18 fixture checks promise batching, consistent router/Redux locations,
+back/forward history titles, replacement, navigation blocking and subscription
+cleanup. It also checks fast saved-password unlock, fast encryption after an
+earlier success, duplicate submission and leaving while a request is pending.
+Lightbox checks cover decoding, zoom, rotation, native Escape/Tab behavior,
+focus restoration, background accessibility and broken-image dismissal.
+
 The development smoke test temporarily edits the hub setup heading and verifies
 that Fast Refresh applies and reverses the edit without reloading the page or
 losing the unsaved custom-hub input. It restores the source in `finally` and
@@ -68,7 +102,8 @@ No personal wallet or funded transaction is used. macOS and exhaustive comic
 formats, assistive technologies and third-party controls are outside these
 fixtures.
 
-References: [React 17](https://legacy.reactjs.org/blog/2020/10/20/react-v17.html),
+References: [React 18 migration](https://react.dev/blog/2022/03/08/react-18-upgrade-guide),
+[Lightbox 2 migration](https://github.com/theanam/react-awesome-lightbox#-migrating-from-1x),
 [Material UI 6](https://mui.com/material-ui/migration/upgrade-to-v6/),
 [Material UI 7 and react-is](https://mui.com/material-ui/migration/upgrade-to-v7/),
 [Material UI 9](https://mui.com/material-ui/migration/upgrade-to-v9/),

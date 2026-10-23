@@ -7,7 +7,7 @@ import { doCheckPendingClaims } from 'redux/actions/claims';
 import { selectMyClaims, selectMyChannelClaims, selectReflectingById } from 'redux/selectors/claims';
 import { selectPublishFormValues, selectMyClaimForUri } from 'redux/selectors/publish';
 import { doError } from 'redux/actions/notifications';
-import { push } from 'connected-react-router';
+import { push } from 'redux-first-history';
 import analytics from 'analytics';
 import { doOpenModal } from 'redux/actions/app';
 import { CC_LICENSES, COPYRIGHT, OTHER, NONE, PUBLIC_DOMAIN } from 'constants/licenses';
