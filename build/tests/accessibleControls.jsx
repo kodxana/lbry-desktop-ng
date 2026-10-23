@@ -201,12 +201,28 @@ async function menus(store, history) {
   let opening = 0;
   const open = async (trigger) => {
     opening++;
-    trigger.focus();
-    await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
-    await waitFor(
-      () => trigger.getAttribute('aria-expanded') === 'true',
-      `Menu must open from keyboard (open ${opening})`
-    );
+    const events = [];
+    const record = (event) =>
+      events.push({
+        type: event.type,
+        key: event.key,
+        target: event.target.id,
+        active: document.activeElement && document.activeElement.id,
+        expanded: trigger.getAttribute('aria-expanded'),
+      });
+    for (const type of ['keydown', 'focusin', 'focusout']) document.addEventListener(type, record, true);
+    try {
+      trigger.focus();
+      await ipcRenderer.invoke('fixture-controls-key', 'ArrowDown');
+      await waitFor(
+        () => trigger.getAttribute('aria-expanded') === 'true',
+        `Menu must open from keyboard (open ${opening})`
+      );
+    } catch (error) {
+      throw new Error(`${error.message}; trigger=${trigger.id}; events=${JSON.stringify(events)}`);
+    } finally {
+      for (const type of ['keydown', 'focusin', 'focusout']) document.removeEventListener(type, record, true);
+    }
     let menu;
     await waitFor(
       () => {

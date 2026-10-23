@@ -165,7 +165,7 @@ app
       assert(['dark', 'light'].includes(theme));
       fs.writeFileSync(
         path.resolve(`dist/ci/controls-${theme}.png`),
-        (await activeWindow.webContents.capturePage()).toPNG()
+        (await activeWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
       );
     });
     ipcMain.handle('fixture-editor-input', async (event, input) => {
