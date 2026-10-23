@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import sharedUi from './sharedUi';
 import ReactModal from 'react-modal';
 import jsQR from 'jsqr';
 import imagesLoaded from 'imagesloaded';
@@ -343,11 +344,12 @@ async function imageLoading() {
 }
 
 export default async function uiComponents(store, history) {
+  sharedUi(store, history);
   await walletQR(store, history);
   await pagination(store, history);
   await dialogs(store, history);
   await progress(store, history);
   await dragging(store, history);
   await imageLoading();
-  return 'wallet QR pixel decoding/address changes, pagination, modal focus/dismissal, update progress, floating drag persistence and thumbnail success/failure';
+  return 'shared icons/ref forwarding and sticker data, wallet QR pixel decoding/address changes, pagination, modal focus/dismissal, update progress, floating drag persistence and thumbnail success/failure';
 }

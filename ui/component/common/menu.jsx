@@ -3,7 +3,7 @@ import React from 'react';
 import { MenuProvider, Menu as Popup, MenuButton, MenuItem, useMenuContext } from '@ariakit/react';
 import classnames from 'classnames';
 
-function Menu({ children }: { children: React$Node }) {
+function Menu({ children }: { children: React.Node }) {
   return (
     <MenuProvider placement="bottom-start" focusLoop rtl={document.documentElement.dir === 'rtl'}>
       {children}
@@ -18,7 +18,7 @@ function MenuList({
 }: {
   className?: string,
   portal?: boolean,
-  children: React$Node,
+  children: React.Node,
 }) {
   const menu = useMenuContext();
   return (

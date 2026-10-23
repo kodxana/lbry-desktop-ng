@@ -4,44 +4,47 @@ import * as ICONS from 'constants/icons';
 import React, { forwardRef } from 'react';
 import { v4 as uuid } from 'uuid';
 
-type IconProps = {
-  size: number,
-  color: string,
-  title?: string,
+export type IconProps = {
+  size?: number,
+  color?: string,
+  title?: ?string,
+  className?: string,
+  ref?: React.RefSetter<SVGSVGElement>,
+  'aria-hidden'?: boolean,
+  'aria-label'?: string,
 };
 
-type CustomProps = {
-  size?: number,
-  className?: string,
-};
+type IconComponent = React.ComponentType<IconProps>;
 
 // Returns a react component
 // Icons with tooltips need to use this function so the ref can be properly forwarded
-const buildIcon = (iconStrokes: React$Node, customSvgValues = {}) =>
-  forwardRef((props: IconProps, ref) => {
-    const { size = 24, color = 'currentColor', title, ...otherProps } = props;
-    return (
-      <svg
-        ref={ref}
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        width={size}
-        height={size}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...otherProps}
-        {...customSvgValues}
-      >
-        {iconStrokes}
-        {title && <title>{title}</title>}
-      </svg>
-    );
-  });
+const buildIcon = (iconStrokes: React.Node, customSvgValues: { viewBox?: string } = {}): IconComponent =>
+  forwardRef<Omit<IconProps, 'ref'>, SVGSVGElement>(
+    (props: Omit<IconProps, 'ref'>, ref: React.RefSetter<SVGSVGElement>): React.Node => {
+      const { size = 24, color = 'currentColor', title, ...otherProps } = props;
+      return (
+        <svg
+          ref={ref}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          width={size}
+          height={size}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          {...otherProps}
+          {...customSvgValues}
+        >
+          {iconStrokes}
+          {title && <title>{title}</title>}
+        </svg>
+      );
+    }
+  );
 
-export const icons = {
+export const icons: { [string]: IconComponent } = {
   // The LBRY icon is different from the base icon set so don't use buildIcon()
   [ICONS.LBRY]: (props: IconProps) => (
     <svg
@@ -615,7 +618,7 @@ export const icons = {
       <path d="M21 13v2a4 4 0 0 1-4 4H3" />
     </g>
   ),
-  [ICONS.MORE_VERTICAL]: (props: CustomProps) => (
+  [ICONS.MORE_VERTICAL]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -946,7 +949,7 @@ export const icons = {
       <polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
     </g>
   ),
-  [ICONS.SCIENCE]: (props: CustomProps) => (
+  [ICONS.SCIENCE]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -981,7 +984,7 @@ export const icons = {
       />
     </svg>
   ),
-  [ICONS.TECH]: (props: CustomProps) => (
+  [ICONS.TECH]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1007,7 +1010,7 @@ export const icons = {
       />
     </svg>
   ),
-  [ICONS.NEWS]: (props: CustomProps) => (
+  [ICONS.NEWS]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1042,7 +1045,7 @@ export const icons = {
       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
     </g>
   ),
-  [ICONS.RABBIT_HOLE]: (props: CustomProps) => (
+  [ICONS.RABBIT_HOLE]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1065,7 +1068,7 @@ export const icons = {
       />
     </svg>
   ),
-  [ICONS.ENLIGHTENMENT]: (props: CustomProps) => (
+  [ICONS.ENLIGHTENMENT]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1091,7 +1094,7 @@ export const icons = {
       />
     </svg>
   ),
-  [ICONS.GAMING]: (props: CustomProps) => (
+  [ICONS.GAMING]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1127,7 +1130,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.COMMUNITY]: (props: CustomProps) => (
+  [ICONS.COMMUNITY]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1200,7 +1203,7 @@ export const icons = {
       <path d="M13.73 21C13.5542 21.3031 13.3018 21.5547 12.9982 21.7295C12.6946 21.9044 12.3504 21.9965 12 21.9965C11.6496 21.9965 11.3054 21.9044 11.0018 21.7295C10.6982 21.5547 10.4458 21.3031 10.27 21" />
     </g>
   ),
-  [ICONS.PIN]: (props: CustomProps) => (
+  [ICONS.PIN]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1218,7 +1221,7 @@ export const icons = {
       <path d="M6,3.33333333 C7.47333333,3.33333333 8.66666667,4.528 8.66666667,6" />
     </svg>
   ),
-  [ICONS.CONTROVERSIAL]: (props: CustomProps) => (
+  [ICONS.CONTROVERSIAL]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1240,7 +1243,7 @@ export const icons = {
       <path d="M17.1,4.58a1.4,1.4,0,0,1-.28,1.77" />
     </svg>
   ),
-  [ICONS.NEW]: (props: CustomProps) => (
+  [ICONS.NEW]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1265,7 +1268,7 @@ export const icons = {
       <line x1="14.55" y1="6.03" x2="19.13" y2="1.86" />
     </svg>
   ),
-  [ICONS.BEST]: (props: CustomProps) => (
+  [ICONS.BEST]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1284,7 +1287,7 @@ export const icons = {
       <polyline points="14.94 12.98 17.37 17.09 14.88 16.99 13.7 19.26 11.19 15.03" />
     </svg>
   ),
-  [ICONS.CREATOR_LIKE]: (props: CustomProps) => (
+  [ICONS.CREATOR_LIKE]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1321,7 +1324,7 @@ export const icons = {
       </defs>
     </svg>
   ),
-  [ICONS.CHEF]: (props: CustomProps) => (
+  [ICONS.CHEF]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1343,7 +1346,7 @@ export const icons = {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </g>
   ),
-  [ICONS.CHANNEL_LEVEL_1]: (props: CustomProps) => (
+  [ICONS.CHANNEL_LEVEL_1]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1359,7 +1362,7 @@ export const icons = {
       <path d="M12 4.32001L14.025 8.02501C14.4776 8.85522 15.1598 9.53744 15.99 9.99001L19.68 12L15.975 14.025C15.1448 14.4776 14.4626 15.1598 14.01 15.99L12 19.68L9.97501 15.975C9.52419 15.1524 8.84761 14.4758 8.02501 14.025L4.32001 12L8.02501 9.97501C8.84761 9.52419 9.52419 8.84761 9.97501 8.02501L12 4.32001Z" />
     </svg>
   ),
-  [ICONS.CHANNEL_LEVEL_2]: (props: CustomProps) => (
+  [ICONS.CHANNEL_LEVEL_2]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1375,7 +1378,7 @@ export const icons = {
       <path d="M15.705 7.31999L17.625 10.845C18.0591 11.6316 18.7099 12.2772 19.5 12.705L23.025 14.625L19.5 16.5C18.7154 16.9301 18.0701 17.5754 17.64 18.36L15.72 21.885L13.785 18.435C13.3625 17.6207 12.7106 16.9479 11.91 16.5L8.38499 14.64L11.91 12.705C12.7001 12.2772 13.3508 11.6316 13.785 10.845L15.705 7.31999ZM4.37999 4.31999C4.10558 4.81954 3.69454 5.23058 3.19499 5.50499L0.974991 6.67499L3.19499 7.88999C3.68451 8.14404 4.09453 8.5281 4.37999 8.99999L5.59499 11.22L6.80999 8.99999C7.0844 8.50045 7.49544 8.08941 7.99499 7.81499L10.215 6.59999L7.99499 5.44499C7.49544 5.17058 7.0844 4.75954 6.80999 4.25999L5.59499 2.05499L4.37999 4.31999Z" />
     </svg>
   ),
-  [ICONS.CHANNEL_LEVEL_3]: (props: CustomProps) => (
+  [ICONS.CHANNEL_LEVEL_3]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1391,7 +1394,7 @@ export const icons = {
       <path d="M12 7.95L13.92 11.475C14.3519 12.2672 15.0028 12.9181 15.795 13.35L19.32 15.27L15.795 17.19C15.0104 17.6201 14.3651 18.2654 13.935 19.05L12 22.59L10.08 19.065C9.64989 18.2804 9.00456 17.6351 8.22 17.205L4.68 15.27L8.205 13.35C8.99718 12.9181 9.64814 12.2672 10.08 11.475L12 7.95ZM3.57 3.705C3.29213 4.2198 2.8698 4.64213 2.355 4.92L0 6.18L2.34 7.5C2.8548 7.77788 3.27713 8.2002 3.555 8.715L4.815 10.95L6.075 8.655C6.36202 8.16237 6.78348 7.76173 7.29 7.5L9.585 6.24L7.29 4.92C6.7752 4.64213 6.35287 4.2198 6.075 3.705L4.815 1.41L3.57 3.705ZM17.625 3.825C17.3305 4.36309 16.8881 4.80555 16.35 5.1L13.935 6.42L16.35 7.74C16.8881 8.03446 17.3305 8.47692 17.625 9.015L18.945 11.43L20.265 9C20.5595 8.46191 21.0019 8.01946 21.54 7.725L24 6.42L21.54 5.1C21.0019 4.80555 20.5595 4.36309 20.265 3.825L18.945 1.41L17.625 3.825Z" />
     </svg>
   ),
-  [ICONS.CHANNEL_LEVEL_4]: (props: CustomProps) => (
+  [ICONS.CHANNEL_LEVEL_4]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1407,7 +1410,7 @@ export const icons = {
       <path d="M4.5 6.375L5.64 8.46C5.89614 8.92861 6.28139 9.31386 6.75 9.57L8.835 10.71L6.75 11.85C6.28139 12.1061 5.89614 12.4914 5.64 12.96L4.5 15L3.285 12.96C3.02886 12.4914 2.64361 12.1061 2.175 11.85L0.0899963 10.71L2.175 9.57C2.64361 9.31386 3.02886 8.92861 3.285 8.46L4.5 6.375ZM17.67 10.125C17.3718 10.6692 16.9242 11.1168 16.38 11.415L13.875 12.75L16.32 14.085C16.8642 14.3832 17.3118 14.8308 17.61 15.375L18.945 17.82L20.28 15.375C20.5782 14.8308 21.0258 14.3832 21.57 14.085L24 12.75L21.555 11.415C21.0108 11.1168 20.5632 10.6692 20.265 10.125L18.93 7.68L17.67 10.125ZM8.49 21C8.93984 21.2454 9.30955 21.6152 9.555 22.065L10.65 24L11.745 21.99C11.9975 21.5699 12.3608 21.2274 12.795 21L14.805 19.905L12.795 18.75C12.3451 18.5046 11.9754 18.1348 11.73 17.685L10.65 15.69L9.555 17.7C9.30955 18.1498 8.93984 18.5196 8.49 18.765L6.48 19.86L8.49 21ZM12.9 4.68C13.2986 4.8985 13.6265 5.22638 13.845 5.625L14.82 7.41L15.795 5.625C16.0135 5.22638 16.3414 4.8985 16.74 4.68L18.525 3.705L16.74 2.73C16.3414 2.5115 16.0135 2.18362 15.795 1.785L14.82 0L13.845 1.785C13.6265 2.18362 13.2986 2.5115 12.9 2.73L11.115 3.705L12.9 4.68Z" />
     </svg>
   ),
-  [ICONS.CHANNEL_LEVEL_5]: (props: CustomProps) => (
+  [ICONS.CHANNEL_LEVEL_5]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1576,7 +1579,7 @@ export const icons = {
       <path d="M6 4.5L3.75 4.5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
     </g>
   ),
-  [ICONS.PEACE]: (props: CustomProps) => (
+  [ICONS.PEACE]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1622,7 +1625,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.UNIVERSE]: (props: CustomProps) => (
+  [ICONS.UNIVERSE]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1668,7 +1671,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.CHEESE]: (props: CustomProps) => (
+  [ICONS.CHEESE]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1721,7 +1724,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.PORK_BUN]: (props: CustomProps) => (
+  [ICONS.PORK_BUN]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1748,7 +1751,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.MIND_BLOWN]: (props: CustomProps) => (
+  [ICONS.MIND_BLOWN]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1778,7 +1781,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.MOVIES]: (props: CustomProps) => (
+  [ICONS.MOVIES]: (props: IconProps) => (
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
@@ -1803,7 +1806,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.STACK]: (props: CustomProps) => (
+  [ICONS.STACK]: (props: IconProps) => (
     <svg
       {...props}
       viewBox="0 0 24 24"
@@ -1823,7 +1826,7 @@ export const icons = {
       </g>
     </svg>
   ),
-  [ICONS.TIME]: (props: CustomProps) => (
+  [ICONS.TIME]: (props: IconProps) => (
     <svg
       {...props}
       viewBox="0 0 24 24"

@@ -21,7 +21,7 @@ type Props = {
 };
 
 class IconComponent extends React.PureComponent<Props> {
-  getTooltip = (icon: string) => {
+  getTooltip = (icon: string): ?string => {
     switch (icon) {
       case ICONS.REWARDS:
         return __('Featured content. Earn rewards for watching.');
@@ -36,7 +36,7 @@ class IconComponent extends React.PureComponent<Props> {
     }
   };
 
-  getIconColor = (color: string) => {
+  getIconColor = (color: string): string => {
     switch (color) {
       case 'red':
         return RED_COLOR;
@@ -49,7 +49,7 @@ class IconComponent extends React.PureComponent<Props> {
     }
   };
 
-  render() {
+  render(): React.Node {
     const { icon, tooltip, customTooltipText, iconColor, size, className, sectionIcon = false, ...rest } = this.props;
     const Icon = icons[this.props.icon];
 

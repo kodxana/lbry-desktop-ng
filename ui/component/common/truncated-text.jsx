@@ -8,7 +8,7 @@ type Props = {
   children?: React.Node,
 };
 
-const TruncatedText = (props: Props) => {
+const TruncatedText = (props: Props): React.Node => {
   const { text, children, lines, showTooltip = true } = props;
   const tooltip = showTooltip ? children || text : '';
   return (
