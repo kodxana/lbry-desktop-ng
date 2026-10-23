@@ -1,40 +1,40 @@
 // @flow
 import React from 'react';
-import { useRadioState, Radio, RadioGroup } from 'reakit/Radio';
+import { v4 as uuid } from 'uuid';
 
 type Props = {
   files: Array<File>,
   onChange: (File | void) => void,
 };
 
-type RadioProps = {
-  id: string,
-  label: string,
-};
-
-// Same as FormField type="radio" but it works with reakit:
-const ForwardedRadio = React.forwardRef((props: RadioProps, ref) => (
-  <span className="radio">
-    <input {...props} type="radio" ref={ref} />
-    <label htmlFor={props.id}>{props.label}</label>
-  </span>
-));
-
 function FileList(props: Props) {
   const { files, onChange } = props;
-  const radio = useRadioState({ state: '0' });
+  const [name] = React.useState(uuid);
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const activeIndex = selectedIndex < files.length ? selectedIndex : 0;
 
   React.useEffect(() => {
-    onChange(files && files[Number(radio.state)]);
-  }, [radio.state, files, onChange]);
+    setSelectedIndex(activeIndex);
+    onChange(files[activeIndex]);
+  }, [activeIndex, files, onChange]);
 
   return (
     <div className={'file-list'}>
-      <RadioGroup {...radio} aria-label="files">
-        {files.map(({ name }, index) => {
-          return <Radio key={index} {...radio} value={String(index)} label={name} as={ForwardedRadio} />;
-        })}
-      </RadioGroup>
+      <div role="radiogroup" aria-label={__('Files')}>
+        {files.map((file, index) => (
+          <span className="radio" key={index}>
+            <input
+              type="radio"
+              name={name}
+              id={`${name}-${index}`}
+              value={index}
+              checked={activeIndex === index}
+              onChange={() => setSelectedIndex(index)}
+            />
+            <label htmlFor={`${name}-${index}`}>{file.name}</label>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

@@ -24,6 +24,10 @@ The [Reach replacement](accessible-controls.md) checks Ariakit keyboard/focus,
 tab indicator geometry and retained drafts, menu routing/dismissal, search selection,
 RTL and dark/light menu captures.
 
+The [collection controls migration](collection-controls.md) adds real keyboard
+and mouse reordering in all three list editors, cancellation and focus checks,
+persisted order, and native radio selection in the dropped-file chooser.
+
 The [forms and dates upgrade](forms-and-dates.md) adds send confirmation/retry,
 publish date editing, timed blocks, locale and duration formatting checks.
 

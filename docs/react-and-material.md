@@ -38,8 +38,9 @@ restores its mounted flag when effects rerun after a component edit.
 
 Villain 1.0.9 still declares React 16 peers and has no newer npm release. Its
 peer warning remains visible. The real comic viewer is exercised with React 17,
-using a module-scoped adapter for its two obsolete Reakit animation hooks. Other
-Reakit callers keep the current API. This repairs the reader's
+using a module-scoped adapter for its two obsolete Reakit animation hooks. The
+[file chooser now uses native radio inputs](collection-controls.md), leaving
+Reakit in the comic reader only. The adapter repairs the reader's
 `unstable_stopAnimation is not a function` failure without changing its archive
 decoder or shipping a second React/React DOM implementation. Tests use
 the shipped archive worker and a generated CBZ: both pages must paint the
