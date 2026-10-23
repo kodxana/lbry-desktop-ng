@@ -15,6 +15,8 @@ their navigation links. Popup events do not activate an enclosing claim card,
 and menu links do not reload the renderer. Disabled actions remain inert.
 Closed menus stay mounted, as they did with Reach, so rapid reopening retains
 stable focus targets while the popup animation finishes.
+Focus restoration checks the live open state, so a delayed callback from an
+earlier close cannot steal focus after the menu has reopened.
 
 Tabs retain their existing indexed API at all three callers. Each group has
 distinct tab/panel IDs, automatic arrow-key selection and RTL navigation. Disabled
@@ -39,6 +41,8 @@ in Electron with a disposable Redux/IndexedDB profile. It checks:
   groups, form submit prevention, retained drafts and underline geometry/resizing.
 - Menu keyboard/mouse actions, independent IDs, dismissal and focus restoration,
   router links, nested card links, disabled actions and native Tab navigation.
+  A deferred close/reopen test reproduces stale focus restoration without relying
+  on runner speed.
 - Search selection, text caret movement, input-method composition, Escape,
   blocked-channel matching, tag actions and LBRY navigation.
 - Existing comment suggestions, tooltips and expandable content.
