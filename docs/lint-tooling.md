@@ -105,15 +105,43 @@ the notifications page uses the web notification format; search options use
 their actual keys, with a separate action for mention results. These changes
 affect annotations only, not application behavior.
 
+`node build/testDependencyTypes.js` checks the maintained definitions for React
+Redux 9.3.0, Express 5.3.0, localForage 1.10.0, Prettier 3.9.10, classnames 2.5.1
+and Chalk 6.0.1. It loads the real definitions, rejects duplicate declarations
+and requires a contract review when one of these package versions changes.
+Valid connected components, own props, thunk results, hooks, middleware and
+asynchronous APIs must pass. Twenty-eight incorrect contracts must fail,
+including removed APIs and unsafe assumptions about nullable storage results.
+The duplicate untyped classnames override is removed.
+
+`node build/testDependencyContracts.js` checks the corresponding behavior against
+the installed packages: connected Redux components and thunk results, Prettier's
+promises, Express async error forwarding, wildcard parameters and listen errors,
+and localForage's configuration, callback and storage results. Storage runs in a
+private in-memory browser fixture; HTTP binds only to loopback on an assigned
+port. Both tests run in the required Windows and Linux desktop suite.
+
+The declarations cover the desktop's APIs and the related contracts exercised by
+these tests. Express includes a structural subset of HTTP types because Flow
+no longer supplies Node declarations. Prettier covers formatting/configuration,
+not plugin AST/printer authoring. This is not complete coverage of every upstream
+API. In particular, localForage's implementation is the source of truth where
+its bundled TypeScript definitions differ: missing keys are nullable, `clear`
+resolves without a value, failure callbacks omit the result, undefined writes
+become null, and configuration can return an error or a promise.
+
 **The application is not yet type-clean.** The full check now completes, but
 reports thousands of diagnostics in application code and legacy definitions.
 Missing export annotations, exact-object rules, old utility types, casts and
 definitions for earlier React/Redux versions need a separate migration. No
 application errors are baselined, suppressed or converted into a successful exit.
-The tool and contract tests do not establish whole-app type safety. This first
-migration batch reduces the full report from 5,694 to 5,307 diagnostics, including
-32 fewer library-definition diagnostics. Legacy npm definitions and application
-export annotations are the next work; inherited `any` types are not all removed.
+The tool and contract tests do not establish whole-app type safety. The first
+migration batch reduced the report from 5,694 to 5,307 diagnostics. The dependency
+batch reduces it to 5,031, with library-definition diagnostics falling from 294
+to 24. Remaining legacy definitions (including webpack and reselect), duplicate
+declarations and application export annotations need further work; inherited
+`any` types are not all removed. These counts describe this revision, not a
+baseline that permits new errors.
 Full application checking remains outside the required CI gates and commit hook.
 
 Hermes and the Flow lint rules check syntax and lint behavior. Desktop, renderer,
@@ -129,5 +157,8 @@ required for dependency upgrades.
 - [Flow legacy syntax migration](https://flow.org/en/docs/modernizing-legacy-syntax/)
 - [flow-typed](https://github.com/flow-typed/flow-typed)
 - [Prettier 3 breaking changes](https://prettier.io/blog/2023/07/05/3.0.0.html)
+- [React Redux connect API](https://redux.js.org/react-redux/api/connect)
+- [Express 5 API](https://expressjs.com/en/5x/api/)
+- [localForage implementation](https://github.com/localForage/localForage/tree/1.10.0/src)
 - [Husky setup](https://typicode.github.io/husky/get-started.html)
 - [lint-staged configuration and staging behavior](https://github.com/lint-staged/lint-staged)
