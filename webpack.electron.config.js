@@ -52,6 +52,8 @@ const mainConfig = {
         {
           from: path.resolve(__dirname, 'node_modules/libarchive.js/dist/worker-bundle.js'),
           to: `${DIST_ROOT}/electron/static/webworkers/worker-bundle.js`,
+          // Preserve the published worker alongside its matching WASM.
+          info: { minimized: true },
         },
         {
           from: path.resolve(__dirname, 'node_modules/libarchive.js/dist/libarchive.wasm'),
