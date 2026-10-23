@@ -14,6 +14,9 @@ const { updaterFixture } = require('./updaterFixture.cjs');
 
 const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'sandbox-'));
+fs.mkdirSync(path.join(root, 'webworkers'));
+for (const name of ['worker-bundle.js', 'libarchive.wasm'])
+  fs.copyFileSync(path.join(output, 'webworkers', name), path.join(root, 'webworkers', name));
 app.setPath('userData', root);
 app.commandLine.appendSwitch('use-angle', 'swiftshader');
 app.commandLine.appendSwitch('enable-unsafe-swiftshader');
@@ -142,6 +145,17 @@ app
       vertices: 3,
     });
     console.log('PASS: sandboxed Three.js loads authorized model bytes and renders with WebGL 2 without Node globals');
+    const comic = path.join(root, 'comic.cbz');
+    const comicZip = new AdmZip();
+    comicZip.addFile('1.png', Buffer.from(docxFixture.png, 'base64'));
+    comicZip.writeZip(comic);
+    await files.grant(comic);
+    assert.deepEqual(await evaluate('window.probeComic(' + JSON.stringify(comic) + ')'), {
+      pages: 1,
+      width: 1,
+      node: 'undefined',
+    });
+    console.log('PASS: sandboxed comic archive worker decodes an authorized CBZ and image without Node globals');
     const documents = await evaluate('window.probeDependencies(' + JSON.stringify(docx) + ')');
     const utilities = documents.utilities;
     assert.equal(utilities.signatures.length, 5);

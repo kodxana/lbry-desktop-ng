@@ -4,6 +4,7 @@ import markdownProcessor from 'util/markdown-processor';
 import markdownRenderer from 'util/markdown-renderer';
 import ReactDOMServer from 'react-dom/server';
 import React from 'react';
+import { readComic } from 'util/comic-archive';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
@@ -16,6 +17,18 @@ import sanitizeDocumentHtml from 'util/document-html';
 import ElectronCookies from 'util/electron-cookies.cjs';
 import legacyCookies from './fixtures/legacy-cookies.json';
 import runtimeUtilities from './runtimeUtilities';
+
+window.probeComic = async (filename) => {
+  const urls = await readComic(await desktop.readDocument(filename), new AbortController().signal);
+  try {
+    const image = new Image();
+    image.src = urls[0];
+    await image.decode();
+    return { pages: urls.length, width: image.naturalWidth, node: typeof window.require };
+  } finally {
+    urls.forEach((url) => URL.revokeObjectURL(url));
+  }
+};
 
 window.probeThree = async (filename) => {
   const container = document.createElement('div');

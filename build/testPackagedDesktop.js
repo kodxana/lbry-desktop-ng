@@ -276,16 +276,19 @@ async function main() {
     }
     console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
     if (development) {
-      const worker = await fetch(new URL('/webworkers/worker-bundle.js', page.url), {
-        signal: AbortSignal.timeout(10000),
-      });
-      assert.equal(worker.status, 200);
-      assert.match(worker.headers.get('content-type'), /^text\/javascript\b/);
-      assert.deepEqual(
-        Buffer.from(await worker.arrayBuffer()),
-        fs.readFileSync(path.join(root, 'static/webworkers/worker-bundle.js')),
-        'Express must serve the original static worker bytes'
-      );
+      for (const [name, mime] of [
+        ['worker-bundle.js', /^text\/javascript\b/],
+        ['libarchive.wasm', /^application\/wasm\b/],
+      ]) {
+        const worker = await fetch(new URL('/webworkers/' + name, page.url), { signal: AbortSignal.timeout(10000) });
+        assert.equal(worker.status, 200);
+        assert.match(worker.headers.get('content-type'), mime);
+        assert.deepEqual(
+          Buffer.from(await worker.arrayBuffer()),
+          fs.readFileSync(path.join(root, 'node_modules/libarchive.js/dist', name)),
+          'Express must serve the pinned archive worker/WASM bytes'
+        );
+      }
       const missing = await fetch(new URL('/missing-development-fixture', page.url), {
         signal: AbortSignal.timeout(10000),
       });
@@ -336,7 +339,11 @@ async function main() {
     assert.equal(updateState.ok, true, 'Updater IPC must recognize the packaged/development renderer');
     assert.equal(updateState.state.enabled, !development && process.platform === 'win32');
     assert.equal(updateState.state.accepted, false, 'Startup must never supply install consent');
-    assert.equal(await evaluate('typeof window.__electronLog'), 'undefined', 'Updater logging needs no renderer bridge');
+    assert.equal(
+      await evaluate('typeof window.__electronLog'),
+      'undefined',
+      'Updater logging needs no renderer bridge'
+    );
     assert.deepEqual(
       await evaluate("window.lbryDesktop.selectFile({type: 'invalid'})"),
       { ok: false, error: 'invalid' },

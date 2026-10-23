@@ -11,13 +11,21 @@ function Menu({ children }: { children: React$Node }) {
   );
 }
 
-function MenuList({ className, ...props }: { className?: string, children: React$Node }) {
+function MenuList({
+  className,
+  portal = true,
+  ...props
+}: {
+  className?: string,
+  portal?: boolean,
+  children: React$Node,
+}) {
   const menu = useMenuContext();
   return (
     <Popup
       {...props}
       className={classnames('menu__popup', className)}
-      portal
+      portal={portal}
       // A delayed close must not return focus after the menu has reopened.
       autoFocusOnHide={() => !menu.getState().open}
       onClick={(event) => {

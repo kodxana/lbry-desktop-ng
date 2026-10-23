@@ -19,6 +19,7 @@ const output = path.resolve(__dirname, '../../dist/renderer-tests');
 const root = fs.mkdtempSync(path.join(output, 'profile-'));
 app.setPath('userData', root);
 const graphics = process.argv.includes('--three');
+const comics = process.argv.includes('--comics');
 if (graphics) {
   // Exercise real WebGL 2 rendering deterministically on GPU-less CI runners.
   app.commandLine.appendSwitch('use-angle', 'swiftshader');
@@ -37,6 +38,7 @@ async function run(phase) {
     show: false,
     ...(phase === 'uiComponents' ? { width: 1280, height: 800 } : {}),
     ...(phase === 'collections' ? { width: 1280, height: 900 } : {}),
+    ...(phase === 'comics' ? { width: 1100, height: 750 } : {}),
     webPreferences: {
       nodeIntegration: true,
       // Fixture code creates files and inspects ZIPs. A separate sandbox suite
@@ -50,7 +52,7 @@ async function run(phase) {
       plugins: true,
       // Hidden fixture windows still need animation frames for the real viewers.
       backgroundThrottling: false,
-      offscreen: phase === 'documents' || phase === 'three',
+      offscreen: phase === 'documents' || phase === 'three' || phase === 'comics',
     },
   });
   activeWindow = window;
@@ -85,6 +87,24 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    ipcMain.handle('fixture-comic-fullscreen', async (event, label) => {
+      assert.equal(activePhase, 'comics');
+      assert.equal(event.sender, activeWindow.webContents);
+      assert(['Fullscreen', 'Exit fullscreen'].includes(label));
+      await activeWindow.webContents.executeJavaScript(
+        'document.querySelector(' + JSON.stringify('[aria-label="' + label + '"]') + ').click()',
+        true
+      );
+    });
+    ipcMain.handle('fixture-comic-capture', async (event, theme) => {
+      assert.equal(activePhase, 'comics');
+      assert.equal(event.sender, activeWindow.webContents);
+      assert(['dark', 'light', 'failure'].includes(theme));
+      fs.writeFileSync(
+        path.resolve(`dist/ci/comic-${theme}.png`),
+        (await activeWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
+      );
+    });
     ipcMain.handle('fixture-three-capture', async (event) => {
       assert.equal(activePhase, 'three');
       assert.equal(event.sender, activeWindow.webContents);
@@ -280,39 +300,41 @@ app
     );
     for (const phase of graphics
       ? ['three']
-      : [
-          'bundling',
-          'fresh',
-          'legacy',
-          'restart',
-          'uiComponents',
-          'accessibleControls',
-          'collections',
-          'browserIntegrations',
-          'formsAndDates',
-          'markdownEditor',
-          'documents',
-          'media',
-          'fileDialogs',
-          'fileUploads',
-          'windowControls',
-          'contextMenu',
-          'updater',
-          'updaterRestart',
-          'wallet',
-          'downloadNotifications',
-          'passwords',
-          'passwordRestart',
-          'analytics',
-          'analyticsEnabled',
-          'analyticsDisabled',
-          'analyticsUnconfigured',
-        ]) {
+      : comics
+        ? ['comics']
+        : [
+            'bundling',
+            'fresh',
+            'legacy',
+            'restart',
+            'uiComponents',
+            'accessibleControls',
+            'collections',
+            'browserIntegrations',
+            'formsAndDates',
+            'markdownEditor',
+            'documents',
+            'media',
+            'fileDialogs',
+            'fileUploads',
+            'windowControls',
+            'contextMenu',
+            'updater',
+            'updaterRestart',
+            'wallet',
+            'downloadNotifications',
+            'passwords',
+            'passwordRestart',
+            'analytics',
+            'analyticsEnabled',
+            'analyticsDisabled',
+            'analyticsUnconfigured',
+          ]) {
       await run(phase);
     }
     assert.deepEqual(
       analyticsRequests,
-      graphics
+      graphics || comics
         ? []
         : [
             { phase: 'analytics', url: 'https://analytics.lbry.com/matomo.js' },
@@ -321,7 +343,7 @@ app
       'Only explicit analytics opt-in may request the tracking script'
     );
     assert.deepEqual(blocked, [], 'Unexpected renderer requests: ' + JSON.stringify(blocked));
-    if (!graphics) {
+    if (!graphics && !comics) {
       const purchases = integrationRequests.filter((request) => request.type === 'subFrame');
       assert(purchases.length >= 2, 'The purchase fixture must exercise signed iframe destinations');
       for (const { url } of purchases) {

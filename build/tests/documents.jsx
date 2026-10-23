@@ -14,13 +14,11 @@ import documentHtml from './documentHtml';
 import pdfFixture from './fixtures/pdf.cjs';
 import docxFixture from './fixtures/docx.cjs';
 import markdown from './markdown';
-import comics from './comics';
 import { render, unmount, waitFor } from './helpers';
 
 export default async function documents(store, history, root) {
   await markdown(store, history);
   documentHtml();
-  await comics(store, history);
   for (const strict of [false, true]) {
     const source = path.join(root, `document ł #${strict ? 'strict' : 'transitional'}.docx`);
     docxFixture(strict).writeZip(source);

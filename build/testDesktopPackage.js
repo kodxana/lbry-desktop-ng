@@ -52,6 +52,14 @@ assert(entries.has('/node_modules/electron-updater/out/providers/GitHubProvider.
 for (const entry of ['main.js', 'preload.js', 'ui.js', 'index.html']) {
   assert(asar.extractFile(archive, entry).length > 0, 'Missing packaged entry: ' + entry);
 }
+for (const name of ['worker-bundle.js', 'libarchive.wasm']) {
+  assert.deepEqual(
+    asar.extractFile(archive, 'webworkers/' + name),
+    fs.readFileSync(path.resolve('node_modules/libarchive.js/dist', name)),
+    'Archive worker and WASM must match the pinned decoder'
+  );
+}
+assert(!entries.has('/webworkers/wasm-gen/libarchive.wasm'), 'Do not ship the obsolete comic decoder');
 // Windows uses electron-updater. Linux updates are manual, so its unpacked
 // directory need not contain the NSIS updater configuration.
 if (!linux) {

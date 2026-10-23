@@ -32,6 +32,11 @@ The [browser integration migration](browser-integrations.md) checks CAPTCHA
 callback and navigation races, legacy emoji compatibility, native SDK Proxy
 calls, and sandboxed HMAC signing with all external integration requests blocked.
 
+The [comic reader migration](comic-reader.md) checks decoded page pixels,
+book/manga layouts, navigation, zoom, fullscreen, dark/light captures and cleanup.
+It also verifies RAR 4/5 contents, encrypted/invalid archives, worker failures,
+the pinned worker/WASM pair and decoding without renderer Node privileges.
+
 The [forms and dates upgrade](forms-and-dates.md) adds send confirmation/retry,
 publish date editing, timed blocks, locale and duration formatting checks.
 
