@@ -4,7 +4,7 @@ import Button from 'component/button';
 import desktop from 'util/desktop';
 import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 
 // $FlowFixMe cannot resolve ...
 import image from 'static/img/yrblhappy.svg';
@@ -162,4 +162,4 @@ function HostingSplash(props: Props) {
   );
 }
 
-export default withRouter(HostingSplash);
+export default withDesktopRouter(HostingSplash);

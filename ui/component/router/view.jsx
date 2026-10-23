@@ -1,6 +1,7 @@
 // @flow
 import React, { useEffect } from 'react';
-import { Route, Redirect, Switch, withRouter } from 'react-router-dom';
+import { Route, Navigate, Routes } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 
 import * as PAGES from 'constants/pages';
 import { PAGE_TITLE } from 'constants/pageTitles';
@@ -95,16 +96,6 @@ type Props = {
   homepageData: any,
 };
 
-type PrivateRouteProps = Props & {
-  component: any,
-  isAuthenticated: boolean,
-};
-
-function PrivateRoute(props: PrivateRouteProps) {
-  const { component: Component, isAuthenticated, ...rest } = props;
-  return <Route {...rest} render={(props) => <Component {...props} />} />;
-}
-
 function AppRouter(props: Props) {
   const {
     currentScroll,
@@ -194,94 +185,105 @@ function AppRouter(props: Props) {
     }
   }, [currentScroll, pathname, search, hash, resetScroll, hasLinkedCommentInUrl, historyAction]);
 
-  // react-router doesn't decode pathanmes before doing the route matching check
-  // We have to redirect here because if we redirect on the server, it might get encoded again
-  // in the browser causing a redirect loop
-  const decodedUrl = decodeURIComponent(pathname) + search;
-  if (decodedUrl !== pathname + search) {
-    return <Redirect to={decodedUrl} />;
+  return <AppRoutes location={props.location} welcomeVersion={welcomeVersion} dynamicRoutes={dynamicRoutes} />;
+}
+
+export function AppRoutes({ location, welcomeVersion, dynamicRoutes = [] }: any) {
+  const { pathname } = location;
+  let decodedPath = pathname;
+  try {
+    decodedPath = decodeURIComponent(pathname);
+  } catch (error) {
+    // A malformed percent escape must not crash path normalization.
   }
+  if (decodedPath !== pathname) {
+    return <Navigate replace to={{ ...location, pathname: decodedPath }} state={location.state} />;
+  }
+  if (welcomeVersion < WELCOME_VERSION) return <Welcome />;
 
   return (
-    <Switch>
-      {welcomeVersion < WELCOME_VERSION && <Route path="/*" component={Welcome} />}
-      <Redirect
-        from={`/$/${PAGES.DEPRECATED__CHANNELS_FOLLOWING_MANAGE}`}
-        to={`/$/${PAGES.CHANNELS_FOLLOWING_DISCOVER}`}
+    <Routes>
+      <Route
+        path={`/$/${PAGES.DEPRECATED__CHANNELS_FOLLOWING_MANAGE}/*`}
+        element={<Navigate replace to={`/$/${PAGES.CHANNELS_FOLLOWING_DISCOVER}`} />}
       />
-      <Redirect from={`/$/${PAGES.DEPRECATED__CHANNELS_FOLLOWING}`} to={`/$/${PAGES.CHANNELS_FOLLOWING}`} />
-      <Redirect from={`/$/${PAGES.DEPRECATED__TAGS_FOLLOWING}`} to={`/$/${PAGES.TAGS_FOLLOWING}`} />
-      <Redirect from={`/$/${PAGES.DEPRECATED__TAGS_FOLLOWING_MANAGE}`} to={`/$/${PAGES.TAGS_FOLLOWING_MANAGE}`} />
-      <Redirect from={`/$/${PAGES.DEPRECATED__PUBLISH}`} to={`/$/${PAGES.UPLOAD}`} />
-      <Redirect from={`/$/${PAGES.DEPRECATED__PUBLISHED}`} to={`/$/${PAGES.UPLOADS}`} />
+      <Route
+        path={`/$/${PAGES.DEPRECATED__CHANNELS_FOLLOWING}/*`}
+        element={<Navigate replace to={`/$/${PAGES.CHANNELS_FOLLOWING}`} />}
+      />
+      <Route
+        path={`/$/${PAGES.DEPRECATED__TAGS_FOLLOWING}/*`}
+        element={<Navigate replace to={`/$/${PAGES.TAGS_FOLLOWING}`} />}
+      />
+      <Route
+        path={`/$/${PAGES.DEPRECATED__TAGS_FOLLOWING_MANAGE}/*`}
+        element={<Navigate replace to={`/$/${PAGES.TAGS_FOLLOWING_MANAGE}`} />}
+      />
+      <Route path={`/$/${PAGES.DEPRECATED__PUBLISH}/*`} element={<Navigate replace to={`/$/${PAGES.UPLOAD}`} />} />
+      <Route path={`/$/${PAGES.DEPRECATED__PUBLISHED}/*`} element={<Navigate replace to={`/$/${PAGES.UPLOADS}`} />} />
 
-      <Route path={`/`} exact component={HomePage} />
-      <Route path={`/$/${PAGES.DISCOVER}`} exact component={DiscoverPage} />
+      <Route path={`/`} element={<HomePage />} />
+      <Route path={`/$/${PAGES.DISCOVER}`} element={<DiscoverPage location={location} />} />
       {/* $FlowFixMe */}
       {dynamicRoutes.map((dynamicRouteProps: RowDataItem) => (
         <Route
           key={dynamicRouteProps.route}
-          path={dynamicRouteProps.route}
-          component={(routerProps) => <DiscoverPage {...routerProps} dynamicRouteProps={dynamicRouteProps} />}
+          path={`${dynamicRouteProps.route}/*`}
+          element={<DiscoverPage location={location} dynamicRouteProps={dynamicRouteProps} />}
         />
       ))}
 
       {/* Odysee signin */}
-      <Route path={`/$/${PAGES.AUTH_SIGNIN}`} exact component={SignInPage} />
-      <Route path={`/$/${PAGES.AUTH_PASSWORD_RESET}`} exact component={PasswordResetPage} />
-      <Route path={`/$/${PAGES.AUTH_PASSWORD_SET}`} exact component={PasswordSetPage} />
-      <Route path={`/$/${PAGES.AUTH}`} exact component={SignUpPage} />
-      <Route path={`/$/${PAGES.AUTH}/*`} exact component={SignUpPage} />
-      <Route path={`/$/${PAGES.AUTH_VERIFY}`} exact component={SignInVerifyPage} />
+      <Route path={`/$/${PAGES.AUTH_SIGNIN}`} element={<SignInPage />} />
+      <Route path={`/$/${PAGES.AUTH_PASSWORD_RESET}`} element={<PasswordResetPage />} />
+      <Route path={`/$/${PAGES.AUTH_PASSWORD_SET}`} element={<PasswordSetPage />} />
+      <Route path={`/$/${PAGES.AUTH}`} element={<SignUpPage />} />
+      <Route path={`/$/${PAGES.AUTH}/*`} element={<SignUpPage />} />
+      <Route path={`/$/${PAGES.AUTH_VERIFY}`} element={<SignInVerifyPage />} />
 
-      <Route path={`/$/${PAGES.WELCOME}`} exact component={Welcome} />
+      <Route path={`/$/${PAGES.WELCOME}`} element={<Welcome />} />
 
-      <Route path={`/$/${PAGES.HELP}`} exact component={HelpPage} />
+      <Route path={`/$/${PAGES.HELP}`} element={<HelpPage />} />
       {/* @if TARGET='app' */}
-      <Route path={`/$/${PAGES.BACKUP}`} exact component={BackupPage} />
+      <Route path={`/$/${PAGES.BACKUP}`} element={<BackupPage />} />
       {/* @endif */}
-      <Route path={`/$/${PAGES.SEARCH}`} exact component={SearchPage} />
-      <Route path={`/$/${PAGES.TOP}`} exact component={TopPage} />
-      <Route path={`/$/${PAGES.SETTINGS}`} exact component={SettingsPage} />
-      <Route path={`/$/${PAGES.REPORT_CONTENT}`} exact component={ReportContentPage} />
-      <Route {...props} path={`/$/${PAGES.LIST}/:collectionId`} component={CollectionPage} />
+      <Route path={`/$/${PAGES.SEARCH}`} element={<SearchPage />} />
+      <Route path={`/$/${PAGES.TOP}`} element={<TopPage />} />
+      <Route path={`/$/${PAGES.SETTINGS}`} element={<SettingsPage />} />
+      <Route path={`/$/${PAGES.REPORT_CONTENT}`} element={<ReportContentPage />} />
+      <Route path={`/$/${PAGES.LIST}/:collectionId/*`} element={<CollectionPage />} />
 
-      <PrivateRoute {...props} exact path={`/$/${PAGES.TAGS_FOLLOWING}`} component={TagsFollowingPage} />
-      <PrivateRoute {...props} exact path={`/$/${PAGES.CHANNELS_FOLLOWING}`} component={ChannelsFollowingPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_NOTIFICATIONS}`} component={SettingsNotificationsPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_UPDATE_PWD}`} component={UpdatePasswordPage} />
-      <PrivateRoute
-        {...props}
-        exact
-        path={`/$/${PAGES.CHANNELS_FOLLOWING_DISCOVER}`}
-        component={ChannelsFollowingDiscoverPage}
-      />
-      <PrivateRoute {...props} path={`/$/${PAGES.CHANNEL_NEW}`} component={ChannelNew} />
-      <PrivateRoute {...props} path={`/$/${PAGES.REPOST_NEW}`} component={RepostNew} />
-      <PrivateRoute {...props} path={`/$/${PAGES.UPLOADS}`} component={FileListPublished} />
-      <PrivateRoute {...props} path={`/$/${PAGES.CREATOR_DASHBOARD}`} component={CreatorDashboard} />
-      <PrivateRoute {...props} path={`/$/${PAGES.UPLOAD}`} component={PublishPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.REPORT}`} component={ReportPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.LIBRARY}`} component={LibraryPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.LISTS}`} component={ListsPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.PLAYLISTS}`} component={PlaylistsPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.TAGS_FOLLOWING_MANAGE}`} component={TagsFollowingManagePage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_BLOCKED_MUTED}`} component={ListBlockedPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_CREATOR}`} component={SettingsCreatorPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.WALLET}`} exact component={WalletPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.CHANNELS}`} component={ChannelsPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.BUY}`} component={BuyPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.RECEIVE}`} component={ReceivePage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.SEND}`} component={SendPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.NOTIFICATIONS}`} component={NotificationsPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.AUTH_WALLET_PASSWORD}`} component={SignInWalletPasswordPage} />
-      <PrivateRoute {...props} path={`/$/${PAGES.SETTINGS_OWN_COMMENTS}`} component={OwnComments} />
+      <Route path={`/$/${PAGES.TAGS_FOLLOWING}`} element={<TagsFollowingPage />} />
+      <Route path={`/$/${PAGES.CHANNELS_FOLLOWING}`} element={<ChannelsFollowingPage />} />
+      <Route path={`/$/${PAGES.SETTINGS_NOTIFICATIONS}/*`} element={<SettingsNotificationsPage />} />
+      <Route path={`/$/${PAGES.SETTINGS_UPDATE_PWD}/*`} element={<UpdatePasswordPage />} />
+      <Route path={`/$/${PAGES.CHANNELS_FOLLOWING_DISCOVER}`} element={<ChannelsFollowingDiscoverPage />} />
+      <Route path={`/$/${PAGES.CHANNEL_NEW}/*`} element={<ChannelNew />} />
+      <Route path={`/$/${PAGES.REPOST_NEW}/*`} element={<RepostNew />} />
+      <Route path={`/$/${PAGES.UPLOADS}/*`} element={<FileListPublished />} />
+      <Route path={`/$/${PAGES.CREATOR_DASHBOARD}/*`} element={<CreatorDashboard />} />
+      <Route path={`/$/${PAGES.UPLOAD}/*`} element={<PublishPage />} />
+      <Route path={`/$/${PAGES.REPORT}/*`} element={<ReportPage />} />
+      <Route path={`/$/${PAGES.LIBRARY}/*`} element={<LibraryPage />} />
+      <Route path={`/$/${PAGES.LISTS}/*`} element={<ListsPage />} />
+      <Route path={`/$/${PAGES.PLAYLISTS}/*`} element={<PlaylistsPage />} />
+      <Route path={`/$/${PAGES.TAGS_FOLLOWING_MANAGE}/*`} element={<TagsFollowingManagePage />} />
+      <Route path={`/$/${PAGES.SETTINGS_BLOCKED_MUTED}/*`} element={<ListBlockedPage />} />
+      <Route path={`/$/${PAGES.SETTINGS_CREATOR}/*`} element={<SettingsCreatorPage />} />
+      <Route path={`/$/${PAGES.WALLET}`} element={<WalletPage />} />
+      <Route path={`/$/${PAGES.CHANNELS}/*`} element={<ChannelsPage />} />
+      <Route path={`/$/${PAGES.BUY}/*`} element={<BuyPage />} />
+      <Route path={`/$/${PAGES.RECEIVE}/*`} element={<ReceivePage />} />
+      <Route path={`/$/${PAGES.SEND}/*`} element={<SendPage />} />
+      <Route path={`/$/${PAGES.NOTIFICATIONS}/*`} element={<NotificationsPage />} />
+      <Route path={`/$/${PAGES.AUTH_WALLET_PASSWORD}/*`} element={<SignInWalletPasswordPage />} />
+      <Route path={`/$/${PAGES.SETTINGS_OWN_COMMENTS}/*`} element={<OwnComments />} />
 
-      {/* Below need to go at the end to make sure we don't match any of our pages first */}
-      <Route path="/:claimName" exact component={ShowPage} />
-      <Route path="/:claimName/:streamName" exact component={ShowPage} />
-    </Switch>
+      {/* Named app routes rank ahead of LBRY content routes. */}
+      <Route path="/:claimName" element={<ShowPage />} />
+      <Route path="/:claimName/:streamName" element={<ShowPage />} />
+    </Routes>
   );
 }
 
-export default withRouter(AppRouter);
+export default withDesktopRouter(AppRouter);

@@ -1,12 +1,12 @@
 // @flow
 import { formatLbryUrlForWeb } from 'util/url';
 import { Menu, MenuList, MenuButton, MenuItem } from 'component/common/menu';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 import { PAGE_VIEW_QUERY, DISCUSSION_PAGE } from 'page/channel/view';
 import { parseSticker } from 'util/comments';
 import { parseURI } from 'util/lbryURI';
 import { RULE } from 'constants/notifications';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import * as ICONS from 'constants/icons';
 import Button from 'component/button';
 import ChannelThumbnail from 'component/channelThumbnail';
@@ -35,7 +35,7 @@ export default function Notification(props: Props) {
 
   const { notification_rule, notification_parameters, is_read } = notification;
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const [isReplying, setReplying] = React.useState(false);
   const [quickReply, setQuickReply] = React.useState();
 

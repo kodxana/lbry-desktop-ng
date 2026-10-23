@@ -7,6 +7,11 @@ automatic batching, consistent Redux/router locations,
 redirects, history menus, fast wallet encryption/unlock completion, leaving
 pending password dialogs, and image-viewer zoom, rotation and keyboard focus.
 
+The [navigation migration](navigation.md) checks the production route definitions,
+setup precedence, legacy redirects, collection parameters and content URLs.
+Renderer tests exercise link state/query/hash, active navigation styles,
+cancelled and modified clicks, redirects and back/forward navigation.
+
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
 Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 44.7.0. The

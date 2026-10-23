@@ -14,7 +14,7 @@ import { onFullscreenChange } from 'util/full-screen';
 import { generateListSearchUrlParams, formatLbryUrlForWeb } from 'util/url';
 import { useIsMobile, useIsMediumScreen } from 'effects/use-screensize';
 import debounce from 'util/debounce';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { isURIEqual } from 'util/lbryURI';
 import AutoplayCountdown from 'component/autoplayCountdown';
 
@@ -127,7 +127,7 @@ export default function FileRenderFloating(props: Props) {
     nextListUri,
     previousListUri,
   } = props;
-  const { location, push } = useHistory();
+  const { location, push } = useDesktopHistory();
   const hideFloatingPlayer = location.state && location.state.hideFloatingPlayer;
   const playingUriSource = playingUri && playingUri.source;
   const isComment = playingUriSource === 'comment';

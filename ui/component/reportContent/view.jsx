@@ -17,7 +17,7 @@ import {
 } from 'constants/form-field';
 import * as REPORT_API from 'constants/report_content';
 import * as ICONS from 'constants/icons';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 const PAGE_TYPE = 'page--type';
 const PAGE_CATEGORY = 'page--category';
@@ -74,7 +74,7 @@ export default function ReportContent(props: Props) {
   const [page, setPage] = React.useState(PAGE_TYPE);
   const [timestampInvalid, setTimestampInvalid] = React.useState(false);
   const [isResolvingClaim, setIsResolvingClaim] = React.useState(false);
-  const { goBack } = useHistory();
+  const { goBack } = useDesktopHistory();
 
   // Resolve claim if URL is entered directly or if page is reloaded.
   React.useEffect(() => {

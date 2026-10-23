@@ -1,7 +1,8 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import FileThumbnail from 'component/fileThumbnail';
 import UriIndicator from 'component/uriIndicator';
 import TruncatedText from 'component/common/truncated-text';
@@ -250,4 +251,4 @@ function ClaimPreviewTile(props: Props) {
   );
 }
 
-export default withRouter(ClaimPreviewTile);
+export default withDesktopRouter(ClaimPreviewTile);

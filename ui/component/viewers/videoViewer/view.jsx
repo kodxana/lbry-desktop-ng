@@ -13,7 +13,7 @@ import { addTheaterModeButton } from './internal/theater-mode';
 import { addAutoplayNextButton } from './internal/autoplay-next';
 import { addPlayNextButton } from './internal/play-next';
 import { addPlayPreviousButton } from './internal/play-previous';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import type { HomepageCat } from 'util/buildHomepage';
 import debounce from 'util/debounce';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
@@ -97,7 +97,7 @@ function VideoViewer(props: Props) {
   const claimId = claim && claim.claim_id;
   const isAudio = contentType.includes('audio');
   const forcePlayer = FORCE_CONTENT_TYPE_PLAYER.includes(contentType);
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const [doNavigate, setDoNavigate] = useState(false);
   const [playNextUrl, setPlayNextUrl] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);

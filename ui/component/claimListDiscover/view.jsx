@@ -4,7 +4,7 @@ import type { Node } from 'react';
 import * as CS from 'constants/claim_search';
 import React from 'react';
 import usePersistedState from 'effects/use-persisted-state';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { MATURE_TAGS } from 'constants/tags';
 import { createNormalizedClaimSearchKey } from 'util/claim';
 import { splitBySeparator } from 'util/lbryURI';
@@ -194,13 +194,13 @@ function ClaimListDiscover(props: Props) {
     ? langParam === null
       ? languageSetting.concat(languageSetting === 'en' ? ',none' : '')
       : langParam === 'any'
-      ? null
-      : langParam.concat(langParam === 'en' ? ',none' : '')
+        ? null
+        : langParam.concat(langParam === 'en' ? ',none' : '')
     : langParam === null
-    ? null
-    : langParam === 'any'
-    ? null
-    : langParam.concat(langParam === 'en' ? ',none' : '');
+      ? null
+      : langParam === 'any'
+        ? null
+        : langParam.concat(langParam === 'en' ? ',none' : '');
 
   const contentTypeParam = urlParams.get(CS.CONTENT_KEY);
   const claimTypeParam =
@@ -526,8 +526,8 @@ function ClaimListDiscover(props: Props) {
       orderBy === CS.ORDER_BY_TRENDING
         ? CS.ORDER_BY_TRENDING_VALUE
         : orderBy === CS.ORDER_BY_NEW
-        ? CS.ORDER_BY_NEW_VALUE
-        : CS.ORDER_BY_TOP_VALUE;
+          ? CS.ORDER_BY_NEW_VALUE
+          : CS.ORDER_BY_TOP_VALUE;
 
     if (orderBy === CS.ORDER_BY_NEW && sortBy === CS.SORT_BY.OLDEST.key) {
       return order_by.map((x) => `${CS.SORT_BY.OLDEST.opt}${x}`);
@@ -658,4 +658,4 @@ function ClaimListDiscover(props: Props) {
   );
 }
 
-export default withRouter(ClaimListDiscover);
+export default withDesktopRouter(ClaimListDiscover);

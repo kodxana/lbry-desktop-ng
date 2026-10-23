@@ -3,7 +3,7 @@ import * as PAGES from 'constants/pages';
 import React from 'react';
 import ChannelForm from 'component/channelForm';
 import Page from 'component/page';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import YrblWalletEmpty from 'component/yrblWalletEmpty';
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 
 function ChannelNew(props: Props) {
   const { balance, claimConfirmEmailReward, isAuthenticated } = props;
-  const { push, location } = useHistory();
+  const { push, location } = useDesktopHistory();
   const urlSearchParams = new URLSearchParams(location.search);
   const redirectUrl = urlSearchParams.get('redirect');
   const emptyBalance = balance === 0;

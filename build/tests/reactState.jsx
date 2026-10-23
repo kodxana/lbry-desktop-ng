@@ -1,11 +1,13 @@
 import { strict as assert } from 'assert';
 import React from 'react';
 import { connect, useSelector } from 'react-redux';
-import { Redirect, Route, Switch, useLocation, useParams, withRouter } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { push, replace, goBack, goForward } from 'redux-first-history';
 import { ipcRenderer } from 'electron';
 import ReactModal from 'react-modal';
 import NavigationButton from 'component/navigationButton/view';
+import Button from 'component/button/view';
 import ViewImage from 'modal/modalViewImage/view';
 import Unlock from 'modal/modalWalletUnlock/view';
 import Encrypt from 'modal/modalWalletEncrypt/view';
@@ -22,7 +24,7 @@ import { render, unmount, waitFor, tick, input, submit } from './helpers';
 import imageUrl from './fixtures/build-probe.svg';
 import 'scss/all.scss';
 
-const Navigation = withRouter(NavigationButton);
+const Navigation = withDesktopRouter(NavigationButton);
 
 async function navigation(store, history) {
   const commits = [];
@@ -38,7 +40,10 @@ async function navigation(store, history) {
         setSecond(2);
       });
     React.useLayoutEffect(() => {
-      assert.equal(location, stored, 'Router context and Redux must commit the same location');
+      for (const key of ['pathname', 'search', 'hash', 'key']) {
+        assert.equal(location[key], stored[key], `Router and Redux must commit the same ${key}`);
+      }
+      assert.deepEqual(location.state, stored.state ?? null, 'Navigation state must stay consistent');
       commits.push([first, second]);
     });
     return (
@@ -118,14 +123,12 @@ async function navigation(store, history) {
   }
   history.replace('/redirect');
   render(
-    <Switch>
-      <Route path="/redirect">
-        <Redirect to="/channel/fixture" />
-      </Route>
+    <Routes>
+      <Route path="/redirect" element={<Navigate replace to="/channel/fixture" />} />
       <Route path="/channel">
-        <Route path="/channel/:id" component={Detail} />
+        <Route path=":id" element={<Detail />} />
       </Route>
-    </Switch>,
+    </Routes>,
     store,
     history
   );
@@ -134,6 +137,68 @@ async function navigation(store, history) {
     'Mount redirects and nested params must render'
   );
   assert.equal(history.location.pathname, '/channel/fixture');
+  unmount();
+}
+
+async function links(store, history) {
+  history.replace('/$/wallet?tab=history#details');
+  render(
+    <>
+      <Button id="wallet-nav" navigate="/$/wallet" label="Wallet" activeClass="selected-wallet" />
+      <Button id="content-nav" navigate="lbry://@fixture#abc/video#def" label="Content" />
+      <Link id="state-nav" to="/$/backup?from=wallet#export" state={{ from: 'wallet' }}>
+        Backup
+      </Link>
+      <Link id="cancel-nav" to="/$/send" onClick={(event) => event.preventDefault()}>
+        Stay here
+      </Link>
+      <Link id="query-nav" to="?tab=transactions" relative="path">
+        Transactions
+      </Link>
+    </>,
+    store,
+    history
+  );
+  assert(document.getElementById('wallet-nav').classList.contains('selected-wallet'));
+  assert.equal(document.getElementById('wallet-nav').getAttribute('aria-current'), 'page');
+  document.getElementById('state-nav').click();
+  await waitFor(() => history.location.pathname === '/$/backup', 'Link must use the Redux history');
+  assert.equal(history.location.search, '?from=wallet');
+  assert.equal(history.location.hash, '#export');
+  assert.deepEqual(history.location.state, { from: 'wallet' });
+  document.getElementById('cancel-nav').click();
+  await tick();
+  assert.equal(history.location.pathname, '/$/backup', 'A prevented click must not navigate');
+  // Prevent native browser navigation after React handles this modified click.
+  document.addEventListener('click', (event) => event.preventDefault(), { once: true });
+  document
+    .getElementById('wallet-nav')
+    .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }));
+  await tick();
+  assert.equal(history.location.pathname, '/$/backup', 'Modified clicks must not change the current page');
+  document.getElementById('query-nav').click();
+  await waitFor(() => history.location.search === '?tab=transactions', 'Query-only links must retain the pathname');
+  assert.equal(history.location.pathname, '/$/backup');
+  document.getElementById('content-nav').click();
+  await waitFor(
+    () => history.location.pathname === '/@fixture:abc/video:def',
+    'LBRY links must keep channel and claim IDs'
+  );
+  history.push('/$/wallet/child');
+  await tick();
+  assert(
+    !document.getElementById('wallet-nav').classList.contains('selected-wallet'),
+    'Navigation buttons must match exactly'
+  );
+  unmount();
+
+  const length = history.length;
+  render(<Navigate replace to="/$/wallet?tab=history#details" state={{ from: 'redirect' }} />, store, history);
+  await waitFor(() => history.location.pathname === '/$/wallet', 'Mount redirects must navigate');
+  assert.equal(history.length, length, 'Redirects must replace the current entry');
+  assert.equal(history.location.search, '?tab=history');
+  assert.equal(history.location.hash, '#details');
+  assert.deepEqual(history.location.state, { from: 'redirect' });
   unmount();
 }
 
@@ -372,6 +437,7 @@ export default async function reactState(store, history) {
     assert.match(React.version, /^19\./, 'Exercise the upgraded React runtime');
     await renderingCompatibility(store, history);
     await navigation(store, history);
+    await links(store, history);
     await fastUnlock(store, history);
     await encryptionCompletion(store, history);
     await lightbox(store, history);

@@ -2,7 +2,7 @@ import { connect } from 'react-redux';
 import { selectReceiveAddress, selectGettingNewAddress } from 'redux/selectors/wallet';
 import { doCheckAddressIsMine, doGetNewAddress } from 'redux/actions/wallet';
 import WalletAddress from './view';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 
 const select = (state) => ({
   receiveAddress: selectReceiveAddress(state),
@@ -14,4 +14,4 @@ const perform = (dispatch) => ({
   getNewAddress: () => dispatch(doGetNewAddress()),
 });
 
-export default withRouter(connect(select, perform)(WalletAddress));
+export default withDesktopRouter(connect(select, perform)(WalletAddress));

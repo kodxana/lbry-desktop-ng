@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router';
 import { get as getEmoji, search as searchEmojis } from 'node-emoji';
 import Lbry from 'lbry';
 import { Lbryio } from 'lbryinc';
@@ -112,9 +112,10 @@ async function verification(store, history) {
     });
   const mount = (extra) => {
     render(
-      <Route path="/$/verify">
-        <SignInVerify doToast={toast} />
-      </Route>,
+      <Routes>
+        <Route path="/$/verify" element={<SignInVerify doToast={toast} />} />
+        <Route path="*" element={null} />
+      </Routes>,
       store,
       history
     );

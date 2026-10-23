@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as MODALS from 'constants/modal_types';
 
 import ModalAffirmPurchase from 'modal/modalAffirmPurchase';
@@ -181,4 +181,4 @@ function ModalRouter(props: Props) {
   return <SelectedModal {...modalProps} />;
 }
 
-export default withRouter(ModalRouter);
+export default withDesktopRouter(ModalRouter);

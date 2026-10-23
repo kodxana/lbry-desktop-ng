@@ -8,6 +8,7 @@ for (const file of [
   'testYaml.js',
   'testBuildHelpers.js',
   'testCompiler.js',
+  'testDesktopRoutes.js',
   'testDesktopSetup.js',
   'testDesktopUpdates.js',
   'testUpdaterIpc.js',

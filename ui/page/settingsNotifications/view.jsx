@@ -8,7 +8,7 @@ import { FormField } from 'component/common/form';
 import Card from 'component/common/card';
 import SettingsRow from 'component/settingsRow';
 import { Lbryio } from 'lbryinc';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Yrbl from 'component/yrbl';
 import Button from 'component/button';
 
@@ -24,7 +24,7 @@ export default function NotificationSettingsPage(props: Props) {
   const [tagMap, setTagMap] = React.useState({});
   const [tags, setTags] = React.useState();
   const [enabledEmails, setEnabledEmails] = React.useState();
-  const { location } = useHistory();
+  const { location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const verificationToken = urlParams.get('verification_token');
   const lbryIoParams = verificationToken ? { auth_token: verificationToken } : undefined;

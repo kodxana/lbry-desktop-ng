@@ -2,7 +2,7 @@
 // import 'scss/component/_header.scss'; // ody codesplits this. no.
 
 import { useIsMobile } from 'effects/use-screensize';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import Button from 'component/button';
@@ -131,8 +131,8 @@ const Header = (props: Props) => {
           walletProgress.pending
             ? walletProgress.title
             : balance > 0
-            ? __('Immediately spendable: %spendable_balance%', { spendable_balance: roundedSpendableBalance })
-            : __('Your Wallet')
+              ? __('Immediately spendable: %spendable_balance%', { spendable_balance: roundedSpendableBalance })
+              : __('Your Wallet')
         }
       >
         <div>
@@ -155,8 +155,8 @@ const Header = (props: Props) => {
                 walletProgress.pending
                   ? __('Wallet sync')
                   : hideBalance || Number(roundedBalance) === 0
-                  ? __('Your Wallet')
-                  : roundedBalance
+                    ? __('Your Wallet')
+                    : roundedBalance
               }
               icon={ICONS.LBC}
               onDoubleClick={(e) => {
@@ -268,4 +268,4 @@ const Header = (props: Props) => {
   );
 };
 
-export default withRouter(Header);
+export default withDesktopRouter(Header);

@@ -13,7 +13,7 @@ import ClaimList from 'component/claimList';
 import Card from 'component/common/card';
 import LbcSymbol from 'component/common/lbc-symbol';
 import SelectThumbnail from 'component/selectThumbnail';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { isNameValid, regexInvalidURI } from 'util/lbryURI';
 import * as THUMBNAIL_STATUSES from 'constants/thumbnail_upload_statuses';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
@@ -112,7 +112,7 @@ function CollectionForm(props: Props) {
   const [params, setParams]: [any, (any) => void] = React.useState({});
   const name = params.name;
   const isNewCollection = !uri;
-  const { replace } = useHistory();
+  const { replace } = useDesktopHistory();
   const languageParam = params.languages || [];
   const primaryLanguage = Array.isArray(languageParam) && languageParam.length && languageParam[0];
   const secondaryLanguage = Array.isArray(languageParam) && languageParam.length >= 2 && languageParam[1];

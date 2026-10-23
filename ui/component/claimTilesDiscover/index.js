@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { selectClaimSearchByQuery, selectFetchingClaimSearchByQuery, selectClaimsByUri } from 'redux/selectors/claims';
 import { doClaimSearch } from 'redux/actions/claims';
 import * as SETTINGS from 'constants/settings';
@@ -43,7 +43,7 @@ const perform = {
   doFetchViewCount,
 };
 
-export default withRouter(connect(select, perform)(ClaimListDiscover));
+export default withDesktopRouter(connect(select, perform)(ClaimListDiscover));
 
 // ****************************************************************************
 // ****************************************************************************

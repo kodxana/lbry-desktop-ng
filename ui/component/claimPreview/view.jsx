@@ -1,7 +1,8 @@
 // @flow
 import type { Node } from 'react';
 import React, { useEffect, forwardRef } from 'react';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { isEmpty } from 'util/object';
 import classnames from 'classnames';
 import { isURIValid } from 'util/lbryURI';
@@ -437,4 +438,4 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   );
 });
 
-export default withRouter(ClaimPreview);
+export default withDesktopRouter(ClaimPreview);

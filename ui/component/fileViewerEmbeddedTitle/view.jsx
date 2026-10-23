@@ -3,7 +3,7 @@ import React from 'react';
 import Button from 'component/button';
 import FilePrice from 'component/filePrice';
 import { formatLbryUrlForWeb } from 'util/url';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { URL } from 'config';
 import Logo from 'component/logo';
 
@@ -53,4 +53,4 @@ function FileViewerEmbeddedTitle(props: Props) {
   );
 }
 
-export default withRouter(FileViewerEmbeddedTitle);
+export default withDesktopRouter(FileViewerEmbeddedTitle);

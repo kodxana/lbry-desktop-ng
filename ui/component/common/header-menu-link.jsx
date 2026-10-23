@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 

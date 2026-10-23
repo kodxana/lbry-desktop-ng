@@ -7,7 +7,7 @@ import ChannelThumbnail from 'component/channelThumbnail';
 import { Menu, MenuList, MenuButton, MenuItem } from 'component/common/menu';
 import ChannelTitle from 'component/channelTitle';
 import Icon from 'component/common/icon';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 type Props = {
   selectedChannelUrl: string, // currently selected channel
@@ -56,7 +56,7 @@ function ChannelSelector(props: Props) {
   const {
     push,
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
   const activeChannelUrl = activeChannelClaim && activeChannelClaim.permanent_url;
 
   function handleChannelSelect(channelClaim) {

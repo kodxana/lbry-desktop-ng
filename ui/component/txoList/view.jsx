@@ -1,7 +1,7 @@
 // @flow
 import * as ICONS from 'constants/icons';
 import React, { useEffect } from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as TXO from 'constants/txo_list';
 import TransactionListTable from 'component/transactionListTable';
 import Paginate from 'component/common/paginate';
@@ -311,4 +311,4 @@ function TxoList(props: Props) {
   );
 }
 
-export default withRouter(TxoList);
+export default withDesktopRouter(TxoList);

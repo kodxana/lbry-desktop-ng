@@ -26,7 +26,7 @@ import SelectThumbnail from 'component/selectThumbnail';
 import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
 import * as PUBLISH_MODES from 'constants/publish_types';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Spinner from 'component/spinner';
 
 import desktop from 'util/desktop';
@@ -129,7 +129,7 @@ function PublishForm(props: Props) {
   } = props;
 
   const inEditMode = Boolean(editingURI);
-  const { replace, location } = useHistory();
+  const { replace, location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const TYPE_PARAM = 'type';
   const uploadType = urlParams.get(TYPE_PARAM);
@@ -217,8 +217,8 @@ function PublishForm(props: Props) {
   const formValid = isOverwritingExistingClaim
     ? false
     : editingURI && !filePath // if we're editing we don't need a file
-    ? isStillEditing && formValidLessFile && !waitingForFile
-    : formValidLessFile;
+      ? isStillEditing && formValidLessFile && !waitingForFile
+      : formValidLessFile;
 
   const [previewing, setPreviewing] = React.useState(false);
 

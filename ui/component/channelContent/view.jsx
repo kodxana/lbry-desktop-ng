@@ -3,7 +3,7 @@ import * as CS from 'constants/claim_search';
 import * as ICONS from 'constants/icons';
 import React, { Fragment } from 'react';
 import HiddenNsfwClaims from 'component/hiddenNsfwClaims';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Button from 'component/button';
 import ClaimListDiscover from 'component/claimListDiscover';
 import Icon from 'component/common/icon';
@@ -58,7 +58,7 @@ function ChannelContent(props: Props) {
   const [searchResults, setSearchResults] = React.useState(undefined);
   const {
     location: { pathname, search },
-  } = useHistory();
+  } = useDesktopHistory();
   const url = `${pathname}${search}`;
   const claimId = claim && claim.claim_id;
   const showFilters =

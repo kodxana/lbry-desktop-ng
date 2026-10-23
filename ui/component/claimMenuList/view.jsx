@@ -9,8 +9,8 @@ import classnames from 'classnames';
 import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 import { generateShareUrl, generateLbryContentUrl, formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
-import { useHistory } from 'react-router';
-import { Link } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
+import { Link } from 'react-router';
 import { buildURI, parseURI } from 'util/lbryURI';
 
 const SHARE_DOMAIN = SHARE_DOMAIN_URL || URL;
@@ -126,7 +126,7 @@ function ClaimMenuList(props: Props) {
       ? __('Unfollow')
       : __('Follow');
 
-  const { push, replace } = useHistory();
+  const { push, replace } = useDesktopHistory();
 
   const fetchItems = React.useCallback(() => {
     if (collectionId) {

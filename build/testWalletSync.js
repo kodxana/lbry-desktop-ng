@@ -6,7 +6,13 @@ const { load } = require('./testStartup');
 
 module.exports = async function walletSyncTests() {
   const sync = load('util/wallet-sync.js', {});
-  const history = { state: 'syncing', connected: true, entries_completed: 100, entries_total: 250, pending_operations: 1 };
+  const history = {
+    state: 'syncing',
+    connected: true,
+    entries_completed: 100,
+    entries_total: 250,
+    pending_operations: 1,
+  };
   const status = { wallet: { available_servers: 1, headers_synchronization_progress: 100, history_sync: history } };
   const { walletSyncProgress } = sync;
   assert(walletSyncProgress(status).pending, '100% headers does not complete account history');
@@ -44,7 +50,7 @@ module.exports = async function walletSyncTests() {
   assert(markup.includes('Your balance may change'));
   assert(!markup.includes('<progress'), 'A growing total must not be displayed as an overall percentage');
 
-  const text = props => React.createElement('span', null, props.children || props.label || props.postfix);
+  const text = (props) => React.createElement('span', null, props.children || props.label || props.postfix);
   const WalletBalance = load('component/walletBalance/view.jsx', {
     react: React,
     'constants/icons': {},
@@ -55,7 +61,8 @@ module.exports = async function walletSyncTests() {
     'component/common/help-link': text,
     'component/common/lbc-symbol': text,
     'component/i18nMessage': text,
-    'component/common/card': props => React.createElement('section', null, props.title, props.subtitle, props.actions),
+    'component/common/card': (props) =>
+      React.createElement('section', null, props.title, props.subtitle, props.actions),
     'util/format-credits': { formatCredits: String },
     'component/walletSyncNotice/view': Notice,
     'util/wallet-sync': sync,
@@ -66,33 +73,43 @@ module.exports = async function walletSyncTests() {
 
   const headerDependencies = {
     react: React,
-classnames: require('classnames'),
+    classnames: require('classnames'),
     'effects/use-screensize': { useIsMobile: () => false },
-    'react-router': { withRouter: component => component },
+    'component/common/desktop-router': { withDesktopRouter: (component) => component },
     'constants/icons': {},
-'constants/pages': { WALLET: 'wallet' },
+    'constants/pages': { WALLET: 'wallet' },
     'util/window-controls': {},
-'component/app/view': { IS_MAC: false },
+    'component/app/view': { IS_MAC: false },
     'component/button': text,
-    'component/common/tooltip': props => React.createElement('div', { title: props.title }, props.children),
+    'component/common/tooltip': (props) => React.createElement('div', { title: props.title }, props.children),
     'util/wallet-sync': sync,
   };
-  for (const component of ['headerMenuButtons', 'headerProfileMenuButton', 'logo', 'notificationBubble',
-    'skipNavigationButton', 'wunderbar', 'navigationButton']) headerDependencies['component/' + component] = () => null;
+  for (const component of [
+    'headerMenuButtons',
+    'headerProfileMenuButton',
+    'logo',
+    'notificationBubble',
+    'skipNavigationButton',
+    'wunderbar',
+    'navigationButton',
+  ])
+    headerDependencies['component/' + component] = () => null;
   const Header = load('component/header/view.jsx', headerDependencies).default;
-  const headerProps = { history: { location: { pathname: '/' } },
-walletSyncStatus: status,
+  const headerProps = {
+    history: { location: { pathname: '/' } },
+    walletSyncStatus: status,
     roundedBalance: '123.45',
-roundedSpendableBalance: '123.45',
-balance: 123.45 };
+    roundedSpendableBalance: '123.45',
+    balance: 123.45,
+  };
   const header = render(React.createElement(Header, headerProps));
   assert(header.includes('Wallet sync') && !header.includes('123.45'));
 
   const WalletPage = load('page/wallet/view.jsx', {
     react: React,
-    'react-router': { useHistory: () => ({ location: { search: '' } }) },
+    'component/common/desktop-router': { useDesktopHistory: () => ({ location: { search: '' } }) },
     'component/txoList': () => null,
-    'component/page': props => props.children,
+    'component/page': (props) => props.children,
     'component/walletBalance': () => React.createElement('div', null, 'wallet balance card'),
     'component/spinner': () => null,
     'component/yrblWalletEmpty': () => React.createElement('div', null, 'empty wallet introduction'),
@@ -111,10 +128,23 @@ balance: 123.45 };
   let order = [];
   let failStatus = false;
   let failBalance = false;
-  const balance = { available: '10', total: '10', reserved: '0', reserved_subtotals: { claims: '0', supports: '0', tips: '0' } };
+  const balance = {
+    available: '10',
+    total: '10',
+    reserved: '0',
+    reserved_subtotals: { claims: '0', supports: '0', tips: '0' },
+  };
   const sdk = {
-    status: async () => { order.push('status'); if (failStatus) throw Error('offline'); return status },
-    wallet_balance: async () => { order.push('balance'); if (failBalance) throw Error('locked'); return balance },
+    status: async () => {
+      order.push('status');
+      if (failStatus) throw Error('offline');
+      return status;
+    },
+    wallet_balance: async () => {
+      order.push('balance');
+      if (failBalance) throw Error('locked');
+      return balance;
+    },
   };
   const dependencies = {
     'constants/action_types': { UPDATE_BALANCE: 'balance', WALLET_SYNC_STATUS_UNAVAILABLE: 'unavailable' },
@@ -129,7 +159,7 @@ balance: 123.45 };
   };
   const { doUpdateBalance } = load('redux/actions/wallet.js', dependencies);
   const actions = [];
-  const dispatch = action => actions.push(action);
+  const dispatch = (action) => actions.push(action);
   const first = doUpdateBalance()(dispatch);
   const second = doUpdateBalance()(dispatch);
   assert.equal(first, second, 'Concurrent polls share one status and balance request');
@@ -147,5 +177,7 @@ balance: 123.45 };
   failBalance = true;
   await doUpdateBalance()(dispatch);
   assert.equal(actions[3].type, 'unavailable');
-  console.log('PASS: history progress, incomplete/disconnected states, provisional zero balance and fresh balance polling');
+  console.log(
+    'PASS: history progress, incomplete/disconnected states, provisional zero balance and fresh balance polling'
+  );
 };

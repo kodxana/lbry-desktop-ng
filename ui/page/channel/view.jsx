@@ -9,7 +9,7 @@ import Page from 'component/page';
 import SubscribeButton from 'component/subscribeButton';
 import ShareButton from 'component/shareButton';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Button from 'component/button';
 import { formatLbryUrlForWeb } from 'util/url';
 import ChannelContent from 'component/channelContent';
@@ -46,7 +46,6 @@ type Props = {
   cover: ?string,
   thumbnail: ?string,
   page: number,
-  match: { params: { attribute: ?string } },
   channelIsMine: boolean,
   isSubscribed: boolean,
   channelIsBlocked: boolean,
@@ -85,7 +84,7 @@ function ChannelPage(props: Props) {
     push,
     goBack,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
   const [viewBlockedChannel, setViewBlockedChannel] = React.useState(false);
   const urlParams = new URLSearchParams(search);
   const currentView = urlParams.get(PAGE_VIEW_QUERY) || PAGE.CONTENT;

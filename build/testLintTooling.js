@@ -94,7 +94,12 @@ async function main() {
     JSON.stringify({
       name: 'lint-hook-fixture',
       private: true,
-      scripts: { precommit: `node "${require.resolve('lint-staged/bin').replace(/\\/g, '/')}"` },
+      scripts: {
+        precommit: require('../package.json').scripts.precommit.replace(
+          'lint-staged',
+          `node "${require.resolve('lint-staged/bin').replace(/\\/g, '/')}"`
+        ),
+      },
     })
   );
   run(process.execPath, ['.yarn/releases/yarn-3.2.0.cjs', 'install', '--mode=skip-build']);
@@ -115,6 +120,16 @@ async function main() {
   assert.equal(read('ui/partly staged.js'), 'export const staged = 2;\n\nexport const unfinished = 9;\n');
   assert.equal(git('show', 'HEAD:electron/service.cjs'), "module.exports = 'new';\n");
   assert.equal(git('diff', '--cached'), '');
+
+  // Yarn's Windows command shim has a smaller limit than CreateProcess.
+  fs.mkdirSync(path.join(cwd, 'ui', 'large-batch'));
+  const batch = Array.from({ length: 80 }, (_, index) => `ui/large-batch/${index}-${'long-name-'.repeat(6)}.js`);
+  assert(batch.map((file) => path.join(cwd, file)).join(' ').length > 8191);
+  for (const file of batch) write(file, 'export const value=1\n');
+  git('add', 'ui/large-batch');
+  git('commit', '--quiet', '-m', 'Format a large staged batch');
+  for (const file of batch) assert.equal(git('show', 'HEAD:' + file), 'export const value = 1;\n');
+  assert.equal(read('ui/partly staged.js'), 'export const staged = 2;\n\nexport const unfinished = 9;\n');
 
   write('ui/bad.js', 'export const broken=missingRuntimeValue\n');
   git('add', 'ui/bad.js');

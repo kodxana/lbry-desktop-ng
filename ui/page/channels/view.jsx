@@ -11,7 +11,7 @@ import Yrbl from 'component/yrbl';
 import LbcSymbol from 'component/common/lbc-symbol';
 import * as PAGES from 'constants/pages';
 import HelpLink from 'component/common/help-link';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 type Props = {
   channelUrls: Array<string>,
@@ -23,18 +23,12 @@ type Props = {
 };
 
 export default function ChannelsPage(props: Props) {
-  const {
-    channelUrls,
-    fetchChannelListMine,
-    fetchingChannels,
-    youtubeChannels,
-    doSetActiveChannel,
-    pendingChannels,
-  } = props;
+  const { channelUrls, fetchChannelListMine, fetchingChannels, youtubeChannels, doSetActiveChannel, pendingChannels } =
+    props;
   const [rewardData, setRewardData] = React.useState();
   const hasYoutubeChannels = youtubeChannels && Boolean(youtubeChannels.length);
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
 
   useEffect(() => {
     fetchChannelListMine();

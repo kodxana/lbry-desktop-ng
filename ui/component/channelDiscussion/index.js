@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { DISABLE_COMMENTS_TAG } from 'constants/tags';
 import ChannelDiscussion from './view';
 import { makeSelectTagInClaimOrChannelForUri } from 'redux/selectors/claims';
@@ -14,4 +14,4 @@ const select = (state, props) => {
   };
 };
 
-export default withRouter(connect(select)(ChannelDiscussion));
+export default withDesktopRouter(connect(select)(ChannelDiscussion));

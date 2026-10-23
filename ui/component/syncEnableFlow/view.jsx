@@ -3,7 +3,7 @@ import React from 'react';
 import Button from 'component/button';
 import { getSavedPassword } from 'util/saved-passwords';
 import Card from 'component/common/card';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import Spinner from 'component/spinner';
 import Lbry from 'lbry';
 import ErrorText from 'component/common/error-text';
@@ -34,16 +34,8 @@ const SHARED_KEY = 'shared';
 const LOCAL_KEY = 'local';
 
 function SyncEnableFlow(props: Props) {
-  const {
-    setSyncEnabled,
-    getSyncError,
-    getSyncPending,
-    getSync,
-    checkSync,
-    mode,
-    closeModal,
-    updatePreferences,
-  } = props;
+  const { setSyncEnabled, getSyncError, getSyncPending, getSync, checkSync, mode, closeModal, updatePreferences } =
+    props;
 
   const [step, setStep] = React.useState(INITIAL);
   const [prefDict, setPrefDict]: [any, (any) => void] = React.useState();
@@ -242,4 +234,4 @@ function SyncEnableFlow(props: Props) {
   );
 }
 
-export default withRouter(SyncEnableFlow);
+export default withDesktopRouter(SyncEnableFlow);

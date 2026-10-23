@@ -2,7 +2,7 @@
 // import 'scss/component/_header.scss'; // ody codesplits this; no. REMOVE THESE
 
 import { ENABLE_UI_NOTIFICATIONS } from 'config';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import Button from 'component/button';
@@ -20,7 +20,7 @@ type Props = {
 export default function NotificationHeaderButton(props: Props) {
   const { unseenCount, user, doSeeAllNotifications } = props;
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const notificationsEnabled = ENABLE_UI_NOTIFICATIONS || (user && user.experimental_ui);
 
   function handleMenuClick() {

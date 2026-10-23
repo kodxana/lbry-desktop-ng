@@ -3,7 +3,7 @@ import type { Node } from 'react';
 import React from 'react';
 import Yrbl from 'component/yrbl';
 import Button from 'component/button';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import analytics from 'analytics';
 import I18nMessage from 'component/i18nMessage';
 import Native from 'native';
@@ -111,4 +111,4 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-export default withRouter(ErrorBoundary);
+export default withDesktopRouter(ErrorBoundary);

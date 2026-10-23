@@ -3,7 +3,7 @@ import * as React from 'react';
 import UriIndicator from 'component/uriIndicator';
 import TruncatedText from 'component/common/truncated-text';
 import MarkdownPreview from 'component/common/markdown-preview';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { formatLbryUrlForWeb } from 'util/url';
 import { parseURI } from 'util/lbryURI';
 import classnames from 'classnames';
@@ -63,4 +63,4 @@ class PreviewLink extends React.PureComponent<Props> {
   }
 }
 
-export default withRouter(PreviewLink);
+export default withDesktopRouter(PreviewLink);

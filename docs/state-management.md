@@ -14,15 +14,11 @@ retained rather than rewritten as part of this dependency upgrade.
 The store now owns navigation from startup, including while the SDK setup UI
 is mounted. Redux history actions keep their existing names. The exported
 history retains live memory-history `index` and `entries` getters for the back
-and forward menus, mouse buttons and page titles. React Router remains on its
-5.3.4 compatibility release; migrating route definitions is a separate step.
-
-Router 5's component keeps a second location in React state. With React 18 and
-React-Redux 9, this can commit an old route alongside a new Redux location.
-`DesktopRouter` instead supplies Router 5's exported contexts directly from
-the Redux snapshot. This small compatibility adapter must be replaced during
-the eventual Router 6+ migration. It introduces no synchronous rendering
-override in the application.
+and forward menus, mouse buttons and page titles. React Router 8.5.0 receives
+the Redux location and action through its public `Router` API. The former
+Router 5 private-context adapter is removed. There is still one authoritative
+navigation state, with no synchronous rendering override in the application.
+See [navigation](navigation.md) for the route and link migration.
 
 Reselect 5 changes the default memoization to weak-map caches and adds development
 checks. Selectors must treat inputs as immutable. Claim overlays now copy the

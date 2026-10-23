@@ -4,7 +4,7 @@ import moment from 'moment';
 import classnames from 'classnames';
 import Button from 'component/button';
 import { FormField } from 'component/common/form';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { formatLbryUrlForWeb } from 'util/url';
 
 type Props = {
@@ -13,9 +13,9 @@ type Props = {
   claim: ?StreamClaim,
   selected: boolean,
   onSelect?: () => void,
-  resolveUri: string => void,
+  resolveUri: (string) => void,
   slim: boolean,
-  history: { push: string => void },
+  history: { push: (string) => void },
 };
 
 class NavigationHistoryItem extends React.PureComponent<Props> {
@@ -42,7 +42,7 @@ class NavigationHistoryItem extends React.PureComponent<Props> {
     const navigatePath = formatLbryUrlForWeb(uri);
     const onClick =
       onSelect ||
-      function() {
+      function () {
         history.push(navigatePath);
       };
 
@@ -63,4 +63,4 @@ class NavigationHistoryItem extends React.PureComponent<Props> {
   }
 }
 
-export default withRouter(NavigationHistoryItem);
+export default withDesktopRouter(NavigationHistoryItem);

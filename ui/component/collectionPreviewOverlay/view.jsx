@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import FileThumbnail from 'component/fileThumbnail';
 
 type Props = {
@@ -46,4 +46,4 @@ function CollectionPreviewOverlay(props: Props) {
   return null;
 }
 
-export default withRouter(CollectionPreviewOverlay);
+export default withDesktopRouter(CollectionPreviewOverlay);

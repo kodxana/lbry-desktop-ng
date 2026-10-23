@@ -4,7 +4,7 @@ import Button from 'component/button';
 import I18nMessage from 'component/i18nMessage';
 import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 // $FlowFixMe cannot resolve ...
 import image from 'static/img/yrblsec.svg';
 
@@ -122,4 +122,4 @@ function PrivacyAgreement(props: Props) {
   );
 }
 
-export default withRouter(PrivacyAgreement);
+export default withDesktopRouter(PrivacyAgreement);

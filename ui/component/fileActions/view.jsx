@@ -12,7 +12,7 @@ import * as RENDER_MODES from 'constants/file_render_modes';
 import { useIsMobile } from 'effects/use-screensize';
 import ClaimSupportButton from 'component/claimSupportButton';
 import ClaimCollectionAddButton from 'component/claimCollectionAddButton';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import FileReactions from 'component/fileReactions';
 import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
@@ -39,7 +39,7 @@ function FileActions(props: Props) {
   const {
     push,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
   const isMobile = useIsMobile();
   const webShareable = costInfo && costInfo.cost === 0 && RENDER_MODES.WEB_SHAREABLE_MODES.includes(renderMode);
   const showDelete = claimIsMine || (fileInfo && (fileInfo.written_bytes > 0 || fileInfo.blobs_completed > 0));

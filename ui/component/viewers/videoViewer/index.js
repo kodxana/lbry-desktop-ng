@@ -18,7 +18,7 @@ import { savePosition, clearPosition, doPlayUri, doSetPlayingUri } from 'redux/a
 import { makeSelectContentPositionForUri, makeSelectIsPlayerFloating, selectPlayingUri } from 'redux/selectors/content';
 import { selectRecommendedContentForUri } from 'redux/selectors/search';
 import VideoViewer from './view';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { doClaimEligiblePurchaseRewards } from 'redux/actions/rewards';
 import { selectDaemonSettings, makeSelectClientSetting, selectHomepageData } from 'redux/selectors/settings';
 import { toggleVideoTheaterMode, toggleAutoplayNext, doSetClientSetting } from 'redux/actions/settings';
@@ -91,4 +91,4 @@ const perform = (dispatch) => ({
     ),
 });
 
-export default withRouter(connect(select, perform)(VideoViewer));
+export default withDesktopRouter(connect(select, perform)(VideoViewer));

@@ -22,7 +22,7 @@ import classnames from 'classnames';
 import usePersistedState from 'effects/use-persisted-state';
 import CommentReactions from 'component/commentReactions';
 import CommentsReplies from 'component/commentsReplies';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import CommentCreate from 'component/commentCreate';
 import CommentMenuList from 'component/commentMenuList';
 import UriIndicator from 'component/uriIndicator';
@@ -120,7 +120,7 @@ function CommentView(props: Props) {
     push,
     replace,
     location: { pathname, search },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const isLinkedComment = linkedCommentId && linkedCommentId === commentId;
   const isInLinkedCommentChain =

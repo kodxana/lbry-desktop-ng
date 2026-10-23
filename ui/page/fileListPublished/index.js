@@ -7,7 +7,7 @@ import {
 import { doCheckPendingClaims, doFetchAllClaimListMine } from 'redux/actions/claims';
 import { doClearPublish } from 'redux/actions/publish';
 import FileListPublished from './view';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { MY_CLAIMS_PAGE_SIZE, PAGE_PARAM, PAGE_SIZE_PARAM } from 'constants/claim';
 
 const select = (state, props) => {
@@ -33,4 +33,4 @@ const perform = (dispatch) => ({
   fetchAllMyClaims: () => dispatch(doFetchAllClaimListMine()),
 });
 
-export default withRouter(connect(select, perform)(FileListPublished));
+export default withDesktopRouter(connect(select, perform)(FileListPublished));

@@ -18,7 +18,7 @@ import useLighthouse from 'effects/use-lighthouse';
 import { Form } from 'component/common/form';
 import WunderbarTopSuggestion from 'component/wunderbarTopSuggestion';
 import WunderbarSuggestion from 'component/wunderbarSuggestion';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { formatLbryUrlForWeb } from 'util/url';
 import Yrbl from 'component/yrbl';
 import { SEARCH_OPTIONS } from 'constants/search';
@@ -70,7 +70,7 @@ export default function WunderBarSuggestions(props: Props) {
   const {
     push,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
   const urlParams = new URLSearchParams(search);
   const queryFromUrl = urlParams.get('q') || '';
   const [term, setTerm] = React.useState(queryFromUrl);

@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import ClaimCollectionAdd from './view';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import {
   selectBuiltinCollections,
   selectMyPublishedCollections,
@@ -20,4 +20,4 @@ const perform = (dispatch) => ({
   addCollection: (name, items, type) => dispatch(doLocalCollectionCreate(name, items, type)),
 });
 
-export default withRouter(connect(select, perform)(ClaimCollectionAdd));
+export default withDesktopRouter(connect(select, perform)(ClaimCollectionAdd));

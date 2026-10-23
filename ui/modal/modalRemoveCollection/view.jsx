@@ -4,7 +4,7 @@ import { Modal } from 'modal/modal';
 import Button from 'component/button';
 import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { FormField } from 'component/common/form';
 
 type Props = {
@@ -20,7 +20,7 @@ type Props = {
 function ModalRemoveCollection(props: Props) {
   const { closeModal, claim, collectionDelete, collectionId, collectionName, uri, redirect } = props;
   const title = claim && claim.value && claim.value.title;
-  const { replace } = useHistory();
+  const { replace } = useDesktopHistory();
   const [confirmName, setConfirmName] = useState('');
 
   return (

@@ -1,7 +1,7 @@
 // @flow
 import { MAIN_CLASS } from 'constants/classnames';
 import { parseURI } from 'util/lbryURI';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { useIsMobile, useIsMediumScreen } from 'effects/use-screensize';
 import classnames from 'classnames';
 import Header from 'component/header';
@@ -54,7 +54,7 @@ function Page(props: Props) {
 
   const {
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const isMediumScreen = useIsMediumScreen();
   const isMobile = useIsMobile();

@@ -8,7 +8,7 @@ import ReactModal from 'react-modal';
 import { openContextMenu } from 'util/context-menu';
 import useKonamiListener from 'util/enhanced-layout';
 import FileRenderFloating from 'component/fileRenderFloating';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import usePrevious from 'effects/use-previous';
 import REWARDS from 'rewards';
 import usePersistedState from 'effects/use-persisted-state';
@@ -364,4 +364,4 @@ function App(props: Props) {
   );
 }
 
-export default withRouter(App);
+export default withDesktopRouter(App);
