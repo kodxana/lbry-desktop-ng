@@ -229,7 +229,9 @@ export function AppRoutes({ location, welcomeVersion, dynamicRoutes = [] }: any)
         <Route
           key={dynamicRouteProps.route}
           path={`${dynamicRouteProps.route}/*`}
-          element={<DiscoverPage location={location} dynamicRouteProps={dynamicRouteProps} />}
+          element={
+            <DiscoverPage key={dynamicRouteProps.route} location={location} dynamicRouteProps={dynamicRouteProps} />
+          }
         />
       ))}
 

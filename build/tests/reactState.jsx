@@ -1,3 +1,4 @@
+// @flow
 import { strict as assert } from 'assert';
 import React from 'react';
 import { connect, useSelector } from 'react-redux';
@@ -8,6 +9,9 @@ import { ipcRenderer } from 'electron';
 import ReactModal from 'react-modal';
 import NavigationButton from 'component/navigationButton/view';
 import Button from 'component/button/view';
+import { AppRoutes } from 'component/router/view';
+import usePersistedState from 'effects/use-persisted-state';
+import { WELCOME_VERSION } from 'config';
 import ViewImage from 'modal/modalViewImage/view';
 import Unlock from 'modal/modalWalletUnlock/view';
 import Encrypt from 'modal/modalWalletEncrypt/view';
@@ -200,6 +204,68 @@ async function links(store, history) {
   assert.equal(history.location.hash, '#details');
   assert.deepEqual(history.location.state, { from: 'redirect' });
   unmount();
+}
+
+async function discoveryNavigation(store, history) {
+  const first = '/$/fixture-category-one';
+  const second = '/$/fixture-category-two';
+  const key = (pathname) => `fixture-order-${pathname}`;
+  localStorage.setItem(key(first), 'new');
+  localStorage.setItem(key(second), 'top');
+  function Discovery({ location }: { location: { pathname: string } }) {
+    const [order, setOrder] = usePersistedState(key(location.pathname), 'trending');
+    return (
+      <button id="discovery-order" onClick={() => setOrder('edited')}>
+        {order}
+      </button>
+    );
+  }
+  function Fixture() {
+    const location = useLocation();
+    const routes = AppRoutes({
+      location,
+      welcomeVersion: WELCOME_VERSION,
+      dynamicRoutes: [{ route: first }, { route: second }],
+    });
+    // Use the production route tree and element identity, with a small page body
+    // that exercises the same persisted-state hook as discovery sorting.
+    return React.cloneElement(
+      routes,
+      {},
+      React.Children.map(routes.props.children, (route) => {
+        const element = route?.props.element;
+        if (!element?.props.dynamicRouteProps) return route;
+        return React.cloneElement(route, {
+          element: React.createElement(Discovery, { ...element.props, key: element.key }),
+        });
+      })
+    );
+  }
+  try {
+    history.replace(first);
+    render(<Fixture />, store, history);
+    assert.equal(document.getElementById('discovery-order').textContent, 'new');
+    document.getElementById('discovery-order').click();
+    await waitFor(() => localStorage.getItem(key(first)) === 'edited', 'Category sorting must save');
+    history.push(second);
+    await tick();
+    assert.equal(
+      document.getElementById('discovery-order').textContent,
+      'top',
+      'Categories must load their own saved sort order'
+    );
+    assert.equal(localStorage.getItem(key(second)), 'top', 'Navigation must not overwrite another category preference');
+    history.goBack();
+    await tick();
+    assert.equal(document.getElementById('discovery-order').textContent, 'edited');
+    history.push('?page=2');
+    await tick();
+    assert.equal(document.getElementById('discovery-order').textContent, 'edited');
+  } finally {
+    unmount();
+    localStorage.removeItem(key(first));
+    localStorage.removeItem(key(second));
+  }
 }
 
 async function fastUnlock(store, history) {
@@ -438,6 +504,7 @@ export default async function reactState(store, history) {
     await renderingCompatibility(store, history);
     await navigation(store, history);
     await links(store, history);
+    await discoveryNavigation(store, history);
     await fastUnlock(store, history);
     await encryptionCompletion(store, history);
     await lightbox(store, history);

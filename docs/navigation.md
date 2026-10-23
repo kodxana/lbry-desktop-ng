@@ -17,7 +17,9 @@ separate review of desktop navigation rather than a version-only change.
 
 Routes now use `Routes` and `element`. Setup takes precedence before matching
 app routes. Static routes rank ahead of content paths; prefix routes explicitly
-include `/*`. Collection pages get their ID from `useParams`. The old
+include `/*`. Discovery categories retain separate page instances so changing
+categories does not overwrite saved sort preferences. Collection pages get
+their ID from `useParams`. The old
 `PrivateRoute` merely forwarded router props and did not perform authorization;
 removing it changes no access policy.
 
@@ -31,7 +33,7 @@ content paths.
 `testDesktopRoutes.js` checks the production route definitions with real React
 Router matching and stubbed page bodies. The Electron renderer suite exercises
 real links, redirects, Redux consistency, history menus, blocking/unsubscription,
-query/hash/state and cancelled/modified clicks. Existing wallet archive,
+query/hash/state, category preference isolation and cancelled/modified clicks. Existing wallet archive,
 encryption, password migration/restart and updater suites run with disposable
 profiles. Installed NSIS upgrades run only on fresh hosted Windows runners.
 
