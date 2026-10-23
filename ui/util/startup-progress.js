@@ -1,9 +1,19 @@
 // @flow
 
 import { walletSyncProgress } from './wallet-sync';
+import type { WalletSyncProgress } from './wallet-sync';
+
+export type StartupProgress = {
+  step: 0 | 1 | 2,
+  percent: number | null,
+  history: WalletSyncProgress,
+  hub: string | null,
+  title: string,
+  detail: string | null,
+};
 
 // Header progress is only one part of startup, never an overall completion estimate.
-export function startupProgress(status: ?StatusResponse, locked: boolean = false) {
+export function startupProgress(status: ?StatusResponse, locked: boolean = false): StartupProgress {
   const wallet = status && status.wallet;
   const connected = Boolean(wallet && wallet.available_servers);
   const value = wallet && wallet.headers_synchronization_progress;
@@ -22,20 +32,20 @@ export function startupProgress(status: ?StatusResponse, locked: boolean = false
     title: locked
       ? __('Unlock your wallet')
       : !connected
-      ? __('Connecting to a hub')
-      : ready
-      ? __('Opening your library')
-      : historyPending
-      ? history.title
-      : __('Syncing your wallet'),
+        ? __('Connecting to a hub')
+        : ready
+          ? __('Opening your library')
+          : historyPending
+            ? history.title
+            : __('Syncing your wallet'),
     detail: locked
       ? __('Enter your password in the wallet dialog to continue.')
       : !connected
-      ? __('Finding a connection to the LBRY network. You can choose another hub at any time.')
-      : ready
-      ? __('Your wallet is ready. Checking the connection before opening the app.')
-      : historyPending
-      ? history.detail
-      : __('Downloading wallet headers and checking your history. First-time setup can take longer.'),
+        ? __('Finding a connection to the LBRY network. You can choose another hub at any time.')
+        : ready
+          ? __('Your wallet is ready. Checking the connection before opening the app.')
+          : historyPending
+            ? history.detail
+            : __('Downloading wallet headers and checking your history. First-time setup can take longer.'),
   };
 }

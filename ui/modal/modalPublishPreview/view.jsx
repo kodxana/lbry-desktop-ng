@@ -170,7 +170,7 @@ const ModalPublishPreview = (props: Props) => {
 
   const depositValue = bid ? <LbcSymbol postfix={`${bid}`} size={14} /> : <p>---</p>;
 
-  let priceValue = __('Free');
+  let priceValue: React.Node = __('Free');
   if (!contentIsFree) {
     if (fee.currency === 'LBC') {
       priceValue = <LbcSymbol postfix={fee.amount} />;

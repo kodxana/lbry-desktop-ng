@@ -24,6 +24,10 @@ const sources = [
   'ui/component/common/truncated-text.jsx',
   'ui/component/common/file-list.jsx',
   'ui/component/settingsRow/view.jsx',
+  'ui/component/common/credit-amount.jsx',
+  'ui/component/common/lbc-symbol.jsx',
+  'ui/util/format-credits.js',
+  'ui/util/intlNumberFormat.js',
 ];
 for (const file of [...sources, '.flowconfig', 'flow-typed/i18n.js', 'flow-typed/npm/classnames_v2.x.x.js']) {
   write(file, fs.readFileSync(path.join(root, file), 'utf8'));
@@ -46,6 +50,9 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared UI source and valid callers must type-check');
 const invalid = {
+  creditAmount: 'export const value: React.Node = <CreditAmount amount="1" />;',
+  creditPrecision: 'export const value: React.Node = <CreditAmount amount={1} precision="8" />;',
+  fiatAmount: 'export const value: React.Node = <CreditAmount customAmounts={{amountFiat: "1", amountLBC: 100}} />;',
   iconSize: 'export const value: React.Node = <Lock size="24" />;',
   iconColor: 'export const value: React.Node = <Lock color={123} />;',
   iconTitle: 'export const value: IconProps = {title: {text: "Wallet"}};',

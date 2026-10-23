@@ -868,7 +868,7 @@ export function doCollectionPublishUpdate(
           clear_claims: true,
         }
       : {
-          bid: creditsToString(options.bid),
+          bid: options.bid === undefined ? undefined : creditsToString(options.bid),
           title: options.title,
           thumbnail_url: options.thumbnail_url,
           description: options.description,

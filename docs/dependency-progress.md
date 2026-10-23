@@ -27,8 +27,11 @@ duplicate modules and exercise nine maintained dependency contracts alongside
 the first-party global types. The declaration check is clean. The first
 application pass replaces fresh-object Redux copies with spreads, reducing full
 application diagnostics from 5,051 to 3,214. Shared UI export and React type
-annotations reduce that to 2,908, with a required gate for ten source modules
-and 15 invalid prop contracts. Remaining application errors and untyped
+annotations reduce that to 2,908. Formatting and wallet-progress contracts reduce
+that to 2,891, with no new diagnostics. Required gates cover fourteen shared UI
+source modules and eight utility modules, rejecting 18 invalid contracts in each.
+The utility pass also fixes omitted collection bids being serialized as "NaN".
+Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change
 the package-version percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
