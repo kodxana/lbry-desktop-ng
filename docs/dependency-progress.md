@@ -22,9 +22,12 @@ remaining engineering effort, security or release readiness. The current direct
 dependency set has 149 packages, including 51 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
-The checker runs again. Required checks now cover all first-party global
-definitions and six maintained dependency definitions, but the full application
-still has type errors. Updating declarations does not change the package-version
+The checker runs again. Required checks load all 88 declaration files, reject
+duplicate modules and
+exercise nine maintained dependency contracts alongside the first-party global
+types. The declaration check is clean, but the full application still has type
+errors and some packages retain untyped stubs. Updating declarations does not
+change the package-version
 percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
 

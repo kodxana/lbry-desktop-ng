@@ -131,6 +131,8 @@ async function dialogs(store, history) {
   const trigger = document.createElement('button');
   trigger.textContent = 'Open fixture dialog';
   document.body.appendChild(trigger);
+  let opened = 0;
+  let closed = 0;
   let cancelled = 0;
   let confirmed = 0;
   function Prompt() {
@@ -140,7 +142,18 @@ async function dialogs(store, history) {
         isOpen={open}
         type="confirm"
         contentLabel="Fixture confirmation"
-        onAborted={() => {
+        onAfterOpen={({ overlayEl, contentEl }) => {
+          assert(overlayEl instanceof HTMLDivElement);
+          assert(contentEl instanceof HTMLDivElement);
+          opened++;
+        }}
+        onAfterClose={() => {
+          closed++;
+        }}
+        onAborted={(event) => {
+          assert(event.nativeEvent instanceof MouseEvent || event.nativeEvent instanceof KeyboardEvent);
+          assert.equal(typeof event.preventDefault, 'function');
+          assert.equal(typeof event.stopPropagation, 'function');
           cancelled++;
           setOpen(false);
         }}
@@ -153,8 +166,9 @@ async function dialogs(store, history) {
   }
   const open = async () => {
     trigger.focus();
+    const nextOpen = opened + 1;
     render(<Prompt />, store, history);
-    await waitFor(() => document.querySelector('[role="dialog"]'), 'Dialog must open');
+    await waitFor(() => opened === nextOpen, 'Dialog must finish opening');
     assert.equal(app.getAttribute('aria-hidden'), 'true');
   };
   await open();
@@ -194,6 +208,8 @@ async function dialogs(store, history) {
   await tick();
   assert.equal(confirmed, 1);
   unmount();
+  assert.equal(opened, 3);
+  assert.equal(closed, 3);
   assert(!document.body.classList.contains('ReactModal__Body--open'));
   trigger.remove();
 }

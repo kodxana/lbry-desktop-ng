@@ -12,6 +12,9 @@ const versions = {
   prettier: '3.9.10',
   chalk: '6.0.1',
   classnames: '2.5.1',
+  reselect: '5.3.0',
+  webpack: '5.111.1',
+  'react-modal': '3.16.3',
 };
 const manifest = require('../package.json');
 const parent = path.join(root, 'dist', 'flow-tests');
@@ -23,18 +26,24 @@ const write = (file, source) => {
   fs.writeFileSync(target, source);
 };
 write('.flowconfig', fs.readFileSync(path.join(root, '.flowconfig'), 'utf8'));
+write(
+  'ui/constants/action_types.js',
+  '// @flow\n' + fs.readFileSync(path.join(root, 'ui/constants/action_types.js'), 'utf8')
+);
 const modules = new Set();
+let definitionCount = 0;
 for (const file of fs
   .readdirSync(path.join(root, 'flow-typed'), { recursive: true })
   .filter((file) => file.endsWith('.js'))) {
   const source = fs.readFileSync(path.join(root, 'flow-typed', file), 'utf8');
   const names = [...source.matchAll(/declare module ['"]([^'"]+)['"]/g)].map((match) => match[1]);
-  if (!names.some((name) => Object.hasOwn(versions, name))) continue;
+
   for (const name of names) {
     assert(!modules.has(name), `Duplicate dependency definition: ${name}`);
     modules.add(name);
   }
   write(`flow-typed/${file}`, source);
+  definitionCount++;
 }
 for (const [name, version] of Object.entries(versions)) {
   assert(modules.has(name), `Missing dependency definition: ${name}`);
@@ -45,6 +54,7 @@ for (const [name, version] of Object.entries(versions)) {
   );
 }
 write('contracts.jsx', fs.readFileSync(path.join(__dirname, 'tests/dependencyTypes.jsx'), 'utf8'));
+write('remaining.jsx', fs.readFileSync(path.join(__dirname, 'tests/remainingDependencyTypes.jsx'), 'utf8'));
 const check = () => {
   const result = spawnSync(require('flow-bin'), ['full-check', '--max-workers', '2', '--json', '--strip-root'], {
     cwd,
@@ -60,6 +70,48 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Current dependency APIs and valid application patterns must type-check');
 const invalid = {
+  'selector-composed-params':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}, index: number): string => s.balance, (v: string): string => v); const composed = createSelector(read, (v: string): string => v); composed({balance: '0'});",
+  'selector-optional-type':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: string, index: number = 0): string => s, (v: string): string => v); read('fixture', 'wrong');",
+  'selector-input':
+    "import {createSelector} from 'reselect'; createSelector((s: {balance: string}): string => s.balance, (balance: number): number => balance);",
+  'selector-result':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}): string => s.balance, (v: string): string => v); export const balance: number = read({balance: '0'});",
+  'selector-params':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}, index: number): string => s.balance, (v: string): string => v); read({balance: '0'});",
+  'selector-param-type':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}, index: number): string => s.balance, (v: string): string => v); read({balance: '0'}, 'wrong');",
+  'selector-third-arg':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}, index: number, suffix: string): string => s.balance + suffix, (v: string): string => v); read({balance: '0'}, 1);",
+  'selector-state':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}): string => s.balance, (v: string): string => v); read({balance: 1});",
+  'selector-typed-state':
+    "import {createSelector} from 'reselect'; createSelector.withTypes<{balance: string}>()([(s: {balance: number}): number => s.balance], (value: number): number => value);",
+  'selector-typed-result':
+    "import {createSelector} from 'reselect'; const read = createSelector.withTypes<{balance: string}>()([(s) => s.balance], (value) => value); export const value: number = read({balance: '0'});",
+  'selector-result-func':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}): string => s.balance, (v: string): string => v); read.resultFunc(10);",
+  'selector-reset':
+    "import {createSelector} from 'reselect'; const read = createSelector((s: string): string => s, (v: string): string => v); export const count: number = read.resetRecomputations();",
+  'selector-removed': "import {defaultMemoize} from 'reselect'; defaultMemoize((value: string): string => value);",
+  'memoize-result':
+    "import {lruMemoize} from 'reselect'; const read = lruMemoize((value: string): number => value.length); export const value: string = read('fixture');",
+  'memoize-options':
+    "import {lruMemoize} from 'reselect'; lruMemoize((value: string): string => value, {maxSize: '2'});",
+  'webpack-mode': "import webpack from 'webpack'; webpack({mode: 'release'});",
+  'webpack-rule': "import webpack from 'webpack'; webpack({module: {rules: [{type: 'raw-loader'}]}});",
+  'webpack-stats': "import webpack from 'webpack'; webpack({}).run((error, stats) => { stats.hasErrors(); });",
+  'webpack-ignore': "import webpack from 'webpack'; new webpack.IgnorePlugin(/removed-overload/);",
+  'webpack-provide': "import webpack from 'webpack'; new webpack.ProvidePlugin({value: 10});",
+  'webpack-multi': "import webpack from 'webpack'; webpack({}).compilers;",
+  'modal-open':
+    "import * as React from 'react'; import Modal from 'react-modal'; export const modal: React.Node = <Modal isOpen=\"true\" />;",
+  'modal-timeout':
+    "import * as React from 'react'; import Modal from 'react-modal'; export const modal: React.Node = <Modal isOpen closeTimeoutMS=\"100\" />;",
+  'modal-element': "import Modal from 'react-modal'; Modal.setAppElement(42);",
+  'modal-close-event':
+    "import * as React from 'react'; import Modal from 'react-modal'; export const modal: React.Node = <Modal isOpen onRequestClose={(event: number) => {}} />;",
   'connected-props': `import * as React from 'react'; import {connect} from 'react-redux';
     function View(p: {balance: number}): React.Node { return null; }
     const Wrapped = connect((s: {balance: string}): {balance: string} => s)(View);`,
@@ -106,4 +158,6 @@ for (const name of Object.keys(invalid)) {
     `Invalid ${name} contract must fail`
   );
 }
-console.log(`PASS six dependency definitions, valid APIs and ${Object.keys(invalid).length} invalid contracts`);
+console.log(
+  `PASS ${definitionCount} definition files, ${Object.keys(versions).length} dependency contracts and ${Object.keys(invalid).length} invalid contracts`
+);
