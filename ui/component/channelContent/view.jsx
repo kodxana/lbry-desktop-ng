@@ -55,7 +55,7 @@ function ChannelContent(props: Props) {
   // const claimsInChannel = (claim && claim.meta.claims_in_channel) || 0;
   const claimsInChannel = 9999;
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState(undefined);
+  const [searchResults, setSearchResults] = React.useState<?Array<string>>(undefined);
   const {
     location: { pathname, search },
   } = useDesktopHistory();

@@ -4,7 +4,7 @@ import { isNameValid, isURIValid, normalizeURI, parseURI } from 'util/lbryURI';
 import { URL as SITE_URL, URL_LOCAL, URL_DEV } from 'config';
 import { SEARCH_OPTIONS } from 'constants/search';
 
-export function createNormalizedSearchKey(query: string) {
+export function createNormalizedSearchKey(query: string): string {
   const FROM = '&from=';
 
   // Ignore the "page" (`from`) because we don't care what the last page
@@ -27,7 +27,7 @@ export function createNormalizedSearchKey(query: string) {
  * @param term
  * @returns {string[]|*[]|(string|string)[]}
  */
-export function getUriForSearchTerm(term: string) {
+export function getUriForSearchTerm(term: string): [string, string | null] {
   const WEB_DEV_PREFIX = `${URL_DEV}/`;
   const WEB_LOCAL_PREFIX = `${URL_LOCAL}/`;
   const WEB_PROD_PREFIX = `${SITE_URL}/`;
@@ -40,7 +40,7 @@ export function getUriForSearchTerm(term: string) {
   const isLbryUrl = term.startsWith('lbry://') && term !== 'lbry://';
   const error = '';
 
-  const addLbryIfNot = (term) => {
+  const addLbryIfNot = (term: string): string => {
     return term.startsWith('lbry://') ? term : `lbry://${term}`;
   };
 
@@ -89,8 +89,12 @@ export function getUriForSearchTerm(term: string) {
   }
 }
 
-export function getRecommendationSearchOptions(matureEnabled: boolean, claimIsMature: boolean, claimId: string) {
-  const options = { size: 20, nsfw: matureEnabled, isBackgroundSearch: true };
+export function getRecommendationSearchOptions(
+  matureEnabled: boolean,
+  claimIsMature: boolean,
+  claimId: string
+): SearchOptions {
+  const options: SearchOptions = { size: 20, nsfw: matureEnabled, isBackgroundSearch: true };
 
   if (matureEnabled || !claimIsMature) {
     options[SEARCH_OPTIONS.RELATED_TO] = claimId;

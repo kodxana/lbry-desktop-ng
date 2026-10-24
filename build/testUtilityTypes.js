@@ -22,6 +22,7 @@ const sources = [
   'ui/util/time.js',
   'ui/util/wallet-sync.js',
   'ui/util/startup-progress.js',
+  'ui/util/query-params.js',
 ];
 for (const file of [...sources, '.flowconfig']) write(file, fs.readFileSync(path.join(root, file), 'utf8'));
 for (const file of fs.readdirSync(path.join(root, 'flow-typed')).filter((file) => file.endsWith('.js'))) {
@@ -32,6 +33,7 @@ write(
   'ui/constants/action_types.js',
   '// @flow\n' + fs.readFileSync(path.join(root, 'ui/constants/action_types.js'), 'utf8')
 );
+write('ui/constants/search.js', fs.readFileSync(path.join(root, 'ui/constants/search.js'), 'utf8'));
 const fixture = fs.readFileSync(path.join(__dirname, 'tests/utilityTypes.js'), 'utf8');
 write('valid.js', fixture);
 const check = () => {
@@ -49,6 +51,19 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared utility source and valid callers must type-check');
 const invalid = {
+  searchSize: 'export const invalid: string = getSearchQueryString("test", {size: "20"});',
+  searchMature: 'export const invalid: string = getSearchQueryString("test", {nsfw: "false"});',
+  searchMedia: 'export const invalid: string = getSearchQueryString("test", {video: "true"});',
+  searchType: 'export const invalid: string = getSearchQueryString("test", {claimType: ["file"]});',
+  searchQuery: 'export const invalid: string = getSearchQueryString(null);',
+  queryResult: 'export const invalid: string = parseQueryParams("flag").flag;',
+  queryUpdate: 'export const invalid: string = updateQueryParam("x", "page", 2);',
+  searchCache: 'export function invalid(state: SearchState): Array<string> { return state.resultsByQuery["query"]; }',
+  searchEnd:
+    'export function invalid(state: SearchState): boolean { return state.hasReachedMaxResultsLength["query"]; }',
+  searchProvider:
+    'export function invalid(state: SearchState): string { return state.resultsByQuery["query"].recsys; }',
+
   number: 'export const invalid: string = formatNumber("10");',
   numberResult: 'export const invalid: number = formatNumber(10);',
   bytes: 'export const invalid: string = formatBytes("1024");',
@@ -83,5 +98,7 @@ for (const name of Object.keys(invalid)) {
   );
 }
 console.log(
-  'PASS shared utility source contracts and ' + Object.keys(invalid).length + ' invalid formatting and wallet contracts'
+  'PASS shared utility source contracts and ' +
+    Object.keys(invalid).length +
+    ' invalid formatting, wallet and search contracts'
 );

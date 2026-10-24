@@ -13,18 +13,22 @@ import { SEARCH_SERVER_API } from 'config';
 
 type Dispatch = (action: any) => any;
 type GetState = () => { claims: any, search: SearchState };
+type SearchThunk = (dispatch: Dispatch, getState: GetState) => void;
+type SearchResult = { name: string, claimId: string, ... };
+type SearchResponse = { body: Array<SearchResult>, poweredBy: string | null, ... };
 
-let lighthouse = {
+const lighthouse: { CONNECTION_STRING: string, search: (queryString: string) => Promise<SearchResponse> } = {
   CONNECTION_STRING: SEARCH_SERVER_API,
   search: (queryString: string) => fetch(`${lighthouse.CONNECTION_STRING}?${queryString}`).then(handleFetchResponse),
 };
 
-export const setSearchApi = (endpoint: string) => {
+export const setSearchApi = (endpoint: string): void => {
   lighthouse.CONNECTION_STRING = endpoint.replace(/\/*$/, '/'); // exactly one slash at the end;
 };
 
 export const doSearch =
-  (rawQuery: string, searchOptions: SearchOptions) => (dispatch: Dispatch, getState: GetState) => {
+  (rawQuery: string, searchOptions: SearchOptions): SearchThunk =>
+  (dispatch: Dispatch, getState: GetState) => {
     const query = rawQuery.replace(/^lbry:\/\//i, '').replace(/\//, ' ');
 
     if (!query) {
@@ -55,12 +59,12 @@ export const doSearch =
 
     lighthouse
       .search(queryWithOptions)
-      .then((data: { body: Array<{ name: string, claimId: string }>, poweredBy: string }) => {
+      .then((data: SearchResponse) => {
         const { body: result, poweredBy } = data;
         const uris = [];
         const actions = [];
 
-        result.forEach((item) => {
+        result.forEach((item: ?SearchResult) => {
           if (item) {
             const { name, claimId } = item;
             const urlObj: LbryUrlObj = {};
@@ -102,7 +106,8 @@ export const doSearch =
   };
 
 export const doUpdateSearchOptions =
-  (newOptions: SearchOptions, additionalOptions: SearchOptions) => (dispatch: Dispatch, getState: GetState) => {
+  (newOptions: SearchOptions, additionalOptions: SearchOptions): SearchThunk =>
+  (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const searchValue = selectSearchValue(state);
 
@@ -117,27 +122,31 @@ export const doUpdateSearchOptions =
     }
   };
 
-export const doSetMentionSearchResults = (query: string, uris: Array<string>) => (dispatch: Dispatch) => {
-  dispatch({
-    type: ACTIONS.SET_MENTION_SEARCH_RESULTS,
-    data: { query, uris },
-  });
-};
+export const doSetMentionSearchResults =
+  (query: string, uris: Array<string>): SearchThunk =>
+  (dispatch: Dispatch) => {
+    dispatch({
+      type: ACTIONS.SET_MENTION_SEARCH_RESULTS,
+      data: { query, uris },
+    });
+  };
 
-export const doFetchRecommendedContent = (uri: string) => (dispatch: Dispatch, getState: GetState) => {
-  const state = getState();
-  const claim = selectClaimForUri(state, uri);
-  const matureEnabled = selectShowMatureContent(state);
-  const claimIsMature = makeSelectClaimIsNsfw(uri)(state);
+export const doFetchRecommendedContent =
+  (uri: string): SearchThunk =>
+  (dispatch: Dispatch, getState: GetState) => {
+    const state = getState();
+    const claim = selectClaimForUri(state, uri);
+    const matureEnabled = selectShowMatureContent(state);
+    const claimIsMature = makeSelectClaimIsNsfw(uri)(state);
 
-  if (claim && claim.value && claim.claim_id) {
-    const options: SearchOptions = getRecommendationSearchOptions(matureEnabled, claimIsMature, claim.claim_id);
-    const { title } = claim.value;
+    if (claim && claim.value && claim.claim_id) {
+      const options: SearchOptions = getRecommendationSearchOptions(matureEnabled, claimIsMature, claim.claim_id);
+      const { title } = claim.value;
 
-    if (title && options) {
-      dispatch(doSearch(title, options));
+      if (title) {
+        dispatch(doSearch(title, options));
+      }
     }
-  }
-};
+  };
 
 export { lighthouse };

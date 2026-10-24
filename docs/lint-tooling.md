@@ -175,9 +175,10 @@ checked rather than treated as an untyped module. SDK amounts remain strings,
 failed status reads remain nullable, and the balance read still waits for status.
 Credit display text is kept separate from its rendered React content.
 
-`node build/testUtilityTypes.js` checks eight real utility source files with the
-first-party declarations and rejects 18 invalid formatting, progress and wallet
-snapshot contracts. The UI gate also checks credit display props and defaults.
+`node build/testUtilityTypes.js` checks nine real utility source files and the
+search option constants with the first-party declarations. It rejects 28 invalid
+formatting, progress, wallet snapshot and search contracts. The UI gate also
+checks credit display props and defaults.
 `node build/testUtilityContracts.js` covers formatter caching, locale changes,
 tiny amounts, display rounding versus transaction serialization, bytes and time.
 Wallet tests exercise pending and rejected status/balance reads; renderer tests
@@ -190,9 +191,22 @@ zero and tiny amounts, retain their previous serialization; SDK validation is
 unchanged. A payload regression covers manual and background collection updates
 without submitting transactions. It fails against the previous implementation.
 
-**The application is not yet type-clean.** The full check now reports 2,891
+The search pass types query strings, cached result objects, nullable recommendation
+headers, pagination markers and loading state. Literal search option keys are
+checked against the same constants used by the application. The query gate
+rejects invalid option values and callers that assume optional results exist.
+
+`node build/testSearchContracts.js` exercises real helpers, reducers, selectors
+and actions with mock responses: filter serialization, LBRY links, cached pages,
+deduplication, empty pages, missing provider headers and failed requests.
+Renderer tests cover search loading, stale responses, unmounting and filter
+controls. Simplified filters no longer delete shared Image/Other options, and
+custom selection callbacks receive an empty string when no suggestion matches.
+The legacy URI parser and broader claim-selector state types are unchanged.
+
+**The application is not yet type-clean.** The full check now reports 2,836
 application diagnostics and zero library-definition diagnostics, down from
-2,908 before the utility pass (17 fewer, with no newly introduced diagnostics).
+2,891 before the search pass (55 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

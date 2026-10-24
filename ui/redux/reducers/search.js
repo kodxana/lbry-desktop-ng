@@ -23,7 +23,7 @@ const defaultState: SearchState = {
   mentionQuery: '',
 };
 
-export default handleActions(
+const reducer: (state: SearchState | void, action: { type: string, ... }) => SearchState = handleActions(
   {
     [ACTIONS.SEARCH_START]: (state: SearchState): SearchState => ({
       ...state,
@@ -74,3 +74,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

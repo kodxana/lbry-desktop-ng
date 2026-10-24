@@ -1,4 +1,5 @@
 // @flow
+import { parseQueryParams, updateQueryParam, getSearchQueryString } from 'util/query-params';
 import { getFormatter } from 'util/intlNumberFormat';
 import { formatNumber, formatNumberWithCommas, isTrulyANumber } from 'util/number';
 import { formatBytes } from 'util/format-bytes';
@@ -42,4 +43,20 @@ export const startup: StartupProgress = startupProgress(null, true);
 export async function snapshotValues(): Promise<[string, ?StatusResponse]> {
   const snapshot = await readWalletSnapshot(sdk);
   return [snapshot.balance.total, snapshot.status];
+}
+
+export const searchQuery: string = getSearchQueryString('café / video', {
+  size: 5,
+  from: 20,
+  nsfw: false,
+  claimType: 'file',
+  video: true,
+  exact: true,
+  isBackgroundSearch: false,
+});
+export const queryValues: { [string]: string | void } = parseQueryParams('?flag&empty=');
+export const updatedQuery: string = updateQueryParam('/search?q=old', 'q', 'new');
+export function searchResult(state: SearchState): [Array<string>, string | null, boolean | 0 | void] {
+  const result = state.resultsByQuery['query'];
+  return [result.uris, result.recsys, state.hasReachedMaxResultsLength['query']];
 }
