@@ -1,8 +1,9 @@
 # Video.js 8 migration
 
 The player moves from Video.js 7.19.2 to 8.24.1, with quality-levels 4.1.0
-and HTTP Streaming (VHS) 3.17.5. Event-tracking remains at its already-installed
-1.0.3 release, now pinned. The lockfile shares one Video.js instance between
+and HTTP Streaming (VHS) 3.17.5. The later [media dependency batch](legacy-media-adapters.md)
+replaces event-tracking 1.0.3 with local first-play, buffering and seeking handlers.
+The lockfile shares one Video.js instance between
 the player and plugins instead of retaining two copies of version 7. A Yarn
 resolution keeps their broad dependency ranges on 8.24.1; the renderer runner
 rejects installations that resolve a different player instance for a plugin.

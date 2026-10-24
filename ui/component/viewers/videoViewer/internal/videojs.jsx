@@ -5,7 +5,7 @@ import * as ICONS from 'constants/icons';
 import classnames from 'classnames';
 import videojs from 'video.js';
 import 'video.js/dist/alt/video-js-cdn.min.css';
-import eventTracking from 'videojs-event-tracking';
+import eventTracking from './videojs-tracking';
 import * as OVERLAY from './overlays';
 import './plugins/videojs-mobile-ui/plugin';
 import hlsQualitySelector from './plugins/videojs-hls-quality-selector/plugin';

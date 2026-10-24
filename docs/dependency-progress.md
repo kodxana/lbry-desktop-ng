@@ -7,19 +7,19 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After merged PR #56 (`9efa640cad40f3653d8573c421904a929c9b5c32`):
+After the legacy media dependency replacements (based on merged PR #76):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
 | Upgraded to a newer resolved version   |    92 |
-| Removed or replaced                    |    71 |
-| Still at the original resolved version |     6 |
+| Removed or replaced                    |    74 |
+| Still at the original resolved version |     3 |
 | Total                                  |   169 |
 
-That is **96.4% upgraded, removed or replaced** (163/169). Strict version upgrades
+That is **98.2% upgraded, removed or replaced** (166/169). Strict version upgrades
 alone account for 54.4% (92/169). This is package-count progress, not a measure of
 remaining engineering effort, security or release readiness. The current direct
-dependency set has 149 packages, including 51 additions/replacements.
+dependency set has 147 packages, including 52 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
 The checker runs again. Required checks load all 89 declaration files, reject
@@ -111,14 +111,18 @@ with ten invalid source contracts. It fixes cleared floating playback, missing
 watch progress, stale document reads and image observer cleanup. Real renderer
 tests cover changing document sources, editor updates/disposal and late image
 callbacks, alongside the document, comic and 3D viewer regressions.
-Remaining application errors and untyped
-dependency stubs still need work. These type migrations do not change
+PR #76 completed the application migration: the full check reports **zero errors**
+and is now required on both Windows and Linux. Selected type contracts also
+reject invalid calls, so a clean check cannot be obtained by widening those APIs.
+Some legacy dependency declarations still use broad types; zero diagnostics does
+not mean every dependency API is fully described. These type migrations do not change
 the package-version percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
 
-The six unchanged packages are country-data, ffmpeg-probe, localforage,
-preprocess-loader, redux-persist-transform-compress and videojs-event-tracking.
-On 2026-10-23, none has a newer stable release on npm. An unchanged latest release
+The three unchanged packages are localforage, preprocess-loader and
+redux-persist-transform-compress. On 2026-10-24, none has a newer stable release on npm.
+The [legacy media batch](legacy-media-adapters.md) replaces country-data,
+ffmpeg-probe and videojs-event-tracking. An unchanged latest release
 does not establish that a package is maintained; these need maintenance and
 replacement decisions rather than version bumps just to reach 100%.
 

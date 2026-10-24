@@ -6,6 +6,7 @@ const { spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const versions = {
+  'country-data-list': '1.6.3',
   'react-redux': '9.3.0',
   express: '5.3.0',
   localforage: '1.10.0',
@@ -70,6 +71,9 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Current dependency APIs and valid application patterns must type-check');
 const invalid = {
+  'country-name': "import { countries } from 'country-data-list'; export const value: number = countries.all[0].name;",
+  'country-status':
+    "import { countries } from 'country-data-list'; export const value: number = countries.all[0].status;",
   'tab-selection': "import {useTabStore} from '@ariakit/react'; useTabStore({selectedId: 3});",
   'menu-context':
     "import {useMenuContext} from '@ariakit/react'; export function read(): boolean { return useMenuContext().getState().open; }",

@@ -4858,13 +4858,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"country-data@npm:^0.0.31":
-  version: 0.0.31
-  resolution: "country-data@npm:0.0.31"
-  dependencies:
-    currency-symbol-map: ~2
-    underscore: ">1.4.4"
-  checksum: ffc99e36d2015ae031ed3402cc12bc73b90dd4a5cf6d82578f3a37c0e7a9c0ed7857cf480a28e374f896a541ea1f47f156bc350a3abf7f7cd072fc589c3ae27b
+"country-data-list@npm:1.6.3":
+  version: 1.6.3
+  resolution: "country-data-list@npm:1.6.3"
+  checksum: a569efc477bbea3af0c443e6e33fb63c2b1106badcf0d3f21ca8a4c1ed271b2ee7ee48349c0656b7bc898aba364ce369e05d96a191ecf58dc2a9f1823a656a53
   languageName: node
   linkType: hard
 
@@ -4878,19 +4875,6 @@ __metadata:
     cross-env: dist/bin/cross-env.js
     cross-env-shell: dist/bin/cross-env-shell.js
   checksum: bd7e013603df8dc3a5a2d259a84f43a62114486e141395668ea46e9c5d154b312ebf26486f30699ffe7ff8f275331e00e61d7a720d1593185fce685b0f1c3d9f
-  languageName: node
-  linkType: hard
-
-"cross-spawn@npm:^6.0.0":
-  version: 6.0.5
-  resolution: "cross-spawn@npm:6.0.5"
-  dependencies:
-    nice-try: ^1.0.4
-    path-key: ^2.0.1
-    semver: ^5.5.0
-    shebang-command: ^1.2.0
-    which: ^1.2.9
-  checksum: f893bb0d96cd3d5751d04e67145bdddf25f99449531a72e82dcbbd42796bbc8268c1076c6b3ea51d4d455839902804b94bc45dfb37ecbb32ea8e54a6741c3ab9
   languageName: node
   linkType: hard
 
@@ -4996,13 +4980,6 @@ __metadata:
   version: 3.2.3
   resolution: "csstype@npm:3.2.3"
   checksum: cb882521b3398958a1ce6ca98c011aec0bde1c77ecaf8a1dd4db3b112a189939beae3b1308243b2fe50fc27eb3edeb0f73a5a4d91d928765dc6d5ecc7bda92ee
-  languageName: node
-  linkType: hard
-
-"currency-symbol-map@npm:~2":
-  version: 2.2.0
-  resolution: "currency-symbol-map@npm:2.2.0"
-  checksum: aa5e058962d40a779818ef68864784323f7b1f59806f727dbf0d0925bda239e5b1277cbb5073607e95090a9946c999a8b90dc1a997e4bad412ff201163512020
   languageName: node
   linkType: hard
 
@@ -6268,21 +6245,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"execa@npm:^0.10.0":
-  version: 0.10.0
-  resolution: "execa@npm:0.10.0"
-  dependencies:
-    cross-spawn: ^6.0.0
-    get-stream: ^3.0.0
-    is-stream: ^1.1.0
-    npm-run-path: ^2.0.0
-    p-finally: ^1.0.0
-    signal-exit: ^3.0.0
-    strip-eof: ^1.0.0
-  checksum: da132af2b209e69d79f91751ac6d15ddbb8d9414f9e5f7a53405232679a3dca00fe11eb14e0cd5c2c374a749061410a7717fcc3094f6dd779cf4d259faa58d9a
-  languageName: node
-  linkType: hard
-
 "exenv@npm:^1.2.0":
   version: 1.2.2
   resolution: "exenv@npm:1.2.2"
@@ -6396,15 +6358,6 @@ __metadata:
     node-domexception: ^1.0.0
     web-streams-polyfill: ^3.0.3
   checksum: f19bc28a2a0b9626e69fd7cf3a05798706db7f6c7548da657cbf5026a570945f5eeaedff52007ea35c8bcd3d237c58a20bf1543bc568ab2422411d762dd3d5bf
-  languageName: node
-  linkType: hard
-
-"ffmpeg-probe@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "ffmpeg-probe@npm:1.0.6"
-  dependencies:
-    execa: ^0.10.0
-  checksum: fe649b2ca41bd48b521d7cc5741663d4c608d7bc596033ee9c76d4c3f5e739881a4d421bdcfa3ea60e28301eae7a85b72cd74d6266e661bccf9aea6578fcfe3c
   languageName: node
   linkType: hard
 
@@ -6838,13 +6791,6 @@ __metadata:
     dunder-proto: ^1.0.1
     es-object-atoms: ^1.0.0
   checksum: 4fc96afdb58ced9a67558698b91433e6b037aaa6f1493af77498d7c85b141382cf223c0e5946f334fb328ee85dfe6edd06d218eaf09556f4bc4ec6005d7f5f7b
-  languageName: node
-  linkType: hard
-
-"get-stream@npm:^3.0.0":
-  version: 3.0.0
-  resolution: "get-stream@npm:3.0.0"
-  checksum: 36142f46005ed74ce3a45c55545ec4e7da8e243554179e345a786baf144e5c4a35fb7bdc49fadfa9f18bd08000589b6fe364abdadfc4e1eb0e1b9914a6bb9c56
   languageName: node
   linkType: hard
 
@@ -7985,13 +7931,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-stream@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "is-stream@npm:1.1.0"
-  checksum: 063c6bec9d5647aa6d42108d4c59723d2bd4ae42135a2d4db6eadbd49b7ea05b750fd69d279e5c7c45cf9da753ad2c00d8978be354d65aa9f6bb434969c6a2ae
-  languageName: node
-  linkType: hard
-
 "is-string@npm:^1.0.5, is-string@npm:^1.0.7":
   version: 1.0.7
   resolution: "is-string@npm:1.0.7"
@@ -8442,7 +8381,7 @@ __metadata:
     codemirror-spell-checker: 1.1.2
     copy-webpack-plugin: 14.0.0
     core-js: 3.50.0
-    country-data: ^0.0.31
+    country-data-list: 1.6.3
     cross-env: 10.1.0
     css-loader: 7.1.5
     dotenv-defaults: 6.0.0
@@ -8464,7 +8403,6 @@ __metadata:
     eslint-plugin-react: 7.37.5
     eslint-plugin-react-hooks: 7.1.1
     express: 5.3.0
-    ffmpeg-probe: ^1.0.6
     flow-bin: 0.337.0
     flow-typed: 4.1.1
     font-awesome: 4.7.0
@@ -8549,7 +8487,6 @@ __metadata:
     uuid: 14.0.3
     video.js: 8.24.1
     videojs-contrib-quality-levels: 4.1.0
-    videojs-event-tracking: 1.0.3
     webpack: 5.111.1
     webpack-cli: 7.2.3
     webpack-dev-middleware: 8.3.0
@@ -9948,13 +9885,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nice-try@npm:^1.0.4":
-  version: 1.0.5
-  resolution: "nice-try@npm:1.0.5"
-  checksum: 0b4af3b5bb5d86c289f7a026303d192a7eb4417231fe47245c460baeabae7277bcd8fd9c728fb6bd62c30b3e15cd6620373e2cf33353b095d8b403d3e8a15aff
-  languageName: node
-  linkType: hard
-
 "node-abi@npm:^4.2.0":
   version: 4.37.0
   resolution: "node-abi@npm:4.37.0"
@@ -10142,15 +10072,6 @@ __metadata:
   version: 6.1.0
   resolution: "normalize-url@npm:6.1.0"
   checksum: 4a4944631173e7d521d6b80e4c85ccaeceb2870f315584fa30121f505a6dfd86439c5e3fdd8cd9e0e291290c41d0c3599f0cb12ab356722ed242584c30348e50
-  languageName: node
-  linkType: hard
-
-"npm-run-path@npm:^2.0.0":
-  version: 2.0.2
-  resolution: "npm-run-path@npm:2.0.2"
-  dependencies:
-    path-key: ^2.0.0
-  checksum: acd5ad81648ba4588ba5a8effb1d98d2b339d31be16826a118d50f182a134ac523172101b82eab1d01cb4c2ba358e857d54cfafd8163a1ffe7bd52100b741125
   languageName: node
   linkType: hard
 
@@ -10368,13 +10289,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"p-finally@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "p-finally@npm:1.0.0"
-  checksum: 93a654c53dc805dd5b5891bab16eb0ea46db8f66c4bfd99336ae929323b1af2b70a8b0654f8f1eae924b2b73d037031366d645f1fd18b3d30cbd15950cc4b1d4
-  languageName: node
-  linkType: hard
-
 "p-limit@npm:^2.2.0":
   version: 2.3.0
   resolution: "p-limit@npm:2.3.0"
@@ -10509,13 +10423,6 @@ __metadata:
   version: 1.0.1
   resolution: "path-is-absolute@npm:1.0.1"
   checksum: 060840f92cf8effa293bcc1bea81281bd7d363731d214cbe5c227df207c34cd727430f70c6037b5159c8a870b9157cba65e775446b0ab06fd5ecc7e54615a3b8
-  languageName: node
-  linkType: hard
-
-"path-key@npm:^2.0.0, path-key@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "path-key@npm:2.0.1"
-  checksum: f7ab0ad42fe3fb8c7f11d0c4f849871e28fbd8e1add65c370e422512fc5887097b9cf34d09c1747d45c942a8c1e26468d6356e2df3f740bf177ab8ca7301ebfd
   languageName: node
   linkType: hard
 
@@ -12177,28 +12084,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shebang-command@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "shebang-command@npm:1.2.0"
-  dependencies:
-    shebang-regex: ^1.0.0
-  checksum: 9eed1750301e622961ba5d588af2212505e96770ec376a37ab678f965795e995ade7ed44910f5d3d3cb5e10165a1847f52d3348c64e146b8be922f7707958908
-  languageName: node
-  linkType: hard
-
 "shebang-command@npm:^2.0.0":
   version: 2.0.0
   resolution: "shebang-command@npm:2.0.0"
   dependencies:
     shebang-regex: ^3.0.0
   checksum: 6b52fe87271c12968f6a054e60f6bde5f0f3d2db483a1e5c3e12d657c488a15474121a1d55cd958f6df026a54374ec38a4a963988c213b7570e1d51575cea7fa
-  languageName: node
-  linkType: hard
-
-"shebang-regex@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "shebang-regex@npm:1.0.0"
-  checksum: 404c5a752cd40f94591dfd9346da40a735a05139dac890ffc229afba610854d8799aaa52f87f7e0c94c5007f2c6af55bdcaeb584b56691926c5eaf41dc8f1372
   languageName: node
   linkType: hard
 
@@ -12281,7 +12172,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"signal-exit@npm:^3.0.0, signal-exit@npm:^3.0.2, signal-exit@npm:^3.0.7":
+"signal-exit@npm:^3.0.2, signal-exit@npm:^3.0.7":
   version: 3.0.7
   resolution: "signal-exit@npm:3.0.7"
   checksum: a2f098f247adc367dffc27845853e9959b9e88b01cb301658cfe4194352d8d2bb32e18467c786a7fe15f1d44b233ea35633d076d5e737870b7139949d1ab6318
@@ -12694,13 +12585,6 @@ __metadata:
   version: 3.0.0
   resolution: "strip-bom@npm:3.0.0"
   checksum: 8d50ff27b7ebe5ecc78f1fe1e00fcdff7af014e73cf724b46fb81ef889eeb1015fc5184b64e81a2efe002180f3ba431bdd77e300da5c6685d702780fbf0c8d5b
-  languageName: node
-  linkType: hard
-
-"strip-eof@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "strip-eof@npm:1.0.0"
-  checksum: 40bc8ddd7e072f8ba0c2d6d05267b4e0a4800898c3435b5fb5f5a21e6e47dfaff18467e7aa0d1844bb5d6274c3097246595841fbfeb317e541974ee992cac506
   languageName: node
   linkType: hard
 
@@ -13256,7 +13140,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"underscore@npm:>1.4.4, underscore@npm:^1.13.1":
+"underscore@npm:^1.13.1":
   version: 1.13.4
   resolution: "underscore@npm:1.13.4"
   checksum: 6b04f66cd454e8793a552dc49c71e24e5208a29b9d9c0af988a96948af79103399c36fb15db43f3629bfed152f8b1fe94f44e1249e9d196069c0fc7edfadb636
@@ -13630,15 +13514,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"videojs-event-tracking@npm:1.0.3":
-  version: 1.0.3
-  resolution: "videojs-event-tracking@npm:1.0.3"
-  dependencies:
-    video.js: ">=5.20.5"
-  checksum: 2c1cf90d75a02a652ca03df0f30ec0cd1dbdb4c47ddc0fc98b0433f67e017e9c736d47d66b3fa6e96331c3aafc4ffcdc5e3dc2c9705e453bba0e63bd6826c86e
-  languageName: node
-  linkType: hard
-
 "videojs-font@npm:4.2.0":
   version: 4.2.0
   resolution: "videojs-font@npm:4.2.0"
@@ -13901,17 +13776,6 @@ __metadata:
     gopd: ^1.2.0
     has-tostringtag: ^1.0.2
   checksum: fefaf1088442812234a72de6c0bcbcefb9089269636a9c8dbeb789b157acee0815aea4d1f4fc9ee19ecd270f77ffeeb0b6f9e2158b1a20226792f7d76e568233
-  languageName: node
-  linkType: hard
-
-"which@npm:^1.2.9":
-  version: 1.3.1
-  resolution: "which@npm:1.3.1"
-  dependencies:
-    isexe: ^2.0.0
-  bin:
-    which: ./bin/which
-  checksum: f2e185c6242244b8426c9df1510e86629192d93c1a986a7d2a591f2c24869e7ffd03d6dac07ca863b2e4c06f59a4cc9916c585b72ee9fa1aa609d0124df15e04
   languageName: node
   linkType: hard
 
