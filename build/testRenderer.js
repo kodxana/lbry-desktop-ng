@@ -6,7 +6,7 @@ const assert = require('assert').strict;
 
 process.chdir(path.resolve(__dirname, '..'));
 // Player components and plugins must share constructors and the plugin registry.
-for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels', 'videojs-event-tracking']) {
+for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels']) {
   assert.equal(
     require.resolve('video.js', { paths: [path.dirname(require.resolve(plugin))] }),
     require.resolve('video.js'),

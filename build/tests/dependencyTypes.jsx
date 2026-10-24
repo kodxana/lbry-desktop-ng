@@ -1,5 +1,6 @@
 // @flow
 import * as React from 'react';
+import { countries } from 'country-data-list';
 import {
   connect,
   legacy_connect,
@@ -131,3 +132,7 @@ export const names: string = classes('one', ['two', [3, null]], { enabled: true,
 export const unique: string = dedupe('one', 'one');
 export const bound: string = bind.bind({ one: 'scoped' })('one');
 export const colored: string = chalk.yellow.bold('test', 1);
+
+export const countryNames: Array<string> = countries.all
+  .filter((country) => country.status !== 'deleted')
+  .map((country) => country.name);

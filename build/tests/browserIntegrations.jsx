@@ -220,6 +220,51 @@ async function verification(store, history) {
   }
 }
 
+async function savedCountries(store, history) {
+  for (const [country, supported] of [
+    ['Turkey', true],
+    ['Turkiye', true],
+    ['Viet Nam', true],
+    ['Vietnam', true],
+    ['Ceuta, Mulilla', false],
+    ['Custom saved country', false],
+    ['Poland', true],
+  ]) {
+    const saved = [];
+    try {
+      render(
+        <Buy
+          receiveAddress={null}
+          gettingNewAddress
+          email=""
+          user={{ country }}
+          doGetNewAddress={noop}
+          doUserSetCountry={(value) => saved.push(value)}
+        />,
+        store,
+        history
+      );
+      await tick();
+      const select = document.querySelector('select');
+      assert.equal(select.value, country, 'Existing names must remain selected');
+      assert.equal(select.selectedOptions[0].textContent, country);
+      assert.equal(Array.from(select.options).filter((option) => option.value === country).length, 1);
+      assert.equal(!!button('Continue'), supported);
+      assert.equal(!!button('Try Anyway'), !supported);
+      assert.deepEqual(saved, [country], 'Mounting must not silently migrate an account country');
+      select.value = 'Turkiye';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      await tick();
+      assert.equal(select.value, 'Turkiye');
+      assert(button('Continue'), 'Renamed countries retain the existing provider eligibility');
+      assert.equal(saved[saved.length - 1], 'Turkiye');
+      assert(!document.querySelector('iframe'), 'Choosing a country must not start a purchase');
+    } finally {
+      unmount();
+    }
+  }
+}
+
 async function purchases(store, history) {
   const sign = crypto.subtle.sign;
   const pending = [];
@@ -284,6 +329,7 @@ export default async function browserIntegrations(store, history) {
   await emojiCompatibility(store, history);
   await nativeProxy();
   await verification(store, history);
+  await savedCountries(store, history);
   await purchases(store, history);
   return 'browser integrations: all legacy emoji bytes, quick reactions, native SDK Proxy, CAPTCHA callbacks/errors and asynchronous signed purchase URLs';
 }

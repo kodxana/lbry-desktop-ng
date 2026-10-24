@@ -4,7 +4,7 @@ import Page from 'component/page';
 import Card from 'component/common/card';
 import Spinner from 'component/spinner';
 import signQuery from 'util/sign-query';
-import { countries as countryData } from 'country-data';
+import { countryOptions } from 'util/country';
 import { FormField } from 'component/common/form';
 import { SUPPORTED_MOONPAY_COUNTRIES } from 'constants/moonpay';
 import { useDesktopHistory } from 'component/common/desktop-router';
@@ -14,24 +14,8 @@ import I18nMessage from 'component/i18nMessage';
 import LbcSymbol from 'component/common/lbc-symbol';
 
 const MOONPAY_KEY = process.env.MOONPAY_SECRET_KEY;
-const COUNTRIES = Array.from(
-  new Set(
-    countryData.all
-      .filter((country) => country.status !== 'deleted')
-      .map((country) => country.name)
-      .sort((a, b) => {
-        if (a > b) {
-          return 1;
-        }
-
-        if (b > a) {
-          return -1;
-        }
-
-        return 0;
-      })
-  )
-);
+// Keep the existing provider allowlist when the country dataset changes its names.
+const PROVIDER_COUNTRY_NAMES: { [string]: string } = { Turkiye: 'Turkey', Vietnam: 'Viet Nam' };
 
 type Props = {
   receiveAddress: ?string,
@@ -53,7 +37,7 @@ export default function BuyPage(props: Props): React.Node {
   } | void>();
   const [country, setCountry] = React.useState(initialCountry);
   const [showPurchaseScreen, setShowPurchaseScreen] = React.useState(false);
-  const isValid = SUPPORTED_MOONPAY_COUNTRIES.includes(country);
+  const isValid = SUPPORTED_MOONPAY_COUNTRIES.includes(PROVIDER_COUNTRY_NAMES[country] || country);
   const { goBack } = useDesktopHistory();
   const currentPurchase =
     signedPurchase && signedPurchase.address === receiveAddress && signedPurchase.email === email
@@ -180,7 +164,7 @@ export default function BuyPage(props: Props): React.Node {
                           <option value="" disabled defaultValue>
                             {__('Select your country')}
                           </option>
-                          {COUNTRIES.map((country, index) => (
+                          {countryOptions(country).map((country) => (
                             <option key={country} value={country}>
                               {country}
                             </option>

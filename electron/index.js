@@ -29,13 +29,14 @@ const { registerDesktopInfo } = require('./desktopInfo.cjs');
 const { registerDownloadNotifications } = require('./downloadNotifications.cjs');
 const { getDiskSpace } = require('./diskSpace.cjs');
 const { HubSelection, parseHubConfig } = require('./hubServers.cjs');
-const probe = require('ffmpeg-probe');
+const probe = require('./mediaProbe.cjs');
 
 const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
-const rootArgument = process.argv.find(arg => arg.startsWith(rootFlag));
-const desktopProfile = createProfile(rootArgument
-  ? rootArgument.slice(rootFlag.length)
-  : path.join(app.getPath('appData'), desktopSettings.appName), desktopSettings);
+const rootArgument = process.argv.find((arg) => arg.startsWith(rootFlag));
+const desktopProfile = createProfile(
+  rootArgument ? rootArgument.slice(rootFlag.length) : path.join(app.getPath('appData'), desktopSettings.appName),
+  desktopSettings
+);
 app.setPath('userData', desktopProfile.desktop);
 // Chromium session data defaults to this profile's userData directory.
 app.setPath('logs', desktopProfile.logs);
@@ -52,10 +53,21 @@ const rpc = (method, params = {}) => {
   return daemon.rpc(method, params);
 };
 const contentFiles = require('./contentFiles.cjs').registerContentFiles({
-  ipcMain, shell, rpc, profile: desktopProfile, probe, getWindow: () => rendererWindow, rendererURL,
+  ipcMain,
+  shell,
+  rpc,
+  profile: desktopProfile,
+  probe,
+  getWindow: () => rendererWindow,
+  rendererURL,
 });
 require('./walletBackup.cjs').registerWalletBackup({
-  ipcMain, app, shell, rpc, getWindow: () => rendererWindow, rendererURL,
+  ipcMain,
+  app,
+  shell,
+  rpc,
+  getWindow: () => rendererWindow,
+  rendererURL,
 });
 const AutoLaunch = require('auto-launch');
 require('./desktopActions.cjs').registerDesktopActions({
@@ -70,14 +82,27 @@ if (isDev) {
   const file = process.env.LBRY_I18N_OUTPUT_FILE || path.join(__static, 'app-strings.json');
   if (!fs.existsSync(file)) fs.copyFileSync(path.join(__static, 'app-strings.json'), file);
   require('./translationCollection.cjs').registerTranslationCollection({
-    ipcMain, file, getWindow: () => rendererWindow, rendererURL,
+    ipcMain,
+    file,
+    getWindow: () => rendererWindow,
+    rendererURL,
   });
 }
 registerDesktopInfo({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
 const attachDownloadNotifications = registerDownloadNotifications({
-  ipcMain, app, getWindow: () => rendererWindow, rendererURL,
+  ipcMain,
+  app,
+  getWindow: () => rendererWindow,
+  rendererURL,
 });
-registerFileSelection({ ipcMain, app, dialog, getWindow: () => rendererWindow, rendererURL, onSelected: contentFiles.grant });
+registerFileSelection({
+  ipcMain,
+  app,
+  dialog,
+  getWindow: () => rendererWindow,
+  rendererURL,
+  onSelected: contentFiles.grant,
+});
 registerWindowControls({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
 registerContextMenu({ ipcMain, Menu, clipboard, getWindow: () => rendererWindow, rendererURL, isDev });
 registerPasswordStorage({
@@ -116,7 +141,8 @@ if (isDev) {
 
 const startDaemon = async (settingsOnly = false) => {
   const directory = isDev ? path.join(__static, 'daemon') : path.join(process.resourcesPath, 'static', 'daemon');
-  const binary = process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
+  const binary =
+    process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
   daemon = new Daemon(desktopProfile, binary, process.env.LBRY_HEADERS);
   await daemon.launch({ settingsOnly });
   const ownedDaemon = daemon;
@@ -139,7 +165,7 @@ const hubs = new HubSelection({
   },
   hasCustomServers: () => readHubConfig() !== null,
   onConfigured: () => fs.writeFileSync(hubSetupMarker, JSON.stringify({ version: 1 }) + '\n'),
-  restart: async settingsOnly => {
+  restart: async (settingsOnly) => {
     if (appState.isQuitting) throw new Error('Application is closing.');
     if (daemon && daemon.subprocess) {
       daemon.expectedExit = true;
@@ -150,7 +176,7 @@ const hubs = new HubSelection({
   },
 });
 
-ipcMain.handle('hub-servers-scan', event => {
+ipcMain.handle('hub-servers-scan', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.scan();
 });
@@ -158,11 +184,11 @@ ipcMain.handle('hub-servers-select', (event, endpoint) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.select(endpoint);
 });
-ipcMain.handle('hub-startup-state', event => {
+ipcMain.handle('hub-startup-state', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return { settingsOnly: hubs.settingsOnly };
 });
-ipcMain.handle('hub-servers-prepare', event => {
+ipcMain.handle('hub-servers-prepare', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.prepare();
 });
@@ -170,7 +196,7 @@ ipcMain.handle('hub-servers-check', (event, endpoint) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return hubs.checkCustom(endpoint);
 });
-ipcMain.handle('hub-servers-config', event => {
+ipcMain.handle('hub-servers-config', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return readHubConfig();
 });
@@ -187,7 +213,7 @@ const startLbryFirst = async () => {
 
   try {
     lbryFirst = new LbryFirstInstance();
-    lbryFirst.on('exit', e => {
+    lbryFirst.on('exit', (e) => {
       if (!isDev) {
         lbryFirst = null;
         isLbryFirstRunning = false;
@@ -232,13 +258,13 @@ if (!gotSingleInstanceLock) {
     // Send the url to the app to navigate first, then focus
     if (rendererWindow) {
       // External uri (last item on argv):
-      const EXTERNAL_URI = (argv.length) ? argv[argv.length - 1] : '';
+      const EXTERNAL_URI = argv.length ? argv[argv.length - 1] : '';
       // Handle protocol requests for windows and linux
-      const platforms = (process.platform === 'win32' || process.platform === 'linux');
+      const platforms = process.platform === 'win32' || process.platform === 'linux';
       // Is LBRY protocol
       const isProtocolURI = String(EXTERNAL_URI).startsWith(PROTOCOL + '://');
       // External protocol requested:
-      if (platforms  && isProtocolURI) {
+      if (platforms && isProtocolURI) {
         let URI = EXTERNAL_URI;
         // Keep only command line / deep linked arguments
         // Windows normalizes URIs when they're passed in from other apps. On Windows, this tries to
@@ -249,9 +275,7 @@ if (!gotSingleInstanceLock) {
         //     an anchor and converts it to lbry://channel/#claimid. We remove the slash here as well.
         //   - ? also interpreted as an anchor, remove slash also.
         if (process.platform === 'win32') {
-          URI = URI.replace(/\/$/, '')
-            .replace('/#', '#')
-            .replace('/?', '?');
+          URI = URI.replace(/\/$/, '').replace('/#', '#').replace('/?', '?');
         }
 
         rendererWindow.webContents.send('open-uri-requested', URI);
@@ -269,7 +293,7 @@ if (!gotSingleInstanceLock) {
       app.exit(1);
       return;
     }
-      if (isDev && !process.argv.includes('--skip-devtools')) {
+    if (isDev && !process.argv.includes('--skip-devtools')) {
       await installDevtools();
     }
     rendererWindow = createWindow(appState);
@@ -301,20 +325,23 @@ app.on('activate', () => {
   }
 });
 
-app.on('will-quit', event => {
+app.on('will-quit', (event) => {
   appState.isQuitting = true;
 
   if (daemon) {
     event.preventDefault();
     if (!appState.waitingForDaemon) {
       appState.waitingForDaemon = true;
-      daemon.quit().then(() => {
-        daemon = null;
-        app.quit();
-      }).catch(error => {
-        dialog.showErrorBox('SDK shutdown failed', error.message);
-        app.exit(1);
-      });
+      daemon
+        .quit()
+        .then(() => {
+          daemon = null;
+          app.quit();
+        })
+        .catch((error) => {
+          dialog.showErrorBox('SDK shutdown failed', error.message);
+          app.exit(1);
+        });
     }
   }
   if (lbryFirst) {
@@ -358,7 +385,7 @@ ipcMain.on('get-disk-space', async (event) => {
   }
 });
 
-ipcMain.on('version-info-requested', event => {
+ipcMain.on('version-info-requested', (event) => {
   if (!allowed(event)) return;
   event.reply('version-info-received', updates.versionInfo());
 });
@@ -373,11 +400,15 @@ ipcMain.on('launch-lbry-first', async (event) => {
   }
 });
 
-process.on('uncaughtException', async error => {
+process.on('uncaughtException', async (error) => {
   console.log(error);
   dialog.showErrorBox('Error Encountered', `Caught error: ${error}`);
   appState.isQuitting = true;
-  try { if (daemon) await daemon.quit(); } finally { app.exit(1) }
+  try {
+    if (daemon) await daemon.quit();
+  } finally {
+    app.exit(1);
+  }
 });
 
 autoUpdater.logger = require('./updaterLogger.cjs')(path.join(desktopProfile.desktop, 'logs'));
@@ -405,7 +436,7 @@ const updates = new DesktopUpdater(autoUpdater, {
 
 registerUpdaterIpc({ ipcMain, updates, getWindow: () => rendererWindow, rendererURL });
 
-ipcMain.handle('desktop-versions', event => {
+ipcMain.handle('desktop-versions', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
   return updates.versionInfo();
 });
