@@ -1,6 +1,6 @@
 /* eslint-disable */
 import videojs from 'video.js';
-import { version as VERSION } from './package.json';
+import packageInfo from './package.json';
 import ConcreteButton from './ConcreteButton';
 import ConcreteMenuItem from './ConcreteMenuItem';
 
@@ -42,6 +42,10 @@ class HlsQualitySelectorPlugin {
 
     // Bind event listeners
     this.bindPlayerEvents();
+
+    // A cached playlist can populate levels before this ready callback runs.
+    if (this.player.qualityLevels().length) this.onAddQualityLevel();
+    this.updatePlugin();
 
     // Listen for source changes
     this.player.on('loadedmetadata', (e) => {
@@ -252,7 +256,7 @@ const onPlayerReady = (player, options) => {
  */
 const hlsQualitySelector = function (options) {
   this.ready(() => {
-    onPlayerReady(this, videojs.mergeOptions(defaults, options));
+    onPlayerReady(this, videojs.obj.merge(defaults, options));
   });
 };
 
@@ -260,7 +264,7 @@ const hlsQualitySelector = function (options) {
 registerPlugin('hlsQualitySelector', hlsQualitySelector);
 
 // Include the version number.
-hlsQualitySelector.VERSION = VERSION;
+hlsQualitySelector.VERSION = packageInfo.version;
 
 export default hlsQualitySelector;
 /* eslint-enable */

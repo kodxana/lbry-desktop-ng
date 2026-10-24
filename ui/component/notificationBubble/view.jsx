@@ -9,7 +9,7 @@ type Props = {
   user: ?User,
 };
 
-export default function NotificationHeaderButton(props: Props) {
+export default function NotificationHeaderButton(props: Props): React.Node {
   const { unseenCount, inline = false, user } = props;
   const notificationsEnabled = ENABLE_UI_NOTIFICATIONS || (user && user.experimental_ui);
 

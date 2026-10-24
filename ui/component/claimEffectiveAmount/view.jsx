@@ -7,7 +7,7 @@ type Props = {
   claim: ?Claim,
 };
 
-function ClaimEffectiveAmount(props: Props) {
+function ClaimEffectiveAmount(props: Props): React.Node {
   const { claim } = props;
 
   if (!claim) {

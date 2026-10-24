@@ -4,7 +4,7 @@ import debounce from 'util/debounce';
 
 const DEBOUNCE_SCROLL_HANDLER_MS = 50;
 
-function scaleToDevicePixelRatio(value) {
+function scaleToDevicePixelRatio(value: number): number {
   const devicePixelRatio = window.devicePixelRatio || 1.0;
   if (devicePixelRatio < 1.0) {
     return Math.ceil(value / devicePixelRatio);
@@ -19,20 +19,18 @@ type Props = {
   yOffset?: number,
 };
 
-export default function WaitUntilOnPage(props: Props) {
+export default function WaitUntilOnPage(props: Props): React.Node {
   const { yOffset } = props;
-  const ref = React.useRef();
+  const ref = React.useRef<HTMLDivElement | null>(null);
   const [shouldRender, setShouldRender] = React.useState(false);
 
   const shouldElementRender = React.useCallback(
-    (ref) => {
+    (ref: { current: HTMLDivElement | null }) => {
       const element = ref && ref.current;
       if (element) {
         const bounding = element.getBoundingClientRect();
-        // $FlowFixMe
-        const windowH = window.innerHeight || document.documentElement.clientHeight;
-        // $FlowFixMe
-        const windowW = window.innerWidth || document.documentElement.clientWidth;
+        const windowH = window.innerHeight || document.documentElement?.clientHeight || 0;
+        const windowW = window.innerWidth || document.documentElement?.clientWidth || 0;
 
         const isApproachingViewport = yOffset && bounding.top < windowH + scaleToDevicePixelRatio(yOffset);
         const isInViewport = // also covers "element is larger than viewport".

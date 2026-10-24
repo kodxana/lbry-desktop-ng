@@ -1,8 +1,14 @@
 // @flow
 
-const buildCDNUrl = (path: string) => `https://static.odycdn.com/stickers/${path}`;
+export type Sticker = {
+  name: string,
+  url: string,
+  price?: number,
+};
 
-const buildSticker = (name: string, path: string, price?: number) => ({
+const buildCDNUrl = (path: string): string => `https://static.odycdn.com/stickers/${path}`;
+
+const buildSticker = (name: string, path: string, price?: number): Sticker => ({
   name: `:${name}:`,
   url: buildCDNUrl(path),
   price: price,
@@ -72,7 +78,7 @@ const TIP_HAND_FLIP = 'TIPS/png/tip_hand_flip_$%20_with_border.png';
 const TIP_HAND_FLIP_COIN = 'TIPS/png/tip_hand_flip_coin_with_border.png';
 const TIP_HAND_FLIP_LBC = 'TIPS/png/tip_hand_flip_lbc_with_border.png';
 
-export const FREE_GLOBAL_STICKERS = [
+export const FREE_GLOBAL_STICKERS: Array<Sticker> = [
   buildSticker('CAT', CAT_BORDER),
   buildSticker('FAIL', FAIL_BORDER),
   buildSticker('HYPE', HYPE_BORDER),
@@ -116,7 +122,7 @@ export const FREE_GLOBAL_STICKERS = [
   buildSticker('WHUUT', WHUUT_WITH_FRAME),
 ];
 
-export const PAID_GLOBAL_STICKERS = [
+export const PAID_GLOBAL_STICKERS: Array<Sticker> = [
   buildSticker('TIP_HAND_FLIP', TIP_HAND_FLIP, 1),
   buildSticker('TIP_HAND_FLIP_COIN', TIP_HAND_FLIP_COIN, 1),
   buildSticker('TIP_HAND_FLIP_LBC', TIP_HAND_FLIP_LBC, 1),

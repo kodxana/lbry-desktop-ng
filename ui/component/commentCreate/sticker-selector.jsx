@@ -17,7 +17,7 @@ const STICKER_SIDE_LINKS = [
 
 type Props = { claimIsMine: boolean, onSelect: (any) => void };
 
-export default function StickerSelector(props: Props) {
+export default function StickerSelector(props: Props): React.Node {
   const { claimIsMine, onSelect } = props;
 
   function scrollToStickerSection(section: string) {
@@ -25,7 +25,6 @@ export default function StickerSelector(props: Props) {
     const sectionToScroll = document.getElementById(section);
 
     if (listBodyEl && sectionToScroll) {
-      // $FlowFixMe
       listBodyEl.scrollTo({
         top: sectionToScroll.offsetTop - sectionToScroll.getBoundingClientRect().height * 2,
         behavior: 'smooth',

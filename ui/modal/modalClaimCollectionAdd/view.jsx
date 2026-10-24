@@ -8,7 +8,7 @@ type Props = {
   uri: string,
 };
 
-const ModalClaimCollectionAdd = (props: Props) => {
+const ModalClaimCollectionAdd = (props: Props): React.Node => {
   const { doHideModal, uri } = props;
   return (
     <Modal isOpen type="card" onAborted={doHideModal}>

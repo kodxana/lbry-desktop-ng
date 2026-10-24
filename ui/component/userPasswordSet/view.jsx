@@ -2,7 +2,7 @@
 import * as PAGES from 'constants/pages';
 import React from 'react';
 import { Lbryio } from 'lbryinc';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Card from 'component/common/card';
 import { Form, FormField } from 'component/common/form';
 import ErrorText from 'component/common/error-text';
@@ -15,21 +15,21 @@ type Props = {
   doClearEmailEntry: () => void,
   doUserFetch: () => void,
   doToast: ({ message: string }) => void,
-  history: { push: string => void },
+  history: { push: (string) => void },
   location: { search: string },
   passwordSetPending: boolean,
   passwordSetError: ?string,
 };
 
-function UserPasswordReset(props: Props) {
+function UserPasswordReset(props: Props): React.Node {
   const { doClearEmailEntry, doToast, doUserFetch } = props;
-  const { location, push } = useHistory();
+  const { location, push } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const email = urlParams.get('email');
   const authToken = urlParams.get('auth_token');
   const verificationToken = urlParams.get('verification_token');
   const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState();
+  const [error, setError] = React.useState<string | void>();
   const [loading, setLoading] = React.useState(false);
 
   function handleSubmit() {
@@ -58,7 +58,7 @@ function UserPasswordReset(props: Props) {
         });
         push(`/`);
       })
-      .catch(error => {
+      .catch((error) => {
         setLoading(false);
         setError(error.message);
       });
@@ -83,7 +83,7 @@ function UserPasswordReset(props: Props) {
                 name="password_set"
                 label={__('New Password')}
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
               />
 
               <div className="section__actions">

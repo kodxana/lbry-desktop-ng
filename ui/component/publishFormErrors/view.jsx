@@ -18,7 +18,7 @@ type Props = {
   waitForFile: boolean,
 };
 
-function PublishFormErrors(props: Props) {
+function PublishFormErrors(props: Props): React.Node {
   const {
     name,
     title,

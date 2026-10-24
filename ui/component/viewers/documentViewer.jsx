@@ -10,8 +10,7 @@ type Props = {
   theme: string,
   renderMode: string,
   source: {
-    file: (?string) => any,
-    stream: string,
+    file: () => Promise<Uint8Array>,
     contentType: string,
   },
 };
@@ -23,6 +22,7 @@ type State = {
 };
 
 class DocumentViewer extends React.PureComponent<Props, State> {
+  loadId: number = 0;
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -33,41 +33,44 @@ class DocumentViewer extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    const { source } = this.props;
-    if (source && source.file) {
-      const stream = source.file('utf8');
+    this.loadSource();
+  }
 
-      let data = '';
+  componentDidUpdate(previous: Props) {
+    if (previous.source.file !== this.props.source.file) this.loadSource();
+  }
 
-      stream.on('data', (chunk) => {
-        data += chunk;
-      });
-
-      stream.on('end', () => {
-        this.setState({ content: data, loading: false });
-      });
-
-      stream.on('error', () => {
-        this.setState({ error: true, loading: false });
-      });
+  async loadSource(): Promise<void> {
+    const request = ++this.loadId;
+    const { file } = this.props.source;
+    this.setState({ content: null, error: false, loading: true });
+    try {
+      const bytes = await file();
+      if (request === this.loadId) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
+    } catch (_) {
+      if (request === this.loadId) this.setState({ error: true, loading: false });
     }
   }
 
-  renderDocument() {
+  componentWillUnmount() {
+    this.loadId++;
+  }
+
+  renderDocument(): React.Node {
     const { content } = this.state;
     const { source, theme, renderMode } = this.props;
     const { contentType } = source;
 
     return renderMode === RENDER_MODES.MARKDOWN ? (
-      <MarkdownPreview content={content} isMarkdownPost promptLinks />
+      <MarkdownPreview content={content} isMarkdownPost />
     ) : (
       <CodeViewer value={content} contentType={contentType} theme={theme} />
     );
   }
 
-  render() {
+  render(): React.Node {
     const { error, content } = this.state;
-    const isReady = content && !error;
+    const isReady = content !== null && !error;
     const errorMessage = __("Sorry, looks like we can't load the document.");
 
     return (

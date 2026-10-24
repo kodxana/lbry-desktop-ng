@@ -5,7 +5,7 @@ import React from 'react';
 
 type Props = { balance: number, inline?: boolean };
 
-function WalletSpendableBalanceHelp(props: Props) {
+function WalletSpendableBalanceHelp(props: Props): React.Node {
   const { balance, inline } = props;
 
   const getMessage = (text: string) => (

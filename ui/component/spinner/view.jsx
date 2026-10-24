@@ -17,15 +17,15 @@ type State = {
 };
 
 class Spinner extends PureComponent<Props, State> {
-  static defaultProps = {
+  static defaultProps: { dark: boolean, light: boolean, delayed: boolean } = {
     // We may want a dark/light spinner regardless of the current theme
     dark: false,
     light: false,
     delayed: false,
   };
 
-  constructor() {
-    super();
+  constructor(props: Props) {
+    super(props);
 
     this.state = { show: false };
     this.delayedTimeout = null;
@@ -52,9 +52,9 @@ class Spinner extends PureComponent<Props, State> {
     }
   }
 
-  delayedTimeout: ?TimeoutID;
+  delayedTimeout: ?ReturnType<typeof setTimeout>;
 
-  render() {
+  render(): React.Node {
     const { dark, light, theme, type, text } = this.props;
     const { show } = this.state;
 

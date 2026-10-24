@@ -26,7 +26,7 @@ const formatEmail = (email: string) => {
   return null;
 };
 
-function ChannelAbout(props: Props) {
+function ChannelAbout(props: Props): React.Node {
   const { claim, uri, description, email, website, languages } = props;
   const claimId = claim && claim.claim_id;
 
@@ -95,7 +95,6 @@ function ChannelAbout(props: Props) {
           <label>{__('Staked LBRY Credits')}</label>
           <div className="media__info-text">
             <CreditAmount
-              badge={false}
               amount={parseFloat(claim.amount) + parseFloat(claim.meta.support_amount)}
               precision={8}
             />{' '}

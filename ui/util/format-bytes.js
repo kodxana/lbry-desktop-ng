@@ -1,5 +1,5 @@
 // @flow
-export function formatBytes(bytes: number, decimals?: number = 2) {
+export function formatBytes(bytes: number, decimals: number = 2): string {
   if (bytes === 0) return __('0 Bytes');
 
   const k = 1024;

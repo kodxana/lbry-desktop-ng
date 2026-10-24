@@ -1,3 +1,4 @@
+import { releasesUrl } from 'util/desktop-updates';
 // @flow
 import React from 'react';
 import { Modal } from 'modal/modal';
@@ -45,7 +46,7 @@ class ModalDownloading extends React.PureComponent<Props> {
             <p>{__('After the install is complete, please reopen the app.')}</p>
             <p>
               {__('Note: You can also install the AppImage version for streamlined updates.')}{' '}
-              <Button button="link" label={__('Download here.')} href="https://lbry.com/get/lbry.AppImage" />
+              <Button button="link" label={__('Download here.')} href={releasesUrl} />
             </p>
           </React.Fragment>
         ) : null}

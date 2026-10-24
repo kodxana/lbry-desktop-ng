@@ -3,36 +3,33 @@ import * as ICONS from 'constants/icons';
 import * as MODALS from 'constants/modal_types';
 import React from 'react';
 import classnames from 'classnames';
-import { Menu, MenuButton, MenuList, MenuItem } from '@reach/menu-button';
+import { Menu, MenuButton, MenuList, MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 import * as PAGES from 'constants/pages';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
+import { Link } from 'react-router';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
 type Props = {
   inline?: boolean,
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { collectionId: string }) => void,
   collectionName?: string,
   collectionId: string,
-  playNextUri: string,
+  playNextUri: ?string,
   doToggleShuffleList: (string) => void,
 };
 
-function CollectionMenuList(props: Props) {
+function CollectionMenuList(props: Props): React.Node {
   const { inline = false, collectionId, collectionName, doOpenModal, playNextUri, doToggleShuffleList } = props;
   const [doShuffle, setDoShuffle] = React.useState(false);
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
 
   React.useEffect(() => {
     if (playNextUri && doShuffle) {
       setDoShuffle(false);
       const navigateUrl = formatLbryUrlForWeb(playNextUri);
-      push({
-        pathname: navigateUrl,
-        search: generateListSearchUrlParams(collectionId),
-        state: { forceAutoplay: true },
-      });
+      push({ pathname: navigateUrl, search: generateListSearchUrlParams(collectionId) }, { forceAutoplay: true });
     }
   }, [collectionId, doShuffle, playNextUri, push]);
 
@@ -42,7 +39,6 @@ function CollectionMenuList(props: Props) {
         className={classnames('menu__button', { 'claim__menu-button': !inline, 'claim__menu-button--inline': inline })}
         onClick={(e) => {
           e.stopPropagation();
-          e.preventDefault();
         }}
       >
         <Icon size={20} icon={ICONS.MORE_VERTICAL} />
@@ -50,15 +46,15 @@ function CollectionMenuList(props: Props) {
       <MenuList className="menu__list">
         {collectionId && collectionName && (
           <>
-            <MenuItem className="comment__menu-option" onSelect={() => push(`/$/${PAGES.LIST}/${collectionId}`)}>
-              <a className="menu__link" href={`/$/${PAGES.LIST}/${collectionId}`}>
+            <MenuItem className="comment__menu-option" render={<Link to={`/$/${PAGES.LIST}/${collectionId}`} />}>
+              <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.VIEW} />
                 {__('View List')}
-              </a>
+              </div>
             </MenuItem>
             <MenuItem
               className="comment__menu-option"
-              onSelect={() => {
+              onClick={() => {
                 doToggleShuffleList(collectionId);
                 setDoShuffle(true);
               }}
@@ -70,7 +66,7 @@ function CollectionMenuList(props: Props) {
             </MenuItem>
             <MenuItem
               className="comment__menu-option"
-              onSelect={() => push(`/$/${PAGES.LIST}/${collectionId}?view=edit`)}
+              onClick={() => push(`/$/${PAGES.LIST}/${collectionId}?view=edit`)}
             >
               <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.PUBLISH} />
@@ -79,7 +75,7 @@ function CollectionMenuList(props: Props) {
             </MenuItem>
             <MenuItem
               className="comment__menu-option"
-              onSelect={() => doOpenModal(MODALS.COLLECTION_DELETE, { collectionId })}
+              onClick={() => doOpenModal(MODALS.COLLECTION_DELETE, { collectionId })}
             >
               <div className="menu__link">
                 <Icon aria-hidden icon={ICONS.DELETE} />

@@ -9,7 +9,7 @@ type Props = {
   noLabels?: boolean,
 };
 
-function SettingClosingBehavior(props: Props) {
+function SettingClosingBehavior(props: Props): React.Node {
   const { toTrayWhenClosed, setToTrayWhenClosed, noLabels } = props;
 
   return (

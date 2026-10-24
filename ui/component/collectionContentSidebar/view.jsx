@@ -1,7 +1,6 @@
 // @flow
 
-// $FlowFixMe
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 
 import React from 'react';
 import classnames from 'classnames';
@@ -16,18 +15,16 @@ type Props = {
   id: string,
   url: string,
   isMyCollection: boolean,
-  collectionUrls: Array<Claim>,
+  collectionUrls: ?Array<?string>,
   collectionName: string,
-  collection: any,
   loop: boolean,
-  shuffle: boolean,
+  shuffle: boolean | ?Array<?string>,
   doToggleLoopList: (string, boolean) => void,
   doToggleShuffleList: (string, string, boolean) => void,
-  createUnpublishedCollection: (string, Array<any>, ?string) => void,
   doCollectionEdit: (string, CollectionEditParams) => void,
 };
 
-export default function CollectionContent(props: Props) {
+export default function CollectionContent(props: Props): React.Node {
   const {
     isMyCollection,
     collectionUrls,
@@ -43,7 +40,7 @@ export default function CollectionContent(props: Props) {
 
   const [showEdit, setShowEdit] = React.useState(false);
 
-  function handleOnDragEnd(result) {
+  function handleOnDragEnd(result: CollectionDropResult): void {
     const { source, destination } = result;
 
     if (!destination) return;

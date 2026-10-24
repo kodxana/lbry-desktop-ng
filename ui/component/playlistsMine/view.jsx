@@ -29,7 +29,7 @@ const COLLECTION_FILTERS = [ALL, PRIVATE, PUBLIC];
 const FILTER_TYPE_PARAM = 'type';
 const PAGE_PARAM = 'page';
 
-export default function PlaylistsMine(props: Props) {
+export default function PlaylistsMine(props: Props): React.Node {
   const {
     publishedCollections,
     unpublishedCollections,
@@ -45,13 +45,13 @@ export default function PlaylistsMine(props: Props) {
   const type = urlParams.get(FILTER_TYPE_PARAM) || ALL;
   const pageSize = 12;
 
-  const unpublishedCollectionsList = (Object.keys(unpublishedCollections || {}): any);
-  const publishedList = (Object.keys(publishedCollections || {}): any);
+  const unpublishedCollectionsList = Object.keys(unpublishedCollections || {});
+  const publishedList = Object.keys(publishedCollections || {});
   const hasCollections = unpublishedCollectionsList.length || publishedList.length;
   const [filterType, setFilterType] = React.useState(type);
   const [searchText, setSearchText] = React.useState('');
 
-  let collectionsToShow = [];
+  let collectionsToShow: Array<string> = [];
   if (filterType === ALL) {
     collectionsToShow = unpublishedCollectionsList.concat(publishedList);
   } else if (filterType === PRIVATE) {
@@ -79,7 +79,7 @@ export default function PlaylistsMine(props: Props) {
   const paginateEndIndex = paginateStartIndex + pageSize;
   const paginatedCollections = filteredCollections.slice(paginateStartIndex, paginateEndIndex);
 
-  function escapeListener(e: SyntheticKeyboardEvent<*>) {
+  function escapeListener(e: KeyboardEvent) {
     if (e.keyCode === KEYCODES.ESCAPE) {
       e.preventDefault();
       setSearchText('');
@@ -94,7 +94,7 @@ export default function PlaylistsMine(props: Props) {
     window.removeEventListener('keydown', escapeListener);
   }
 
-  function handleFilterType(val) {
+  function handleFilterType(val: string) {
     const newParams = new URLSearchParams();
     if (val) {
       newParams.set(FILTER_TYPE_PARAM, val);

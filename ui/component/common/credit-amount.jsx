@@ -23,7 +23,14 @@ type Props = {
 };
 
 class CreditAmount extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: {
+    noFormat: boolean,
+    precision: number,
+    showFree: boolean,
+    showFullPrice: boolean,
+    showLBC: boolean,
+    showPlus: boolean,
+  } = {
     noFormat: false,
     precision: 2,
     showFree: false,
@@ -32,7 +39,7 @@ class CreditAmount extends React.PureComponent<Props> {
     showPlus: false,
   };
 
-  render() {
+  render(): React.Node {
     const {
       amount,
       className,
@@ -55,7 +62,7 @@ class CreditAmount extends React.PureComponent<Props> {
     // return null, otherwise it will try and convert undefined to a string
     if (amount === undefined && customAmounts === undefined) return null;
 
-    function getAmountText(amount: number, isFiat?: boolean) {
+    function getAmountText(amount: number, isFiat?: boolean): React.Node {
       const fullPrice = formatFullPrice(amount, 2);
       const isFree = parseFloat(amount) === 0;
       let formattedAmount;
@@ -72,23 +79,26 @@ class CreditAmount extends React.PureComponent<Props> {
       if (showFree && isFree) {
         return __('Free');
       } else {
-        let amountText = noFormat ? amount : formattedAmount;
+        let amountText: string | number = noFormat ? amount : formattedAmount;
 
         if (showPlus && amount > 0) {
           amountText = `+${amountText}`;
         }
 
+        let renderedAmount: React.Node = amountText;
         if (showLBC && !isFiat) {
-          amountText = <LbcSymbol postfix={amountText} size={size} />;
+          renderedAmount = <LbcSymbol postfix={amountText} size={size} />;
         } else if (showLBC && isFiat) {
-          amountText = <p style={{ display: 'inline' }}> ${(Math.round(Number(amountText) * 100) / 100).toFixed(2)}</p>;
+          renderedAmount = (
+            <p style={{ display: 'inline' }}> ${(Math.round(Number(amountText) * 100) / 100).toFixed(2)}</p>
+          );
         }
 
         if (fee) {
-          amountText = __('%amount% fee', { amount: amountText });
+          renderedAmount = __('%amount% fee', { amount: renderedAmount });
         }
 
-        return amountText;
+        return renderedAmount;
       }
     }
 

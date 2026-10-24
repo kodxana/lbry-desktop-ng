@@ -1,5 +1,12 @@
 // @flow
 import { useEffect } from 'react';
+import type { VideoControl, Player } from './videojs';
+type ButtonRef = { current: HTMLButtonElement | null };
+type EventControls = {
+  retryVideoAfterFailure: () => void,
+  unmuteAndHideHint: () => void,
+  initializeEvents: () => void,
+};
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -9,14 +16,13 @@ const TAP = {
   RETRY: 'RETRY',
 };
 
-const setLabel = (controlBar, childName, label) => {
-  const c = controlBar.getChild(childName);
+const setLabel = (controlBar: ?VideoControl, childName: string, label: string) => {
+  const c = controlBar?.getChild(childName);
   if (c) {
     c.controlText(label);
   }
 };
 
-// $FlowFixMe
 const VideoJsEvents = ({
   tapToUnmuteRef,
   tapToRetryRef,
@@ -34,11 +40,11 @@ const VideoJsEvents = ({
   claimRewards,
   playerServerRef,
 }: {
-  tapToUnmuteRef: any, // DOM element
-  tapToRetryRef: any, // DOM element
-  setReload: any, // react hook
-  videoTheaterMode: any, // dispatch function
-  playerRef: any, // DOM element
+  tapToUnmuteRef: ButtonRef,
+  tapToRetryRef: ButtonRef,
+  setReload: (number) => void,
+  videoTheaterMode: boolean,
+  playerRef: { current: Player | void },
   autoplaySetting: boolean,
   replay: boolean,
   claimId?: ?string,
@@ -50,7 +56,7 @@ const VideoJsEvents = ({
   doAnalyticsView?: (string, number) => any,
   claimRewards?: () => void,
   playerServerRef?: any,
-}) => {
+}): EventControls => {
   // Override the player's control text. We override to:
   // 1. Add keyboard shortcut to the tool-tip.
   // 2. Override videojs' i18n and use our own (don't want to have 2 systems).
@@ -63,7 +69,7 @@ const VideoJsEvents = ({
   // - videojs changes the MuteToggle text at 'loadstart', so this was chosen
   // as the listener to update static texts.
 
-  function resolveCtrlText(e) {
+  function resolveCtrlText(e: { type: string }): void {
     const player = playerRef.current;
     if (player) {
       const ctrlBar = player.getChild('controlBar');
@@ -111,7 +117,7 @@ const VideoJsEvents = ({
   function onInitialPlay() {
     const player = playerRef.current;
 
-    const bigPlayButton = document.querySelector('.vjs-big-play-button');
+    const bigPlayButton = document.querySelector<HTMLElement>('.vjs-big-play-button');
     if (bigPlayButton) bigPlayButton.style.setProperty('display', 'none');
 
     if (player && (player.muted() || player.volume() === 0)) {
@@ -135,8 +141,8 @@ const VideoJsEvents = ({
     showTapButton(TAP.RETRY);
 
     // reattach initial play listener in case we recover from error successfully
-    // $FlowFixMe
-    player.one('play', onInitialPlay);
+
+    player?.one('play', onInitialPlay);
 
     if (player && player.loadingSpinner) {
       player.loadingSpinner.hide();
@@ -179,8 +185,8 @@ const VideoJsEvents = ({
     }
   }
 
-  function showTapButton(tapButton) {
-    const setButtonVisibility = (theRef, newState) => {
+  function showTapButton(tapButton: string) {
+    const setButtonVisibility = (theRef: ButtonRef, newState: boolean) => {
       // Use the DOM to control the state of the button to prevent re-renders.
       if (theRef.current) {
         const curState = theRef.current.style.visibility === 'visible';
@@ -221,7 +227,7 @@ const VideoJsEvents = ({
 
         autoplayButton.controlText(title);
         autoplayButton.setAttribute('aria-label', title);
-        autoplayButton.setAttribute('aria-checked', autoplaySetting);
+        autoplayButton.setAttribute('aria-checked', String(autoplaySetting));
       }
     }
   }, [autoplaySetting]);
@@ -235,6 +241,7 @@ const VideoJsEvents = ({
 
   function initializeEvents() {
     const player = playerRef.current;
+    if (!player) return;
     // Add various event listeners to player
     player.one('play', onInitialPlay);
     player.on('play', resolveCtrlText);
@@ -248,14 +255,12 @@ const VideoJsEvents = ({
     // hide forcing control bar show
     player.on('canplaythrough', function () {
       setTimeout(function () {
-        // $FlowFixMe
-        const vjsControlBar = document.querySelector('.vjs-control-bar');
+        const vjsControlBar = document.querySelector<HTMLElement>('.vjs-control-bar');
         if (vjsControlBar) vjsControlBar.style.removeProperty('opacity');
       }, 1000 * 3); // wait 3 seconds to hit control bar
     });
     player.on('playing', function () {
-      // $FlowFixMe
-      document.querySelector('.vjs-big-play-button').style.setProperty('display', 'none', 'important');
+      document.querySelector<HTMLElement>('.vjs-big-play-button')?.style.setProperty('display', 'none', 'important');
     });
     // player.on('ended', onEnded);
   }

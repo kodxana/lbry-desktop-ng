@@ -16,7 +16,7 @@ type Props = {
   onClose?: () => void,
 };
 
-export default function Nag(props: Props) {
+export default function Nag(props: Props): React.Node {
   const { message, actionText, href, onClick, onClose, type, inline, relative } = props;
 
   const buttonProps = onClick ? { onClick } : { href };

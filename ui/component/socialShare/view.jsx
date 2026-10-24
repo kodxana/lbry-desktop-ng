@@ -19,7 +19,7 @@ const SUPPORTS_SHARE_API = typeof navigator.share !== 'undefined';
 const TWITTER_INTENT_API = 'https://twitter.com/intent/tweet?';
 
 type Props = {
-  claim: StreamClaim,
+  claim: Claim,
   title: ?string,
   webShareable: boolean,
   position: number,
@@ -28,7 +28,7 @@ type Props = {
   customShareUrl: string,
 };
 
-function SocialShare(props: Props) {
+function SocialShare(props: Props): React.Node {
   const { claim, title, webShareable, position, collectionId, customShareUrlEnabled, customShareUrl } = props;
   const [showEmbed, setShowEmbed] = React.useState(false);
   const [includeCollectionId, setIncludeCollectionId] = React.useState(Boolean(collectionId)); // unless it *is* a collection?
@@ -47,8 +47,8 @@ function SocialShare(props: Props) {
   const isChannel = claim.value_type === 'channel';
   const isCollection = claim.value_type === 'collection';
   const isStream = claim.value_type === 'stream';
-  const isVideo = isStream && claim.value.stream_type === 'video';
-  const isAudio = isStream && claim.value.stream_type === 'audio';
+  const isVideo = claim.value_type === 'stream' && claim.value.stream_type === 'video';
+  const isAudio = claim.value_type === 'stream' && claim.value.stream_type === 'audio';
   const showStartAt = isVideo || isAudio;
   const lbryUrl: string = generateLbryContentUrl(canonicalUrl, permanentUrl);
   const lbryWebUrl: string = generateLbryWebUrl(lbryUrl);
@@ -72,14 +72,13 @@ function SocialShare(props: Props) {
   const downloadUrl = `${generateDownloadUrl(name, claimId)}`;
 
   // Tweet params
-  let tweetIntentParams = {
+  const tweetIntentParams: { [string]: string } = {
     url: shareUrl,
     text: title || claim.name,
     hashtags: 'LBRY',
   };
 
   if (TWITTER_ACCOUNT) {
-    // $FlowFixMe
     tweetIntentParams.via = TWITTER_ACCOUNT;
   }
 

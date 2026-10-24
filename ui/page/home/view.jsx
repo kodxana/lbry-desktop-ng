@@ -16,10 +16,10 @@ type Props = {
   followedTags: Array<Tag>,
   subscribedChannels: Array<Subscription>,
   showNsfw: boolean,
-  homepageData: any,
+  homepageData: HomepageData,
 };
 
-function HomePage(props: Props) {
+function HomePage(props: Props): React.Node {
   const { followedTags, subscribedChannels, showNsfw, homepageData } = props;
   const showPersonalizedChannels = subscribedChannels && subscribedChannels.length > 0;
   const showPersonalizedTags = followedTags && followedTags.length > 0;
@@ -42,7 +42,7 @@ function HomePage(props: Props) {
     title: string,
     navigate?: string,
     icon?: string,
-    help?: string,
+    help?: React.Node,
   };
   const SectionHeader = ({ title, navigate = '/', icon = '', help }: SectionHeaderProps) => {
     return (
@@ -56,10 +56,19 @@ function HomePage(props: Props) {
     );
   };
 
-  function getRowElements(title, route, link, icon, help, options, index, pinUrls) {
+  function getRowElements(
+    title: string,
+    route: string | void,
+    link: string | void,
+    icon: string | void,
+    help: React.Node,
+    options: HomepageSearchOptions,
+    index: number,
+    pinUrls: Array<string> | void
+  ): React.Node {
     const tilePlaceholder = (
       <ul className="claim-grid">
-        {new Array(options.pageSize || 8).fill(1).map((x, i) => (
+        {new Array<number>(options.pageSize || 8).fill(1).map((x, i) => (
           <ClaimPreviewTile key={i} placeholder />
         ))}
       </ul>
@@ -76,7 +85,7 @@ function HomePage(props: Props) {
 
         {index === 0 && <>{claimTiles}</>}
         {index !== 0 && (
-          <WaitUntilOnPage name={title} placeholder={tilePlaceholder} yOffset={800}>
+          <WaitUntilOnPage placeholder={tilePlaceholder} yOffset={800}>
             {claimTiles}
           </WaitUntilOnPage>
         )}

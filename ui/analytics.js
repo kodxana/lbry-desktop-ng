@@ -7,11 +7,11 @@
  */
 
 import { Lbryio } from 'lbryinc';
-import * as Sentry from '@sentry/browser';
 import MatomoTracker from '@datapunt/matomo-tracker-js';
 import { history } from './store';
 import Native from 'native';
-import ElectronCookies from '@meetfranz/electron-cookies';
+import ElectronCookies from 'util/electron-cookies.cjs';
+import desktop from 'util/desktop';
 import { generateInitialUrl } from 'util/url';
 import { MATOMO_ID, MATOMO_URL } from 'config';
 
@@ -22,20 +22,28 @@ export const SHARE_INTERNAL = 'shareInternal';
 const SHARE_THIRD_PARTY = 'shareThirdParty';
 
 if (isProduction) {
+  const application = desktop.cookieLocation();
+  if (!application || !application.ok) throw new Error('Cookie storage could not determine the application path');
   ElectronCookies.enable({
-    origin: 'https://lbry.tv',
+    url: application.url,
   });
 }
 
 type Analytics = {
   error: (string) => Promise<any>,
-  sentryError: ({} | string, {}) => Promise<any>,
   pageView: (string, ?string) => void,
-  setUser: (Object) => void,
+  setUser: (?string | number) => void,
   toggleInternal: (boolean, ?boolean) => void,
   apiLogView: (string, string, string, ?number, ?() => void) => Promise<any>,
-  apiLogPublish: (ChannelClaim | StreamClaim) => void,
-  apiSyncTags: ({}) => void,
+  apiLogPublish: (Claim) => void,
+  apiSyncTags: ({ content_tags: string }) => void,
+  apiLogSearch: () => void,
+  toggleThirdParty: (boolean) => void,
+  adsFetchedEvent: () => void,
+  adsReceivedEvent: (unknown) => void,
+  adsErrorEvent: (unknown) => void,
+  channelBlockEvent: (string, boolean, ?string) => void,
+  trendingAlgorithmEvent: (string) => void,
   tagFollowEvent: (string, boolean, ?string) => void,
   playerLoadedEvent: (?boolean) => void,
   playerStartedEvent: (?boolean) => void,
@@ -71,6 +79,22 @@ type LogPublishParams = {
 
 let internalAnalyticsEnabled: boolean = false;
 if (window.localStorage.getItem(SHARE_INTERNAL) === 'true') internalAnalyticsEnabled = true;
+let matomo;
+
+function getMatomo() {
+  if (!internalAnalyticsEnabled || !MATOMO_URL || !MATOMO_ID) return null;
+  if (!matomo) {
+    matomo = new MatomoTracker({
+      urlBase: MATOMO_URL,
+      siteId: MATOMO_ID,
+      configurations: { requireConsent: [] },
+      heartBeat: { active: false },
+      linkTracking: false,
+    });
+    matomo.pushInstruction('setConsentGiven');
+  }
+  return matomo;
+}
 
 const analytics: Analytics = {
   // receive buffer events from tracking plugin and save buffer amounts and times for backend call
@@ -100,23 +124,11 @@ const analytics: Analytics = {
       }
     });
   },
-  sentryError: (error, errorInfo) => {
-    return new Promise((resolve) => {
-      if (internalAnalyticsEnabled && isProduction) {
-        Sentry.withScope((scope) => {
-          scope.setExtras(errorInfo);
-          const eventId = Sentry.captureException(error);
-          resolve(eventId);
-        });
-      } else {
-        resolve(null);
-      }
-    });
-  },
   pageView: (path, search) => {
-    if (internalAnalyticsEnabled) {
+    const tracker = getMatomo();
+    if (tracker) {
       const params: { href: string, customDimensions?: Array<{ id: number, value: ?string }> } = { href: `${path}` };
-      const dimensions = [];
+      const dimensions: Array<{ id: number, value: ?string }> = [];
       const searchParams = search && new URLSearchParams(search);
 
       if (searchParams && searchParams.get('src')) {
@@ -125,24 +137,33 @@ const analytics: Analytics = {
       if (dimensions.length) {
         params['customDimensions'] = dimensions;
       }
-      MatomoInstance.trackPageView(params);
+      tracker.trackPageView(params);
     }
   },
   setUser: (userId) => {
-    if (internalAnalyticsEnabled && userId) {
-      window._paq.push(['setUserId', String(userId)]);
+    const tracker = getMatomo();
+    if (tracker && userId) {
+      tracker.pushInstruction('setUserId', String(userId));
       Native.getAppVersionInfo().then(({ localVersion }) => {
         sendMatomoEvent('Version', 'Desktop-Version', localVersion);
       });
     }
   },
   toggleInternal: (enabled: boolean): void => {
+    if (matomo && internalAnalyticsEnabled !== enabled) {
+      if (!enabled && Array.isArray(window._paq)) {
+        // A slow script must not replay queued activity after consent is withdrawn.
+        window._paq = window._paq.filter(([name]) => ['setTrackerUrl', 'setSiteId', 'requireConsent'].includes(name));
+      }
+      matomo.pushInstruction(enabled ? 'setConsentGiven' : 'forgetConsentGiven');
+      if (!enabled) matomo.pushInstruction('resetUserId');
+    }
     internalAnalyticsEnabled = enabled;
-    window.localStorage.setItem(SHARE_INTERNAL, enabled);
+    window.localStorage.setItem(SHARE_INTERNAL, String(enabled));
   },
 
   toggleThirdParty: (enabled: boolean): void => {
-    window.localStorage.setItem(SHARE_THIRD_PARTY, enabled);
+    window.localStorage.setItem(SHARE_THIRD_PARTY, String(enabled));
   },
 
   apiLogView: (uri, outpoint, claimId, timeToStart) => {
@@ -174,7 +195,7 @@ const analytics: Analytics = {
       Lbryio.call('event', 'search');
     }
   },
-  apiLogPublish: (claimResult: ChannelClaim | StreamClaim) => {
+  apiLogPublish: (claimResult: Claim) => {
     // Don't check if this is production so channels created on localhost are still linked to user
     if (internalAnalyticsEnabled) {
       const { permanent_url: uri, claim_id: claimId, txid, nout, signing_channel: signingChannel } = claimResult;
@@ -244,23 +265,19 @@ const analytics: Analytics = {
   },
 };
 
-function sendMatomoEvent(category, action, name, value) {
-  if (internalAnalyticsEnabled) {
+function sendMatomoEvent(category: string, action: string, name?: string, value?: number): void {
+  const tracker = getMatomo();
+  if (tracker) {
     const event = { category, action, name, value };
-    MatomoInstance.trackEvent(event);
+    tracker.trackEvent(event);
   }
 }
-
-const MatomoInstance = new MatomoTracker({
-  urlBase: MATOMO_URL,
-  siteId: MATOMO_ID, // optional, default value: `1`
-});
 
 analytics.pageView(generateInitialUrl(window.location.hash));
 
 // Listen for url changes and report
 // This will include search queries
-history.listen((location) => {
+history.listen(({ location }) => {
   const { pathname, search } = location;
 
   const page = `${pathname}${search}`;

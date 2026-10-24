@@ -1,6 +1,6 @@
+import React from 'react';
 import { connect } from 'react-redux';
-
-import { withRouter } from 'react-router-dom';
+import { useParams } from 'react-router';
 import CollectionPage from './view';
 import {
   selectTitleForUri,
@@ -24,9 +24,7 @@ import { doFetchItemsInCollection, doCollectionDelete, doCollectionEdit } from '
 import { selectUser } from 'redux/selectors/user';
 
 const select = (state, props) => {
-  const { match } = props;
-  const { params } = match;
-  const { collectionId } = params;
+  const { collectionId } = props;
 
   const claim = collectionId && makeSelectClaimForClaimId(collectionId)(state);
   const uri = (claim && (claim.canonical_url || claim.permanent_url)) || null;
@@ -57,4 +55,9 @@ const perform = (dispatch) => ({
   renameCollection: (id, name) => dispatch(doCollectionEdit(id, { name })),
 });
 
-export default withRouter(connect(select, perform)(CollectionPage));
+const ConnectedCollectionPage = connect(select, perform)(CollectionPage);
+
+export default function CollectionRoute() {
+  const { collectionId } = useParams();
+  return <ConnectedCollectionPage collectionId={collectionId} />;
+}

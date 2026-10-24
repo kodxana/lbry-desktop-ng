@@ -15,7 +15,7 @@ type Props = {
 // const SANDBOX_SET_BASE_URL = 'http://localhost:5278/set/';
 // const SANDBOX_CONTENT_BASE_URL = 'http://localhost:5278';
 
-function AppViewer(props: Props) {
+function AppViewer(props: Props): React.Node {
   // const { claim, contentType } = props;
   // const [loading, setLoading] = useState(true);
   // const [appUrl, setAppUrl] = useState(false);

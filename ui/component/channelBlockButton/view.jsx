@@ -18,7 +18,7 @@ type Props = {
   doCommentModBlockAsModerator: (string, string, string) => void,
 };
 
-function ChannelBlockButton(props: Props) {
+function ChannelBlockButton(props: Props): React.Node {
   const {
     uri,
     blockLevel,
@@ -65,7 +65,7 @@ function ChannelBlockButton(props: Props) {
     }
   }
 
-  function getButtonText(blockLevel) {
+  function getButtonText(blockLevel: ?string) {
     switch (blockLevel) {
       default:
       case BLOCK_LEVEL.SELF:
@@ -75,8 +75,8 @@ function ChannelBlockButton(props: Props) {
             ? __('Unblocking...')
             : __('Unblock')
           : isBlockingOrUnBlocking
-          ? __('Blocking...')
-          : __('Block');
+            ? __('Blocking...')
+            : __('Block');
 
       case BLOCK_LEVEL.MODERATOR:
         if (isToggling) {

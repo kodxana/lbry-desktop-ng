@@ -10,7 +10,7 @@ type Props = {
   currentTheme: string,
 };
 
-export default function Logo(props: Props) {
+export default function Logo(props: Props): React.Node {
   const { type, currentTheme } = props;
   const isMobile = useIsMobile();
   const defaultWithLabel = (

@@ -12,7 +12,7 @@ type Props = {
   followedTags: Array<Tag>,
 };
 
-function UserTagFollowIntro(props: Props) {
+function UserTagFollowIntro(props: Props): React.Node {
   const { onContinue, followedTags } = props;
   const followingCount = (followedTags && followedTags.length) || 0;
 

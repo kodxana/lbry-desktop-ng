@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { FormField, Form } from 'component/common/form';
 import Button from 'component/button';
 import { EMAIL_REGEX } from 'constants/email';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import UserEmailVerify from 'component/userEmailVerify';
 import Card from 'component/common/card';
 import Nag from 'component/common/nag';
@@ -24,7 +24,7 @@ type Props = {
   isPending: boolean,
 };
 
-function UserEmailReturning(props: Props) {
+function UserEmailReturning(props: Props): React.Node {
   const {
     user,
     errorMessage,
@@ -35,7 +35,7 @@ function UserEmailReturning(props: Props) {
     doSetWalletSyncPreference,
     isPending,
   } = props;
-  const { push, location } = useHistory();
+  const { push, location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const emailExistsFromUrl = urlParams.get('email_exists');

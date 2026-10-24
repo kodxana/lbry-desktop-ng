@@ -12,15 +12,15 @@ type Props = {
   setLanguage: (string) => void,
 };
 
-function SettingLanguage(props: Props) {
+function SettingLanguage(props: Props): React.Node {
   const { language, setLanguage } = props;
-  const [previousLanguage, setPreviousLanguage] = useState(null);
+  const [previousLanguage, setPreviousLanguage] = useState<string | null>(null);
 
   if (previousLanguage && language !== previousLanguage) {
     setPreviousLanguage(null);
   }
 
-  function onLanguageChange(e) {
+  function onLanguageChange(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     setPreviousLanguage(language || getDefaultLanguage());
     setLanguage(value);

@@ -6,10 +6,10 @@ import Button from 'component/button';
 
 type Props = {
   uri: string,
-  doOpenModal: (id: string, {}) => void,
+  doOpenModal: (id: string, { uri: string, webShareable: boolean }) => void,
 };
 
-export default function ShareButton(props: Props) {
+export default function ShareButton(props: Props): React.Node {
   const { uri, doOpenModal } = props;
 
   return (

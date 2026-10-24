@@ -3,7 +3,7 @@ import * as PAGES from 'constants/pages';
 import * as SETTINGS from 'constants/settings';
 import React from 'react';
 import classnames from 'classnames';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import UserEmailNew from 'component/userEmailNew';
 import UserEmailVerify from 'component/userEmailVerify';
 import UserChannelFollowIntro from 'component/userChannelFollowIntro';
@@ -43,7 +43,7 @@ type Props = {
   prefsReady: boolean,
 };
 
-function UserSignUp(props: Props) {
+function UserSignUp(props: Props): React.Node {
   const {
     emailToVerify,
     user,
@@ -69,12 +69,12 @@ function UserSignUp(props: Props) {
   const {
     location: { search, pathname },
     replace,
-  } = useHistory();
+  } = useDesktopHistory();
   const urlParams = new URLSearchParams(search);
   const redirect = urlParams.get(REDIRECT_PARAM);
   const step = urlParams.get(STEP_PARAM);
   const shouldRedirectImmediately = urlParams.get(REDIRECT_IMMEDIATELY_PARAM);
-  const [initialSignInStep, setInitialSignInStep] = React.useState();
+  const [initialSignInStep, setInitialSignInStep] = React.useState<number | void>();
   const hasVerifiedEmail = user && user.has_verified_email;
   const passwordSet = user && user.password_set;
   const hasFetchedReward = useFetched(claimingReward);
@@ -98,7 +98,7 @@ function UserSignUp(props: Props) {
   const showLoadingSpinner =
     canHijackSignInFlowWithSpinner && (isCurrentlyFetchingSomething || isWaitingForSomethingToFinish);
 
-  function setSettingAndSync(setting, value) {
+  function setSettingAndSync(setting: string, value: boolean) {
     setClientSetting(setting, value, true);
   }
 
@@ -187,7 +187,6 @@ function UserSignUp(props: Props) {
     ),
   ];
 
-  //   $FlowFixMe
   function getSignInStep() {
     for (var i = SIGN_IN_FLOW.length - 1; i > -1; i--) {
       const Component = SIGN_IN_FLOW[i];

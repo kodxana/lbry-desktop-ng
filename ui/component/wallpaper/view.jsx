@@ -1,7 +1,6 @@
 // @flow
 import React from 'react';
 // import { resetColors } from 'util/theme';
-// $FlowFixMe cannot resolve ...
 import freeezepeach from 'static/img/freespch.png';
 type Props = {
   // uri: ?string,
@@ -11,7 +10,7 @@ type Props = {
   disableBackground: ?boolean,
 };
 
-const Wallpaper = (props: Props) => {
+const Wallpaper = (props: Props): React.Node => {
   const { disableBackground } = props;
 
   /*

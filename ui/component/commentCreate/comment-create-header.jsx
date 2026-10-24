@@ -10,7 +10,7 @@ type Props = {
   advanced: boolean,
 };
 
-export default function CommentCreateHeader(props: Props) {
+export default function CommentCreateHeader(props: Props): React.Node {
   const { isReply, advancedHandler, advanced } = props;
 
   return (

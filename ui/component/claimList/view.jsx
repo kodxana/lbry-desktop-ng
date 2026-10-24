@@ -1,7 +1,6 @@
 // @flow
 
-// $FlowFixMe
-import { Draggable } from 'react-beautiful-dnd';
+import { Draggable } from '@hello-pangea/dnd';
 import { MAIN_CLASS } from 'constants/classnames';
 import type { Node } from 'react';
 import React, { useEffect } from 'react';
@@ -18,7 +17,7 @@ const SORT_NEW = 'new';
 const SORT_OLD = 'old';
 
 type Props = {
-  uris: Array<string>,
+  uris: ?Array<string>,
   prefixUris?: Array<string>,
   header: Node | boolean,
   headerAltControls: Node,
@@ -56,7 +55,7 @@ type Props = {
   unavailableUris?: Array<string>,
 };
 
-export default function ClaimList(props: Props) {
+export default function ClaimList(props: Props): React.Node {
   const {
     activeUri,
     uris,
@@ -123,7 +122,7 @@ export default function ClaimList(props: Props) {
   }
 
   const handleClaimClicked = React.useCallback(
-    (e, claim, index) => {
+    (e: unknown, claim?: ?Claim, index?: number) => {
       if (onClick) {
         onClick(e, claim, index);
       }

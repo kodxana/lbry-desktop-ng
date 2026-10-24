@@ -26,7 +26,7 @@ type Props = {
   secondPane?: Node,
 };
 
-export default function Card(props: Props) {
+export default function Card(props: Props): React.Node {
   const {
     title,
     subtitle,
@@ -109,7 +109,7 @@ export default function Card(props: Props) {
             </div>
           </div>
         )}
-        {(!expandable || (expandable && expanded)) && (
+        {(!expandable || expanded) && (
           <>
             {body && (
               <div

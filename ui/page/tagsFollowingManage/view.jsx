@@ -3,7 +3,7 @@ import React from 'react';
 import Page from 'component/page';
 import TagsSelect from 'component/tagsSelect';
 
-function FollowingPage() {
+function FollowingPage(): React.Node {
   return (
     <Page>
       <TagsSelect limitShow={300} showClose={false} title={__('Follow new tags')} />

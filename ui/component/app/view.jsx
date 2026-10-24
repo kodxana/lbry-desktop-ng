@@ -8,7 +8,7 @@ import ReactModal from 'react-modal';
 import { openContextMenu } from 'util/context-menu';
 import useKonamiListener from 'util/enhanced-layout';
 import FileRenderFloating from 'component/fileRenderFloating';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import usePrevious from 'effects/use-previous';
 import REWARDS from 'rewards';
 import usePersistedState from 'effects/use-persisted-state';
@@ -55,8 +55,8 @@ type Props = {
   setLanguage: (string) => void,
   isUpgradeAvailable: boolean,
   autoUpdateDownloaded: boolean,
-  updatePreferences: () => Promise<any>,
-  getWalletSyncPref: () => Promise<any>,
+  updatePreferences?: () => Promise<any>,
+  getWalletSyncPref?: () => Promise<any>,
   uploadCount: number,
   balance: ?number,
   syncError: ?string,
@@ -115,7 +115,7 @@ function App(props: Props) {
     isUpdateModalDisplayed,
   } = props;
 
-  const appRef = useRef();
+  const appRef = useRef<HTMLDivElement | null>(null);
   const isEnhancedLayout = useKonamiListener();
   const [hasSignedIn, setHasSignedIn] = useState(false);
   const [readyForSync, setReadyForSync] = useState(false);
@@ -152,7 +152,7 @@ function App(props: Props) {
 
   useEffect(() => {
     if (!uploadCount) return;
-    const handleBeforeUnload = (event) => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
       event.returnValue = __('There are pending uploads.'); // without setting this to something it doesn't work
     };
@@ -162,7 +162,7 @@ function App(props: Props) {
 
   // allows user to navigate history using the forward and backward buttons on a mouse
   useEffect(() => {
-    const handleForwardAndBackButtons = (e) => {
+    const handleForwardAndBackButtons = (e: MouseEvent) => {
       switch (e.button) {
         case MOUSE_BACK_BTN:
           history.index > 0 && history.goBack();
@@ -178,7 +178,7 @@ function App(props: Props) {
 
   // allows user to pause miniplayer using the spacebar without the page scrolling down
   useEffect(() => {
-    const handleKeyPress = (e) => {
+    const handleKeyPress = (e: KeyboardEvent) => {
       if (e.key === ' ' && e.target === document.body) {
         e.preventDefault();
       }
@@ -221,8 +221,7 @@ function App(props: Props) {
   }, [appRef, fetchAccessToken, fetchChannelListMine, fetchCollectionListMine]);
 
   useEffect(() => {
-    // $FlowFixMe
-    document.documentElement.setAttribute('theme', theme);
+    document.documentElement?.setAttribute('theme', theme);
   }, [theme]);
 
   useEffect(() => {
@@ -239,8 +238,7 @@ function App(props: Props) {
   }, [hasMyChannels, hasNoChannels, hasActiveChannelClaim, setActiveChannelIfNotSet, setIncognito]);
 
   useEffect(() => {
-    // $FlowFixMe
-    document.documentElement.setAttribute('lang', language);
+    document.documentElement?.setAttribute('lang', language);
   }, [language]);
 
   useEffect(() => {
@@ -364,4 +362,5 @@ function App(props: Props) {
   );
 }
 
-export default withRouter(App);
+const RoutedApp: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(App);
+export default RoutedApp;

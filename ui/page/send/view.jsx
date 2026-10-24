@@ -8,17 +8,17 @@ import { parseURI, isNameValid, isURIValid, normalizeURI } from 'util/lbryURI';
 
 type Props = {};
 
-export default function SendPage(props: Props) {
+export default function SendPage(props: Props): React.Node {
   const [isAddress, setIsAddress] = React.useState(true);
   const [contentUri, setContentUri] = React.useState('');
   const [draftTransaction, setDraftTransaction] = React.useState({ address: '', amount: '' });
-  const [enteredContent, setEnteredContentUri] = React.useState(undefined);
+  const [enteredContent, setEnteredContentUri] = React.useState<string | void>(undefined);
   const contentFirstRender = React.useRef(true);
   const [contentError, setContentError] = React.useState('');
   const [confirmed, setConfirmed] = React.useState(false);
   const [sendLabel, setSendLabel] = React.useState('Send');
 
-  function getSearchUri(value) {
+  function getSearchUri(value: string) {
     const WEB_DEV_PREFIX = `${URL_DEV}/`;
     const WEB_LOCAL_PREFIX = `${URL_LOCAL}/`;
     const WEB_PROD_PREFIX = `${SITE_URL}/`;
@@ -31,7 +31,7 @@ export default function SendPage(props: Props) {
     const isLbryUrl = value.startsWith('lbry://') && value !== 'lbry://';
     const error = '';
 
-    const addLbryIfNot = (term) => {
+    const addLbryIfNot = (term: string) => {
       return term.startsWith('lbry://') ? term : `lbry://${term}`;
     };
     if (wasCopiedFromWeb) {

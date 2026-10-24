@@ -26,17 +26,16 @@ import SelectThumbnail from 'component/selectThumbnail';
 import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
 import * as PUBLISH_MODES from 'constants/publish_types';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Spinner from 'component/spinner';
 
-import fs from 'fs';
-import tempy from 'tempy';
+import desktop from 'util/desktop';
 
 type Props = {
   disabled: boolean,
   tags: Array<Tag>,
-  publish: (source: ?File, ?boolean) => void,
-  filePath: ?File,
+  publish: (source: ?string, ?boolean) => void,
+  filePath: ?string,
   fileText: string,
   bid: ?number,
   bidError: ?string,
@@ -70,14 +69,13 @@ type Props = {
   clearPublish: () => void,
   resolveUri: (string) => void,
   scrollToTop: () => void,
-  prepareEdit: (claim: any, uri: string) => void,
+  prepareEdit: (claim: StreamClaim, uri: string) => void,
   resetThumbnailStatus: () => void,
   amountNeededForTakeover: ?number,
-  // Add back type
-  updatePublishForm: (any) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   checkAvailability: (string) => void,
   ytSignupPending: boolean,
-  modal: { id: string, modalProps: {} },
+  modal: ?{ id: string, modalProps: { ... } },
   enablePublishPreview: boolean,
   activeChannelClaim: ?ChannelClaim,
   incognito: boolean,
@@ -91,7 +89,7 @@ type Props = {
   hasClaimedInitialRewards: boolean,
 };
 
-function PublishForm(props: Props) {
+function PublishForm(props: Props): React.Node {
   // Detect upload type from query in URL
   const {
     thumbnail,
@@ -130,14 +128,12 @@ function PublishForm(props: Props) {
   } = props;
 
   const inEditMode = Boolean(editingURI);
-  const { replace, location } = useHistory();
+  const { replace, location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const TYPE_PARAM = 'type';
   const uploadType = urlParams.get(TYPE_PARAM);
   const _uploadType = uploadType && uploadType.toLowerCase();
-  // $FlowFixMe
   const AVAILABLE_MODES = Object.values(PUBLISH_MODES).filter((mode) => {
-    // $FlowFixMe
     if (inEditMode) {
       if (isPostClaim) {
         return mode === PUBLISH_MODES.POST;
@@ -177,7 +173,7 @@ function PublishForm(props: Props) {
 
   // Used to check if the url name has changed:
   // A new file needs to be provided
-  const [prevName, setPrevName] = React.useState(false);
+  const [prevName, setPrevName] = React.useState<?string>(undefined);
   // Used to check if the file has been modified by user
   const [fileEdited, setFileEdited] = React.useState(false);
   const [prevFileText, setPrevFileText] = React.useState('');
@@ -218,8 +214,8 @@ function PublishForm(props: Props) {
   const formValid = isOverwritingExistingClaim
     ? false
     : editingURI && !filePath // if we're editing we don't need a file
-    ? isStillEditing && formValidLessFile && !waitingForFile
-    : formValidLessFile;
+      ? isStillEditing && formValidLessFile && !waitingForFile
+      : formValidLessFile;
 
   const [previewing, setPreviewing] = React.useState(false);
 
@@ -272,7 +268,7 @@ function PublishForm(props: Props) {
 
   // Save previous name of the editing claim
   useEffect(() => {
-    if (isStillEditing && (!prevName || !prevName.trim() === '')) {
+    if (isStillEditing && (!prevName || prevName.trim() === '')) {
       if (name !== prevName) {
         setPrevName(name);
       }
@@ -362,27 +358,13 @@ function PublishForm(props: Props) {
     if (!_uploadType) return;
     const newParams = new URLSearchParams();
     newParams.set(TYPE_PARAM, mode.toLowerCase());
-    replace({ search: newParams.toString() });
+    replace({ search: '?' + newParams.toString() });
   }, [mode, _uploadType]);
 
   // @if TARGET='app'
   // Save file changes locally ( desktop )
   function saveFileChanges() {
-    let output;
-    if (!output || output === '') {
-      // Generate a temporary file:
-      output = tempy.file({ name: 'post.md' });
-    }
-    // Create a temporary file and save file changes
-    if (output && output !== '') {
-      // Save file changes
-      return new Promise((resolve, reject) => {
-        fs.writeFile(output, fileText, (error, data) => {
-          // Handle error, cant save changes or create file
-          error ? reject(error) : resolve(output);
-        });
-      });
-    }
+    return desktop.savePost(fileText);
   }
   // @endif
 
@@ -481,7 +463,6 @@ function PublishForm(props: Props) {
                 label={__(MODE_TO_I18N_STR[String(modeName)] || '---')}
                 button="alt"
                 onClick={() => {
-                  // $FlowFixMe
                   setMode(modeName);
                 }}
                 className={classnames('button-toggle', { 'button-toggle--active': mode === modeName })}
@@ -491,43 +472,41 @@ function PublishForm(props: Props) {
         }
       />
 
-      {!publishing && (
-        <div className={classnames({ 'card--disabled': formDisabled })}>
-          {mode !== PUBLISH_MODES.POST && <PublishDescription disabled={formDisabled} />}
-          <Card actions={<SelectThumbnail />} />
-          <label>{__('Tags')}</label>
-          <TagsSelect
-            suggestMature
-            disableAutoFocus
-            hideHeader
-            label={__('Selected Tags')}
-            empty={__('No tags added')}
-            limitSelect={TAGS_LIMIT}
-            help={__(
-              "Add tags that are relevant to your content so those who're looking for it can find it more easily. If your content is best suited for mature audiences, ensure it is tagged 'mature'."
-            )}
-            placeholder={__('gaming, crypto')}
-            onSelect={(newTags) => {
-              const validatedTags = [];
-              newTags.forEach((newTag) => {
-                if (!tags.some((tag) => tag.name === newTag.name)) {
-                  validatedTags.push(newTag);
-                }
-              });
-              updatePublishForm({ tags: [...tags, ...validatedTags] });
-            }}
-            onRemove={(clickedTag) => {
-              const newTags = tags.slice().filter((tag) => tag.name !== clickedTag.name);
-              updatePublishForm({ tags: newTags });
-            }}
-            tagsChosen={tags}
-          />
+      <div className={classnames({ 'card--disabled': formDisabled })}>
+        {mode !== PUBLISH_MODES.POST && <PublishDescription disabled={formDisabled} />}
+        <Card actions={<SelectThumbnail />} />
+        <label>{__('Tags')}</label>
+        <TagsSelect
+          suggestMature
+          disableAutoFocus
+          hideHeader
+          label={__('Selected Tags')}
+          empty={__('No tags added')}
+          limitSelect={TAGS_LIMIT}
+          help={__(
+            "Add tags that are relevant to your content so those who're looking for it can find it more easily. If your content is best suited for mature audiences, ensure it is tagged 'mature'."
+          )}
+          placeholder={__('gaming, crypto')}
+          onSelect={(newTags) => {
+            const validatedTags = [];
+            newTags.forEach((newTag) => {
+              if (!tags.some((tag) => tag.name === newTag.name)) {
+                validatedTags.push(newTag);
+              }
+            });
+            updatePublishForm({ tags: [...tags, ...validatedTags] });
+          }}
+          onRemove={(clickedTag) => {
+            const newTags = tags.slice().filter((tag) => tag.name !== clickedTag.name);
+            updatePublishForm({ tags: newTags });
+          }}
+          tagsChosen={tags}
+        />
 
-          <PublishBid disabled={isStillEditing || formDisabled} />
-          <PublishPrice disabled={formDisabled} />
-          <PublishAdditionalOptions disabled={formDisabled} />
-        </div>
-      )}
+        <PublishBid disabled={isStillEditing || formDisabled} />
+        <PublishPrice disabled={formDisabled} />
+        <PublishAdditionalOptions disabled={formDisabled} />
+      </div>
       <section>
         <div className="section__actions">
           <Button

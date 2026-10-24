@@ -1,7 +1,9 @@
 // @flow
+import { isClaimPlayable } from 'util/claim';
 import React from 'react';
 import classnames from 'classnames';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import FileThumbnail from 'component/fileThumbnail';
 import UriIndicator from 'component/uriIndicator';
 import TruncatedText from 'component/common/truncated-text';
@@ -18,7 +20,6 @@ import FileWatchLaterLink from 'component/fileWatchLaterLink';
 import ClaimRepostAuthor from 'component/claimRepostAuthor';
 import ClaimMenuList from 'component/claimMenuList';
 import CollectionPreviewOverlay from 'component/collectionPreviewOverlay';
-// $FlowFixMe cannot resolve ...
 import PlaceholderTx from 'static/img/placeholderTx.gif';
 
 type Props = {
@@ -45,7 +46,7 @@ type Props = {
 };
 
 // preview image cards used in related video functionality, channel overview page and homepage
-function ClaimPreviewTile(props: Props) {
+function ClaimPreviewTile(props: Props): React.Node {
   const {
     history,
     uri,
@@ -71,15 +72,7 @@ function ClaimPreviewTile(props: Props) {
   const isRepost = claim && claim.repost_channel_url;
   const isCollection = claim && claim.value_type === 'collection';
   const isStream = claim && claim.value_type === 'stream';
-  // $FlowFixMe
-  const isPlayable =
-    claim &&
-    // $FlowFixMe
-    claim.value &&
-    // $FlowFixMe
-    claim.value.stream_type &&
-    // $FlowFixMe
-    (claim.value.stream_type === 'audio' || claim.value.stream_type === 'video');
+  const isPlayable = isClaimPlayable(claim);
   const collectionClaimId = isCollection && claim && claim.claim_id;
   const shouldFetch = claim === undefined;
   const thumbnailUrl = useGetThumbnail(uri, claim, streamingUrl, getFile, placeholder) || thumbnail;
@@ -90,7 +83,7 @@ function ClaimPreviewTile(props: Props) {
     formatLbryUrlForWeb(canonicalUrl || uri || '/') + (listId ? generateListSearchUrlParams(listId) : '');
   const navLinkProps = {
     to: navigateUrl,
-    onClick: (e) => e.stopPropagation(),
+    onClick: (e: { stopPropagation: () => void, ... }): void => e.stopPropagation(),
   };
   const { location } = history;
 
@@ -112,7 +105,7 @@ function ClaimPreviewTile(props: Props) {
   // Aria-label value for claim preview
   let ariaLabelData = isChannel ? title : formatClaimPreviewTitle(title, channelTitle, date, mediaDuration);
 
-  function handleClick(e) {
+  function handleClick(): void {
     if (navigateUrl) {
       history.push(navigateUrl);
     }
@@ -131,8 +124,9 @@ function ClaimPreviewTile(props: Props) {
     // https://github.com/lbryio/lbry-sdk/issues/2785
     shouldHide = true;
   } else {
-    shouldHide =
-      banState.blacklisted || banState.filtered || (!showHiddenByUser && (banState.muted || banState.blocked));
+    shouldHide = Boolean(
+      banState.blacklisted || banState.filtered || (!showHiddenByUser && (banState.muted || banState.blocked))
+    );
   }
 
   if (shouldHide) {
@@ -168,8 +162,6 @@ function ClaimPreviewTile(props: Props) {
     );
   }
 
-  let liveProperty = null;
-
   return (
     <li
       onClick={handleClick}
@@ -192,7 +184,7 @@ function ClaimPreviewTile(props: Props) {
               {/* @endif */}
 
               <div className="claim-preview__file-property-overlay">
-                <PreviewOverlayProperties uri={uri} properties={liveProperty || properties} />
+                <PreviewOverlayProperties uri={uri} properties={properties} />
               </div>
             </React.Fragment>
           )}
@@ -250,4 +242,6 @@ function ClaimPreviewTile(props: Props) {
   );
 }
 
-export default withRouter(ClaimPreviewTile);
+const RoutedClaimPreviewTile: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ClaimPreviewTile);
+export default RoutedClaimPreviewTile;

@@ -7,7 +7,7 @@ import { doCheckPendingClaims } from 'redux/actions/claims';
 import { selectMyClaims, selectMyChannelClaims, selectReflectingById } from 'redux/selectors/claims';
 import { selectPublishFormValues, selectMyClaimForUri } from 'redux/selectors/publish';
 import { doError } from 'redux/actions/notifications';
-import { push } from 'connected-react-router';
+import { push } from 'redux-first-history';
 import analytics from 'analytics';
 import { doOpenModal } from 'redux/actions/app';
 import { CC_LICENSES, COPYRIGHT, OTHER, NONE, PUBLIC_DOMAIN } from 'constants/licenses';
@@ -18,81 +18,85 @@ import Lbry from 'lbry';
 import { isClaimNsfw } from 'util/claim';
 
 export const NO_FILE = '---';
-export const doPublishDesktop = (filePath: ?File, preview?: boolean) => (dispatch: Dispatch, getState: () => {}) => {
-  const publishPreview = (previewResponse) => {
-    dispatch(
-      doOpenModal(MODALS.PUBLISH_PREVIEW, {
-        previewResponse,
-      })
-    );
+export const doPublishDesktop =
+  (filePath: ?string, preview?: boolean): ThunkAction<void> =>
+  (dispatch: Dispatch, getState: GetState) => {
+    const publishPreview = (previewResponse: PublishResponse): void => {
+      dispatch(
+        doOpenModal(MODALS.PUBLISH_PREVIEW, {
+          previewResponse,
+        })
+      );
+    };
+
+    const publishSuccess = (successResponse: PublishResponse, lbryFirstError?: string): void => {
+      const state = getState();
+      const myClaims = selectMyClaims(state) || [];
+      const pendingClaim = successResponse.outputs[0];
+      analytics.apiLogPublish(pendingClaim);
+      const { permanent_url: url } = pendingClaim;
+      const actions = [];
+
+      // @if TARGET='app'
+      actions.push(push(`/$/${PAGES.UPLOADS}`));
+      // @endif
+
+      actions.push({
+        type: ACTIONS.PUBLISH_SUCCESS,
+      });
+
+      // We have to fake a temp claim until the new pending one is returned by claim_list_mine
+      // We can't rely on claim_list_mine because there might be some delay before the new claims are returned
+      // Doing this allows us to show the pending claim immediately, it will get overwritten by the real one
+      const isMatch = (claim: Claim) => claim.claim_id === pendingClaim.claim_id;
+      const isEdit = myClaims.some(isMatch);
+
+      actions.push({
+        type: ACTIONS.UPDATE_PENDING_CLAIMS,
+        data: {
+          claims: [pendingClaim],
+        },
+      });
+      // @if TARGET='app'
+      actions.push({
+        type: ACTIONS.ADD_FILES_REFLECTING,
+        data: pendingClaim,
+      });
+      // @endif
+
+      dispatch(batchActions(...actions));
+      dispatch(
+        doOpenModal(MODALS.PUBLISH, {
+          uri: url,
+          isEdit,
+          filePath,
+          lbryFirstError,
+        })
+      );
+      dispatch(doCheckPendingClaims());
+      dispatch(doCheckReflectingFiles());
+    };
+
+    const publishFail = (error: unknown): void => {
+      const actions: Array<{ type: string, ... } | DoError> = [];
+      actions.push({
+        type: ACTIONS.PUBLISH_FAIL,
+      });
+      const message =
+        error && typeof error === 'object' && typeof error.message === 'string' ? error.message : String(error);
+      actions.push(doError(message));
+      dispatch(batchActions(...actions));
+    };
+
+    if (preview) {
+      dispatch(doPublish(publishSuccess, publishFail, publishPreview));
+      return;
+    }
+
+    dispatch(doPublish(publishSuccess, publishFail));
   };
 
-  const publishSuccess = (successResponse, lbryFirstError) => {
-    const state = getState();
-    const myClaims = selectMyClaims(state);
-    const pendingClaim = successResponse.outputs[0];
-    analytics.apiLogPublish(pendingClaim);
-    const { permanent_url: url } = pendingClaim;
-    const actions = [];
-
-    // @if TARGET='app'
-    actions.push(push(`/$/${PAGES.UPLOADS}`));
-    // @endif
-
-    actions.push({
-      type: ACTIONS.PUBLISH_SUCCESS,
-    });
-
-    // We have to fake a temp claim until the new pending one is returned by claim_list_mine
-    // We can't rely on claim_list_mine because there might be some delay before the new claims are returned
-    // Doing this allows us to show the pending claim immediately, it will get overwritten by the real one
-    const isMatch = (claim) => claim.claim_id === pendingClaim.claim_id;
-    const isEdit = myClaims.some(isMatch);
-
-    actions.push({
-      type: ACTIONS.UPDATE_PENDING_CLAIMS,
-      data: {
-        claims: [pendingClaim],
-      },
-    });
-    // @if TARGET='app'
-    actions.push({
-      type: ACTIONS.ADD_FILES_REFLECTING,
-      data: pendingClaim,
-    });
-    // @endif
-
-    dispatch(batchActions(...actions));
-    dispatch(
-      doOpenModal(MODALS.PUBLISH, {
-        uri: url,
-        isEdit,
-        filePath,
-        lbryFirstError,
-      })
-    );
-    dispatch(doCheckPendingClaims());
-    dispatch(doCheckReflectingFiles());
-  };
-
-  const publishFail = (error) => {
-    const actions = [];
-    actions.push({
-      type: ACTIONS.PUBLISH_FAIL,
-    });
-    actions.push(doError(error.message));
-    dispatch(batchActions(...actions));
-  };
-
-  if (preview) {
-    dispatch(doPublish(publishSuccess, publishFail, publishPreview));
-    return;
-  }
-
-  dispatch(doPublish(publishSuccess, publishFail));
-};
-
-export const doResetThumbnailStatus = () => (dispatch: Dispatch) => {
+export const doResetThumbnailStatus = (): ThunkAction<Promise<UpdatePublishFormAction>> => (dispatch: Dispatch) => {
   dispatch({
     type: ACTIONS.UPDATE_PUBLISH_FORM,
     data: {
@@ -127,140 +131,71 @@ export const doResetThumbnailStatus = () => (dispatch: Dispatch) => {
     );
 };
 
-export const doClearPublish = () => (dispatch: Dispatch) => {
+export const doClearPublish = (): ThunkAction<Promise<UpdatePublishFormAction>> => (dispatch: Dispatch) => {
   dispatch({ type: ACTIONS.CLEAR_PUBLISH });
   return dispatch(doResetThumbnailStatus());
 };
 
-export const doUpdatePublishForm = (publishFormValue: UpdatePublishFormData) => (dispatch: Dispatch) =>
-  dispatch({
-    type: ACTIONS.UPDATE_PUBLISH_FORM,
-    data: { ...publishFormValue },
-  });
+export const doUpdatePublishForm =
+  (publishFormValue: UpdatePublishFormData): ThunkAction<UpdatePublishFormAction> =>
+  (dispatch: Dispatch) =>
+    dispatch({
+      type: ACTIONS.UPDATE_PUBLISH_FORM,
+      data: { ...publishFormValue },
+    });
 
 export const doUploadThumbnail =
-  (filePath?: string, thumbnailBlob?: File, fsAdapter?: any, fs?: any, path?: any, cb?: (string) => void) =>
-  (dispatch: Dispatch) => {
+  (thumbnail: File, cb?: (string) => void): ThunkAction<Promise<void>> =>
+  async (dispatch: Dispatch) => {
     const downMessage = __('Thumbnail upload service may be down, try again later.');
-    let thumbnail, fileExt, fileName, fileType;
-
-    const makeid = () => {
-      let text = '';
+    dispatch({
+      type: ACTIONS.UPDATE_PUBLISH_FORM,
+      data: { thumbnailError: undefined, uploadThumbnailStatus: THUMBNAIL_STATUSES.IN_PROGRESS },
+    });
+    try {
+      let name = '';
       const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      for (let i = 0; i < 24; i += 1) text += possible.charAt(Math.floor(Math.random() * 62));
-      return text;
-    };
-
-    const uploadError = (error = '') => {
+      for (let i = 0; i < 24; i += 1) name += possible.charAt(Math.floor(Math.random() * 62));
+      const data = new FormData();
+      data.append('name', name);
+      data.append('file', thumbnail);
+      const response = await fetch(SPEECH_PUBLISH, { method: 'POST', body: data });
+      const text = await response.text();
+      const json = text.length ? JSON.parse(text) : null;
+      if (!json || json.success !== true || typeof json.data?.serveUrl !== 'string' || !json.data.serveUrl) {
+        throw Error(typeof json?.message === 'string' ? json.message : downMessage);
+      }
+      const url = json.data.serveUrl;
+      if (cb) cb(url);
+      dispatch({
+        type: ACTIONS.UPDATE_PUBLISH_FORM,
+        data: { uploadThumbnailStatus: THUMBNAIL_STATUSES.COMPLETE, thumbnail: url },
+      });
+    } catch (error) {
+      const message = error instanceof Error && error.message !== 'Failed to fetch' ? error.message : downMessage;
       dispatch(
         batchActions(
           {
             type: ACTIONS.UPDATE_PUBLISH_FORM,
-            data: {
-              uploadThumbnailStatus: THUMBNAIL_STATUSES.READY,
-              thumbnail: '',
-              nsfw: false,
-            },
+            data: { uploadThumbnailStatus: THUMBNAIL_STATUSES.READY, thumbnail: '' },
           },
-          doError(error)
+          doError(message)
         )
       );
-    };
-
-    dispatch({
-      type: ACTIONS.UPDATE_PUBLISH_FORM,
-      data: {
-        thumbnailError: undefined,
-      },
-    });
-
-    const doUpload = (data) => {
-      return fetch(SPEECH_PUBLISH, {
-        method: 'POST',
-        body: data,
-      })
-        .then((res) => res.text())
-        .then((text) => (text.length ? JSON.parse(text) : {}))
-        .then((json) => {
-          if (!json.success) return uploadError(json.message || downMessage);
-          if (cb) {
-            cb(json.data.serveUrl);
-          }
-          return dispatch({
-            type: ACTIONS.UPDATE_PUBLISH_FORM,
-            data: {
-              uploadThumbnailStatus: THUMBNAIL_STATUSES.COMPLETE,
-              thumbnail: json.data.serveUrl,
-            },
-          });
-        })
-        .catch((err) => {
-          let message = err.message;
-
-          // This sucks but ¯\_(ツ)_/¯
-          if (message === 'Failed to fetch') {
-            message = downMessage;
-          }
-          const userInput = [fileName, fileExt, fileType, thumbnail];
-          uploadError(`${message}\nUser input:  ${userInput.join(', ')}`);
-        });
-    };
-
-    dispatch({
-      type: ACTIONS.UPDATE_PUBLISH_FORM,
-      data: { uploadThumbnailStatus: THUMBNAIL_STATUSES.IN_PROGRESS },
-    });
-
-    if (fsAdapter && fsAdapter.readFile && filePath) {
-      fsAdapter.readFile(filePath, 'base64').then((base64Image) => {
-        fileExt = 'png';
-        fileName = 'thumbnail.png';
-        fileType = 'image/png';
-
-        const data = new FormData();
-        const name = makeid();
-        data.append('name', name);
-        // $FlowFixMe
-        data.append('file', { uri: 'file://' + filePath, type: fileType, name: fileName });
-        return doUpload(data);
-      });
-    } else {
-      if (filePath && fs && path) {
-        thumbnail = fs.readFileSync(filePath);
-        fileExt = path.extname(filePath);
-        fileName = path.basename(filePath);
-        fileType = `image/${fileExt.slice(1)}`;
-      } else if (thumbnailBlob) {
-        fileExt = `.${thumbnailBlob.type && thumbnailBlob.type.split('/')[1]}`;
-        fileName = thumbnailBlob.name;
-        fileType = thumbnailBlob.type;
-      } else {
-        return null;
-      }
-
-      const data = new FormData();
-      const name = makeid();
-      const file = thumbnailBlob || (thumbnail && new File([thumbnail], fileName, { type: fileType }));
-      data.append('name', name);
-      // $FlowFixMe
-      data.append('file', file);
-      return doUpload(data);
     }
   };
 
 export const doPrepareEdit =
-  (claim: StreamClaim, uri: string, fileInfo: FileListItem, fs: any) => (dispatch: Dispatch) => {
-    const { name, amount, value = {} } = claim;
+  (claim: StreamClaim, uri: string): ThunkAction<void> =>
+  (dispatch: Dispatch) => {
+    const { name, amount, value } = claim;
     const channelName = (claim && claim.signing_channel && claim.signing_channel.name) || null;
     const {
       author,
       description,
       // use same values as default state
       // fee will be undefined for free content
-      fee = {
-        amount: '0',
-        currency: 'LBC',
-      },
+      fee: existingFee,
       languages,
       release_time,
       license,
@@ -270,10 +205,11 @@ export const doPrepareEdit =
       tags,
     } = value;
 
+    const fee: PublishFee = existingFee || { amount: '0', currency: 'LBC' };
     const publishData: UpdatePublishFormData = {
       name,
       bid: Number(amount),
-      contentIsFree: fee.amount === '0',
+      contentIsFree: Number(fee.amount) === 0,
       author,
       description,
       fee,
@@ -294,7 +230,7 @@ export const doPrepareEdit =
     if (!CC_LICENSES.some(({ value }) => value === license)) {
       if (!license || license === NONE || license === PUBLIC_DOMAIN) {
         publishData.licenseType = license;
-      } else if (license && !licenseUrl && license !== NONE) {
+      } else if (!licenseUrl) {
         publishData.licenseType = COPYRIGHT;
       } else {
         publishData.licenseType = OTHER;
@@ -312,7 +248,12 @@ export const doPrepareEdit =
   };
 
 export const doPublish =
-  (success: Function, fail: Function, preview: Function) => (dispatch: Dispatch, getState: () => {}) => {
+  (
+    success: (PublishResponse) => unknown,
+    fail: (unknown) => unknown,
+    preview?: (PublishResponse) => unknown
+  ): ThunkAction<Promise<unknown>> =>
+  (dispatch: Dispatch, getState: GetState) => {
     if (!preview) {
       dispatch({ type: ACTIONS.PUBLISH_START });
     }
@@ -322,7 +263,7 @@ export const doPublish =
     const myChannels = selectMyChannelClaims(state);
     // const myClaims = selectMyClaimsWithoutChannels(state);
     // get redux publish form
-    const publishData = selectPublishFormValues(state);
+    const publishData: PublishState = selectPublishFormValues(state);
 
     // destructure the data values
     const {
@@ -367,18 +308,19 @@ export const doPublish =
     const publishPayload: {
       name: ?string,
       bid: string,
-      description?: string,
+      title: ?string,
+      description: ?string,
       channel_id?: string,
       file_path?: string,
       license_url?: string,
       license?: string,
-      thumbnail_url?: string,
+      thumbnail_url: ?string,
       release_time?: number,
       fee_currency?: string,
       fee_amount?: string,
       languages?: Array<string>,
       tags: Array<string>,
-      locations?: Array<any>,
+      locations?: Array<ClaimLocation>,
       blocking: boolean,
       optimize_file?: boolean,
       preview?: boolean,
@@ -418,7 +360,7 @@ export const doPublish =
     if (releaseTimeEdited) {
       publishPayload.release_time = releaseTimeEdited;
     } else if (myClaimForUriEditing && myClaimForUriEditing.value.release_time) {
-      publishPayload.release_time = Number(myClaimForUri.value.release_time);
+      publishPayload.release_time = Number(myClaimForUriEditing.value.release_time);
     } else if (myClaimForUriEditing && myClaimForUriEditing.timestamp) {
       publishPayload.release_time = Number(myClaimForUriEditing.timestamp);
     } else {
@@ -461,18 +403,18 @@ export const doPublish =
   };
 
 // Calls file_list until any reflecting files are done
-export const doCheckReflectingFiles = () => (dispatch: Dispatch, getState: GetState) => {
+export const doCheckReflectingFiles = (): ThunkAction<void> => (dispatch: Dispatch, getState: GetState) => {
   const state = getState();
   const { checkingReflector } = state.claims;
-  let reflectorCheckInterval;
+  let reflectorCheckInterval: ReturnType<typeof setInterval> | void;
 
   const checkFileList = async () => {
     const state = getState();
     const reflectingById = selectReflectingById(state);
     const ids = Object.keys(reflectingById);
 
-    const newReflectingById = {};
-    const promises = [];
+    const newReflectingById: { [string]: ReflectingUpdate } = {};
+    const promises: Array<Promise<FileListResponse>> = [];
     // TODO: just use file_list({claim_id: Array<claimId>})
     if (Object.keys(reflectingById).length) {
       ids.forEach((claimId) => {

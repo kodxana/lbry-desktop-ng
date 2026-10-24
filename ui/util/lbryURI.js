@@ -4,8 +4,9 @@ const channelNameMinLength = 1;
 const claimIdMaxLength = 40;
 
 // see https://spec.lbry.com/#urls
-export const regexInvalidURI = /[ =&#:$@%?;/\\"<>%{}|^~[\]`\u{0000}-\u{0008}\u{000b}-\u{000c}\u{000e}-\u{001F}\u{D800}-\u{DFFF}\u{FFFE}-\u{FFFF}]/u;
-export const regexAddress = /^(b|r)(?=[^0OIl]{32,33})[0-9A-Za-z]{32,33}$/;
+export const regexInvalidURI: RegExp =
+  /[ =&#:$@%?;/\\"<>%{}|^~[\]`\u{0000}-\u{0008}\u{000b}-\u{000c}\u{000e}-\u{001F}\u{D800}-\u{DFFF}\u{FFFE}-\u{FFFF}]/u;
+export const regexAddress: RegExp = /^(b|r)(?=[^0OIl]{32,33})[0-9A-Za-z]{32,33}$/;
 const regexPartProtocol = '^((?:lbry://)?)';
 const regexPartStreamOrChannelName = '([^:$#/]*)';
 const regexPartModifierSeparator = '([:$#]?)([^/]*)';
@@ -115,26 +116,28 @@ export function parseURI(url: string, requireProto: boolean = false): LbryUrlObj
   const streamClaimId = includesChannel ? secondaryClaimId : primaryClaimId;
   const channelClaimId = includesChannel && primaryClaimId;
 
-  return {
+  const parsed: LbryUrlObj = {
     isChannel,
     path,
-    ...(streamName ? { streamName } : {}),
-    ...(streamClaimId ? { streamClaimId } : {}),
-    ...(channelName ? { channelName } : {}),
-    ...(channelClaimId ? { channelClaimId } : {}),
-    ...(primaryClaimSequence ? { primaryClaimSequence: parseInt(primaryClaimSequence, 10) } : {}),
-    ...(secondaryClaimSequence ? { secondaryClaimSequence: parseInt(secondaryClaimSequence, 10) } : {}),
-    ...(primaryBidPosition ? { primaryBidPosition: parseInt(primaryBidPosition, 10) } : {}),
-    ...(secondaryBidPosition ? { secondaryBidPosition: parseInt(secondaryBidPosition, 10) } : {}),
-    ...(startTime ? { startTime: parseInt(startTime, 10) } : {}),
-
     // The values below should not be used for new uses of parseURI
     // They will not work properly with canonical_urls
     claimName: streamNameOrChannelName,
     claimId: primaryClaimId,
-    ...(streamName ? { contentName: streamName } : {}),
-    ...(qs ? { queryString: qs } : {}),
   };
+  if (streamName) {
+    parsed.streamName = streamName;
+    parsed.contentName = streamName;
+  }
+  if (streamClaimId) parsed.streamClaimId = streamClaimId;
+  if (channelName) parsed.channelName = channelName;
+  if (channelClaimId) parsed.channelClaimId = channelClaimId;
+  if (primaryClaimSequence) parsed.primaryClaimSequence = parseInt(primaryClaimSequence, 10);
+  if (secondaryClaimSequence) parsed.secondaryClaimSequence = parseInt(secondaryClaimSequence, 10);
+  if (primaryBidPosition) parsed.primaryBidPosition = parseInt(primaryBidPosition, 10);
+  if (secondaryBidPosition) parsed.secondaryBidPosition = parseInt(secondaryBidPosition, 10);
+  if (startTime) parsed.startTime = parseInt(startTime, 10);
+  if (qs) parsed.queryString = qs;
+  return parsed;
 }
 
 function parseURIModifier(modSeperator: ?string, modValue: ?string) {
@@ -217,9 +220,7 @@ export function buildURI(UrlObj: LbryUrlObj, includeProto: boolean = true, proto
 
   return (
     (includeProto ? protoDefault : '') +
-    // primaryClaimName will always exist here because we throw above if there is no "name" value passed in
-    // $FlowFixMe
-    primaryClaimName +
+    String(primaryClaimName) +
     (primaryClaimId ? `#${primaryClaimId}` : '') +
     (primaryClaimSequence ? `:${primaryClaimSequence}` : '') +
     (primaryBidPosition ? `${primaryBidPosition}` : '') +
@@ -232,7 +233,7 @@ export function buildURI(UrlObj: LbryUrlObj, includeProto: boolean = true, proto
 }
 
 /* Takes a parseable LBRY URL and converts it to standard, canonical format */
-export function normalizeURI(URL: string) {
+export function normalizeURI(URL: string): string {
   const {
     streamName,
     streamClaimId,
@@ -268,11 +269,11 @@ export function isURIValid(URL: string, normalize: boolean = true): boolean {
   return true;
 }
 
-export function isNameValid(claimName: string) {
+export function isNameValid(claimName: string): boolean {
   return !regexInvalidURI.test(claimName);
 }
 
-export function isURIClaimable(URL: string) {
+export function isURIClaimable(URL: string): boolean {
   let parts;
   try {
     parts = parseURI(normalizeURI(URL));
@@ -280,10 +281,10 @@ export function isURIClaimable(URL: string) {
     return false;
   }
 
-  return parts && parts.streamName && !parts.streamClaimId && !parts.isChannel;
+  return Boolean(parts.streamName && !parts.streamClaimId && !parts.isChannel);
 }
 
-export function convertToShareLink(URL: string) {
+export function convertToShareLink(URL: string): string {
   const {
     streamName,
     streamClaimId,
@@ -310,12 +311,12 @@ export function convertToShareLink(URL: string) {
   );
 }
 
-export function splitBySeparator(uri: string) {
+export function splitBySeparator(uri: string): Array<string> {
   const protocolLength = 7;
   return uri.startsWith('lbry://') ? uri.slice(protocolLength).split(/[#:*]/) : uri.split(/#:\*\$/);
 }
 
-export function isURIEqual(uriA: string, uriB: string) {
+export function isURIEqual(uriA: string, uriB: string): boolean {
   const parseA = parseURI(normalizeURI(uriA));
   const parseB = parseURI(normalizeURI(uriB));
   if (parseA.isChannel) {
@@ -324,7 +325,6 @@ export function isURIEqual(uriA: string, uriB: string) {
     }
   } else if (parseA.streamClaimId === parseB.streamClaimId) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 }

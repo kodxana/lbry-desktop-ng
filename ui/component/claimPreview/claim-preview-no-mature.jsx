@@ -9,7 +9,7 @@ type Props = {
   message: string,
 };
 
-function ClaimPreviewHidden(props: Props) {
+function ClaimPreviewHidden(props: Props): React.Node {
   const { isChannel, type, message } = props;
   return (
     <li

@@ -13,8 +13,7 @@ import { addTheaterModeButton } from './internal/theater-mode';
 import { addAutoplayNextButton } from './internal/autoplay-next';
 import { addPlayNextButton } from './internal/play-next';
 import { addPlayPreviousButton } from './internal/play-previous';
-import { useHistory } from 'react-router';
-import type { HomepageCat } from 'util/buildHomepage';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import debounce from 'util/debounce';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
@@ -44,7 +43,7 @@ type Props = {
   toggleAutoplayNext: () => void,
   setVideoPlaybackRate: (number) => void,
   userId: number,
-  homepageData?: { [string]: HomepageCat },
+  homepageData?: HomepageData,
   shareTelemetry: boolean,
   isFloating: boolean,
   doPlayUri: (string, string) => void,
@@ -60,7 +59,7 @@ codesandbox of idealized/clean videojs and react 16+
 https://codesandbox.io/s/71z2lm4ko6
  */
 
-function VideoViewer(props: Props) {
+function VideoViewer(props: Props): React.Node {
   const {
     contentType,
     source,
@@ -97,7 +96,7 @@ function VideoViewer(props: Props) {
   const claimId = claim && claim.claim_id;
   const isAudio = contentType.includes('audio');
   const forcePlayer = FORCE_CONTENT_TYPE_PLAYER.includes(contentType);
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const [doNavigate, setDoNavigate] = useState(false);
   const [playNextUrl, setPlayNextUrl] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -109,7 +108,7 @@ function VideoViewer(props: Props) {
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
   const [isLoading, setIsLoading] = useState(false);
   const [replay, setReplay] = useState(false);
-  const [videoNode, setVideoNode] = useState();
+  const [activePlayer, setActivePlayer] = useState<?Player>();
 
   const updateVolumeState = React.useCallback(
     debounce((volume, muted) => {
@@ -141,7 +140,7 @@ function VideoViewer(props: Props) {
     });
   }
 
-  function doTrackingFirstPlay(e: Event, data: any) {
+  function doTrackingFirstPlay(this: Player, e: Event, data: any) {
     let timeToStart = data.secondsToLoad;
 
     if (desktopPlayStartTime !== undefined) {
@@ -177,15 +176,14 @@ function VideoViewer(props: Props) {
   }
 
   const doPlay = useCallback(
-    (playUri) => {
+    (playUri: string) => {
       setDoNavigate(false);
       if (!isFloating) {
         const navigateUrl = formatLbryUrlForWeb(playUri);
-        push({
-          pathname: navigateUrl,
-          search: collectionId && generateListSearchUrlParams(collectionId),
-          state: { collectionId, forceAutoplay: true, hideFloatingPlayer: true },
-        });
+        push(
+          { pathname: navigateUrl, search: (collectionId && generateListSearchUrlParams(collectionId)) || '' },
+          { collectionId, forceAutoplay: true, hideFloatingPlayer: true }
+        );
       } else {
         doPlayUri(playUri, collectionId);
       }
@@ -206,13 +204,13 @@ function VideoViewer(props: Props) {
         setReplay(true);
       }
     } else {
-      if (videoNode) {
-        const currentTime = videoNode.currentTime;
+      if (activePlayer) {
+        const currentTime = activePlayer.currentTime();
 
         if (currentTime <= 5) {
           if (previousListUri && permanentUrl !== previousListUri) doPlay(previousListUri);
         } else {
-          videoNode.currentTime = 0;
+          activePlayer.currentTime(0);
         }
         setDoNavigate(false);
       }
@@ -230,7 +228,7 @@ function VideoViewer(props: Props) {
     permanentUrl,
     playNextUrl,
     previousListUri,
-    videoNode,
+    activePlayer,
   ]);
 
   React.useEffect(() => {
@@ -247,7 +245,7 @@ function VideoViewer(props: Props) {
     clearPosition(uri);
   }, [autoplayNext, clearPosition, collectionId, ended, uri]);
 
-  function onPlay(player) {
+  function onPlay(player: Player) {
     setEnded(false);
     setIsLoading(false);
     setIsPlaying(true);
@@ -257,18 +255,18 @@ function VideoViewer(props: Props) {
     analytics.videoIsPlaying(true, player);
   }
 
-  function onPause(event, player) {
+  function onPause(event: Event, player: Player) {
     setIsPlaying(false);
     handlePosition(player);
     analytics.videoIsPlaying(false, player);
   }
 
-  function onDispose(event, player) {
+  function onDispose(event: Event, player: Player) {
     handlePosition(player);
     analytics.videoIsPlaying(false, player);
   }
 
-  function handlePosition(player) {
+  function handlePosition(player: Player) {
     const currTime = player.currentTime();
     const durationInSeconds = claim.value.video && claim.value.video.duration;
     if (Number(durationInSeconds) > Number(currTime)) {
@@ -276,14 +274,13 @@ function VideoViewer(props: Props) {
     }
   }
 
-  function restorePlaybackRate(player) {
+  function restorePlaybackRate(player: Player) {
     if (!vjsCallbackDataRef.current.embedded) {
       player.playbackRate(vjsCallbackDataRef.current.videoPlaybackRate);
     }
   }
 
-  const playerReadyDependencyList = [uri];
-  playerReadyDependencyList.push(desktopPlayStartTime);
+  const playerReadyDependencyList = [uri, desktopPlayStartTime];
 
   const doPlayNext = () => {
     setPlayNextUrl(true);
@@ -295,8 +292,8 @@ function VideoViewer(props: Props) {
     setEnded(true);
   };
 
-  const onPlayerReady = useCallback((player: Player, videoNode: any) => {
-    setVideoNode(videoNode);
+  const onPlayerReady = useCallback((player: Player) => {
+    setActivePlayer(player);
     player.muted(muted);
     player.volume(volume);
     player.playbackRate(videoPlaybackRate);
@@ -341,16 +338,10 @@ function VideoViewer(props: Props) {
     // first play tracking, used for initializing the watchman api
     player.on('tracking:firstplay', doTrackingFirstPlay);
     player.on('ended', () => setEnded(true));
-    player.on('play', onPlay);
+    player.on('play', () => onPlay(player));
     player.on('pause', (event) => onPause(event, player));
     player.on('dispose', (event) => onDispose(event, player));
 
-    player.on('error', () => {
-      const error = player.error();
-      if (error) {
-        analytics.sentryError('Video.js error', error);
-      }
-    });
     player.on('volumechange', () => {
       if (player) {
         updateVolumeState(player.volume(), player.muted());

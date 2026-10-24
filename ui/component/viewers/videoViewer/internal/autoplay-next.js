@@ -2,8 +2,10 @@
 import type { Player } from './videojs';
 import videojs from 'video.js';
 
-class AutoplayNextButton extends videojs.getComponent('Button') {
-  constructor(player, options = {}, autoplayNext) {
+const VideoButton = videojs.getComponent('Button');
+
+class AutoplayNextButton extends VideoButton {
+  constructor(player: Player, options: { ... } = {}, autoplayNext: boolean) {
     super(player, options, autoplayNext);
     const title = autoplayNext ? 'Autoplay Next On' : 'Autoplay Next Off';
 

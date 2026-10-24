@@ -8,18 +8,18 @@ import Card from 'component/common/card';
 type Props = {
   description: ?string,
   disabled: boolean,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
-function PublishDescription(props: Props) {
+function PublishDescription(props: Props): React.Node {
   const { description, updatePublishForm, disabled } = props;
   const [advancedEditor, setAdvancedEditor] = usePersistedState('publish-form-description-mode', false);
   function toggleMarkdown() {
     setAdvancedEditor(!advancedEditor);
   }
 
-  function handleCommentChange(event) {
-    let descriptionValue = advancedEditor ? event : event.target.value;
+  function handleCommentChange(event: string | { target: { value: string, ... }, ... }): void {
+    const descriptionValue = typeof event === 'string' ? event : event.target.value;
 
     updatePublishForm({ description: descriptionValue });
   }

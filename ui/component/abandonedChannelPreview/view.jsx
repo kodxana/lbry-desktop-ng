@@ -12,7 +12,7 @@ type Props = {
   type: string,
 };
 
-function AbandonedChannelPreview(props: Props) {
+function AbandonedChannelPreview(props: Props): React.Node {
   const { uri, type } = props;
   const { channelName } = parseURI(uri);
 

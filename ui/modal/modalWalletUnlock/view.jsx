@@ -3,12 +3,12 @@ import React from 'react';
 import { Form, FormField } from 'component/common/form';
 import { Modal } from 'modal/modal';
 import Button from 'component/button';
-import { getSavedPassword, setSavedPassword } from 'util/saved-passwords';
+import { getSavedPasswordState, setSavedPassword } from 'util/saved-passwords';
 
 type Props = {
   quit: () => void,
   closeModal: () => void,
-  unlockWallet: (?string) => void,
+  unlockWallet: (?string) => Promise<boolean>,
   walletUnlockSucceded: boolean,
   shouldTryWithBlankPassword: boolean,
 };
@@ -16,45 +16,65 @@ type Props = {
 type State = {
   password: string,
   rememberPassword: boolean,
+  submittedPassword: ?string,
+  pending: boolean,
 };
 
 class ModalWalletUnlock extends React.PureComponent<Props, State> {
-  state = {
+  unmounted = false;
+  saving = false;
+  pendingRequest = false;
+
+  state: State = {
     password: '',
     rememberPassword: false,
+    submittedPassword: null,
+    pending: false,
   };
 
   componentDidMount() {
-    const { unlockWallet, shouldTryWithBlankPassword } = this.props;
+    this.unmounted = false;
+    const { shouldTryWithBlankPassword } = this.props;
 
-    getSavedPassword().then(p => {
+    getSavedPasswordState().then(({ password: p, remembered: rememberPassword }) => {
+      if (this.unmounted || this.state.submittedPassword !== null || this.state.password) return;
       if (p !== null) {
-        this.setState({ password: p, rememberPassword: true });
-        unlockWallet(p);
+        this.setState({ password: p, rememberPassword });
+        this.submitPassword(p, rememberPassword);
       } else if (shouldTryWithBlankPassword) {
-        unlockWallet('');
+        this.submitPassword('', false);
       }
     });
   }
-  componentDidUpdate() {
-    const { props } = this;
+  componentWillUnmount() {
+    this.unmounted = true;
+  }
 
-    if (props.walletUnlockSucceded === true) {
-      setSavedPassword(this.state.password, this.state.rememberPassword);
-      props.closeModal();
+  async submitPassword(password: string, rememberPassword: boolean = this.state.rememberPassword) {
+    if (this.saving || this.pendingRequest || this.unmounted) return;
+    this.pendingRequest = true;
+    this.setState({ submittedPassword: password, pending: true });
+    try {
+      if (!(await this.props.unlockWallet(password)) || this.unmounted) return;
+      this.saving = true;
+      await setSavedPassword(password, rememberPassword);
+      if (!this.unmounted) this.props.closeModal();
+    } finally {
+      this.pendingRequest = false;
+      if (!this.unmounted) this.setState({ pending: false });
     }
   }
 
-  onChangePassword(event: SyntheticInputEvent<*>) {
+  onChangePassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ password: event.target.value });
   }
 
-  onChangeRememberPassword(event: SyntheticInputEvent<>) {
+  onChangeRememberPassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ rememberPassword: event.target.checked });
   }
 
-  render() {
-    const { quit, unlockWallet, walletUnlockSucceded } = this.props;
+  render(): React.Node {
+    const { quit, walletUnlockSucceded } = this.props;
 
     const { password, rememberPassword } = this.state;
     return (
@@ -65,22 +85,23 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
         type="confirm"
         shouldCloseOnOverlayClick={false}
         confirmButtonLabel={__('Unlock')}
+        confirmButtonDisabled={this.state.pending}
         abortButtonLabel={__('Exit')}
-        onConfirmed={() => unlockWallet(password)}
+        onConfirmed={() => this.submitPassword(password)}
         onAborted={quit}
       >
         <p>
           {__('Your wallet has been encrypted with a local password. Please enter your wallet password to proceed.')}{' '}
           <Button button="link" label={__('Learn more')} href="https://lbry.com/faq/wallet-encryption" />.
         </p>
-        <Form className="section" onSubmit={() => unlockWallet(password)}>
+        <Form className="section" onSubmit={() => this.submitPassword(password)}>
           <FormField
             autoFocus
             error={walletUnlockSucceded === false ? 'Incorrect Password' : false}
             label={__('Wallet Password')}
             type="password"
             name="wallet-password"
-            onChange={event => this.onChangePassword(event)}
+            onChange={(event) => this.onChangePassword(event)}
             value={password || ''}
           />
           <fieldset-section>
@@ -88,7 +109,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
               label={__('Remember Password')}
               type="checkbox"
               name="wallet-remember-password"
-              onChange={event => this.onChangeRememberPassword(event)}
+              onChange={(event) => this.onChangeRememberPassword(event)}
               checked={rememberPassword}
             />
           </fieldset-section>

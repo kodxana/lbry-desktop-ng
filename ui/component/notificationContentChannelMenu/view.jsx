@@ -1,7 +1,7 @@
 // @flow
 import * as ICONS from 'constants/icons';
 import React from 'react';
-import { MenuItem } from '@reach/menu-button';
+import { MenuItem } from 'component/common/menu';
 import { parseURI } from 'util/lbryURI';
 import Icon from 'component/common/icon';
 
@@ -12,7 +12,7 @@ type Props = {
   doChannelSubscribe: (Subscription) => void,
 };
 
-export default function NotificationContentChannelMenu(props: Props) {
+export default function NotificationContentChannelMenu(props: Props): React.Node {
   const { uri, notificationsDisabled, doToast, doChannelSubscribe } = props;
   let claimName;
   const { claimName: name } = parseURI(uri);
@@ -32,7 +32,7 @@ export default function NotificationContentChannelMenu(props: Props) {
   }
 
   return (
-    <MenuItem onSelect={handleClick}>
+    <MenuItem onClick={handleClick}>
       <div className="menu__link">
         <Icon aria-hidden icon={notificationsDisabled ? ICONS.BELL : ICONS.BELL_ON} />
         {notificationsDisabled ? __('Turn Back On') : __('Turn Off')}

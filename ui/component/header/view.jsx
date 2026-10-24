@@ -2,7 +2,7 @@
 // import 'scss/component/_header.scss'; // ody codesplits this. no.
 
 import { useIsMobile } from 'effects/use-screensize';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import Button from 'component/button';
@@ -15,9 +15,10 @@ import React from 'react';
 import SkipNavigationButton from 'component/skipNavigationButton';
 import Tooltip from 'component/common/tooltip';
 import WunderBar from 'component/wunderbar';
-import * as remote from '@electron/remote';
+import { maximizeWindow } from 'util/window-controls';
 import { IS_MAC } from 'component/app/view';
 import NavigationButton from 'component/navigationButton';
+import { walletSyncProgress } from 'util/wallet-sync';
 
 type Props = {
   authHeader: boolean,
@@ -28,6 +29,7 @@ type Props = {
     simpleTitle: string, // Just use the same value as `title` if `title` is already short (~< 10 chars), unless you have a better idea for title overlfow on mobile
   },
   balance: number,
+  walletSyncStatus: ?StatusResponse,
   emailToVerify?: string,
   hasNavigated: boolean,
   hideBalance: boolean,
@@ -54,6 +56,7 @@ const Header = (props: Props) => {
     authHeader,
     backout,
     balance,
+    walletSyncStatus,
     emailToVerify,
     hideBalance,
     hideCancel,
@@ -76,6 +79,7 @@ const Header = (props: Props) => {
   } = history;
 
   const isMobile = useIsMobile();
+  const walletProgress = walletSyncProgress(walletSyncStatus);
 
   // on the verify page don't let anyone escape other than by closing the tab to keep session data consistent
   const isVerifyPage = pathname.includes(PAGES.AUTH_VERIFY);
@@ -94,7 +98,7 @@ const Header = (props: Props) => {
     ? __('Close sidebar - hide channels you are following.')
     : __('Expand sidebar - view channels you are following.');
 
-  const onBackout = React.useCallback(
+  const onBackout: (e: { type: string, ... }) => void = React.useCallback(
     (e: any) => {
       const { hasNavigated } = props;
       const { replace } = history;
@@ -124,9 +128,11 @@ const Header = (props: Props) => {
     <div className="header__menu--right">
       <Tooltip
         title={
-          balance > 0
-            ? __('Immediately spendable: %spendable_balance%', { spendable_balance: roundedSpendableBalance })
-            : __('Your Wallet')
+          walletProgress.pending
+            ? walletProgress.title
+            : balance > 0
+              ? __('Immediately spendable: %spendable_balance%', { spendable_balance: roundedSpendableBalance })
+              : __('Your Wallet')
         }
       >
         <div>
@@ -134,7 +140,7 @@ const Header = (props: Props) => {
             <Button
               navigate={`/$/${PAGES.WALLET}`}
               className="header__navigationItem--icon header__navigationItem--balance"
-              label={!(hideBalance || Number(roundedBalance) === 0) && roundedBalance}
+              label={false}
               icon={ICONS.LBC}
               iconSize={18}
               onDoubleClick={(e) => {
@@ -145,7 +151,13 @@ const Header = (props: Props) => {
             <Button
               navigate={`/$/${PAGES.WALLET}`}
               className="button--file-action header__navigationItem--balance"
-              label={hideBalance || Number(roundedBalance) === 0 ? __('Your Wallet') : roundedBalance}
+              label={
+                walletProgress.pending
+                  ? __('Wallet sync')
+                  : Number(roundedBalance) === 0
+                    ? __('Your Wallet')
+                    : roundedBalance
+              }
               icon={ICONS.LBC}
               onDoubleClick={(e) => {
                 e.stopPropagation();
@@ -165,9 +177,7 @@ const Header = (props: Props) => {
         'header--minimal': authHeader,
         'header--mac': IS_MAC,
       })}
-      onDoubleClick={(e) => {
-        remote.getCurrentWindow().maximize();
-      }}
+      onDoubleClick={maximizeWindow}
     >
       <div className="card__actions--between header__contents">
         {!authHeader && canBackout ? (
@@ -214,12 +224,10 @@ const Header = (props: Props) => {
 
               {!authHeader && (
                 <div className="header__center">
-                  {!authHeader && (
-                    <div className="header__buttons">
-                      <NavigationButton isBackward history={history} />
-                      <NavigationButton isBackward={false} history={history} />
-                    </div>
-                  )}
+                  <div className="header__buttons">
+                    <NavigationButton isBackward history={history} />
+                    <NavigationButton isBackward={false} history={history} />
+                  </div>
                   <WunderBar />
                   <HeaderMenuButtons />
                 </div>
@@ -258,4 +266,5 @@ const Header = (props: Props) => {
   );
 };
 
-export default withRouter(Header);
+const RoutedHeader: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(Header);
+export default RoutedHeader;

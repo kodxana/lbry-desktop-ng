@@ -4,7 +4,7 @@ import type { Node } from 'react';
 import * as CS from 'constants/claim_search';
 import React from 'react';
 import usePersistedState from 'effects/use-persisted-state';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { MATURE_TAGS } from 'constants/tags';
 import { createNormalizedClaimSearchKey } from 'util/claim';
 import { splitBySeparator } from 'util/lbryURI';
@@ -17,6 +17,29 @@ import I18nMessage from 'component/i18nMessage';
 import ClaimListHeader from 'component/claimListHeader';
 import useFetchViewCount from 'effects/use-fetch-view-count';
 import { useIsLargeScreen } from 'effects/use-screensize';
+
+type SearchOptions = {
+  page_size: number,
+  page: number,
+  no_totals: boolean,
+  any_tags?: Array<string>,
+  any_languages?: Array<string>,
+  not_tags: Array<string>,
+  channel_ids?: Array<string>,
+  claim_ids?: Array<string>,
+  not_channel_ids?: Array<string>,
+  order_by: Array<string>,
+  release_time?: string,
+  claim_type?: string | Array<string>,
+  name?: string,
+  duration?: string | Array<string>,
+  reposted_claim_id?: string,
+  stream_types?: any,
+  fee_amount?: string,
+  has_source?: boolean,
+  has_no_source?: boolean,
+  limit_claims_per_channel?: number,
+};
 
 type Props = {
   uris: Array<string>,
@@ -32,7 +55,7 @@ type Props = {
   hideAdvancedFilter?: boolean,
   hideFilters?: boolean,
   includeSupportAction?: boolean,
-  infiniteScroll?: Boolean,
+  infiniteScroll?: boolean,
   isChannel?: boolean,
   personalView: boolean,
   showHeader: boolean,
@@ -173,7 +196,7 @@ function ClaimListDiscover(props: Props) {
   const didNavigateForward = history.action === 'PUSH';
   const { search } = location;
   const [page, setPage] = React.useState(1);
-  const [forceRefresh, setForceRefresh] = React.useState();
+  const [forceRefresh, setForceRefresh] = React.useState<number | void>();
   const isLargeScreen = useIsLargeScreen();
   const [orderParamEntry, setOrderParamEntry] = usePersistedState(`entry-${location.pathname}`, CS.ORDER_BY_TRENDING);
   const [orderParamUser, setOrderParamUser] = usePersistedState(`orderUser-${location.pathname}`, CS.ORDER_BY_TRENDING);
@@ -194,13 +217,13 @@ function ClaimListDiscover(props: Props) {
     ? langParam === null
       ? languageSetting.concat(languageSetting === 'en' ? ',none' : '')
       : langParam === 'any'
-      ? null
-      : langParam.concat(langParam === 'en' ? ',none' : '')
+        ? null
+        : langParam.concat(langParam === 'en' ? ',none' : '')
     : langParam === null
-    ? null
-    : langParam === 'any'
-    ? null
-    : langParam.concat(langParam === 'en' ? ',none' : '');
+      ? null
+      : langParam === 'any'
+        ? null
+        : langParam.concat(langParam === 'en' ? ',none' : '');
 
   const contentTypeParam = urlParams.get(CS.CONTENT_KEY);
   const claimTypeParam =
@@ -239,28 +262,7 @@ function ClaimListDiscover(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyAction, setOrderParamEntry]);
 
-  let options: {
-    page_size: number,
-    page: number,
-    no_totals: boolean,
-    any_tags?: Array<string>,
-    any_languages?: Array<string>,
-    not_tags: Array<string>,
-    channel_ids?: Array<string>,
-    claim_ids?: Array<string>,
-    not_channel_ids?: Array<string>,
-    order_by: Array<string>,
-    release_time?: string,
-    claim_type?: string | Array<string>,
-    name?: string,
-    duration?: string | Array<string>,
-    reposted_claim_id?: string,
-    stream_types?: any,
-    fee_amount?: string,
-    has_source?: boolean,
-    has_no_source?: boolean,
-    limit_claims_per_channel?: number,
-  } = {
+  let options: SearchOptions = {
     page_size: dynamicPageSize,
     page,
     name,
@@ -398,7 +400,7 @@ function ClaimListDiscover(props: Props) {
   const claimSearchResult = claimSearchByQuery[searchKey];
   const claimSearchResultLastPageReached = claimSearchByQueryLastPageReached[searchKey];
 
-  const [prevOptions, setPrevOptions] = React.useState(null);
+  const [prevOptions, setPrevOptions] = React.useState<SearchOptions | null>(null);
 
   if (!isJustScrollingToNewPage(prevOptions, options)) {
     // --- New search, or search options changed.
@@ -467,7 +469,7 @@ function ClaimListDiscover(props: Props) {
 
   // Returns true if the change in 'options' indicate that we are simply scrolling
   // down to a new page; false otherwise.
-  function isJustScrollingToNewPage(prevOptions, options) {
+  function isJustScrollingToNewPage(prevOptions: ?SearchOptions, options: SearchOptions) {
     if (!prevOptions) {
       // It's a new search, or we just popped back from a different view.
       return false;
@@ -486,9 +488,9 @@ function ClaimListDiscover(props: Props) {
     return JSON.stringify(tmpOptions) === JSON.stringify(tmpPrevOptions);
   }
 
-  function getParamFromTags(t) {
+  function getParamFromTags(t: string | Array<string>): string | void {
     if (t === CS.TAGS_ALL || t === CS.TAGS_FOLLOWED) {
-      return t;
+      return String(t);
     } else if (Array.isArray(t)) {
       return t.join(',');
     }
@@ -526,8 +528,8 @@ function ClaimListDiscover(props: Props) {
       orderBy === CS.ORDER_BY_TRENDING
         ? CS.ORDER_BY_TRENDING_VALUE
         : orderBy === CS.ORDER_BY_NEW
-        ? CS.ORDER_BY_NEW_VALUE
-        : CS.ORDER_BY_TOP_VALUE;
+          ? CS.ORDER_BY_NEW_VALUE
+          : CS.ORDER_BY_TOP_VALUE;
 
     if (orderBy === CS.ORDER_BY_NEW && sortBy === CS.SORT_BY.OLDEST.key) {
       return order_by.map((x) => `${CS.SORT_BY.OLDEST.opt}${x}`);
@@ -605,7 +607,7 @@ function ClaimListDiscover(props: Props) {
           />
           {loading && useSkeletonScreen && (
             <div className="claim-grid">
-              {new Array(dynamicPageSize).fill(1).map((x, i) => (
+              {new Array<number>(dynamicPageSize).fill(1).map((x, i) => (
                 <ClaimPreviewTile key={i} placeholder="loading" />
               ))}
             </div>
@@ -642,7 +644,7 @@ function ClaimListDiscover(props: Props) {
           />
           {loading &&
             useSkeletonScreen &&
-            new Array(dynamicPageSize)
+            new Array<number>(dynamicPageSize)
               .fill(1)
               .map((x, i) => (
                 <ClaimPreview
@@ -658,4 +660,6 @@ function ClaimListDiscover(props: Props) {
   );
 }
 
-export default withRouter(ClaimListDiscover);
+const RoutedClaimListDiscover: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ClaimListDiscover);
+export default RoutedClaimListDiscover;

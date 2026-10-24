@@ -2,7 +2,7 @@
 import * as ACTIONS from 'constants/action_types';
 import * as ABANDON_STATES from 'constants/abandon_states';
 // @if TARGET='app'
-import { shell } from 'electron';
+import desktop from 'util/desktop';
 // @endif
 import Lbry from 'lbry';
 import { selectClaimForUri } from 'redux/selectors/claims';
@@ -10,7 +10,7 @@ import { doAbandonClaim } from 'redux/actions/claims';
 import { batchActions } from 'util/batch-actions';
 
 import { doHideModal } from 'redux/actions/app';
-import { goBack } from 'connected-react-router';
+import { goBack } from 'redux-first-history';
 import { doSetPlayingUri } from 'redux/actions/content';
 import { selectPlayingUri } from 'redux/selectors/content';
 import { doToast } from 'redux/actions/notifications';
@@ -23,16 +23,16 @@ import {
 
 type Dispatch = (action: any) => any;
 type GetState = () => { claims: any, file: FileState, content: any };
-export function doOpenFileInFolder(path: string) {
+export function doOpenFileInFolder(path: string): ThunkAction<void> {
   return () => {
-    shell.showItemInFolder(path);
+    desktop.revealFile(path);
   };
 }
 
-export function doOpenFileInShell(path: string) {
-  return (dispatch: Dispatch) => {
-    const success = shell.openPath(path);
-    if (!success) {
+export function doOpenFileInShell(path: string): ThunkAction<Promise<void>> {
+  return async (dispatch: Dispatch) => {
+    const error = await desktop.openFile(path);
+    if (error) {
       dispatch(doOpenFileInFolder(path));
     }
   };
@@ -44,7 +44,7 @@ export function doDeleteFile(
   abandonClaim?: boolean,
   cb: any,
   claim: Claim
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     if (abandonClaim) {
       dispatch(doAbandonClaim(claim, cb));
@@ -70,14 +70,14 @@ export function doDeleteFileAndMaybeGoBack(
   uri: string,
   deleteFromComputer?: boolean,
   abandonClaim?: boolean,
-  doGoBack: (any) => void,
+  doGoBack: ?() => void,
   claim: Claim
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const playingUri = selectPlayingUri(state);
     const { outpoint } = makeSelectFileInfoForUri(uri)(state) || '';
-    const { nout, txid } = selectClaimForUri(state, uri);
+    const { nout, txid } = selectClaimForUri(state, uri) || claim;
     const claimOutpoint = `${txid}:${nout}`;
     const actions = [];
 
@@ -114,10 +114,15 @@ export function doDeleteFileAndMaybeGoBack(
   };
 }
 
-export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (GetResponse) => any) {
+export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (GetResponse) => any): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
-    const { nout, txid } = selectClaimForUri(state, uri);
+    const claim = selectClaimForUri(state, uri);
+    if (!claim) {
+      dispatch(doToast({ message: __('This claim is not available yet. Please try again.'), isError: true }));
+      return;
+    }
+    const { nout, txid } = claim;
     const outpoint = `${txid}:${nout}`;
 
     dispatch({
@@ -129,9 +134,8 @@ export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (Ge
 
     // set save_file argument to True to save the file (old behaviour)
     Lbry.get({ uri, save_file: saveFile })
-      .then((streamInfo: GetResponse) => {
-        const timeout = streamInfo === null || typeof streamInfo !== 'object' || streamInfo.error === 'Timeout';
-        if (timeout) {
+      .then((streamInfo: GetResponse | string | number | boolean | null | void) => {
+        if (streamInfo == null || typeof streamInfo !== 'object' || streamInfo.error === 'Timeout') {
           dispatch({
             type: ACTIONS.FETCH_FILE_INFO_FAILED,
             data: { outpoint },
@@ -184,7 +188,7 @@ export function doPurchaseUri(
   costInfo: { cost: number },
   saveFile: boolean = true,
   onSuccess?: (GetResponse) => any
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.PURCHASE_URI_STARTED,
@@ -226,7 +230,7 @@ export function doPurchaseUri(
   };
 }
 
-export function doClearPurchasedUriSuccess() {
+export function doClearPurchasedUriSuccess(): { type: string } {
   return {
     type: ACTIONS.CLEAR_PURCHASED_URI_SUCCESS,
   };

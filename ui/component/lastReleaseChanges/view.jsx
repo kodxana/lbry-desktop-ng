@@ -1,4 +1,5 @@
 // @flow
+import { releasesUrl, releaseNotesUrl } from 'util/desktop-updates';
 import React, { useState, useEffect } from 'react';
 import MarkdownPreview from 'component/common/markdown-preview';
 import Button from 'component/button';
@@ -9,9 +10,9 @@ type Props = {
   hideReleaseVersion?: boolean,
 };
 
-const LastReleaseChanges = (props: Props) => {
+const LastReleaseChanges = (props: Props): React.Node => {
   const { hideReleaseVersion, releaseVersion } = props;
-  const [releaseTag, setReleaseTag] = useState('');
+  const [releaseTag, setReleaseTag] = useState(releaseVersion);
   const [releaseChanges, setReleaseChanges] = useState('');
   const [fetchingReleaseChanges, setFetchingReleaseChanges] = useState(false);
   const [fetchReleaseFailed, setFetchReleaseFailed] = useState(false);
@@ -25,9 +26,7 @@ const LastReleaseChanges = (props: Props) => {
     <p className="help">
       <I18nMessage
         tokens={{
-          release_notes: (
-            <Button button="link" label={__('release notes')} href="https://github.com/lbryio/lbry-desktop/releases" />
-          ),
+          release_notes: <Button button="link" label={__('release notes')} href={releasesUrl} />,
         }}
       >
         Want to know what has changed? See the %release_notes%.
@@ -36,7 +35,7 @@ const LastReleaseChanges = (props: Props) => {
   );
 
   useEffect(() => {
-    const lastReleaseUrl = `https://api.github.com/repos/lbryio/lbry-desktop/releases/tags/${releaseVersion}`;
+    const lastReleaseUrl = releaseNotesUrl(releaseVersion);
     const options = {
       method: 'GET',
       headers: { Accept: 'application/vnd.github.v3+json' },
@@ -44,7 +43,10 @@ const LastReleaseChanges = (props: Props) => {
 
     setFetchingReleaseChanges(true);
     fetch(lastReleaseUrl, options)
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error('Release notes unavailable');
+        return response.json();
+      })
       .then((response) => {
         setReleaseTag(response.tag_name);
         setReleaseChanges(response.body);

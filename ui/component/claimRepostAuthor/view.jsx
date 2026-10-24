@@ -11,7 +11,7 @@ type Props = {
   short: boolean,
 };
 
-function ClaimRepostAuthor(props: Props) {
+function ClaimRepostAuthor(props: Props): React.Node {
   const { claim, short } = props;
   const repostChannelUrl = claim && claim.repost_channel_url;
   const repostUrl = claim && claim.repost_url;

@@ -4,7 +4,6 @@ import { ENABLE_COMMENT_REACTIONS, COMMENT_SERVER_API, COMMENT_SERVER_NAME } fro
 import { useIsMobile, useIsMediumScreen } from 'effects/use-screensize';
 import { getCommentsListTitle } from 'util/comments';
 import * as ICONS from 'constants/icons';
-import * as REACTION_TYPES from 'constants/reactions';
 import Button from 'component/button';
 import Card from 'component/common/card';
 import classnames from 'classnames';
@@ -20,7 +19,7 @@ import Comments from 'comments';
 
 const DEBOUNCE_SCROLL_HANDLER_MS = 200;
 
-function scaleToDevicePixelRatio(value) {
+function scaleToDevicePixelRatio(value: number) {
   const devicePixelRatio = window.devicePixelRatio || 1.0;
   if (devicePixelRatio < 1.0) {
     return Math.ceil(value / devicePixelRatio);
@@ -30,9 +29,9 @@ function scaleToDevicePixelRatio(value) {
 
 type Props = {
   allCommentIds: any,
-  pinnedComments: Array<Comment>,
-  topLevelComments: Array<Comment>,
-  resolvedComments: Array<Comment>,
+  pinnedComments: Array<LbryComment>,
+  topLevelComments: Array<LbryComment>,
+  resolvedComments: Array<LbryComment>,
   topLevelTotalPages: number,
   uri: string,
   claimId?: string,
@@ -45,7 +44,7 @@ type Props = {
   totalComments: number,
   fetchingChannels: boolean,
   myReactsByCommentId: ?{ [string]: Array<string> }, // "CommentId:MyChannelId" -> reaction array (note the ID concatenation)
-  othersReactsById: ?{ [string]: { [REACTION_TYPES.LIKE | REACTION_TYPES.DISLIKE]: number } },
+  othersReactsById: ?{ [string]: { [string]: number } },
   activeChannelId: ?string,
   settingsByChannelId: { [channelId: string]: PerChannelSettings },
   commentsAreExpanded?: boolean,
@@ -59,7 +58,7 @@ type Props = {
   commentServer: string,
 };
 
-export default function CommentList(props: Props) {
+export default function CommentList(props: Props): React.Node {
   const {
     allCommentIds,
     uri,
@@ -96,7 +95,7 @@ export default function CommentList(props: Props) {
   const defaultServer = { name: COMMENT_SERVER_NAME, url: COMMENT_SERVER_API };
   const allServers = [defaultServer, ...(customCommentServers || [])];
 
-  const spinnerRef = React.useRef();
+  const spinnerRef = React.useRef<HTMLDivElement | null>(null);
   const DEFAULT_SORT = ENABLE_COMMENT_REACTIONS ? SORT_BY.POPULARITY : SORT_BY.NEWEST;
   const [sort, setSort] = usePersistedState('comment-sort-by', DEFAULT_SORT);
   const [page, setPage] = React.useState(0);
@@ -119,7 +118,7 @@ export default function CommentList(props: Props) {
     Boolean(othersReactsById) || !ENABLE_COMMENT_REACTIONS
   );
 
-  function changeSort(newSort) {
+  function changeSort(newSort: number) {
     if (sort !== newSort) {
       setSort(newSort);
       setPage(0); // Invalidate existing comments
@@ -193,12 +192,12 @@ export default function CommentList(props: Props) {
 
   // Infinite scroll
   useEffect(() => {
-    function shouldFetchNextPage(page, topLevelTotalPages, yPrefetchPx = 1000) {
+    function shouldFetchNextPage(page: number, topLevelTotalPages: number, yPrefetchPx: number = 1000) {
       if (!spinnerRef || !spinnerRef.current) return false;
 
-      const rect = spinnerRef.current.getBoundingClientRect(); // $FlowFixMe
-      const windowH = window.innerHeight || document.documentElement.clientHeight; // $FlowFixMe
-      const windowW = window.innerWidth || document.documentElement.clientWidth; // $FlowFixMe
+      const rect = spinnerRef.current.getBoundingClientRect();
+      const windowH = window.innerHeight || document.documentElement?.clientHeight || 0;
+      const windowW = window.innerWidth || document.documentElement?.clientWidth || 0;
 
       const isApproachingViewport = yPrefetchPx !== 0 && rect.top < windowH + scaleToDevicePixelRatio(yPrefetchPx);
 
@@ -207,9 +206,7 @@ export default function CommentList(props: Props) {
         rect.height > 0 &&
         rect.bottom >= 0 &&
         rect.right >= 0 &&
-        // $FlowFixMe
         rect.top <= windowH &&
-        // $FlowFixMe
         rect.left <= windowW;
 
       return (isInViewport || isApproachingViewport) && page < topLevelTotalPages;
@@ -228,7 +225,7 @@ export default function CommentList(props: Props) {
     }
 
     if (hasDefaultExpansion && !isFetchingComments && canDisplayComments && readyToDisplayComments && moreBelow) {
-      const commentsInDrawer = Boolean(document.querySelector('.MuiDrawer-root .card--enable-overflow'));
+      const commentsInDrawer = document.querySelector('.MuiDrawer-root .card--enable-overflow') !== null;
       const scrollingElement = commentsInDrawer ? document.querySelector('.card--enable-overflow') : window;
 
       if (scrollingElement) {
@@ -340,7 +337,12 @@ export default function CommentList(props: Props) {
 }
 
 type CommentProps = {
-  comments: Array<Comment>,
+  isTopLevel: boolean,
+  threadDepth: number,
+  uri: string,
+  claimIsMine: boolean,
+  linkedCommentId?: string,
+  comments: Array<LbryComment>,
 };
 
 const CommentElements = (commentProps: CommentProps) => {
@@ -351,8 +353,8 @@ const CommentElements = (commentProps: CommentProps) => {
 
 type ActionButtonsProps = {
   totalComments: number,
-  sort: string,
-  changeSort: (string) => void,
+  sort: number,
+  changeSort: (number) => void,
   setPage: (number) => void,
   allServers: Array<CommentServerDetails>,
   commentServer: string,
@@ -414,9 +416,11 @@ const CommentActionButtons = (actionButtonsProps: ActionButtonsProps) => {
 };
 
 type SortButtonProps = {
-  activeSort: string,
-  sortOption: string,
-  changeSort: (string) => void,
+  label: string,
+  icon: string,
+  activeSort: number,
+  sortOption: number,
+  changeSort: (number) => void,
 };
 
 const SortButton = (sortButtonProps: SortButtonProps) => {

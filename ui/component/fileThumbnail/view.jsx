@@ -20,7 +20,7 @@ type Props = {
   showPercentage: boolean,
 };
 
-function FileThumbnail(props: Props) {
+function FileThumbnail(props: Props): React.Node {
   const {
     claim,
     uri,
@@ -53,9 +53,9 @@ function FileThumbnail(props: Props) {
     }
   }, [hasResolvedClaim, uri, doResolveUri]);
 
-  if (!allowGifs && isGif) {
+  if (!allowGifs && isGif && thumbnail) {
     return (
-      <FreezeframeWrapper src={thumbnail} className={classnames('media__thumb', className)}>
+      <FreezeframeWrapper key={thumbnail} src={thumbnail} className={classnames('media__thumb', className)}>
         {children}
         {viewedBar}
       </FreezeframeWrapper>

@@ -1,30 +1,29 @@
-import '@babel/polyfill';
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
 import ErrorBoundary from 'component/errorBoundary';
 import App from 'component/app';
 import SnackBar from 'component/snackBar';
-import SplashScreen from 'component/splash';
+import SdkStartup from 'component/sdkStartup';
 import * as ACTIONS from 'constants/action_types';
 import { changeZoomFactor } from 'util/zoomWindow';
-import { ipcRenderer, shell } from 'electron';
-import * as remote from '@electron/remote';
+import desktop from 'util/desktop';
+import { getDesktopInfo } from 'util/desktop-info';
+import { listenForDownloadNotifications } from 'util/download-notifications';
+import { listenForFullscreenExit } from 'util/window-controls';
+import { listenForUpdater } from 'util/updater-events';
+import { requestUpdater } from 'util/updater-client';
 import moment from 'moment';
 import * as MODALS from 'constants/modal_types';
 import React, { Fragment, useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import * as SETTINGS from 'constants/settings';
 import {
   doDaemonReady,
-  doAutoUpdate,
+  doCheckUpgradeAvailable,
   doOpenModal,
   doHideModal,
   doToggle3PAnalytics,
-  doUpdateDownloadProgress,
-  doNotifyUpdateAvailable,
-  doShowUpgradeInstallationError,
-  doAutoUpdateDownloading,
-  doAutoUpdateReset,
-  doAutoUpdateFail,
 } from 'redux/actions/app';
 import { isURIValid } from 'util/lbryURI';
 import { setSearchApi } from 'redux/actions/search';
@@ -34,7 +33,8 @@ import rewards from 'rewards';
 import { store, persistor, history } from 'store';
 import app from './app';
 import doLogWarningConsoleMessage from './logWarningConsoleMessage';
-import { ConnectedRouter, push } from 'connected-react-router';
+import { push } from 'redux-first-history';
+import DesktopRouter from 'component/common/desktop-router';
 import { formatLbryUrlForWeb, formatInAppUrl } from 'util/url';
 import { PersistGate } from 'redux-persist/integration/react';
 import analytics from 'analytics';
@@ -53,9 +53,6 @@ import 'scss/all.scss';
 
 const startTime = Date.now();
 analytics.startupEvent();
-
-const { autoUpdater } = remote.require('electron-updater');
-autoUpdater.logger = remote.require('electron-log');
 
 if (LBRY_API_URL) {
   Lbryio.setLocalApi(LBRY_API_URL);
@@ -96,18 +93,17 @@ rewards.setCallback('claimRewardSuccess', (reward) => {
   }
 });
 
-ipcRenderer.on('send-disk-space', (event, result) => {
+desktop.onDiskSpace((result) => {
   if (result.error) {
     console.log(`disk space error: ${result.error}`);
-  } else {
-    app.store.dispatch({
-      type: ACTIONS.DISK_SPACE,
-      data: result.diskSpace,
-    });
   }
+  app.store.dispatch({
+    type: ACTIONS.DISK_SPACE,
+    data: result.error ? null : result.diskSpace,
+  });
 });
 
-ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
+desktop.onOpenUri((url) => {
   function handleError() {
     app.store.dispatch(
       doToast({
@@ -132,74 +128,25 @@ ipcRenderer.on('open-uri-requested', (event, url, newSession) => {
   handleError();
 });
 
-autoUpdater.on('download-progress', () => {
-  app.store.dispatch(doAutoUpdateDownloading());
-});
-
-autoUpdater.on('checking-for-update', () => {
-  app.store.dispatch(doAutoUpdateReset());
-});
-
-autoUpdater.on('update-available', (e) => {
-  app.store.dispatch(doNotifyUpdateAvailable(e));
-});
-
-autoUpdater.on('update-downloaded', () => {
-  app.store.dispatch(doAutoUpdateReset());
-});
-
-autoUpdater.on('error', () => {
-  app.store.dispatch(doAutoUpdateFail());
-});
-
-ipcRenderer.on('upgrade-installing-error', () => {
-  app.store.dispatch(doShowUpgradeInstallationError());
-});
-
-ipcRenderer.on('download-progress-update', (e, p) => {
-  app.store.dispatch(doUpdateDownloadProgress(Math.round(p.percent * 100)));
-});
-
-ipcRenderer.on('download-update-complete', (e, c) => {
-  app.store.dispatch({
-    type: ACTIONS.UPGRADE_DOWNLOAD_COMPLETED,
-    data: {
-      path: c.path,
-    },
-  });
-});
-
-ipcRenderer.on('language-set', (event, language) => {
+desktop.onLanguage((language) => {
   app.store.dispatch(doSetLanguage(language));
 });
 
-ipcRenderer.on('open-menu', (event, uri) => {
+desktop.onMenu((uri) => {
   if (uri && uri.startsWith('/help')) {
     app.store.dispatch(push('/$/help'));
   }
 });
 
-ipcRenderer.on('zoom-window', (event, action) => {
+desktop.onZoom((action) => {
   changeZoomFactor(action);
 });
 
-const { dock } = remote.app;
-
-ipcRenderer.on('window-is-focused', () => {
-  if (!dock) return;
-  app.store.dispatch({ type: ACTIONS.WINDOW_FOCUSED });
-  dock.setBadge('');
-});
-
-ipcRenderer.on('devtools-is-opened', () => {
+desktop.onDevtools(() => {
   doLogWarningConsoleMessage();
 });
 
-// Force exit mode for html5 fullscreen api
-// See: https://github.com/electron/electron/issues/18188
-remote.getCurrentWindow().on('leave-full-screen', (event) => {
-  document.webkitExitFullscreen();
-});
+listenForFullscreenExit();
 
 document.addEventListener('click', (event) => {
   let { target } = event;
@@ -207,7 +154,7 @@ document.addEventListener('click', (event) => {
   while (target && target !== document) {
     if (target.matches('a[href^="http"]') || target.matches('a[href^="mailto"]')) {
       event.preventDefault();
-      shell.openExternal(target.href);
+      desktop.openExternal(target.href);
       return;
     }
     target = target.parentNode;
@@ -228,36 +175,40 @@ function AppWrapper() {
 
   useEffect(() => {
     if (persistDone) {
+      const stopUpdates = listenForUpdater(store);
+      const stopNotifications = listenForDownloadNotifications(store);
       const state = store.getState();
       const enabled = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(state);
-      if (enabled) {
-        autoUpdater.allowPrerelease = true;
-      } else {
-        autoUpdater.allowPrerelease = false;
-      }
+      let previous = enabled;
+      const sendPreferences = () => {
+        const allow = makeSelectClientSetting(SETTINGS.ENABLE_PRERELEASE_UPDATES)(store.getState());
+        if (allow !== previous) {
+          previous = allow;
+          requestUpdater('prereleases', allow);
+          store.dispatch(doCheckUpgradeAvailable());
+        }
+      };
+      requestUpdater('prereleases', enabled);
+      const unsubscribe = store.subscribe(sendPreferences);
+      return () => {
+        unsubscribe();
+        stopUpdates();
+        stopNotifications();
+      };
     }
   }, [persistDone]);
 
   useEffect(() => {
     // @if TARGET='app'
-    moment.locale(remote.app.getLocale());
-
-    autoUpdater.on('error', (error) => {
-      console.error(error.message); // eslint-disable-line no-console
-    });
-
-    if (['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE) {
-      autoUpdater.on('update-available', () => {
-        console.log('Update available'); // eslint-disable-line no-console
-      });
-      autoUpdater.on('update-not-available', () => {
-        console.log('Update not available'); // eslint-disable-line no-console
-      });
-      autoUpdater.on('update-downloaded', () => {
-        console.log('Update downloaded'); // eslint-disable-line no-console
-        app.store.dispatch(doAutoUpdate());
-      });
-    }
+    let disposed = false;
+    getDesktopInfo('metadata')
+      .then(({ locale }) => {
+        if (!disposed) moment.locale(locale);
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+    };
     // @endif
   }, []);
 
@@ -292,15 +243,15 @@ function AppWrapper() {
       >
         <Fragment>
           {readyToLaunch ? (
-            <ConnectedRouter history={history}>
+            <DesktopRouter history={history}>
               <ErrorBoundary>
                 <App />
                 <SnackBar />
               </ErrorBoundary>
-            </ConnectedRouter>
+            </DesktopRouter>
           ) : (
             <Fragment>
-              <SplashScreen onReadyToLaunch={() => setReadyToLaunch(true)} />
+              <SdkStartup onReadyToLaunch={() => setReadyToLaunch(true)} />
               <SnackBar />
             </Fragment>
           )}
@@ -310,4 +261,4 @@ function AppWrapper() {
   );
 }
 
-ReactDOM.render(<AppWrapper />, document.getElementById('app'));
+createRoot(document.getElementById('app')).render(<AppWrapper />);

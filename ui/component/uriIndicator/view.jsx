@@ -39,7 +39,7 @@ class UriIndicator extends React.PureComponent<Props> {
     }
   };
 
-  render() {
+  render(): React.Node {
     const {
       link,
       isResolvingUri,

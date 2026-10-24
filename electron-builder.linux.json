@@ -1,0 +1,19 @@
+{
+  "extends": "./electron-builder.json",
+  "directories": { "output": "dist/ng-linux" },
+  "artifactName": "LBRY-Desktop-NG-${version}-linux-${arch}.${ext}",
+  "extraResources": [
+    { "from": "static/daemon", "to": "static/daemon", "filter": ["lbrynet"] },
+    { "from": "static/img", "to": "static/img", "filter": ["**/*"] },
+    { "from": "static/font", "to": "static/font", "filter": ["**/*"] }
+  ],
+  "linux": {
+    "target": [
+      { "target": "AppImage", "arch": ["x64"] },
+      { "target": "tar.gz", "arch": ["x64"] }
+    ],
+    "executableName": "lbry-desktop-ng",
+    "category": "AudioVideo",
+    "icon": "build/icons"
+  }
+}

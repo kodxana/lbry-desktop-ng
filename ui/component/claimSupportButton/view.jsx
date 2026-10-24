@@ -7,13 +7,13 @@ import Button from 'component/button';
 
 type Props = {
   uri: string,
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { uri: string, isSupport: boolean }) => void,
   fileAction?: boolean,
   disableSupport: boolean,
   claim: GenericClaim,
 };
 
-export default function ClaimSupportButton(props: Props) {
+export default function ClaimSupportButton(props: Props): React.Node {
   const { doOpenModal, uri, fileAction, disableSupport, claim } = props;
   const isRepost = claim && claim.repost_url;
 

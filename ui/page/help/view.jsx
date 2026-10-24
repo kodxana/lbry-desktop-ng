@@ -1,10 +1,11 @@
+import { releasesUrl } from 'util/desktop-updates';
 // @flow
 import { SITE_HELP_EMAIL } from 'config';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import * as React from 'react';
 // @if TARGET='app'
-import { shell } from 'electron';
+import desktop from 'util/desktop';
 import WalletBackup from 'component/walletBackup';
 // @endif
 import Lbry from 'lbry';
@@ -52,9 +53,6 @@ class HelpPage extends React.PureComponent<Props, State> {
       upgradeAvailable: null,
       accessTokenHidden: true,
     };
-
-    (this: any).showAccessToken = this.showAccessToken.bind(this);
-    (this: any).openLogFile = this.openLogFile.bind(this);
   }
 
   componentDidMount() {
@@ -80,21 +78,15 @@ class HelpPage extends React.PureComponent<Props, State> {
     });
   }
 
-  showAccessToken() {
+  showAccessToken = () => {
     this.setState({
       accessTokenHidden: false,
     });
-  }
+  };
 
-  openLogFile(userHomeDirectory: string) {
-    const logFileName = 'lbrynet.log';
-    const os = this.state.versionInfo.os_system;
-    if (os === 'Darwin' || os === 'Linux') {
-      shell.openPath(`${userHomeDirectory}/${logFileName}`);
-    } else {
-      shell.openPath(`${userHomeDirectory}\\${logFileName}`);
-    }
-  }
+  openLogFile = () => {
+    desktop.openLogs();
+  };
 
   render() {
     let ver;
@@ -111,16 +103,16 @@ class HelpPage extends React.PureComponent<Props, State> {
         osName = parseInt(ver.os_release.match(/^\d+/), 10) < 16 ? 'Mac OS X' : 'Mac OS';
 
         platform = `${osName} ${ver.os_release}`;
-        newVerLink = 'https://lbry.com/get/lbry.dmg';
+        newVerLink = releasesUrl;
       } else if (process.env.APPIMAGE !== undefined) {
         platform = `Linux (AppImage)`;
-        newVerLink = 'https://lbry.com/get/lbry.AppImage';
+        newVerLink = releasesUrl;
       } else if (ver.os_system === 'Linux') {
         platform = `Linux (${ver.platform})`;
-        newVerLink = 'https://lbry.com/get/lbry.deb';
+        newVerLink = releasesUrl;
       } else {
         platform = `Windows (${ver.platform})`;
-        newVerLink = 'https://lbry.com/get/lbry.msi';
+        newVerLink = releasesUrl;
       }
     } else {
       ver = null;
@@ -206,7 +198,7 @@ class HelpPage extends React.PureComponent<Props, State> {
                 button="secondary"
                 label={__('Open Log Folder')}
                 icon={ICONS.OPEN_LOG_FOLDER}
-                onClick={() => shell.openPath(dataDirectory)}
+                onClick={() => desktop.openData()}
               />
             </div>
           }

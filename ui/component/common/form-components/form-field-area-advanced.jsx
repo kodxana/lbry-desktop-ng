@@ -1,5 +1,6 @@
 // @flow
 import 'easymde/dist/easymde.min.css';
+import 'font-awesome/css/font-awesome.min.css';
 import { FF_MAX_CHARS_DEFAULT } from 'constants/form-field';
 import { openEditorMenu, stopContextMenu } from 'util/context-menu';
 import * as ICONS from 'constants/icons';
@@ -8,23 +9,25 @@ import MarkdownPreview from 'component/common/markdown-preview';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import SimpleMDE from 'react-simplemde-editor';
+import editorSpellcheck from 'util/editor-spellcheck';
 import TextareaWithSuggestions from 'component/textareaWithSuggestions';
-import type { ElementRef, Node } from 'react';
+import type { Node } from 'react';
+import type { EditorBeforeChange, EditorChange, MarkdownCodeMirror, MarkdownEditor } from 'types/markdown-editor';
 
 type Props = {
   autoFocus?: boolean,
   blockWrap: boolean,
   charCount?: number,
-  children?: React$Node,
+  children?: React.Node,
   disabled?: boolean,
-  helper?: string | React$Node,
+  helper?: string | React.Node,
   hideSuggestions?: boolean,
   isLivestream?: boolean,
   label?: string | Node,
   labelOnLeft: boolean,
   name: string,
   noEmojis?: boolean,
-  placeholder?: string | number,
+  placeholder?: string,
   quickActionLabel?: string,
   textAreaMaxLength?: number,
   type?: string,
@@ -32,14 +35,100 @@ type Props = {
   onChange?: (any) => any,
   openEmoteMenu?: () => void,
   quickActionHandler?: (any) => any,
-  render?: () => React$Node,
-  header?: React$Node,
+  render?: () => React.Node,
+  header?: React.Node,
 };
 
 export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
-  static defaultProps = { labelOnLeft: false, blockWrap: true };
+  static defaultProps: { labelOnLeft: boolean, blockWrap: boolean } = { labelOnLeft: false, blockWrap: true };
 
-  input: { current: ElementRef<any> };
+  input: { current: HTMLTextAreaElement | null };
+  editor: MarkdownEditor | null = null;
+  linkSelectionTimer: ReturnType<typeof setTimeout> | void;
+
+  // v5 recreates the editor whenever options change, losing focus and undo history.
+  markdownOptions: {
+    autofocus?: boolean,
+    autoDownloadFontAwesome: boolean,
+    spellChecker: typeof editorSpellcheck,
+    hideIcons: Array<string>,
+    previewRender: (string) => string,
+  } = {
+    autofocus: this.props.autoFocus,
+    autoDownloadFontAwesome: false,
+    spellChecker: editorSpellcheck,
+    hideIcons: ['heading', 'image', 'fullscreen', 'side-by-side'],
+    previewRender(plainText: string): string {
+      return ReactDOMServer.renderToString(<MarkdownPreview content={plainText} noDataStore />);
+    },
+  };
+
+  handleBeforeChange = (instance: MarkdownCodeMirror, changes: EditorBeforeChange): void => {
+    // Restored drafts and externally loaded posts must keep their original contents.
+    if (changes.origin === 'setValue') return;
+    if (this.props.disabled) {
+      changes.cancel();
+      return;
+    }
+    const limit = this.props.textAreaMaxLength;
+    const update = changes.update;
+    if (limit && update) {
+      const text = changes.text.join('\n');
+      const replacedLength = instance.indexFromPos(changes.to) - instance.indexFromPos(changes.from);
+      if (text.length <= replacedLength) return;
+      const available = Math.max(0, limit - instance.getValue().length + replacedLength);
+      if (text.length > available) {
+        update(changes.from, changes.to, text.slice(0, available).split('\n'));
+      }
+    }
+  };
+
+  handleEditorChanges = (instance: MarkdownCodeMirror, changes: Array<EditorChange>): void => {
+    clearTimeout(this.linkSelectionTimer);
+    const last = changes[changes.length - 1];
+    if (!last || last.origin !== '+input') return;
+    const text = last.text[last.text.length - 1];
+    if (!text.endsWith('(https://)') || text === '[](https://)') return;
+    const line = last.from.line + last.text.length - 1;
+    const base = last.text.length > 1 ? 0 : last.from.ch;
+    // EasyMDE's toolbar sets its selection after the change event.
+    this.linkSelectionTimer = setTimeout(() => {
+      if (this.editor && this.editor.codemirror === instance && instance.getWrapperElement().isConnected) {
+        instance.setSelection(
+          { line, ch: base + text.lastIndexOf('(') + 1 },
+          { line, ch: base + text.lastIndexOf(')') }
+        );
+      }
+    }, 25);
+  };
+
+  editorEvents: {
+    contextmenu: typeof openEditorMenu,
+    beforeChange: (MarkdownCodeMirror, EditorBeforeChange) => void,
+    changes: (MarkdownCodeMirror, Array<EditorChange>) => void,
+  } = {
+    contextmenu: openEditorMenu,
+    beforeChange: this.handleBeforeChange,
+    changes: this.handleEditorChanges,
+  };
+
+  syncEditorProps = (): void => {
+    const editor = this.editor;
+    if (!editor) return;
+    editor.codemirror.setOption('readOnly', !!this.props.disabled);
+    editor.codemirror.setOption('placeholder', this.props.placeholder || '');
+    editor.codemirror
+      .getInputField()
+      .setAttribute('aria-label', typeof this.props.label === 'string' ? this.props.label : this.props.name);
+    editor.gui.toolbar.querySelectorAll('button').forEach((button) => {
+      button.disabled = !!this.props.disabled;
+    });
+  };
+
+  getEditorInstance = (editor: MarkdownEditor): void => {
+    this.editor = editor;
+    this.syncEditorProps();
+  };
 
   constructor(props: Props) {
     super(props);
@@ -53,7 +142,21 @@ export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
     if (input && autoFocus) input.focus();
   }
 
-  render() {
+  componentDidUpdate() {
+    if (this.props.type === 'markdown') {
+      this.syncEditorProps();
+    } else {
+      this.editor = null;
+      clearTimeout(this.linkSelectionTimer);
+    }
+  }
+
+  componentWillUnmount() {
+    this.editor = null;
+    clearTimeout(this.linkSelectionTimer);
+  }
+
+  render(): React.Node {
     const {
       autoFocus,
       blockWrap,
@@ -95,62 +198,6 @@ export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
     const input = () => {
       switch (type) {
         case 'markdown':
-          const handleEvents = { contextmenu: openEditorMenu };
-
-          const getInstance = (editor) => {
-            // SimpleMDE max char check
-            editor.codemirror.on('beforeChange', (instance, changes) => {
-              if (textAreaMaxLength && changes.update) {
-                var str = changes.text.join('\n');
-                var delta = str.length - (instance.indexFromPos(changes.to) - instance.indexFromPos(changes.from));
-
-                if (delta <= 0) return;
-
-                delta = instance.getValue().length + delta - textAreaMaxLength;
-                if (delta > 0) {
-                  str = str.substring(0, str.length - delta);
-                  changes.update(changes.from, changes.to, str.split('\n'));
-                }
-              }
-            });
-
-            // "Create Link (Ctrl-K)": highlight URL instead of label:
-            editor.codemirror.on('changes', (instance, changes) => {
-              try {
-                // Grab the last change from the buffered list. I assume the
-                // buffered one ('changes', instead of 'change') is more efficient,
-                // and that "Create Link" will always end up last in the list.
-                const lastChange = changes[changes.length - 1];
-                if (lastChange.origin === '+input') {
-                  // https://github.com/Ionaru/easy-markdown-editor/blob/8fa54c496f98621d5f45f57577ce630bee8c41ee/src/js/easymde.js#L765
-                  const EASYMDE_URL_PLACEHOLDER = '(https://)';
-
-                  // The URL placeholder is always placed last, so just look at the
-                  // last text in the array to also cover the multi-line case:
-                  const urlLineText = lastChange.text[lastChange.text.length - 1];
-
-                  if (urlLineText.endsWith(EASYMDE_URL_PLACEHOLDER) && urlLineText !== '[]' + EASYMDE_URL_PLACEHOLDER) {
-                    const from = lastChange.from;
-                    const to = lastChange.to;
-                    const isSelectionMultiline = lastChange.text.length > 1;
-                    const baseIndex = isSelectionMultiline ? 0 : from.ch;
-
-                    // Everything works fine for the [Ctrl-K] case, but for the
-                    // [Button] case, this handler happens before the original
-                    // code, thus our change got wiped out.
-                    // Add a small delay to handle that case.
-                    setTimeout(() => {
-                      instance.setSelection(
-                        { line: to.line, ch: baseIndex + urlLineText.lastIndexOf('(') + 1 },
-                        { line: to.line, ch: baseIndex + urlLineText.lastIndexOf(')') }
-                      );
-                    }, 25);
-                  }
-                }
-              } catch (e) {} // Do nothing (revert to original behavior)
-            });
-          };
-
           return (
             <div className="form-field--SimpleMDE" onContextMenu={stopContextMenu}>
               <fieldset-section>
@@ -166,17 +213,10 @@ export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
                 <SimpleMDE
                   {...inputProps}
                   id={name}
-                  type="textarea"
-                  events={handleEvents}
-                  getMdeInstance={getInstance}
-                  options={{
-                    spellChecker: true,
-                    hideIcons: ['heading', 'image', 'fullscreen', 'side-by-side'],
-                    previewRender(plainText) {
-                      const preview = <MarkdownPreview content={plainText} noDataStore />;
-                      return ReactDOMServer.renderToString(preview);
-                    },
-                  }}
+                  events={this.editorEvents}
+                  getMdeInstance={this.getEditorInstance}
+                  options={this.markdownOptions}
+                  textareaProps={{ disabled: inputProps.disabled }}
                 />
                 {countInfo}
               </fieldset-section>

@@ -8,7 +8,7 @@ type Props = {
   renderMode: string,
 };
 
-export default function FileRenderDownload(props: Props) {
+export default function FileRenderDownload(props: Props): React.Node {
   const { uri } = props;
 
   return <Card title={__('Download')} actions={<FileDownloadLink uri={uri} buttonType="primary" showLabel />} />;

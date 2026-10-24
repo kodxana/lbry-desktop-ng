@@ -10,7 +10,7 @@ type Props = {
   text: string,
 };
 
-export default function NudgeFloating(props: Props) {
+export default function NudgeFloating(props: Props): React.Node {
   const { user, name, text } = props;
   const [showNudge, setShowNudge] = React.useState(false);
   const [nudgeAcknowledged, setNudgeAcknowledged] = usePersistedState(name, false);

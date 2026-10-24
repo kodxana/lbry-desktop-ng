@@ -90,7 +90,7 @@ const getEmotes = (px: string, multiplier: string) => [
   buildEmote('WOODOO_DOLL', `${px}/woodo%20doll${multiplier}.png`),
 ];
 
-export const EMOTES_24px = getEmotes('24%20px', '');
-export const EMOTES_36px = getEmotes('36px', '%401.5x');
-export const EMOTES_48px = getEmotes('48%20px', '%402x');
-export const EMOTES_72px = getEmotes('72%20px', '%403x');
+export const EMOTES_24px: Array<{ name: string, url: string }> = getEmotes('24%20px', '');
+export const EMOTES_36px: Array<{ name: string, url: string }> = getEmotes('36px', '%401.5x');
+export const EMOTES_48px: Array<{ name: string, url: string }> = getEmotes('48%20px', '%402x');
+export const EMOTES_72px: Array<{ name: string, url: string }> = getEmotes('72%20px', '%403x');

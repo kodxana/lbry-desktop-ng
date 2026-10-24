@@ -14,7 +14,7 @@ type Props = {
   activeChannelClaim: ?ChannelClaim,
 };
 
-export default function CreatorDashboardPage(props: Props) {
+export default function CreatorDashboardPage(props: Props): React.Node {
   const { hasChannels, fetchingChannels, activeChannelClaim } = props;
 
   return (

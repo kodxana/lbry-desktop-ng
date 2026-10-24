@@ -1,13 +1,12 @@
 // @flow
 
-// $FlowFixMe
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 
 import React from 'react';
 import ClaimList from 'component/claimList';
 import Page from 'component/page';
 import * as PAGES from 'constants/pages';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import CollectionEdit from 'component/collectionEdit';
 import Card from 'component/common/card';
 import Button from 'component/button';
@@ -26,27 +25,21 @@ export const EDIT_PAGE = 'edit';
 
 type Props = {
   collectionId: string,
-  uri: string,
-  claim: Claim,
-  title: string,
-  thumbnail: string,
-  collection: Collection,
-  collectionUrls: Array<string>,
+  uri: ?string,
+  claim: ?CollectionClaim,
+  collection: ?Collection,
+  collectionUrls: ?Array<?string>,
   collectionCount: number,
   isResolvingCollection: boolean,
-  isMyClaim: boolean,
-  isMyCollection: boolean,
   claimIsPending: boolean,
   collectionHasEdits: boolean,
   deleteCollection: (string, string) => void,
   editCollection: (string, CollectionEditParams) => void,
   fetchCollectionItems: (string, () => void) => void,
-  resolveUris: (string) => void,
-  user: ?User,
   renameCollection: (string, string) => void,
 };
 
-export default function CollectionPage(props: Props) {
+export default function CollectionPage(props: Props): React.Node {
   const {
     collectionId,
     uri,
@@ -66,22 +59,23 @@ export default function CollectionPage(props: Props) {
   const {
     replace,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const [didTryResolve, setDidTryResolve] = React.useState(false);
   const [showInfo, setShowInfo] = React.useState(false);
   const [showEdit, setShowEdit] = React.useState(false);
-  const [unavailableUris, setUnavailable] = React.useState([]);
+  const [unavailableUris, setUnavailable] = React.useState<Array<string>>([]);
 
   const collectionName = claim ? claim.value.title || claim.name : collection && collection.name;
 
   const [isRenamingList, setIsRenamingList] = React.useState(false);
-  const [newName, setNewName] = React.useState(collectionName);
+  const [newName, setNewName] = React.useState(collectionName || '');
 
-  const { name, totalItems } = collection || {};
+  const name = collection?.name;
+  const totalItems = collection?.totalItems;
   const isBuiltin = COLLECTIONS_CONSTS.BUILTIN_LISTS.includes(collectionId);
 
-  function handleOnDragEnd(result) {
+  function handleOnDragEnd(result: CollectionDropResult): void {
     const { source, destination } = result;
 
     if (!destination) return;
@@ -174,7 +168,7 @@ export default function CollectionPage(props: Props) {
                   icon={ICONS.REMOVE}
                   onClick={() => {
                     setIsRenamingList(false);
-                    setNewName(collectionName);
+                    setNewName(collectionName || '');
                   }}
                   className={'editable-text__input-button'}
                 />

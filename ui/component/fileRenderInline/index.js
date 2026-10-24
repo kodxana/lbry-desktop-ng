@@ -3,7 +3,7 @@ import { makeSelectFileInfoForUri, makeSelectStreamingUrlForUri } from 'redux/se
 import { makeSelectClaimWasPurchased } from 'redux/selectors/claims';
 import { doClaimEligiblePurchaseRewards } from 'redux/actions/rewards';
 import { makeSelectFileRenderModeForUri, selectPrimaryUri } from 'redux/selectors/content';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { doAnalyticsView } from 'redux/actions/app';
 import FileRenderInline from './view';
 import { selectCostInfoForUri } from 'lbryinc';
@@ -22,4 +22,4 @@ const perform = (dispatch) => ({
   claimRewards: () => dispatch(doClaimEligiblePurchaseRewards()),
 });
 
-export default withRouter(connect(select, perform)(FileRenderInline));
+export default withDesktopRouter(connect(select, perform)(FileRenderInline));

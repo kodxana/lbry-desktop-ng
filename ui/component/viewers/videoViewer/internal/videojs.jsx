@@ -1,11 +1,11 @@
 // @flow
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Button from 'component/button';
 import * as ICONS from 'constants/icons';
 import classnames from 'classnames';
 import videojs from 'video.js';
 import 'video.js/dist/alt/video-js-cdn.min.css';
-import eventTracking from 'videojs-event-tracking';
+import eventTracking from './videojs-tracking';
 import * as OVERLAY from './overlays';
 import './plugins/videojs-mobile-ui/plugin';
 import hlsQualitySelector from './plugins/videojs-hls-quality-selector/plugin';
@@ -16,17 +16,27 @@ import keyboardShorcuts from './videojs-keyboard-shortcuts';
 import events from './videojs-events';
 import functions from './videojs-functions';
 
+export type VideoControl = {
+  getChild: (string) => ?VideoControl,
+  controlText: (string) => void,
+  setAttribute: (string, string) => void,
+  hide: () => void,
+  ...
+};
+
 export type Player = {
-  on: (string, (any) => void) => void,
+  on: (string, (this: Player, any) => void) => void,
   one: (string, (any) => void) => void,
   isFullscreen: () => boolean,
   exitFullscreen: () => boolean,
   requestFullscreen: () => boolean,
   play: () => Promise<any>,
+  pause: () => void,
+  paused: () => boolean,
   volume: (?number) => number,
   muted: (?boolean) => boolean,
   dispose: () => void,
-  currentTime: (?number) => number,
+  currentTime: (time?: number) => number,
   ended: () => boolean,
   error: () => any,
   loadingSpinner: any,
@@ -35,7 +45,12 @@ export type Player = {
   readyState: () => number,
   userActive: (?boolean) => boolean,
   overlay: (any) => void,
-  mobileUi: (any) => void,
+  mobileUi: () => void,
+  reloadSourceOnError: ({ errorInterval: number }) => void,
+  hlsQualitySelector: ({ displayCurrentQuality: boolean }) => void,
+  recsys: ({ videoId: ?string, userId: ?number }) => void,
+  children_: Array<VideoControl>,
+  bigPlayButton: VideoControl,
   controlBar: {
     addChild: (string, any) => void,
   },
@@ -103,7 +118,7 @@ if (!Object.keys(videojs.getPlugins()).includes('recsys')) {
 /*
 properties for this component should be kept to ONLY those that if changed should REQUIRE an entirely new videojs element
  */
-export default React.memo<Props>(function VideoJs(props: Props) {
+const VideoJs: React.ComponentType<Props> = React.memo<Props>(function VideoJs(props: Props): React.Node {
   const {
     autoplay,
     autoplaySetting,
@@ -123,16 +138,16 @@ export default React.memo<Props>(function VideoJs(props: Props) {
   } = props;
 
   // will later store the videojs player
-  const playerRef = useRef();
-  const containerRef = useRef();
+  const playerRef = useRef<Player | void>();
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const tapToUnmuteRef = useRef();
-  const tapToRetryRef = useRef();
+  const tapToUnmuteRef = useRef<HTMLButtonElement | null>(null);
+  const tapToRetryRef = useRef<HTMLButtonElement | null>(null);
 
   // initiate keyboard shortcuts
   const { curried_function } = keyboardShorcuts({ toggleVideoTheaterMode, playNext, playPrevious });
 
-  const [reload, setReload] = useState('initial');
+  const [reload, setReload] = useState<string | number>('initial');
 
   const videoJsOptions = {
     ...VIDEO_JS_OPTIONS,
@@ -168,7 +183,7 @@ export default React.memo<Props>(function VideoJs(props: Props) {
   });
 
   // Initialize video.js
-  function initializeVideoPlayer(el) {
+  function initializeVideoPlayer(el: ?HTMLMediaElement): Player | void {
     if (!el) return;
 
     const vjs = videojs(el, videoJsOptions, () => {
@@ -205,24 +220,32 @@ export default React.memo<Props>(function VideoJs(props: Props) {
       player.children_[0].setAttribute('playsinline', '');
 
       // I think this is a callback function
-      const videoNode = containerRef.current && containerRef.current.querySelector('video, audio');
+      const videoNode = containerRef.current && containerRef.current.querySelector<HTMLMediaElement>('video, audio');
       onPlayerReady(player, videoNode);
     });
 
     // fixes #3498 (https://github.com/lbryio/lbry-desktop/issues/3498)
     // summary: on firefox the focus would stick to the fullscreen button which caused buggy behavior with spacebar
-    vjs.on('fullscreenchange', () => document.activeElement && document.activeElement.blur());
+    vjs.on('fullscreenchange', () => {
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement) activeElement.blur();
+    });
 
     return vjs;
   }
 
   /** instantiate videoJS and dispose of it when done with code **/
   // This lifecycle hook is only called once (on mount), or when `isAudio` or `source` changes.
-  useEffect(() => {
+  // React 17 defers passive cleanup; cancel source detection and detach the player synchronously.
+  useLayoutEffect(() => {
+    let cancelled = false;
     const vjsElement = createVideoPlayerDOM(containerRef.current);
+    const wrapper = vjsElement && vjsElement.parentElement;
+    const handleKeyDown = curried_function(playerRef, containerRef);
 
     // Detect source file type via pre-fetch (async)
     detectFileType().then(() => {
+      if (cancelled) return;
       // Initialize Video.js
       const vjsPlayer = initializeVideoPlayer(vjsElement);
 
@@ -232,25 +255,30 @@ export default React.memo<Props>(function VideoJs(props: Props) {
       // Set reference in component state
       playerRef.current = vjsPlayer;
 
-      window.addEventListener('keydown', curried_function(playerRef, containerRef));
+      window.addEventListener('keydown', handleKeyDown);
     });
 
     // Cleanup
     return () => {
-      window.removeEventListener('keydown', curried_function);
+      cancelled = true;
+      window.removeEventListener('keydown', handleKeyDown);
 
       const player = playerRef.current;
       if (player) {
         player.dispose();
-        window.player = undefined;
+        if (window.player === player) window.player = undefined;
       }
+      playerRef.current = undefined;
+      if (wrapper) wrapper.remove();
     };
   }, [isAudio, source]);
 
   // Update video player and reload when source URL changes
   useEffect(() => {
+    let cancelled = false;
     // For some reason the video player is responsible for detecting content type this way
     fetch(source, { method: 'HEAD', cache: 'no-store' }).then((response) => {
+      if (cancelled) return;
       let finalType = sourceType;
       let finalSource = source;
 
@@ -279,10 +307,12 @@ export default React.memo<Props>(function VideoJs(props: Props) {
         player.bigPlayButton.hide();
       }
     });
+    return () => {
+      cancelled = true;
+    };
   }, [source, reload]);
 
   return (
-    // $FlowFixMe
     <div className={classnames('video-js-parent', { 'video-js-parent--ios': IS_IOS })} ref={containerRef}>
       <Button
         label={__('Tap to unmute')}
@@ -303,3 +333,5 @@ export default React.memo<Props>(function VideoJs(props: Props) {
     </div>
   );
 });
+
+export default VideoJs;

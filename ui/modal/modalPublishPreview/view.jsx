@@ -5,7 +5,7 @@ import Button from 'component/button';
 import { Form, FormField } from 'component/common/form';
 import { Modal } from 'modal/modal';
 import Card from 'component/common/card';
-import Tag from 'component/tag';
+import TagPill from 'component/tag';
 import MarkdownPreview from 'component/common/markdown-preview';
 import { COPYRIGHT, OTHER } from 'constants/licenses';
 import LbcSymbol from 'component/common/lbc-symbol';
@@ -13,9 +13,10 @@ import ChannelThumbnail from 'component/channelThumbnail';
 import * as ICONS from 'constants/icons';
 import Icon from 'component/common/icon';
 import { NO_FILE } from 'redux/actions/publish';
+import path from 'util/file-name';
 
 type Props = {
-  filePath: ?File,
+  filePath: ?string,
   isMarkdownPost: boolean,
   optimize: boolean,
   title: ?string,
@@ -24,10 +25,7 @@ type Props = {
   bid: ?number,
   uri: ?string,
   contentIsFree: boolean,
-  fee: {
-    amount: string,
-    currency: string,
-  },
+  fee: PublishFee,
   language: string,
   releaseTimeEdited: ?number,
   licenseType: string,
@@ -35,7 +33,7 @@ type Props = {
   licenseUrl: ?string,
   tags: Array<Tag>,
   isVid: boolean,
-  ffmpegStatus: any,
+  ffmpegStatus?: { available?: boolean, ... },
   previewResponse: PublishResponse,
   publish: (?string, ?boolean) => void,
   closeModal: () => void,
@@ -49,7 +47,7 @@ type Props = {
 };
 
 // class ModalPublishPreview extends React.PureComponent<Props> {
-const ModalPublishPreview = (props: Props) => {
+const ModalPublishPreview = (props: Props): React.Node => {
   const {
     filePath,
     isMarkdownPost,
@@ -98,20 +96,20 @@ const ModalPublishPreview = (props: Props) => {
   // leave the confirm modal up if we're not going straight to upload/reflecting
   function onConfirmed() {
     // Publish for real:
-    publish(getFilePathName(filePath), false);
+    publish(filePath, false);
     // @if TARGET='app'
     closeModal();
     // @endif
   }
 
-  function getFilePathName(filePath: ?File) {
+  function getFilePathName(filePath: ?string): string {
     if (!filePath) {
       return NO_FILE;
     }
-    return filePath.name;
+    return path.basename(filePath);
   }
 
-  function createRow(label: string, value: any) {
+  function createRow(label: string, value: React.Node): React.Node {
     return (
       <tr>
         <td>{label}</td>
@@ -121,7 +119,6 @@ const ModalPublishPreview = (props: Props) => {
   }
 
   const txFee = previewResponse ? previewResponse['total_fee'] : null;
-  //   $FlowFixMe add outputs[0] etc to PublishResponse type
   const isOptimizeAvail = filePath && isVid && ffmpegStatus.available;
   let modalTitle;
   if (isStillEditing) {
@@ -166,11 +163,11 @@ const ModalPublishPreview = (props: Props) => {
 
   const tagsValue =
     // Do nothing for onClick(). Setting to 'null' results in "View Tag" action -- we don't want to leave the modal.
-    tags.map((tag) => <Tag key={tag.name} title={tag.name} name={tag.name} type={'flow'} onClick={() => {}} />);
+    tags.map((tag) => <TagPill key={tag.name} title={tag.name} name={tag.name} type={'flow'} onClick={() => {}} />);
 
   const depositValue = bid ? <LbcSymbol postfix={`${bid}`} size={14} /> : <p>---</p>;
 
-  let priceValue = __('Free');
+  let priceValue: React.Node = __('Free');
   if (!contentIsFree) {
     if (fee.currency === 'LBC') {
       priceValue = <LbcSymbol postfix={fee.amount} />;
@@ -179,7 +176,7 @@ const ModalPublishPreview = (props: Props) => {
     }
   }
 
-  const channelValue = (channel) => {
+  const channelValue = (channel: ?string): React.Node => {
     const channelClaim = myChannels && myChannels.find((x) => x.name === channel);
     return channel ? (
       <div className="channel-value">
@@ -194,7 +191,7 @@ const ModalPublishPreview = (props: Props) => {
     );
   };
 
-  const releaseTimeStr = (time) => {
+  const releaseTimeStr = (time: ?number): string => {
     return time ? moment(new Date(time * 1000)).format('MMMM Do, YYYY - h:mm a') : '';
   };
 

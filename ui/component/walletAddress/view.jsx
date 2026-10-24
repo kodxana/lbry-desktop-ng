@@ -23,8 +23,6 @@ class WalletAddress extends React.PureComponent<Props, State> {
     this.state = {
       showQR: false,
     };
-
-    (this: any).toggleQR = this.toggleQR.bind(this);
   }
 
   componentDidMount() {
@@ -36,13 +34,13 @@ class WalletAddress extends React.PureComponent<Props, State> {
     }
   }
 
-  toggleQR() {
+  toggleQR = () => {
     this.setState({
       showQR: !this.state.showQR,
     });
-  }
+  };
 
-  render() {
+  render(): React.Node {
     const { receiveAddress, getNewAddress, gettingNewAddress } = this.props;
     const { showQR } = this.state;
 

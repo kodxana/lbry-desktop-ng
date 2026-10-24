@@ -7,7 +7,6 @@ import { LIGHTHOUSE_DEFAULT_TYPES } from 'config';
 const defaultSearchTypes = LIGHTHOUSE_DEFAULT_TYPES && LIGHTHOUSE_DEFAULT_TYPES.split(',');
 
 const defaultState: SearchState = {
-  // $FlowFixMe
   options: {
     [SEARCH_OPTIONS.RESULT_COUNT]: SEARCH_PAGE_SIZE,
     [SEARCH_OPTIONS.CLAIM_TYPE]: SEARCH_OPTIONS.INCLUDE_FILES_AND_CHANNELS,
@@ -24,7 +23,7 @@ const defaultState: SearchState = {
   mentionQuery: '',
 };
 
-export default handleActions(
+const reducer: (state: SearchState | void, action: { type: string, ... }) => SearchState = handleActions(
   {
     [ACTIONS.SEARCH_START]: (state: SearchState): SearchState => ({
       ...state,
@@ -47,10 +46,8 @@ export default handleActions(
       return {
         ...state,
         searching: false,
-        resultsByQuery: Object.assign({}, state.resultsByQuery, { [normalizedQuery]: results }),
-        hasReachedMaxResultsLength: Object.assign({}, state.hasReachedMaxResultsLength, {
-          [normalizedQuery]: noMoreResults,
-        }),
+        resultsByQuery: { ...state.resultsByQuery, [normalizedQuery]: results },
+        hasReachedMaxResultsLength: { ...state.hasReachedMaxResultsLength, [normalizedQuery]: noMoreResults },
       };
     },
 
@@ -69,7 +66,7 @@ export default handleActions(
       };
     },
 
-    [ACTIONS.SET_MENTION_SEARCH_RESULTS]: (state: SearchState, action: SearchSuccess): SearchState => ({
+    [ACTIONS.SET_MENTION_SEARCH_RESULTS]: (state: SearchState, action: MentionSearchResults): SearchState => ({
       ...state,
       results: action.data.uris,
       mentionQuery: action.data.query,
@@ -77,3 +74,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

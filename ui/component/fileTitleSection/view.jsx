@@ -1,3 +1,4 @@
+import { releasesUrl } from 'util/desktop-updates';
 // @flow
 import * as React from 'react';
 import { normalizeURI } from 'util/lbryURI';
@@ -102,7 +103,7 @@ function FileTitleSection(props: Props) {
                   <>
                     <I18nMessage
                       tokens={{
-                        download_url: <Button label={__('lbry.com')} button="link" href="https://lbry.com/get" />,
+                        download_url: <Button label={__('lbry.com')} button="link" href={releasesUrl} />,
                       }}
                     >
                       You can download the LBRY Desktop or Android app on %download_url% and enable mature content in

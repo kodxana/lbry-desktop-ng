@@ -299,12 +299,12 @@
 }
 
 .card__main-actions.settings__row {
+  padding-bottom: var(--spacing-m);
   @media (max-width: $breakpoint-small) {
     padding: 0;
     margin-top: 0;
     margin-bottom: 0;
   }
-  padding-bottom: var(--spacing-m);
 }
 
 .settings__row--title {

@@ -10,7 +10,7 @@ type Props = {
   doSignOut: () => void,
 };
 
-function ModalRepost(props: Props) {
+function ModalRepost(props: Props): React.Node {
   const { doHideModal, doSignOut } = props;
 
   return (

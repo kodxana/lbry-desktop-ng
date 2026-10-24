@@ -3,7 +3,7 @@ import * as CS from 'constants/claim_search';
 import * as ICONS from 'constants/icons';
 import React, { Fragment } from 'react';
 import HiddenNsfwClaims from 'component/hiddenNsfwClaims';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Button from 'component/button';
 import ClaimListDiscover from 'component/claimListDiscover';
 import Icon from 'component/common/icon';
@@ -24,18 +24,18 @@ type Props = {
   fetchClaims: (string, number) => void,
   channelIsBlackListed: boolean,
   defaultPageSize?: number,
-  defaultInfiniteScroll?: Boolean,
+  defaultInfiniteScroll?: boolean,
   claim: Claim,
   isAuthenticated: boolean,
   showMature: boolean,
   tileLayout: boolean,
   viewHiddenChannels: boolean,
   doResolveUris: (Array<string>, boolean) => void,
-  claimType: string,
+  claimType: string | Array<string>,
   empty?: string,
 };
 
-function ChannelContent(props: Props) {
+function ChannelContent(props: Props): React.Node {
   const {
     uri,
     fetching,
@@ -55,10 +55,10 @@ function ChannelContent(props: Props) {
   // const claimsInChannel = (claim && claim.meta.claims_in_channel) || 0;
   const claimsInChannel = 9999;
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [searchResults, setSearchResults] = React.useState(undefined);
+  const [searchResults, setSearchResults] = React.useState<?Array<string>>(undefined);
   const {
     location: { pathname, search },
-  } = useHistory();
+  } = useDesktopHistory();
   const url = `${pathname}${search}`;
   const claimId = claim && claim.claim_id;
   const showFilters =
@@ -67,7 +67,7 @@ function ChannelContent(props: Props) {
       ? claimType.every((ct) => TYPES_TO_ALLOW_FILTER.includes(ct))
       : TYPES_TO_ALLOW_FILTER.includes(claimType));
 
-  function handleInputChange(e) {
+  function handleInputChange(e: { target: HTMLInputElement, ... }) {
     const { value } = e.target;
     setSearchQuery(value);
   }

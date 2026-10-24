@@ -3,15 +3,16 @@ import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import React from 'react';
 import { Modal } from 'modal/modal';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import Card from 'component/common/card';
 import Button from 'component/button';
 import FileList from 'component/common/file-list';
+import { getFilePath } from 'util/file-path';
 
 type Props = {
   files: Array<File>,
   hideModal: () => void,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: ({ filePath: string | File }) => void,
   history: {
     location: { pathname: string },
     push: (string) => void,
@@ -22,7 +23,7 @@ const PUBLISH_URL = `/$/${PAGES.UPLOAD}`;
 
 const ModalFileSelection = (props: Props) => {
   const { history, files, hideModal, updatePublishForm } = props;
-  const [selectedFile, setSelectedFile] = React.useState(null);
+  const [selectedFile, setSelectedFile] = React.useState<?File>(null);
 
   const navigateToPublish = React.useCallback(() => {
     // Navigate only if location is not publish area:
@@ -38,13 +39,16 @@ const ModalFileSelection = (props: Props) => {
   }
 
   function handleSubmit() {
-    updatePublishForm({ filePath: selectedFile });
-    handleCloseModal();
+    if (!selectedFile) return;
+    const filePath = IS_WEB ? selectedFile : getFilePath(selectedFile);
+    if (!filePath) return;
+    // Navigate before assigning the selection: entering Publish resets its form.
     navigateToPublish();
+    updatePublishForm({ filePath });
+    handleCloseModal();
   }
 
   const handleFileChange = (file?: File) => {
-    // $FlowFixMe
     setSelectedFile(file);
   };
 
@@ -61,7 +65,7 @@ const ModalFileSelection = (props: Props) => {
             </div>
             <div className="section__actions">
               <Button
-                disabled={!selectedFile || !files || !files.length}
+                disabled={!selectedFile || !files || !files.length || (!IS_WEB && !getFilePath(selectedFile))}
                 button="primary"
                 label={__('Accept')}
                 onClick={handleSubmit}
@@ -75,4 +79,6 @@ const ModalFileSelection = (props: Props) => {
   );
 };
 
-export default withRouter(ModalFileSelection);
+const RoutedModalFileSelection: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ModalFileSelection);
+export default RoutedModalFileSelection;

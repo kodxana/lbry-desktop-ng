@@ -24,7 +24,7 @@ const LBC_STEP = 1.0;
 
 type Props = {
   activeChannelClaim: ChannelClaim,
-  settingsByChannelId: { [string]: PerChannelSettings },
+  settingsByChannelId: { [string]: ?PerChannelSettings },
   fetchingCreatorSettings: boolean,
   fetchingBlockedWords: boolean,
   moderationDelegatesById: { [string]: Array<{ channelId: string, channelName: string }> },
@@ -38,7 +38,7 @@ type Props = {
   doToast: ({ message: string }) => void,
 };
 
-export default function SettingsCreatorPage(props: Props) {
+export default function SettingsCreatorPage(props: Props): React.Node {
   const {
     activeChannelClaim,
     settingsByChannelId,
@@ -53,8 +53,8 @@ export default function SettingsCreatorPage(props: Props) {
   } = props;
 
   const [commentsEnabled, setCommentsEnabled] = React.useState(true);
-  const [mutedWordTags, setMutedWordTags] = React.useState([]);
-  const [moderatorUris, setModeratorUris] = React.useState([]);
+  const [mutedWordTags, setMutedWordTags] = React.useState<Array<Tag>>([]);
+  const [moderatorUris, setModeratorUris] = React.useState<Array<string>>([]);
   const [minTip, setMinTip] = React.useState(0);
   const [minSuper, setMinSuper] = React.useState(0);
   const [slowModeMin, setSlowModeMin] = React.useState(0);
@@ -129,7 +129,7 @@ export default function SettingsCreatorPage(props: Props) {
     updateCreatorSettings(activeChannelClaim, { min_tip_amount_super_chat: value });
   }
 
-  function parseModUri(uri) {
+  function parseModUri(uri: string) {
     try {
       return parseURI(uri);
     } catch (e) {}

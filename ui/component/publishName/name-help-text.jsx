@@ -11,7 +11,7 @@ type Props = {
   onEditMyClaim: (any, string) => void,
 };
 
-function NameHelpText(props: Props) {
+function NameHelpText(props: Props): React.Node {
   const { uri, myClaimForUri, onEditMyClaim, isStillEditing } = props;
   let nameHelpText;
 

@@ -2,11 +2,11 @@
 import React from 'react';
 
 type Props = {
-  tokens: Object,
+  tokens: { [string]: React.Node },
   children: string, // e.g. "Read %faq_link% for more detail"
 };
 
-export default function I18nMessage(props: Props) {
+export default function I18nMessage(props: Props): React.Node {
   const message = __(props.children),
     regexp = /%\w+%/g,
     matchingGroups = message.match(regexp);

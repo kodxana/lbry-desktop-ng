@@ -6,7 +6,7 @@ type Props = {
   dislikeCount: number,
 };
 
-const RatioBar = (props: Props) => {
+const RatioBar = (props: Props): React.Node => {
   const { likeCount, dislikeCount } = props;
 
   const like = (1 / (likeCount + dislikeCount)) * likeCount;

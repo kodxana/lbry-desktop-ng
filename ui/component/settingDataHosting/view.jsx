@@ -26,7 +26,7 @@ type Props = {
   isSetting: boolean,
 };
 
-function SettingDataHosting(props: Props) {
+function SettingDataHosting(props: Props): React.Node {
   const { daemonSettings, setDaemonSetting, cleanBlobs, getDaemonStatus, isSetting } = props;
 
   const networkLimitSetting = daemonSettings[DAEMON_SETTINGS.NETWORK_STORAGE_LIMIT_MB] || 0;
@@ -34,7 +34,7 @@ function SettingDataHosting(props: Props) {
     networkLimitSetting ? String(networkLimitSetting / 1024) : 0
   );
 
-  function handleNetworkLimitChange(gb) {
+  function handleNetworkLimitChange(gb: string) {
     if (gb === '') {
       setNetworkBlobSpaceLimit('');
     } else {
@@ -45,7 +45,7 @@ function SettingDataHosting(props: Props) {
     }
   }
 
-  function handleKeyDown(e) {
+  function handleKeyDown(e: { keyCode: number, preventDefault: () => void, ... }) {
     if (e.keyCode === KEYCODES.ESCAPE) {
       e.preventDefault();
       setNetworkBlobSpaceLimit(String(networkLimitSetting / 1024));

@@ -4,7 +4,7 @@ import * as ICONS from 'constants/icons';
 import { SETTINGS_GRP } from 'constants/settings';
 import type { Node } from 'react';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import classnames from 'classnames';
 import Button from 'component/button';
 import { IS_MAC } from 'component/app/view';
@@ -48,12 +48,12 @@ const SIDE_LINKS: Array<SideNavLink> = [
   },
 ];
 
-export default function SettingsSideNavigation() {
+export default function SettingsSideNavigation(): React.Node {
   const sidebarOpen = true;
   const isMediumScreen = useIsMediumScreen();
   const isAbsolute = isMediumScreen;
-  const microNavigation = !sidebarOpen || isMediumScreen;
-  const { location, goBack } = useHistory();
+  const microNavigation = isMediumScreen;
+  const { location, goBack } = useDesktopHistory();
 
   function scrollToSection(section: string) {
     const TOP_MARGIN_PX = 20;
@@ -67,7 +67,7 @@ export default function SettingsSideNavigation() {
     }
   }
 
-  function getOnClickHandler(section) {
+  function getOnClickHandler(section: ?string) {
     if (section) {
       if (location.pathname === `/$/${PAGES.SETTINGS}`) {
         return () => scrollToSection(section);
@@ -117,7 +117,6 @@ export default function SettingsSideNavigation() {
                     title={__(linkProps.title)}
                     icon={linkProps.icon}
                     className={classnames('navigation-link', {})}
-                    // $FlowFixMe
                     onClick={getOnClickHandler(linkProps.section)}
                   />
                   {linkProps.extra && linkProps.extra}
@@ -140,7 +139,6 @@ export default function SettingsSideNavigation() {
             <div>
               <ul className="navigation-links--absolute">
                 {SIDE_LINKS.map((linkProps) => {
-                  // $FlowFixMe
                   const { link, route, ...passedProps } = linkProps;
                   return (
                     <li key={linkProps.title}>

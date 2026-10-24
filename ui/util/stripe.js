@@ -1,7 +1,7 @@
 // @flow
 import { STRIPE_PUBLIC_KEY } from 'config';
 import * as STRIPE_CONSTS from 'constants/stripe';
-export function getStripeEnvironment() {
+export function getStripeEnvironment(): ?string {
   if (STRIPE_PUBLIC_KEY) {
     if (STRIPE_PUBLIC_KEY.indexOf('pk_live') > -1) {
       return STRIPE_CONSTS.LIVE;

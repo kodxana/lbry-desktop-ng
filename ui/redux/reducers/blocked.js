@@ -6,7 +6,7 @@ const defaultState: BlocklistState = {
   blockedChannels: [],
 };
 
-export default handleActions(
+const reducer: (state: BlocklistState | void, action: { type: string, ... }) => BlocklistState = handleActions(
   {
     [ACTIONS.TOGGLE_BLOCK_CHANNEL]: (state: BlocklistState, action: BlocklistAction): BlocklistState => {
       const { blockedChannels } = state;
@@ -34,3 +34,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

@@ -307,7 +307,7 @@ videojs.registerComponent('Overlay', Overlay);
  * @param    {Object} [options={}]
  */
 const plugin = function(options) {
-  const settings = videojs.mergeOptions(defaults, options);
+  const settings = videojs.obj.merge(defaults, options);
 
   // De-initialize the plugin if it already has an array of overlays.
   if (Array.isArray(this.overlays_)) {
@@ -327,7 +327,7 @@ const plugin = function(options) {
   delete settings.overlays;
 
   this.overlays_ = overlays.map(o => {
-    const mergeOptions = videojs.mergeOptions(settings, o);
+    const mergeOptions = videojs.obj.merge(settings, o);
     const attachToControlBar =
       typeof mergeOptions.attachToControlBar === 'string' || mergeOptions.attachToControlBar === true;
 

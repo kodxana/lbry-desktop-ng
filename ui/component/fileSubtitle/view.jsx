@@ -8,7 +8,7 @@ type Props = {
   uri: string,
 };
 
-function FileSubtitle(props: Props) {
+function FileSubtitle(props: Props): React.Node {
   const { uri } = props;
 
   return (

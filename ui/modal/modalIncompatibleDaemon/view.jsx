@@ -9,7 +9,7 @@ type Props = {
 };
 
 class ModalIncompatibleDaemon extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { onContinueAnyway, quitAnyDaemon } = this.props;
 
     return (

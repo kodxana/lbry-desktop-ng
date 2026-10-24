@@ -4,7 +4,7 @@ import { Modal } from 'modal/modal';
 import Button from 'component/button';
 import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { FormField } from 'component/common/form';
 
 type Props = {
@@ -17,10 +17,9 @@ type Props = {
   redirect: ?string,
 };
 
-function ModalRemoveCollection(props: Props) {
-  const { closeModal, claim, collectionDelete, collectionId, collectionName, uri, redirect } = props;
-  const title = claim && claim.value && claim.value.title;
-  const { replace } = useHistory();
+function ModalRemoveCollection(props: Props): React.Node {
+  const { closeModal, collectionDelete, collectionId, collectionName, uri, redirect } = props;
+  const { replace } = useDesktopHistory();
   const [confirmName, setConfirmName] = useState('');
 
   return (
@@ -35,7 +34,7 @@ function ModalRemoveCollection(props: Props) {
               <FormField value={confirmName} type={'text'} onChange={(e) => setConfirmName(e.target.value)} />
             </React.Fragment>
           ) : (
-            <I18nMessage tokens={{ title: <cite>{uri && title ? `"${title}"` : `"${collectionName}"`}</cite> }}>
+            <I18nMessage tokens={{ title: <cite>{`"${collectionName}"`}</cite> }}>
               Are you sure you'd like to remove %title%?
             </I18nMessage>
           )

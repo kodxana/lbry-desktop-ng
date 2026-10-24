@@ -1,5 +1,4 @@
-import { Color } from 'three-full/sources/math/Color';
-import { GridHelper } from 'three-full/sources/helpers/GridHelper';
+import { Color, GridHelper } from 'three';
 
 const ThreeGrid = ({ size, gridColor, centerLineColor }) => {
   const divisions = size / 2;

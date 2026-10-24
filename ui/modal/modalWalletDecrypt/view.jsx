@@ -16,7 +16,7 @@ type State = {
 };
 
 class ModalWalletDecrypt extends React.PureComponent<Props, State> {
-  state = {
+  state: State = {
     submitted: false, // Prior actions could be marked complete
   };
 
@@ -35,7 +35,7 @@ class ModalWalletDecrypt extends React.PureComponent<Props, State> {
     this.props.decryptWallet();
   }
 
-  render() {
+  render(): React.Node {
     const { closeModal } = this.props;
 
     return (

@@ -13,7 +13,7 @@ import * as ICONS from 'constants/icons';
 import useFetched from 'effects/use-fetched';
 import debounce from 'util/debounce';
 
-function scaleToDevicePixelRatio(value) {
+function scaleToDevicePixelRatio(value: number) {
   const devicePixelRatio = window.devicePixelRatio || 1.0;
   if (devicePixelRatio < 1.0) {
     return Math.ceil(value / devicePixelRatio);
@@ -23,7 +23,7 @@ function scaleToDevicePixelRatio(value) {
 
 type Props = {
   activeChannelClaim: ?ChannelClaim,
-  allComments: Array<Comment>,
+  allComments: Array<LbryComment>,
   totalComments: number,
   topLevelTotalPages: number,
   isFetchingComments: boolean,
@@ -32,7 +32,7 @@ type Props = {
   doCommentListOwn: (channelId: string, page: number, pageSize: number) => void,
 };
 
-export default function OwnComments(props: Props) {
+export default function OwnComments(props: Props): React.Node {
   const {
     activeChannelClaim,
     allComments,
@@ -42,7 +42,7 @@ export default function OwnComments(props: Props) {
     doCommentReset,
     doCommentListOwn,
   } = props;
-  const spinnerRef = React.useRef();
+  const spinnerRef = React.useRef<HTMLDivElement | null>(null);
   const [page, setPage] = React.useState(0);
   const [activeChannelId, setActiveChannelId] = React.useState('');
 
@@ -53,7 +53,7 @@ export default function OwnComments(props: Props) {
   const totalPages = Math.ceil(totalComments / COMMENT_PAGE_SIZE_TOP_LEVEL);
   const moreBelow = page < totalPages;
 
-  function getCommentsElem(comments) {
+  function getCommentsElem(comments: Array<LbryComment>) {
     return comments.map((comment) => {
       const contentClaim = claimsById[comment.claim_id];
       const isChannel = contentClaim && contentClaim.value_type === 'channel';
@@ -115,14 +115,14 @@ export default function OwnComments(props: Props) {
 
   // Infinite scroll
   React.useEffect(() => {
-    function shouldFetchNextPage(page, topLevelTotalPages, window, document, yPrefetchPx = 1000) {
+    function shouldFetchNextPage(page: number, topLevelTotalPages: number, yPrefetchPx: number = 1000) {
       if (!spinnerRef || !spinnerRef.current) {
         return false;
       }
 
-      const rect = spinnerRef.current.getBoundingClientRect(); // $FlowFixMe
-      const windowH = window.innerHeight || document.documentElement.clientHeight; // $FlowFixMe
-      const windowW = window.innerWidth || document.documentElement.clientWidth; // $FlowFixMe
+      const rect = spinnerRef.current.getBoundingClientRect();
+      const windowH = window.innerHeight || document.documentElement?.clientHeight || 0;
+      const windowW = window.innerWidth || document.documentElement?.clientWidth || 0;
 
       const isApproachingViewport = yPrefetchPx !== 0 && rect.top < windowH + scaleToDevicePixelRatio(yPrefetchPx);
 
@@ -131,22 +131,20 @@ export default function OwnComments(props: Props) {
         rect.height > 0 &&
         rect.bottom >= 0 &&
         rect.right >= 0 &&
-        // $FlowFixMe
         rect.top <= windowH &&
-        // $FlowFixMe
         rect.left <= windowW;
 
       return (isInViewport || isApproachingViewport) && page < topLevelTotalPages;
     }
 
     const handleCommentScroll = debounce(() => {
-      if (shouldFetchNextPage(page, totalPages, window, document)) {
+      if (shouldFetchNextPage(page, totalPages)) {
         setPage(page + 1);
       }
     }, 200);
 
     if (!isFetchingComments && moreBelow && spinnerRef && spinnerRef.current) {
-      if (shouldFetchNextPage(page, totalPages, window, document, 0)) {
+      if (shouldFetchNextPage(page, totalPages, 0)) {
         setPage(page + 1);
       } else {
         window.addEventListener('scroll', handleCommentScroll);
@@ -173,8 +171,8 @@ export default function OwnComments(props: Props) {
               ? __('1 comment')
               : __('%total_comments% comments', { total_comments: totalComments })
             : isFetchingComments
-            ? ''
-            : __('No comments')
+              ? ''
+              : __('No comments')
         }
         titleActions={
           <Button

@@ -10,7 +10,7 @@ import {
   selectMyPurchasesCount,
 } from 'redux/selectors/claims';
 import FileListDownloaded from './view';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 
 const select = (state, props) => {
   const { history, location } = props;
@@ -31,4 +31,4 @@ const select = (state, props) => {
   };
 };
 
-export default withRouter(connect(select)(FileListDownloaded));
+export default withDesktopRouter(connect(select)(FileListDownloaded));

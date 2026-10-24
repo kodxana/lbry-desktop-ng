@@ -5,7 +5,7 @@ import HostingSplash from 'component/hostingSplash';
 import HostingSplashCustom from 'component/hostingSplashCustom';
 import WelcomeSplash from 'component/welcomeSplash';
 import Page from 'component/page';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 const SPLASH_PAGE = 0;
 const PRIVACY_PAGE = 1;
@@ -38,11 +38,11 @@ type Props = {
   // -- perform ---
   updateWelcomeVersion: () => void,
 };
-export default function Welcome(props: Props) {
+export default function Welcome(props: Props): React.Node {
   const { updateWelcomeVersion } = props;
   // const { save_blobs: saveBlobs } = daemonSettings || {};
   const [welcomePage, setWelcomePage] = React.useState(SPLASH_PAGE);
-  const { replace } = useHistory();
+  const { replace } = useDesktopHistory();
 
   const handleNextPage = () => {
     if (welcomePage === SPLASH_PAGE) {
@@ -66,13 +66,15 @@ export default function Welcome(props: Props) {
   };
 
   return (
-    <Page noHeader noSideNavigation>
-      {welcomePage === SPLASH_PAGE && <WelcomeSplash handleNextPage={handleNextPage} />}
-      {welcomePage === PRIVACY_PAGE && <PrivacyAgreement handleNextPage={handleNextPage} />}
-      {welcomePage === HOSTING_PAGE && <HostingSplash handleNextPage={handleNextPage} handleDone={handleDone} />}
-      {welcomePage === HOSTING_ADVANCED && (
-        <HostingSplashCustom handleNextPage={handleDone} handleGoBack={handleGoBack} />
-      )}
-    </Page>
+    <div className="first-run" theme="dark">
+      <Page noHeader noSideNavigation>
+        {welcomePage === SPLASH_PAGE && <WelcomeSplash handleNextPage={handleNextPage} />}
+        {welcomePage === PRIVACY_PAGE && <PrivacyAgreement handleNextPage={handleNextPage} />}
+        {welcomePage === HOSTING_PAGE && <HostingSplash handleNextPage={handleNextPage} handleDone={handleDone} />}
+        {welcomePage === HOSTING_ADVANCED && (
+          <HostingSplashCustom handleNextPage={handleDone} handleGoBack={handleGoBack} />
+        )}
+      </Page>
+    </div>
   );
 }

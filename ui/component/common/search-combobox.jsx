@@ -1,0 +1,84 @@
+// @flow
+import React from 'react';
+import * as Ariakit from '@ariakit/react';
+
+type Selection = { onSelect: (string) => void, openOnFocus: boolean };
+const SelectionContext = React.createContext<Selection>({ onSelect: () => {}, openOnFocus: false });
+
+type ComboboxProps = {
+  children: React.Node,
+  onSelect: (string) => void,
+  value: string,
+  setValue: (string) => void,
+  openOnFocus?: boolean,
+  className?: string,
+};
+
+function Combobox({ children, onSelect, value, setValue, openOnFocus = false, ...props }: ComboboxProps): React.Node {
+  return (
+    <Ariakit.ComboboxProvider
+      inputValue={value}
+      setInputValue={setValue}
+      resetValueOnHide={false}
+      resetValueOnSelect={false}
+    >
+      <SelectionContext.Provider value={{ onSelect, openOnFocus }}>
+        <div {...props}>{children}</div>
+      </SelectionContext.Provider>
+    </Ariakit.ComboboxProvider>
+  );
+}
+
+type InputProps = { ...React.ComponentProps<'input'>, selectOnClick?: boolean };
+const ComboboxInput: React.ComponentType<InputProps> = React.forwardRef<InputProps, HTMLInputElement>(
+  function ComboboxInput({ selectOnClick, ...props }, ref) {
+    const store = Ariakit.useComboboxContext();
+    const { openOnFocus } = React.useContext(SelectionContext);
+    return (
+      <Ariakit.Combobox
+        {...props}
+        ref={ref}
+        moveOnKeyPress={(event) => !['Home', 'End'].includes(event.key)}
+        onFocus={() => {
+          if (openOnFocus) store?.show();
+        }}
+        onClick={(event) => {
+          if (selectOnClick) event.currentTarget.select();
+        }}
+      />
+    );
+  }
+);
+
+function ComboboxPopover(props: React.ComponentProps<'div'>): React.Node {
+  return <Ariakit.ComboboxPopover {...props} portal={false} unmountOnHide sameWidth gutter={8} />;
+}
+
+function ComboboxList(props: React.ComponentProps<'div'>): React.Node {
+  return <div {...props} className="search__list" />;
+}
+
+function ComboboxOption({
+  value,
+  children,
+  ...props
+}: {
+  value: string,
+  children?: React.Node,
+  className?: string,
+}): React.Node {
+  const { onSelect } = React.useContext(SelectionContext);
+  return (
+    <Ariakit.ComboboxItem
+      {...props}
+      value={value}
+      setValueOnClick={false}
+      selectValueOnClick={false}
+      onClick={() => onSelect(value)}
+    >
+      {children || value}
+    </Ariakit.ComboboxItem>
+  );
+}
+
+export { Combobox, ComboboxInput, ComboboxPopover, ComboboxList, ComboboxOption };

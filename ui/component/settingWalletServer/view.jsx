@@ -34,7 +34,7 @@ type Props = {
   walletReconnectingToDefault: boolean,
 };
 
-function SettingWalletServer(props: Props) {
+function SettingWalletServer(props: Props): React.Node {
   const {
     daemonStatus,
     setCustomWalletServers,
@@ -118,7 +118,7 @@ function SettingWalletServer(props: Props) {
     updateServers(newServerConfig);
   }
 
-  function updateServers(newConfig) {
+  function updateServers(newConfig: ServerConfig) {
     saveServerConfig(newConfig);
     setCustomWalletServers(stringifyServerParam(newConfig));
   }
@@ -171,8 +171,8 @@ function SettingWalletServer(props: Props) {
                       {available
                         ? __('Connected')
                         : walletReconnecting && !walletReconnectingToDefault
-                        ? __('Connecting...')
-                        : __('Not connected')}
+                          ? __('Connecting...')
+                          : __('Not connected')}
                     </span>
                     <Button
                       button="close"

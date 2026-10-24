@@ -4,10 +4,10 @@ import Lbry from 'lbry';
 import { parseURI, isNameValid } from 'util/lbryURI';
 import ClaimList from 'component/claimList';
 import Page from 'component/page';
-import SearchOptions from 'component/searchOptions';
+import SearchOptionsView from 'component/searchOptions';
 import SearchTopClaim from 'component/searchTopClaim';
 import { formatLbryUrlForWeb } from 'util/url';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { SEARCH_PAGE_SIZE } from 'constants/search';
 
 type Props = {
@@ -19,9 +19,9 @@ type Props = {
   hasReachedMaxResultsLength: boolean,
 };
 
-export default function SearchPage(props: Props) {
+export default function SearchPage(props: Props): React.Node {
   const { urlQuery, searchOptions, search, uris, isSearching, hasReachedMaxResultsLength } = props;
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const [from, setFrom] = React.useState(0);
 
   const modifiedUrlQuery = urlQuery.trim().replace(/\s+/g, '').replace(/:/g, '#');
@@ -92,7 +92,7 @@ export default function SearchPage(props: Props) {
               // needs to be unique to indicate when a fetch is needed.
               page={from + 1}
               pageSize={SEARCH_PAGE_SIZE}
-              header={<SearchOptions additionalOptions={searchOptions} onSearchOptionsChanged={resetPage} />}
+              header={<SearchOptionsView additionalOptions={searchOptions} onSearchOptionsChanged={resetPage} />}
             />
 
             <div className="main--empty help">{__('These search results are provided by LBRY, Inc.')}</div>

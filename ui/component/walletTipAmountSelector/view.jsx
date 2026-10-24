@@ -23,21 +23,20 @@ type Props = {
   activeTab: string,
   amount: number,
   balance: number,
-  claim: StreamClaim,
+  claim: ?Claim,
   convertedAmount?: number,
   customTipAmount?: number,
   exchangeRate?: any,
   fiatConversion?: boolean,
-  tipError: boolean,
-  tipError: string,
+  tipError: string | false | void,
   uri: string,
   onChange: (number) => void,
   setConvertedAmount?: (number) => void,
-  setDisableSubmitButton: (boolean) => void,
-  setTipError: (any) => void,
+  setDisableSubmitButton?: (boolean) => void,
+  setTipError: (string | false) => void,
 };
 
-function WalletTipAmountSelector(props: Props) {
+function WalletTipAmountSelector(props: Props): React.Node {
   const {
     activeTab,
     amount,
@@ -57,7 +56,7 @@ function WalletTipAmountSelector(props: Props) {
   const isMobile = useIsMobile();
   const [useCustomTip, setUseCustomTip] = usePersistedState('comment-support:useCustomTip', true);
   const [hasCardSaved, setHasSavedCard] = usePersistedState('comment-support:hasCardSaved', false);
-  const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState(); // dont persist because it needs to be calc'd per creator
+  const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState<boolean | void>(); // dont persist because it needs to be calc'd per creator
 
   const convertToTwoDecimalsOrMore = (number: number, decimals: number = 2) =>
     Number((Math.round(number * 10 ** decimals) / 10 ** decimals).toFixed(decimals));
@@ -66,16 +65,16 @@ function WalletTipAmountSelector(props: Props) {
     customTipAmount && fiatConversion && activeTab === TAB_FIAT
       ? [customTipAmount]
       : customTipAmount && exchangeRate
-      ? [convertToTwoDecimalsOrMore(customTipAmount / exchangeRate)]
-      : DEFAULT_TIP_AMOUNTS;
+        ? [convertToTwoDecimalsOrMore(customTipAmount / exchangeRate)]
+        : DEFAULT_TIP_AMOUNTS;
 
   // if it's fiat but there's no card saved OR the creator can't receive fiat tips
   const shouldDisableFiatSelectors = activeTab === TAB_FIAT && (!hasCardSaved || !canReceiveFiatTip);
   if (setDisableSubmitButton) setDisableSubmitButton(shouldDisableFiatSelectors);
 
   // setup variables for tip API
-  const channelClaimId = claim.signing_channel ? claim.signing_channel.claim_id : claim.claim_id;
-  const tipChannelName = claim.signing_channel ? claim.signing_channel.name : claim.name;
+  const channelClaimId = claim?.signing_channel ? claim.signing_channel.claim_id : claim?.claim_id;
+  const tipChannelName = claim?.signing_channel ? claim.signing_channel.name : claim?.name;
 
   /**
    * whether tip amount selection/review functionality should be disabled
@@ -84,7 +83,6 @@ function WalletTipAmountSelector(props: Props) {
    */
   function shouldDisableAmountSelector(amount: number) {
     // if it's LBC but the balance isn't enough, or fiat conditions met
-    // $FlowFixMe
     return (
       ((amount > balance || balance === 0) && activeTab !== TAB_FIAT) ||
       shouldDisableFiatSelectors ||
@@ -307,8 +305,8 @@ function WalletTipAmountSelector(props: Props) {
               </>
             )
           : !canReceiveFiatTip
-          ? getHelpMessage(__('Only creators that verify cash accounts can receive tips'))
-          : getHelpMessage(__('Send a tip directly from your attached card')))}
+            ? getHelpMessage(__('Only creators that verify cash accounts can receive tips'))
+            : getHelpMessage(__('Send a tip directly from your attached card')))}
     </>
   );
 }

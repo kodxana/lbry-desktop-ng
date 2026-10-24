@@ -8,11 +8,11 @@ type Props = {
 };
 
 export class Submit extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { label: string } = {
     label: 'Submit',
   };
 
-  render() {
+  render(): React.Node {
     const { label, disabled, ...otherProps } = this.props;
     return <Button button="primary" type="submit" label={label} disabled={disabled} {...otherProps} />;
   }

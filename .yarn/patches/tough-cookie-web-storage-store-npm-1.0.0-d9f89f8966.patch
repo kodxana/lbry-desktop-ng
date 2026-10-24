@@ -1,0 +1,22 @@
+diff --git a/WebStorageCookieStore.js b/WebStorageCookieStore.js
+index 4ba71afa953b295efb2fbd0bab6c2b73dcb87b95..e5300a87868130694e5976e56a8ab7d73efc2c39 100644
+--- a/WebStorageCookieStore.js
++++ b/WebStorageCookieStore.js
+@@ -24,7 +24,7 @@ class WebStorageCookieStore extends ToughCookie.Store {
+     callback(null, Cookie.fromJSON(cookie));
+   }
+ 
+-  findCookies(domain, path, callback) {
++  findCookies(domain, path, allowSpecialUseDomain, callback) {
+     if (!domain) {
+       callback(null, []);
+       return;
+@@ -32,7 +32,7 @@ class WebStorageCookieStore extends ToughCookie.Store {
+ 
+     let cookies = [];
+     let store = this._readStore();
+-    let domains = ToughCookie.permuteDomain(domain) || [domain];
++    let domains = ToughCookie.permuteDomain(domain, allowSpecialUseDomain) || [domain];
+     for (let domain of domains) {
+       if (!store[domain]) {
+         continue;

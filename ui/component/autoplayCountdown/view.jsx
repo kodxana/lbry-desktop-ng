@@ -3,7 +3,6 @@ import React from 'react';
 import Button from 'component/button';
 import UriIndicator from 'component/uriIndicator';
 import I18nMessage from 'component/i18nMessage';
-import { withRouter } from 'react-router';
 import debounce from 'util/debounce';
 import * as ICONS from 'constants/icons';
 
@@ -11,29 +10,19 @@ const DEBOUNCE_SCROLL_HANDLER_MS = 150;
 const CLASSNAME_AUTOPLAY_COUNTDOWN = 'autoplay-countdown';
 
 type Props = {
-  history: { push: (string) => void },
   nextRecommendedClaim: ?StreamClaim,
-  nextRecommendedUri: string,
-  modal: { id: string, modalProps: {} },
+  nextRecommendedUri: ?string,
+  modal: ?{ id: string, ... },
   skipPaid: boolean,
   doNavigate: () => void,
   doReplay: () => void,
-  doPrevious: () => void,
-  onCanceled: () => void,
+  doPrevious?: () => void,
+  onCanceled?: () => void,
 };
 
-function AutoplayCountdown(props: Props) {
-  const {
-    nextRecommendedUri,
-    nextRecommendedClaim,
-    history: { push },
-    modal,
-    skipPaid,
-    doNavigate,
-    doReplay,
-    doPrevious,
-    onCanceled,
-  } = props;
+function AutoplayCountdown(props: Props): React.Node {
+  const { nextRecommendedUri, nextRecommendedClaim, modal, skipPaid, doNavigate, doReplay, doPrevious, onCanceled } =
+    props;
   const nextTitle = nextRecommendedClaim && nextRecommendedClaim.value && nextRecommendedClaim.value.title;
 
   /* this value is coupled with CSS timing variables on .autoplay-countdown__timer */
@@ -45,9 +34,9 @@ function AutoplayCountdown(props: Props) {
   const anyModalPresent = modal !== undefined && modal !== null;
   const isTimerPaused = timerPaused || anyModalPresent;
 
-  function shouldPauseAutoplay() {
+  function shouldPauseAutoplay(): boolean {
     const elm = document.querySelector(`.${CLASSNAME_AUTOPLAY_COUNTDOWN}`);
-    return elm && elm.getBoundingClientRect().top < 0;
+    return Boolean(elm && elm.getBoundingClientRect().top < 0);
   }
 
   function getMsgPlayingNext() {
@@ -93,7 +82,7 @@ function AutoplayCountdown(props: Props) {
     return () => {
       clearInterval(interval);
     };
-  }, [timer, doNavigate, push, timerCanceled, isTimerPaused, nextRecommendedUri, skipPaid]);
+  }, [timer, doNavigate, timerCanceled, isTimerPaused, nextRecommendedUri, skipPaid]);
 
   if (timerCanceled || !nextRecommendedUri) {
     return null;
@@ -158,4 +147,4 @@ function AutoplayCountdown(props: Props) {
   );
 }
 
-export default withRouter(AutoplayCountdown);
+export default AutoplayCountdown;

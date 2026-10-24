@@ -6,7 +6,7 @@ import type { Node } from 'react';
 import classnames from 'classnames';
 import React from 'react';
 import usePersistedState from 'effects/use-persisted-state';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { FormField } from 'component/common/form';
 import Button from 'component/button';
 import { toCapitalCase } from 'util/string';
@@ -36,7 +36,7 @@ type Props = {
   scrollAnchor?: string,
 };
 
-function ClaimListHeader(props: Props) {
+function ClaimListHeader(props: Props): React.Node {
   const {
     defaultTags,
     freshness,
@@ -60,7 +60,7 @@ function ClaimListHeader(props: Props) {
     languageSetting,
     scrollAnchor,
   } = props;
-  const { action, push, location } = useHistory();
+  const { action, push, location } = useDesktopHistory();
   const { search } = location;
   const [expanded, setExpanded] = usePersistedState(`expanded-${location.pathname}`, false);
   const [orderParamEntry, setOrderParamEntry] = usePersistedState(`entry-${location.pathname}`, CS.ORDER_BY_TRENDING);
@@ -80,11 +80,11 @@ function ClaimListHeader(props: Props) {
   const isFiltered = () =>
     Boolean(
       urlParams.get(CS.FRESH_KEY) ||
-        urlParams.get(CS.CONTENT_KEY) ||
-        urlParams.get(CS.DURATION_KEY) ||
-        urlParams.get(CS.TAGS_KEY) ||
-        urlParams.get(CS.FEE_AMOUNT_KEY) ||
-        urlParams.get(CS.LANGUAGE_KEY)
+      urlParams.get(CS.CONTENT_KEY) ||
+      urlParams.get(CS.DURATION_KEY) ||
+      urlParams.get(CS.TAGS_KEY) ||
+      urlParams.get(CS.FEE_AMOUNT_KEY) ||
+      urlParams.get(CS.LANGUAGE_KEY)
     );
 
   const languageValue = searchInLanguage
@@ -92,8 +92,8 @@ function ClaimListHeader(props: Props) {
       ? languageSetting
       : languageParam
     : languageParam === null
-    ? CS.LANGUAGES_ALL
-    : languageParam;
+      ? CS.LANGUAGES_ALL
+      : languageParam;
 
   const shouldHighlight = searchInLanguage
     ? languageParam !== languageSetting && languageParam !== null
@@ -129,7 +129,7 @@ function ClaimListHeader(props: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleChange(change) {
+  function handleChange(change: { key: string, value: string }) {
     const url = buildUrl(change);
     setPage(1);
     push(url);
@@ -144,11 +144,11 @@ function ClaimListHeader(props: Props) {
     push(newSearch);
   }
 
-  function buildUrl(delta) {
+  function buildUrl(delta: { key: string, value: string }) {
     const newUrlParams = new URLSearchParams(location.search);
     CS.KEYS.forEach((k) => {
-      // $FlowFixMe get() can return null
-      if (urlParams.get(k) !== null) newUrlParams.set(k, urlParams.get(k));
+      const value = urlParams.get(k);
+      if (value !== null) newUrlParams.set(k, value);
     });
 
     switch (delta.key) {
@@ -455,7 +455,6 @@ function ClaimListHeader(props: Props) {
                     <option value={CS.FEE_AMOUNT_ANY}>{__('Any')}</option>
                     <option value={CS.FEE_AMOUNT_ONLY_FREE}>{__('Free')}</option>
                     <option value={CS.FEE_AMOUNT_ONLY_PAID}>{__('Paid')}</option>
-                    ))}
                   </FormField>
                 </div>
               )}
@@ -474,9 +473,7 @@ function ClaimListHeader(props: Props) {
                   >
                     {Object.entries(CS.SORT_BY).map(([key, value]) => {
                       return (
-                        // $FlowFixMe https://github.com/facebook/flow/issues/2221
                         <option key={value.key} value={value.key}>
-                          {/* $FlowFixMe */}
                           {__(value.str)}
                         </option>
                       );

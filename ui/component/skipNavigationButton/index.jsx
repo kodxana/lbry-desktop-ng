@@ -3,8 +3,8 @@ import React from 'react';
 import Button from 'component/button';
 // Allow screen reader users ( or keyboard navigation )
 // to jump to main content
-export default function SkipNavigationButton() {
-  const skipNavigation = (e) => {
+export default function SkipNavigationButton(): React.Node {
+  const skipNavigation = (e: { preventDefault: () => void, ... }) => {
     // Match any focusable element
     const focusableElementQuery = `
       #main-content [tabindex]:not([tabindex="-1"]):not(:disabled),
@@ -14,7 +14,7 @@ export default function SkipNavigationButton() {
     // Find first focusable element
     const element = document.querySelector(focusableElementQuery);
     // Trigger focus to skip navigation
-    if (element && element.focus) {
+    if (element instanceof HTMLElement) {
       element.focus();
     }
   };

@@ -178,6 +178,11 @@ $contentMaxWidth: 60rem;
   }
 }
 
+.notification__row {
+  display: flex;
+  align-items: flex-start;
+}
+
 .notificationContent__wrapper {
   flex: 1;
   display: flex;

@@ -10,7 +10,7 @@ type Props = {
   type?: string,
 };
 
-export default function HiddenNsfw(props: Props) {
+export default function HiddenNsfw(props: Props): React.Node {
   const { type = 'page' } = props;
 
   return (

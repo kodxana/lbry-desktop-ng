@@ -8,7 +8,7 @@ import { FormField } from 'component/common/form';
 import Card from 'component/common/card';
 import SettingsRow from 'component/settingsRow';
 import { Lbryio } from 'lbryinc';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Yrbl from 'component/yrbl';
 import Button from 'component/button';
 
@@ -18,16 +18,19 @@ type Props = {
   setClientSetting: (string, boolean) => void,
 };
 
-export default function NotificationSettingsPage(props: Props) {
+type EmailPreference = { email: string, isEnabled: boolean };
+type EmailTag = { name: string, description: string };
+
+export default function NotificationSettingsPage(props: Props): React.Node {
   const { osNotificationsEnabled, setClientSetting, isAuthenticated } = props;
-  const [error, setError] = React.useState();
-  const [tagMap, setTagMap] = React.useState({});
-  const [tags, setTags] = React.useState();
-  const [enabledEmails, setEnabledEmails] = React.useState();
-  const { location } = useHistory();
+  const [error, setError] = React.useState(false);
+  const [tagMap, setTagMap] = React.useState<{ [string]: boolean }>({});
+  const [tags, setTags] = React.useState<Array<EmailTag> | void>();
+  const [enabledEmails, setEnabledEmails] = React.useState<Array<EmailPreference> | void>();
+  const { location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
   const verificationToken = urlParams.get('verification_token');
-  const lbryIoParams = verificationToken ? { auth_token: verificationToken } : undefined;
+  const lbryIoParams: { auth_token?: string } = verificationToken ? { auth_token: verificationToken } : {};
 
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -41,10 +44,10 @@ export default function NotificationSettingsPage(props: Props) {
         .then((res) => {
           const enabledEmails =
             res.emails &&
-            Object.keys(res.emails).reduce((acc, email) => {
+            Object.keys(res.emails).map((email) => {
               const isEnabled = res.emails[email];
-              return [...acc, { email, isEnabled }];
-            }, []);
+              return { email, isEnabled };
+            });
 
           setTagMap(res.tags);
           setEnabledEmails(enabledEmails);
@@ -55,8 +58,8 @@ export default function NotificationSettingsPage(props: Props) {
     }
   }, [isAuthenticated]);
 
-  function handleChangeTag(name, newIsEnabled) {
-    const tagParams = newIsEnabled ? { add: name } : { remove: name };
+  function handleChangeTag(name: string, newIsEnabled: boolean) {
+    const tagParams: { add?: string, remove?: string } = newIsEnabled ? { add: name } : { remove: name };
 
     Lbryio.call('user_tag', 'edit', { ...lbryIoParams, ...tagParams }).then(() => {
       const newTagMap = { ...tagMap };
@@ -66,7 +69,7 @@ export default function NotificationSettingsPage(props: Props) {
     });
   }
 
-  function handleChangeEmail(email, newIsEnabled) {
+  function handleChangeEmail(email: string, newIsEnabled: boolean) {
     Lbryio.call('user_email', 'edit', {
       email: email,
       enabled: newIsEnabled,

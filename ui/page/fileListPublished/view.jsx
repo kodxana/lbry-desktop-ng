@@ -8,7 +8,6 @@ import ClaimPreview from 'component/claimPreview';
 import Page from 'component/page';
 import Paginate from 'component/common/paginate';
 import { PAGE_PARAM, PAGE_SIZE_PARAM } from 'constants/claim';
-import Spinner from 'component/spinner';
 import Yrbl from 'component/yrbl';
 import { FormField, Form } from 'component/common/form';
 import Icon from 'component/common/icon';
@@ -33,7 +32,7 @@ type Props = {
   initialSearchTerm: string,
 };
 
-function FileListPublished(props: Props) {
+function FileListPublished(props: Props): React.Node {
   const {
     checkPendingPublishes,
     clearPublish,
@@ -49,12 +48,9 @@ function FileListPublished(props: Props) {
 
   const [filterBy, setFilterBy] = React.useState(FILTER_ALL);
   const [searchText, setSearchText] = React.useState(initialSearchTerm);
-  const [filteredClaims, setFilteredClaims] = React.useState([]);
+  const [filteredClaims, setFilteredClaims] = React.useState<Array<Claim>>([]);
   const { search } = location;
-  const params = {};
-
-  params[PAGE_PARAM] = Number(page);
-  params[PAGE_SIZE_PARAM] = Number(pageSize);
+  const params = { [PAGE_PARAM]: Number(page), [PAGE_SIZE_PARAM]: Number(pageSize) };
 
   const paramsString = JSON.stringify(params);
 
@@ -194,41 +190,35 @@ function FileListPublished(props: Props) {
               loading={fetching}
             />
             {fetching &&
-              new Array(Number(pageSize)).fill(1).map((x, i) => <ClaimPreview key={i} placeholder="loading" />)}
+              new Array<number>(Number(pageSize)).fill(1).map((x, i) => <ClaimPreview key={i} placeholder="loading" />)}
             <Paginate totalPages={urlTotal > 0 ? Math.ceil(urlTotal / Number(pageSize)) : 1} />
           </>
         )}
       </div>
       {!fetching && myClaims.length === 0 && (
         <React.Fragment>
-          {!fetching ? (
-            <section className="main--empty">
-              <Yrbl
-                title={filterBy === FILTER_REPOSTS ? __('No Reposts') : __('No uploads')}
-                subtitle={
-                  filterBy === FILTER_REPOSTS
-                    ? __("You haven't reposted anything yet. Do it.")
-                    : __("You haven't uploaded anything yet. This is where you can find them when you do!")
-                }
-                actions={
-                  filterBy !== FILTER_REPOSTS && (
-                    <div className="section__actions">
-                      <Button
-                        button="primary"
-                        navigate={`/$/${PAGES.UPLOAD}`}
-                        label={__('Upload Something New')}
-                        onClick={() => clearPublish()}
-                      />
-                    </div>
-                  )
-                }
-              />
-            </section>
-          ) : (
-            <section className="main--empty">
-              <Spinner delayed />
-            </section>
-          )}
+          <section className="main--empty">
+            <Yrbl
+              title={filterBy === FILTER_REPOSTS ? __('No Reposts') : __('No uploads')}
+              subtitle={
+                filterBy === FILTER_REPOSTS
+                  ? __("You haven't reposted anything yet. Do it.")
+                  : __("You haven't uploaded anything yet. This is where you can find them when you do!")
+              }
+              actions={
+                filterBy !== FILTER_REPOSTS && (
+                  <div className="section__actions">
+                    <Button
+                      button="primary"
+                      navigate={`/$/${PAGES.UPLOAD}`}
+                      label={__('Upload Something New')}
+                      onClick={() => clearPublish()}
+                    />
+                  </div>
+                )
+              }
+            />
+          </section>
         </React.Fragment>
       )}
     </Page>

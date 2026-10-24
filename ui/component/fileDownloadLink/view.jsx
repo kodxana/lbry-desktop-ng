@@ -12,7 +12,7 @@ type Props = {
   loading: boolean,
   focusable: boolean,
   fileInfo: ?FileListItem,
-  openModal: (id: string, { path: string }) => void,
+  openModal: (id: string, { path: string, isMine?: boolean }) => void,
   pause: () => void,
   download: (string) => void,
   costInfo: ?{ cost: string },
@@ -23,7 +23,7 @@ type Props = {
   streamingUrl: ?string,
 };
 
-function FileDownloadLink(props: Props) {
+function FileDownloadLink(props: Props): React.Node {
   const {
     fileInfo,
     downloading,
@@ -41,7 +41,7 @@ function FileDownloadLink(props: Props) {
     hideDownloadStatus = false,
   } = props;
 
-  function handleDownload(e) {
+  function handleDownload(e: { stopPropagation: () => void, preventDefault: () => void, ... }) {
     e.preventDefault();
     download(uri);
   }
@@ -66,6 +66,7 @@ function FileDownloadLink(props: Props) {
   // @endif
 
   if (fileInfo && fileInfo.download_path && fileInfo.completed) {
+    const downloadPath = fileInfo.download_path;
     const openLabel = __('Open file');
     return hideOpenButton ? null : (
       <Button
@@ -76,7 +77,7 @@ function FileDownloadLink(props: Props) {
         icon={ICONS.EXTERNAL}
         onClick={() => {
           pause();
-          openModal(MODALS.CONFIRM_EXTERNAL_RESOURCE, { path: fileInfo.download_path, isMine: claimIsMine });
+          openModal(MODALS.CONFIRM_EXTERNAL_RESOURCE, { path: downloadPath, isMine: claimIsMine });
         }}
         aria-hidden={!focusable}
         tabIndex={focusable ? 0 : -1}

@@ -1,7 +1,7 @@
 // @flow
 import React, { PureComponent } from 'react';
 import Button from 'component/button';
-import path from 'path';
+
 import { formatBytes } from 'util/format-bytes';
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 };
 
 class FileDetails extends PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { claim, contentType, fileInfo, metadata, openFolder } = this.props;
 
     if (!claim || !metadata) {
@@ -28,7 +28,7 @@ class FileDetails extends PureComponent<Props> {
       metadata.source && metadata.source.size
         ? formatBytes(metadata.source.size)
         : fileInfo && fileInfo.download_path && formatBytes(fileInfo.written_bytes);
-    let downloadPath = fileInfo && fileInfo.download_path ? path.normalize(fileInfo.download_path) : null;
+    let downloadPath = fileInfo && fileInfo.download_path ? fileInfo.download_path : null;
     let downloadNote;
     // If the path is blank, file is not available. Streamed files won't have any blobs saved
     // Create path from name so the folder opens on click.

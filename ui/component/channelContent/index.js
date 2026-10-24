@@ -10,7 +10,7 @@ import {
 import { doResolveUris } from 'redux/actions/claims';
 import * as SETTINGS from 'constants/settings';
 import { makeSelectChannelIsMuted } from 'redux/selectors/blocked';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { selectUserVerifiedEmail } from 'redux/selectors/user';
 import { makeSelectClientSetting, selectShowMatureContent } from 'redux/selectors/settings';
 
@@ -39,4 +39,4 @@ const perform = (dispatch) => ({
   doResolveUris: (uris, returnCachedUris) => dispatch(doResolveUris(uris, returnCachedUris)),
 });
 
-export default withRouter(connect(select, perform)(ChannelContent));
+export default withDesktopRouter(connect(select, perform)(ChannelContent));

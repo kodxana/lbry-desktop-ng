@@ -2,7 +2,6 @@
 import { createSelector } from 'reselect';
 import {
   makeSelectClaimForUri,
-  selectClaimsByUri,
   selectClaimIsNsfwForUri,
   selectClaimIsMineForUri,
   makeSelectClaimIsNsfw,
@@ -13,27 +12,31 @@ import { selectBalance } from 'redux/selectors/wallet';
 import { selectCostInfoForUri } from 'lbryinc';
 import { selectShowMatureContent } from 'redux/selectors/settings';
 import * as RENDER_MODES from 'constants/file_render_modes';
-import path from 'path';
+import path from 'util/file-name';
 import { FORCE_CONTENT_TYPE_PLAYER, FORCE_CONTENT_TYPE_COMIC } from 'constants/claim';
 
 const RECENT_HISTORY_AMOUNT = 10;
 const HISTORY_ITEMS_PER_PAGE = 50;
 
-type State = { claims: any, content: any };
+type State = { claims: ClaimsState, content?: ContentState, ... };
+type ContentSelector<T> = (state: State) => T;
+const EMPTY_CONTENT: ContentState = { primaryUri: null, playingUri: null, positions: {}, history: [] };
 
-export const selectState = (state: State) => state.content || {};
+export const selectState = (state: State): ContentState => state.content || EMPTY_CONTENT;
 
-export const selectPlayingUri = (state: State) => selectState(state).playingUri;
-export const selectPrimaryUri = (state: State) => selectState(state).primaryUri;
-export const selectListLoop = (state: State) => selectState(state).loopList;
-export const selectListShuffle = (state: State) => selectState(state).shuffleList;
+export const selectPlayingUri = (state: State): ?PlayingUri => selectState(state).playingUri;
+export const selectPrimaryUri = (state: State): ?string => selectState(state).primaryUri;
+export const selectListLoop = (state: State): ContentState['loopList'] => selectState(state).loopList;
+export const selectListShuffle = (state: State): ContentState['shuffleList'] => selectState(state).shuffleList;
 
-export const makeSelectIsPlaying = (uri: string) =>
+export const makeSelectIsPlaying = (uri: string): ContentSelector<boolean> =>
   createSelector(selectPrimaryUri, (primaryUri) => primaryUri === uri);
 
-export const makeSelectIsPlayerFloating = (location: UrlLocation) =>
+export const makeSelectIsPlayerFloating = (
+  location: Readonly<{ pathname: string, search?: string, ... }>
+): ContentSelector<boolean> =>
   createSelector(selectPrimaryUri, selectPlayingUri, (primaryUri, playingUri) => {
-    if (!playingUri) return false;
+    if (!playingUri || !playingUri.uri) return false;
 
     const { pathname, search } = location;
     const hasSecondarySource = Boolean(playingUri.source);
@@ -53,7 +56,7 @@ export const makeSelectIsPlayerFloating = (location: UrlLocation) =>
     return true;
   });
 
-export const makeSelectContentPositionForUri = (uri: string) =>
+export const makeSelectContentPositionForUri = (uri: string): ContentSelector<?number> =>
   createSelector(selectState, makeSelectClaimForUri(uri), (state, claim) => {
     if (!claim) {
       return null;
@@ -63,12 +66,12 @@ export const makeSelectContentPositionForUri = (uri: string) =>
     return state.positions[id] ? state.positions[id][outpoint] : null;
   });
 
-export const makeSelectContentWatchedPercentageForUri = (uri: string) =>
+export const makeSelectContentWatchedPercentageForUri = (uri: string): ContentSelector<number> =>
   createSelector(selectState, makeSelectClaimForUri(uri), (state, claim) => {
     if (!claim) {
       return 0;
     }
-    const media = claim.value && (claim.value.video || claim.value.audio);
+    const media = claim.value_type === 'stream' && (claim.value.video || claim.value.audio);
     if (!media) {
       return 0;
     }
@@ -85,56 +88,68 @@ export const makeSelectContentWatchedPercentageForUri = (uri: string) =>
       return 100;
     }
     const duration = media.duration;
-    return (watched / duration) * 100;
+    return typeof watched === 'number' &&
+      Number.isFinite(watched) &&
+      typeof duration === 'number' &&
+      Number.isFinite(duration) &&
+      duration > 0
+      ? (watched / duration) * 100
+      : 0;
   });
 
-export const selectHistory = createSelector(selectState, (state) => state.history || []);
+export const selectHistory: ContentSelector<Array<ContentHistoryItem>> = createSelector(
+  selectState,
+  (state) => state.history || []
+);
 
-export const selectHistoryPageCount = createSelector(selectHistory, (history) =>
+export const selectHistoryPageCount: ContentSelector<number> = createSelector(selectHistory, (history) =>
   Math.ceil(history.length / HISTORY_ITEMS_PER_PAGE)
 );
 
-export const makeSelectHistoryForPage = (page: number) =>
-  createSelector(selectHistory, selectClaimsByUri, (history, claimsByUri) => {
+export const makeSelectHistoryForPage = (page: number): ContentSelector<Array<ContentHistoryItem>> =>
+  createSelector(selectHistory, (history) => {
     const left = page * HISTORY_ITEMS_PER_PAGE;
     const historyItemsForPage = history.slice(left, left + HISTORY_ITEMS_PER_PAGE);
     return historyItemsForPage;
   });
 
-export const makeSelectHistoryForUri = (uri: string) =>
+export const makeSelectHistoryForUri = (uri: string): ContentSelector<ContentHistoryItem | void> =>
   createSelector(selectHistory, (history) => history.find((i) => i.uri === uri));
 
-export const makeSelectHasVisitedUri = (uri: string) =>
+export const makeSelectHasVisitedUri = (uri: string): ContentSelector<boolean> =>
   createSelector(makeSelectHistoryForUri(uri), (history) => Boolean(history));
 
-export const selectRecentHistory = createSelector(selectHistory, (history) => {
-  return history.slice(0, RECENT_HISTORY_AMOUNT);
-});
+export const selectRecentHistory: ContentSelector<Array<ContentHistoryItem>> = createSelector(
+  selectHistory,
+  (history) => {
+    return history.slice(0, RECENT_HISTORY_AMOUNT);
+  }
+);
 
-export const selectShouldObscurePreviewForUri = (state: State, uri: string) => {
+export const selectShouldObscurePreviewForUri = (state: State, uri: string): boolean => {
   const showMatureContent = selectShowMatureContent(state);
   const isClaimMature = selectClaimIsNsfwForUri(state, uri);
   return isClaimMature && !showMatureContent;
 };
 
 // deprecated
-export const makeSelectShouldObscurePreview = (uri: string) =>
+export const makeSelectShouldObscurePreview = (uri: string): ContentSelector<boolean> =>
   createSelector(selectShowMatureContent, makeSelectClaimIsNsfw(uri), (showMatureContent, isClaimMature) => {
     return isClaimMature && !showMatureContent;
   });
 
 // should probably be in lbry-redux, yarn link was fighting me
-export const makeSelectFileExtensionForUri = (uri: string) =>
+export const makeSelectFileExtensionForUri = (uri: string): ContentSelector<?string> =>
   createSelector(makeSelectFileNameForUri(uri), (fileName) => {
     return fileName && path.extname(fileName).substring(1);
   });
 
-export const makeSelectFileRenderModeForUri = (uri: string) =>
+export const makeSelectFileRenderModeForUri = (uri: string): ContentSelector<string> =>
   createSelector(
     makeSelectContentTypeForUri(uri),
     makeSelectMediaTypeForUri(uri),
     makeSelectFileExtensionForUri(uri),
-    (contentType, mediaType, extension) => {
+    (contentType = '', mediaType = '', extension) => {
       if (mediaType === 'video' || FORCE_CONTENT_TYPE_PLAYER.includes(contentType)) {
         return RENDER_MODES.VIDEO;
       }
@@ -144,7 +159,7 @@ export const makeSelectFileRenderModeForUri = (uri: string) =>
       if (mediaType === 'image') {
         return RENDER_MODES.IMAGE;
       }
-      if (['md', 'markdown'].includes(extension) || ['text/md', 'text/markdown'].includes(contentType)) {
+      if ((extension && ['md', 'markdown'].includes(extension)) || ['text/md', 'text/markdown'].includes(contentType)) {
         return RENDER_MODES.MARKDOWN;
       }
       if (contentType === 'application/pdf') {
@@ -189,9 +204,9 @@ export const makeSelectFileRenderModeForUri = (uri: string) =>
     }
   );
 
-export const selectInsufficientCreditsForUri = (state: State, uri: string) => {
+export const selectInsufficientCreditsForUri = (state: State, uri: string): boolean => {
   const isMine = selectClaimIsMineForUri(state, uri);
   const costInfo = selectCostInfoForUri(state, uri);
   const balance = selectBalance(state);
-  return !isMine && costInfo && costInfo.cost > 0 && costInfo.cost > balance;
+  return Boolean(!isMine && costInfo && costInfo.cost > 0 && costInfo.cost > balance);
 };

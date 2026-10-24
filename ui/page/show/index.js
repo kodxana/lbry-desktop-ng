@@ -1,7 +1,7 @@
 import * as PAGES from 'constants/pages';
 import { DOMAIN } from 'config';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { PAGE_SIZE } from 'constants/claim';
 import {
   selectIsUriResolving,
@@ -20,11 +20,11 @@ import {
   makeSelectIsResolvingCollectionForId,
 } from 'redux/selectors/collections';
 import { doResolveUri } from 'redux/actions/claims';
-import { doClearPublish, doPrepareEdit } from 'redux/actions/publish';
+import { doClearPublish, doUpdatePublishForm } from 'redux/actions/publish';
 import { doFetchItemsInCollection } from 'redux/actions/collections';
 import { normalizeURI } from 'util/lbryURI';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
-import { push } from 'connected-react-router';
+import { push } from 'redux-first-history';
 import { makeSelectChannelInSubscriptions } from 'redux/selectors/subscriptions';
 import ShowPage from './view';
 
@@ -93,10 +93,10 @@ const perform = (dispatch) => ({
   resolveUri: (uri) => dispatch(doResolveUri(uri)),
   beginPublish: (name) => {
     dispatch(doClearPublish());
-    dispatch(doPrepareEdit({ name }));
+    dispatch(doUpdatePublishForm({ name }));
     dispatch(push(`/$/${PAGES.UPLOAD}`));
   },
   fetchCollectionItems: (claimId) => dispatch(doFetchItemsInCollection({ collectionId: claimId })),
 });
 
-export default withRouter(connect(select, perform)(ShowPage));
+export default withDesktopRouter(connect(select, perform)(ShowPage));

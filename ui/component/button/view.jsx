@@ -3,45 +3,40 @@ import type { Node } from 'react';
 import React, { forwardRef, useRef } from 'react';
 import Icon from 'component/common/icon';
 import classnames from 'classnames';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 import { formatLbryUrlForWeb } from 'util/url';
 import useCombinedRefs from 'effects/use-combined-refs';
 
 type Props = {
-  id: ?string,
-  href: ?string,
-  title: ?string,
-  label: ?string,
-  largestLabel: ?string,
-  icon: ?string,
-  iconRight: ?string,
-  disabled: ?boolean,
-  children: ?Node,
-  navigate: ?string,
-  className: ?string,
-  description: ?string,
-  type: string,
-  button: ?string, // primary, secondary, alt, link
+  ...Omit<React.ComponentProps<'button'>, 'onClick' | 'ref'>,
+  href?: ?string,
+  label?: Node,
+  largestLabel?: ?string,
+  icon?: ?string,
+  iconRight?: ?string,
+  navigate?: ?string,
+  description?: ?string,
+  button?: ?string, // primary, secondary, alt, link
   iconSize?: number,
   iconColor?: string,
   activeClass?: string,
-  innerRef: ?any,
   authSrc?: string,
   // Events
-  onClick: ?(any) => any,
-  onMouseEnter: ?(any) => any,
-  onMouseLeave: ?(any) => any,
-  pathname: string,
-  emailVerified: boolean,
-  myref: any,
-  dispatch: any,
+  onClick?: React.ComponentProps<'button'>['onClick'],
+  pathname?: string,
+  emailVerified?: boolean,
+  myref?: React.RefSetter<HTMLButtonElement>,
+  dispatch?: Dispatch,
   'aria-label'?: string,
-  user: ?User,
+  user?: ?User,
 };
 
 // use forwardRef to allow consumers to pass refs to the button content if they want to
 // flow requires forwardRef have default type arguments passed to it
-const Button = forwardRef<any, {}>((props: Props, ref: any) => {
+const Button: React.ComponentType<{ ...Props, ref?: React.RefSetter<HTMLButtonElement> }> = forwardRef<
+  Props,
+  HTMLButtonElement,
+>((props: Props, ref) => {
   const {
     type = 'button',
     onClick,
@@ -119,7 +114,7 @@ const Button = forwardRef<any, {}>((props: Props, ref: any) => {
             }}
           >
             <span style={{ visibility: 'hidden' }}>
-              {largestLabel || label}
+              {largestLabel}
               <div
                 style={{
                   position: 'absolute',
@@ -182,18 +177,17 @@ const Button = forwardRef<any, {}>((props: Props, ref: any) => {
 
   return path ? (
     <NavLink
-      exact
+      end
       to={path}
       title={title || defaultTooltip}
       disabled={disable}
       onClick={(e) => {
         e.stopPropagation();
         if (onClick) {
-          onClick();
+          onClick(e);
         }
       }}
-      className={combinedClassName}
-      activeClassName={activeClass}
+      className={({ isActive }) => classnames(combinedClassName, isActive && (activeClass || 'active'))}
       aria-label={ariaLabel}
       {...otherProps}
     >

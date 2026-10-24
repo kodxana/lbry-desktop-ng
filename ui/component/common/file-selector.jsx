@@ -1,12 +1,12 @@
 // @flow
 import * as React from 'react';
-import * as remote from '@electron/remote';
-import { ipcRenderer } from 'electron';
+import desktop from 'util/desktop';
 import Button from 'component/button';
 import { FormField } from 'component/common/form';
+import { getFilePath } from 'util/file-path';
 
 type Props = {
-  type: string,
+  type?: string,
   currentPath?: ?string,
   onFileChosen: (FileWithPath) => void,
   label?: string,
@@ -15,89 +15,86 @@ type Props = {
   error?: string,
   disabled?: boolean,
   autoFocus?: boolean,
-  filters?: Array<{ name: string, extension: string[] }>,
+  filters?: Array<{ name: string, extensions: string[] }>,
   readFile?: boolean,
 };
 
-class FileSelector extends React.PureComponent<Props> {
-  static defaultProps = {
+type State = { selectionError?: string, selecting: boolean };
+
+class FileSelector extends React.PureComponent<Props, State> {
+  state: State = { selectionError: undefined, selecting: false };
+  mounted = false;
+  selecting = false;
+  static defaultProps: { autoFocus: boolean, type: string, readFile: boolean } = {
     autoFocus: false,
     type: 'file',
     readFile: true,
   };
 
-  fileInput: React.ElementRef<any>;
+  fileInput: { current: HTMLInputElement | null } = React.createRef<HTMLInputElement>();
 
-  constructor() {
-    super();
-    this.fileInput = React.createRef();
-    this.handleFileInputSelection = this.handleFileInputSelection.bind(this);
-    this.handleDirectoryInputSelection = this.handleDirectoryInputSelection.bind(this);
-    this.fileInputButton = this.fileInputButton.bind(this);
+  componentDidMount() {
+    this.mounted = true;
   }
 
-  handleFileInputSelection = () => {
-    const { files } = this.fileInput.current;
-    if (!files) {
+  componentWillUnmount() {
+    this.mounted = false;
+  }
+
+  handleFileInputSelection = (): void => {
+    const input = this.fileInput.current;
+    if (!input) return;
+    const { files } = input;
+    if (!files || !files.length) {
       return;
     }
 
     const file = files[0];
 
-    if (this.props.onFileChosen) {
-      this.props.onFileChosen({ file, path: file.path || file.name });
+    try {
+      const path = getFilePath(file);
+      if (!path) throw new Error('The selected file has no local path');
+      this.setState({ selectionError: undefined });
+      if (this.props.onFileChosen) this.props.onFileChosen({ file, path });
+    } catch (_) {
+      this.setState({ selectionError: __('The selected file or folder could not be opened.') });
+    } finally {
+      input.value = ''; // Allow choosing the same file again.
     }
-    this.fileInput.current.value = null; // clear the file input
   };
 
-  handleDirectoryInputSelection = () => {
-    let defaultPath;
-    let properties;
-    let isWin = process.platform === 'win32';
-    let type = this.props.type;
-
-    if (isWin === true) {
-      defaultPath = process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE;
-    }
-
-    if (type === 'openFile') {
-      properties = ['openFile'];
-    }
-
-    if (type === 'openDirectory') {
-      properties = ['openDirectory'];
-    }
-
-    remote.dialog
-      .showOpenDialog({
-        properties,
-        defaultPath,
+  handleDirectoryInputSelection = async (): Promise<void> => {
+    if (this.selecting || this.props.disabled) return;
+    this.selecting = true;
+    this.setState({ selectionError: undefined, selecting: true });
+    try {
+      const result = await desktop.selectFile({
+        type: this.props.type,
         filters: this.props.filters,
-      })
-      .then((result) => {
-        const path = result && result.filePaths[0];
-        if (path) {
-          return ipcRenderer.invoke('get-file-from-path', path, this.props.readFile);
-        }
-      })
-      .then((result) => {
-        if (!result) {
-          return;
-        }
-        const file = new File([result.buffer], result.name, {
-          type: result.mime,
-        });
-        this.props.onFileChosen({ file, path: result.path });
+        readFile: this.props.readFile,
       });
+      if (!this.mounted) return;
+      if (!result.ok) throw new Error('File selection failed');
+      if (result.file) {
+        const selected = result.file;
+        const file = new File([selected.buffer], selected.name, { type: selected.mime });
+        this.props.onFileChosen({ file, path: selected.path });
+      }
+    } catch (_) {
+      if (this.mounted) this.setState({ selectionError: __('The selected file or folder could not be opened.') });
+    } finally {
+      this.selecting = false;
+      if (this.mounted) this.setState({ selecting: false });
+    }
   };
 
   fileInputButton = () => {
-    this.fileInput.current.click();
+    this.fileInput.current?.click();
   };
 
   input: ?HTMLInputElement;
 
-  render() {
+  render(): React.Node {
     const { type, currentPath, label, placeholder, accept, error, disabled, autoFocus = false } = this.props;
     const placeHolder = currentPath || placeholder;
 
@@ -107,8 +104,8 @@ class FileSelector extends React.PureComponent<Props> {
           label={label}
           webkitdirectory="true"
           className="form-field--with-button"
-          error={error}
-          disabled={disabled}
+          error={error || this.state.selectionError}
+          disabled={disabled || this.state.selecting}
           type="text"
           readOnly="readonly"
           value={placeHolder || __('Choose a file')}
@@ -116,7 +113,7 @@ class FileSelector extends React.PureComponent<Props> {
             <Button
               autoFocus={autoFocus}
               button="primary"
-              disabled={disabled}
+              disabled={disabled || this.state.selecting}
               onClick={
                 type === 'openDirectory' || type === 'openFile'
                   ? this.handleDirectoryInputSelection

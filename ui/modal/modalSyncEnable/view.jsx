@@ -8,7 +8,7 @@ type Props = {
   mode: string,
 };
 
-const ModalSyncEnable = (props: Props) => {
+const ModalSyncEnable = (props: Props): React.Node => {
   const { closeModal, mode } = props;
 
   return (

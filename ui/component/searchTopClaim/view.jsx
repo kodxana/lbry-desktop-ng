@@ -8,7 +8,7 @@ import Button from 'component/button';
 import ClaimEffectiveAmount from 'component/claimEffectiveAmount';
 import ClaimRepostAuthor from 'component/claimRepostAuthor';
 import I18nMessage from 'component/i18nMessage';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import LbcSymbol from 'component/common/lbc-symbol';
 import { DOMAIN } from 'config';
 
@@ -17,7 +17,7 @@ type Props = {
   winningUri: ?string,
   doResolveUris: (Array<string>) => void,
   hideLink?: boolean,
-  setChannelActive: (boolean) => void,
+  setChannelActive?: (boolean) => void,
   beginPublish: (?string) => void,
   pendingIds: Array<string>,
   isResolvingWinningUri: boolean,
@@ -25,7 +25,7 @@ type Props = {
   isSearching: boolean,
 };
 
-export default function SearchTopClaim(props: Props) {
+export default function SearchTopClaim(props: Props): React.Node {
   const {
     doResolveUris,
     query = '',
@@ -38,7 +38,7 @@ export default function SearchTopClaim(props: Props) {
     isSearching,
   } = props;
   const uriFromQuery = `lbry://${query}`;
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   let name;
   let channelUriFromQuery;
   let winningUriIsChannel;
@@ -64,10 +64,7 @@ export default function SearchTopClaim(props: Props) {
   }, [setChannelActive, winningUriIsChannel]);
 
   React.useEffect(() => {
-    let urisToResolve = [];
-    if (uriFromQuery) {
-      urisToResolve.push(uriFromQuery);
-    }
+    const urisToResolve = [uriFromQuery];
 
     if (channelUriFromQuery) {
       urisToResolve.push(channelUriFromQuery);

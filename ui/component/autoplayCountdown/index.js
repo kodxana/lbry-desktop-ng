@@ -1,6 +1,6 @@
 import { connect } from 'react-redux';
 import { makeSelectClaimForUri } from 'redux/selectors/claims';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import AutoplayCountdown from './view';
 import { selectModal } from 'redux/selectors/app';
 
@@ -13,4 +13,4 @@ const select = (state, props) => ({
   modal: selectModal(state),
 });
 
-export default withRouter(connect(select, null)(AutoplayCountdown));
+export default withDesktopRouter(connect(select, null)(AutoplayCountdown));

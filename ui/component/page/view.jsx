@@ -1,7 +1,7 @@
 // @flow
 import { MAIN_CLASS } from 'constants/classnames';
 import { parseURI } from 'util/lbryURI';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { useIsMobile, useIsMediumScreen } from 'effects/use-screensize';
 import classnames from 'classnames';
 import Header from 'component/header';
@@ -11,7 +11,7 @@ import SettingsSideNavigation from 'component/settingsSideNavigation';
 import SideNavigation from 'component/sideNavigation';
 import StatusBar from 'component/common/status-bar';
 import usePersistedState from 'effects/use-persisted-state';
-import type { Element, Node } from 'react';
+import type { Node } from 'react';
 
 type Props = {
   className: ?string,
@@ -31,12 +31,12 @@ type Props = {
   isMarkdown?: boolean,
   noHeader: boolean,
   noSideNavigation: boolean,
-  rightSide?: Element<any>,
+  rightSide?: React.Node,
   settingsPage?: boolean,
   videoTheaterMode: boolean,
 };
 
-function Page(props: Props) {
+function Page(props: Props): React.Node {
   const {
     authPage = false,
     backout,
@@ -54,7 +54,7 @@ function Page(props: Props) {
 
   const {
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const isMediumScreen = useIsMediumScreen();
   const isMobile = useIsMobile();

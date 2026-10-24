@@ -5,7 +5,7 @@ type Props = {
   themePath: ?string,
 };
 
-const Theme = (props: Props) => {
+const Theme = (props: Props): React.Node => {
   const { themePath } = props;
 
   if (!themePath) {

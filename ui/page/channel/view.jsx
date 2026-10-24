@@ -9,7 +9,7 @@ import Page from 'component/page';
 import SubscribeButton from 'component/subscribeButton';
 import ShareButton from 'component/shareButton';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Button from 'component/button';
 import { formatLbryUrlForWeb } from 'util/url';
 import ChannelContent from 'component/channelContent';
@@ -25,7 +25,6 @@ import OptimizedImage from 'component/optimizedImage';
 import Yrbl from 'component/yrbl';
 import I18nMessage from 'component/i18nMessage';
 import TruncatedText from 'component/common/truncated-text';
-// $FlowFixMe cannot resolve ...
 import PlaceholderTx from 'static/img/placeholderTx.gif';
 
 export const PAGE_VIEW_QUERY = `view`;
@@ -46,7 +45,6 @@ type Props = {
   cover: ?string,
   thumbnail: ?string,
   page: number,
-  match: { params: { attribute: ?string } },
   channelIsMine: boolean,
   isSubscribed: boolean,
   channelIsBlocked: boolean,
@@ -63,7 +61,7 @@ type Props = {
   unpublishedCollections: CollectionGroup,
 };
 
-function ChannelPage(props: Props) {
+function ChannelPage(props: Props): React.Node {
   const {
     uri,
     claim,
@@ -85,7 +83,7 @@ function ChannelPage(props: Props) {
     push,
     goBack,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
   const [viewBlockedChannel, setViewBlockedChannel] = React.useState(false);
   const urlParams = new URLSearchParams(search);
   const currentView = urlParams.get(PAGE_VIEW_QUERY) || PAGE.CONTENT;
@@ -165,7 +163,7 @@ function ChannelPage(props: Props) {
       break;
   }
 
-  function onTabChange(newTabIndex) {
+  function onTabChange(newTabIndex: number) {
     let url = formatLbryUrlForWeb(uri);
     let search = '?';
 
@@ -283,10 +281,16 @@ function ChannelPage(props: Props) {
       ) : (
         <Tabs onChange={onTabChange} index={tabIndex}>
           <TabList className="tabs__list--channel-page">
-            <Tab disabled={editing}>{__('Content')}</Tab>
-            <Tab disabled={editing}>{__('Playlists')}</Tab>
-            <Tab>{editing ? __('Editing Your Channel') : __('About --[tab title in Channel Page]--')}</Tab>
-            <Tab disabled={editing}>{__('Community')}</Tab>
+            <Tab index={0} disabled={editing}>
+              {__('Content')}
+            </Tab>
+            <Tab index={1} disabled={editing}>
+              {__('Playlists')}
+            </Tab>
+            <Tab index={2}>{__('About --[tab title in Channel Page]--')}</Tab>
+            <Tab index={3} disabled={editing}>
+              {__('Community')}
+            </Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

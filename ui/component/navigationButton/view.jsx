@@ -9,19 +9,25 @@ const MAX_HISTORY_SIZE = 12;
 type Props = {
   isBackward: boolean,
   history: {
-    entries: Array<{ key: string, title: string, pathname: string }>,
-    go: number => void,
+    entries: Array<{ key: string, title?: string, pathname: string }>,
+    go: (number) => void,
     goBack: () => void,
     goForward: () => void,
     index: number,
     length: number,
     location: { pathname: string },
-    push: string => void,
+    push: (string) => void,
   },
 };
 
 // determines which slice of entries should make up the back or forward button drop-downs (isBackward vs !isBackward respectively)
-const sliceEntries = (currentIndex, entries, historyLength, isBackward, maxSize) => {
+const sliceEntries = (
+  currentIndex: number,
+  entries: Props['history']['entries'],
+  historyLength: number,
+  isBackward: boolean,
+  maxSize: number
+) => {
   let l = isBackward ? 0 : currentIndex + 1;
   let r = isBackward ? currentIndex : historyLength;
   const exceedsMax = maxSize < r - l;
@@ -35,7 +41,7 @@ const sliceEntries = (currentIndex, entries, historyLength, isBackward, maxSize)
   return entries.slice(l, r);
 };
 
-const NavigationButton = (props: Props) => {
+const NavigationButton = (props: Props): React.Node => {
   const { isBackward, history } = props;
   const { entries, go } = history;
   const currentIndex = history.index;
@@ -44,7 +50,7 @@ const NavigationButton = (props: Props) => {
 
   // creates an <li> intended for the button's <ul>
   const makeItem = useCallback(
-    (entry: { pathname: string, title: string, key: string }, index: number) => {
+    (entry: { pathname: string, title?: string, key: string }, index: number) => {
       // difference between the current index and the index of the entry
       const backwardDif = index - (currentIndex < MAX_HISTORY_SIZE ? currentIndex : MAX_HISTORY_SIZE);
       const forwardDif = index + 1;
@@ -69,7 +75,7 @@ const NavigationButton = (props: Props) => {
   return (
     <div
       // @if TARGET='app'
-      onDoubleClick={e => {
+      onDoubleClick={(e) => {
         e.stopPropagation();
       }}
       // @endif
@@ -79,7 +85,7 @@ const NavigationButton = (props: Props) => {
         description={isBackward ? __('Navigate back') : __('Navigate forward')}
         onBlur={() => setShowHistory(false)}
         onClick={() => (isBackward ? history.goBack() : history.goForward())}
-        onContextMenu={e => {
+        onContextMenu={(e) => {
           setShowHistory(!showHistory);
           // the following three lines prevent the regular context menu (right click menu) from appearing
           e.preventDefault();

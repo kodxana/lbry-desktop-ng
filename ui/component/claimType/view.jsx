@@ -9,7 +9,7 @@ type Props = {
   small: boolean,
 };
 
-function ClaimType(props: Props) {
+function ClaimType(props: Props): React.Node {
   const { claim, small } = props;
   const { value_type: claimType } = claim || {};
 

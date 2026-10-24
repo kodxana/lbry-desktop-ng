@@ -12,7 +12,7 @@ type Props = {
   tileLayout: boolean,
 };
 
-function TagsFollowingPage(props: Props) {
+function TagsFollowingPage(props: Props): React.Node {
   const { tileLayout } = props;
 
   return (

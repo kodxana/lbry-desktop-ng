@@ -1,17 +1,33 @@
 // @flow
 
-declare type Claim = StreamClaim | ChannelClaim | CollectionClaim;
+declare type Claim = StreamClaim | ChannelClaim | CollectionClaim | RepostClaim;
 
-declare type ChannelClaim = GenericClaim & {
+declare type ChannelClaim = {
+  ...GenericClaim,
+  value_type: 'channel',
   value: ChannelMetadata,
+  ...
 };
 
-declare type CollectionClaim = GenericClaim & {
+declare type CollectionClaim = {
+  ...GenericClaim,
+  value_type: 'collection',
   value: CollectionMetadata,
+  ...
 };
 
-declare type StreamClaim = GenericClaim & {
+declare type StreamClaim = {
+  ...GenericClaim,
+  value_type: 'stream',
   value: StreamMetadata,
+  ...
+};
+
+declare type RepostClaim = {
+  ...GenericClaim,
+  value_type: 'repost',
+  value: { ...GenericMetadata, claim_id?: string, ... },
+  ...
 };
 
 declare type GenericClaim = {
@@ -34,12 +50,12 @@ declare type GenericClaim = {
   short_url: string, // permanent_url with short id, no channel
   txid: string, // unique tx id
   type: 'claim' | 'update' | 'support',
-  value_type: 'stream' | 'channel' | 'collection',
+  value_type: 'stream' | 'channel' | 'collection' | 'repost',
   signing_channel?: ChannelClaim,
-  reposted_claim?: GenericClaim,
-  repost_channel_url?: string,
+  reposted_claim?: Claim,
+  repost_channel_url?: string | void,
   repost_url?: string,
-  repost_bid_amount?: string,
+  repost_bid_amount?: string | void,
   purchase_receipt?: PurchaseReceipt,
   meta: {
     activation_height: number,
@@ -55,7 +71,9 @@ declare type GenericClaim = {
     trending_group: number,
     trending_local: number,
     trending_mixed: number,
+    ...
   },
+  ...
 };
 
 declare type GenericMetadata = {
@@ -63,24 +81,29 @@ declare type GenericMetadata = {
   description?: string,
   thumbnail?: {
     url?: string,
+    ...
   },
   languages?: Array<string>,
   tags?: Array<string>,
-  locations?: Array<Location>,
+  locations?: Array<ClaimLocation>,
+  ...
 };
 
 declare type ChannelMetadata = GenericMetadata & {
   public_key: string,
   public_key_id: string,
   cover_url?: string,
+  cover?: { url?: string, ... },
   email?: string,
   website_url?: string,
   featured?: Array<string>,
+  ...
 };
 
 declare type CollectionMetadata = GenericMetadata & {
   claims: Array<string>,
-}
+  ...
+};
 
 declare type StreamMetadata = GenericMetadata & {
   license?: string, // License "title" ex: Creative Commons, Custom copyright
@@ -94,6 +117,7 @@ declare type StreamMetadata = GenericMetadata & {
     hash?: string,
     name?: string, // file name
     size?: number, // size of file in bytes
+    ...
   },
 
   // Only exists if a stream has a fee
@@ -105,32 +129,39 @@ declare type StreamMetadata = GenericMetadata & {
     duration: number,
     height: number,
     width: number,
+    ...
   },
   audio?: {
     duration: number,
+    ...
   },
   image?: {
     height: number,
     width: number,
+    ...
   },
   software?: {
     os: string,
+    ...
   },
+  ...
 };
 
-declare type Location = {
+declare type ClaimLocation = {
   latitude?: number,
   longitude?: number,
   country?: string,
   state?: string,
   city?: string,
   code?: string,
+  ...
 };
 
 declare type Fee = {
   amount: string,
   currency: string,
   address: string,
+  ...
 };
 
 declare type PurchaseReceipt = {
@@ -143,6 +174,7 @@ declare type PurchaseReceipt = {
   timestamp: number,
   txid: string,
   type: 'purchase',
+  ...
 };
 
 declare type ClaimErrorCensor = {
@@ -165,6 +197,7 @@ declare type ClaimErrorCensor = {
     reposted: number,
     support_amount: string,
     take_over_height: number,
+    ...
   },
   name: string,
   normalized_name: string,
@@ -177,19 +210,24 @@ declare type ClaimErrorCensor = {
   value: {
     public_key: string,
     public_key_id: string,
+    ...
   },
   value_type: string,
-}
+  ...
+};
+
+declare type ClaimResolveResult = {
+  stream?: ?(StreamClaim | RepostClaim),
+  channel?: ?ChannelClaim,
+  claimsInChannel?: ?number,
+  collection?: ?CollectionClaim,
+  errorCensor?: ?ClaimErrorCensor,
+  ...
+};
 
 declare type ClaimActionResolveInfo = {
-  [string]: {
-    stream: ?StreamClaim,
-    channel: ?ChannelClaim,
-    claimsInChannel: ?number,
-    collection: ?CollectionClaim,
-    errorCensor: ?ClaimErrorCensor,
-  },
-}
+  resolveInfo: { [string]: ClaimResolveResult },
+};
 
 declare type ChannelUpdateParams = {
   claim_id: string,
@@ -205,7 +243,15 @@ declare type ChannelUpdateParams = {
   languages?: Array<string>,
   locations?: Array<string>,
   blocking?: boolean,
-}
+  ...
+};
+
+declare type ClaimMetadataFields = Readonly<{ ...GenericMetadata, website_url?: string, email?: string, ... }>;
+declare type ClaimMetadataKey = keyof ClaimMetadataFields;
+declare type ClaimMetadataSelector = <K extends ClaimMetadataKey>(
+  uri: string,
+  key: K
+) => (state: { claims: ClaimsState, ... }) => ClaimMetadataFields[K] | void;
 
 declare type ChannelPublishParams = {
   name: string,
@@ -219,7 +265,8 @@ declare type ChannelPublishParams = {
   email?: string,
   tags?: Array<string>,
   languages?: Array<string>,
-}
+  ...
+};
 
 declare type CollectionUpdateParams = {
   claim_id: string,
@@ -236,7 +283,8 @@ declare type CollectionUpdateParams = {
   languages?: Array<string>,
   locations?: Array<string>,
   blocking?: boolean,
-}
+  ...
+};
 
 declare type CollectionPublishParams = {
   name: string,
@@ -248,4 +296,5 @@ declare type CollectionPublishParams = {
   description?: string,
   tags?: Array<string>,
   languages?: Array<string>,
-}
+  ...
+};

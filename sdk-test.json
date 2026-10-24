@@ -1,0 +1,7 @@
+{
+  "appId": "net.lbry.community.sdk-test",
+  "appName": "LBRY SDK Test",
+  "apiPort": 35279,
+  "streamingPort": 35280,
+  "peerPort": 34444
+}

@@ -19,19 +19,13 @@ type Props = {
   doToggleInterestedInYoutubeSync: () => void,
 };
 
-function UserFirstChannel(props: Props) {
-  const {
-    createChannel,
-    creatingChannel,
-    claimingReward,
-    user,
-    createChannelError,
-    doToggleInterestedInYoutubeSync,
-  } = props;
+function UserFirstChannel(props: Props): React.Node {
+  const { createChannel, creatingChannel, claimingReward, user, createChannelError, doToggleInterestedInYoutubeSync } =
+    props;
   const { primary_email: primaryEmail } = user;
   const initialChannel = primaryEmail ? primaryEmail.split('@')[0] : '';
   const [channel, setChannel] = useState(initialChannel);
-  const [nameError, setNameError] = useState(undefined);
+  const [nameError, setNameError] = useState<string | void>(undefined);
 
   function handleCreateChannel() {
     createChannel(`@${channel}`, DEFAULT_BID_FOR_FIRST_CHANNEL).then((channelClaim) => {
@@ -41,7 +35,7 @@ function UserFirstChannel(props: Props) {
     });
   }
 
-  function handleChannelChange(e) {
+  function handleChannelChange(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     setChannel(value);
     if (!isNameValid(value)) {

@@ -23,18 +23,17 @@ type State = { claims: any, search: SearchState };
 
 export const selectState = (state: State): SearchState => state.search;
 
-// $FlowFixMe - 'searchQuery' is never populated. Something lost in a merge?
-export const selectSearchValue: (state: State) => string = (state) => selectState(state).searchQuery;
+export const selectSearchValue: (state: State) => string | void = (state) => selectState(state).searchQuery;
 export const selectSearchOptions: (state: State) => SearchOptions = (state) => selectState(state).options;
 export const selectIsSearching: (state: State) => boolean = (state) => selectState(state).searching;
-export const selectSearchResultByQuery: (state: State) => { [string]: Array<string> } = (state) =>
+export const selectSearchResultByQuery: (state: State) => SearchState['resultsByQuery'] = (state) =>
   selectState(state).resultsByQuery;
-export const selectHasReachedMaxResultsLength: (state: State) => { [boolean]: Array<boolean> } = (state) =>
+export const selectHasReachedMaxResultsLength: (state: State) => SearchState['hasReachedMaxResultsLength'] = (state) =>
   selectState(state).hasReachedMaxResultsLength;
 export const selectMentionSearchResults: (state: State) => Array<string> = (state) => selectState(state).results;
 export const selectMentionQuery: (state: State) => string = (state) => selectState(state).mentionQuery;
 
-export const makeSelectSearchUrisForQuery = (query: string): ((state: State) => Array<string>) =>
+export const makeSelectSearchUrisForQuery = (query: string): ((state: State) => Array<string> | void) =>
   createSelector(selectSearchResultByQuery, (byQuery) => {
     if (!query) return;
     // replace statement below is kind of ugly, and repeated in doSearch action
@@ -43,7 +42,7 @@ export const makeSelectSearchUrisForQuery = (query: string): ((state: State) => 
     return byQuery[normalizedQuery] && byQuery[normalizedQuery]['uris'];
   });
 
-export const makeSelectHasReachedMaxResultsLength = (query: string): ((state: State) => boolean) =>
+export const makeSelectHasReachedMaxResultsLength = (query: string): ((state: State) => boolean | 0 | void) =>
   createSelector(selectHasReachedMaxResultsLength, (hasReachedMaxResultsLength) => {
     if (query) {
       query = query.replace(/^lbry:\/\//i, '').replace(/\//, ' ');
@@ -53,7 +52,7 @@ export const makeSelectHasReachedMaxResultsLength = (query: string): ((state: St
     return hasReachedMaxResultsLength[query];
   });
 
-export const selectRecommendedContentForUri = createCachedSelector(
+export const selectRecommendedContentForUri: (state: State, uri: string) => Array<string> | void = createCachedSelector(
   (state, uri) => uri,
   selectHistory,
   selectClaimsByUri,
@@ -75,11 +74,7 @@ export const selectRecommendedContentForUri = createCachedSelector(
 
     if (!title) return;
 
-    const options: {
-      size: number,
-      nsfw?: boolean,
-      isBackgroundSearch?: boolean,
-    } = { size: 20, nsfw: matureEnabled, isBackgroundSearch: true };
+    const options: SearchOptions = { size: 20, nsfw: matureEnabled, isBackgroundSearch: true };
 
     if (matureEnabled || (!matureEnabled && !isMature)) {
       options[SEARCH_OPTIONS.RELATED_TO] = claim.claim_id;
@@ -114,8 +109,14 @@ export const selectRecommendedContentForUri = createCachedSelector(
       const nextUriToPlay = recommendedContent.filter((nextRecommendedUri) => {
         const costInfo = costInfoByUri[nextRecommendedUri] && costInfoByUri[nextRecommendedUri].cost;
         const recommendedClaim = claimsByUri[nextRecommendedUri];
-        const isVideo = recommendedClaim && recommendedClaim.value && recommendedClaim.value.stream_type === 'video';
-        const isAudio = recommendedClaim && recommendedClaim.value && recommendedClaim.value.stream_type === 'audio';
+        const isVideo =
+          recommendedClaim &&
+          recommendedClaim.value_type === 'stream' &&
+          recommendedClaim.value.stream_type === 'video';
+        const isAudio =
+          recommendedClaim &&
+          recommendedClaim.value_type === 'stream' &&
+          recommendedClaim.value.stream_type === 'audio';
 
         let historyMatch = false;
         try {
@@ -141,7 +142,7 @@ export const selectRecommendedContentForUri = createCachedSelector(
   }
 )((state, uri) => String(uri));
 
-export const makeSelectRecommendedRecsysIdForClaimId = (claimId: string) =>
+export const makeSelectRecommendedRecsysIdForClaimId = (claimId: string): ((state: State) => string | null | void) =>
   createSelector(
     makeSelectClaimForClaimId(claimId),
     selectShowMatureContent,
@@ -171,7 +172,7 @@ export const makeSelectRecommendedRecsysIdForClaimId = (claimId: string) =>
     }
   );
 
-export const makeSelectWinningUriForQuery = (query: string) => {
+export const makeSelectWinningUriForQuery = (query: string): ((state: State) => string | void) => {
   const uriFromQuery = `lbry://${query}`;
 
   let channelUriFromQuery = '';
@@ -190,7 +191,7 @@ export const makeSelectWinningUriForQuery = (query: string) => {
     (matureEnabled, pendingClaim, claim1, claim2) => {
       const claim1Mature = claim1 && isClaimNsfw(claim1);
       const claim2Mature = claim2 && isClaimNsfw(claim2);
-      let pendingAmount = pendingClaim && pendingClaim.amount;
+      const pendingAmount = pendingClaim && Number(pendingClaim.amount);
 
       if (!claim1 && !claim2) {
         return undefined;
@@ -200,13 +201,14 @@ export const makeSelectWinningUriForQuery = (query: string) => {
         return matureEnabled
           ? claim1.repost_url || claim1.canonical_url
           : claim1Mature
-          ? undefined
-          : claim1.repost_url || claim1.canonical_url;
+            ? undefined
+            : claim1.repost_url || claim1.canonical_url;
       }
 
-      const effectiveAmount1 = claim1 && (claim1.repost_bid_amount || claim1.meta.effective_amount);
+      if (!claim1 || !claim2) return undefined;
+      const effectiveAmount1 = Number(claim1.repost_bid_amount || claim1.meta.effective_amount);
       // claim2 will never have a repost_bid_amount because reposts never start with "@"
-      const effectiveAmount2 = claim2 && claim2.meta.effective_amount;
+      const effectiveAmount2 = Number(claim2.meta.effective_amount);
 
       if (!matureEnabled) {
         if (claim1Mature && !claim2Mature) {
@@ -222,8 +224,13 @@ export const makeSelectWinningUriForQuery = (query: string) => {
         Number(effectiveAmount1) > Number(effectiveAmount2)
           ? claim1.repost_url || claim1.canonical_url
           : claim2.canonical_url;
-      if (pendingAmount && pendingAmount > effectiveAmount1 && pendingAmount > effectiveAmount2) {
-        return pendingAmount.permanent_url;
+      if (
+        pendingClaim &&
+        pendingAmount != null &&
+        pendingAmount > effectiveAmount1 &&
+        pendingAmount > effectiveAmount2
+      ) {
+        return pendingClaim.permanent_url;
       } else {
         return returnBeforePending;
       }
@@ -231,7 +238,7 @@ export const makeSelectWinningUriForQuery = (query: string) => {
   );
 };
 
-export const selectIsResolvingWinningUri = (state: State, query: string = '') => {
+export const selectIsResolvingWinningUri = (state: State, query: string = ''): boolean => {
   const uriFromQuery = `lbry://${query}`;
   let channelUriFromQuery;
   try {
@@ -246,7 +253,7 @@ export const selectIsResolvingWinningUri = (state: State, query: string = '') =>
   return claim1IsResolving || claim2IsResolving;
 };
 
-export const makeSelectUrlForClaimId = (claimId: string) =>
+export const makeSelectUrlForClaimId = (claimId: string): ((state: State) => string | null) =>
   createSelector(makeSelectClaimForClaimId(claimId), (claim) =>
     claim ? claim.canonical_url || claim.permanent_url : null
   );

@@ -1,130 +1,97 @@
 // @flow
-import React, { Fragment, useState, useRef, useContext, useLayoutEffect, createContext } from 'react';
-import {
-  Tabs as ReachTabs,
-  Tab as ReachTab,
-  TabList as ReachTabList,
-  TabPanels as ReachTabPanels,
-  TabPanel as ReachTabPanel,
-} from '@reach/tabs';
+import React, { useState, useRef, useContext, useLayoutEffect, createContext } from 'react';
+import * as Ariakit from '@ariakit/react';
+import { v4 as uuid } from 'uuid';
 import classnames from 'classnames';
-import { useRect } from '@reach/rect';
 
-// Tabs are a compound component
-// The components are used individually, but they will still interact and share state
-// When using, at a minimum you must arrange the components in this pattern
-// When the <Tab> at index 0 is active, the TabPanel at index 0 will be displayed
-//
-// <Tabs onChange={...} index={...}>
-//   <TabList>
-//     <Tab>Tab label 1</Tab>
-//     <Tab>Tab label 2</Tab>
-//     ...
-//   </TabList>
-//   <TabPanels>
-//     <TabPanel>Content for Tab 1</TabPanel>
-//     <TabPanel>Content for Tab 2</TabPanel>
-//     ...
-//   </TabPanels>
-// </Tabs>
-//
-// the base @reach/tabs components handle all the focus/accessibility labels
-// We're just adding some styling
+const TabsContext = createContext('');
+const TabPanelContext = createContext('');
 
 type TabsProps = {
   index?: number,
-  onChange?: number => void,
-  children: Array<React$Node>,
-};
-
-// Use context so child TabPanels can set the active tab, which is kept in Tabs' state
-const AnimatedContext = createContext<any>();
-
-function Tabs(props: TabsProps) {
-  // Store the position of the selected Tab so we can animate the "active" bar to its position
-  const [selectedRect, setSelectedRect] = useState(null);
-
-  // Create a ref of the parent element so we can measure the relative "left" for the bar for the child Tab's
-  const tabsRef = useRef();
-  const tabsRect = useRect(tabsRef);
-
-  const tabLabels = props.children[0];
-  const tabContent = props.children[1];
-
-  return (
-    <AnimatedContext.Provider value={setSelectedRect}>
-      <ReachTabs className="tabs" {...props} ref={tabsRef}>
-        {tabLabels}
-
-        <div
-          className="tab__divider"
-          style={{
-            left: selectedRect && tabsRect && selectedRect.left - tabsRect.left,
-            width: selectedRect && selectedRect.width,
-          }}
-        />
-
-        {tabContent}
-      </ReachTabs>
-    </AnimatedContext.Provider>
-  );
-}
-
-//
-// The wrapper for the list of tab labels that users can click
-type TabListProps = {
+  onChange?: (number) => void,
+  children: Array<React.Node>,
   className?: string,
 };
-function TabList(props: TabListProps) {
-  const { className, ...rest } = props;
-  return <ReachTabList className={classnames('tabs__list', className)} {...rest} />;
-}
 
-//
-// The links that users click
-// Accesses `setSelectedRect` from context to set itself as active if needed
-// Flow doesn't understand we don't have to pass it in ourselves
-type TabProps = {
-  isSelected?: Boolean,
-};
-function Tab(props: TabProps) {
-  // @reach/tabs provides an `isSelected` prop
-  // We could also useContext to read it manually
-  const { isSelected } = props;
+function Tabs({ index, onChange, children, className, ...props }: TabsProps): React.Node {
+  const [id] = useState(() => `tabs-${uuid()}`);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [indicator, setIndicator] = useState<{ left?: number, width?: number }>({});
+  const store = Ariakit.useTabStore({
+    rtl: document.documentElement.dir === 'rtl',
+    defaultSelectedId: `${id}-0`,
+    selectedId: index === undefined ? undefined : `${id}-${index}`,
+    setSelectedId: (selected) => {
+      if (onChange && selected) onChange(Number(selected.slice(id.length + 1)));
+    },
+  });
+  const selectedId = Ariakit.useStoreState(store, 'selectedId');
 
-  // Each tab measures itself
-  const ref = useRef();
-  const rect = useRect(ref, isSelected);
-
-  // and calls up to the parent when it becomes selected
-  // we useLayoutEffect to avoid flicker
-  const setSelectedRect = useContext(AnimatedContext);
   useLayoutEffect(() => {
-    if (isSelected) setSelectedRect(rect);
-  }, [isSelected, rect, setSelectedRect]);
+    const element = ref.current;
+    if (!element || !selectedId) return;
+    const measure = () => {
+      const selected = document.getElementById(selectedId);
+      if (!selected || !element.contains(selected)) return;
+      const rect = selected.getBoundingClientRect();
+      const left = rect.left - element.getBoundingClientRect().left;
+      setIndicator((previous) =>
+        previous.left === left && previous.width === rect.width ? previous : { left, width: rect.width }
+      );
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    element.querySelectorAll('[role="tablist"], [role="tab"]').forEach((tab) => observer.observe(tab));
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [selectedId]);
 
-  return <ReachTab ref={ref} {...props} className="tab" />;
-}
-
-//
-// The wrapper for TabPanel
-type TabPanelsProps = {
-  header?: React$Node,
-};
-function TabPanels(props: TabPanelsProps) {
-  const { header, ...rest } = props;
   return (
-    <Fragment>
-      {header}
-      <ReachTabPanels {...rest} />
-    </Fragment>
+    <Ariakit.TabProvider store={store}>
+      <TabsContext.Provider value={id}>
+        <div {...props} className={classnames('tabs', className)} ref={ref}>
+          {children[0]}
+          <div className="tab__divider" style={indicator} />
+          {children[1]}
+        </div>
+      </TabsContext.Provider>
+    </Ariakit.TabProvider>
   );
 }
 
-//
-// The wrapper for content when it's associated Tab is selected
-function TabPanel(props: any) {
-  return <ReachTabPanel className="tab__panel" {...props} />;
+function TabList({ className, ...props }: { className?: string, children: React.Node }): React.Node {
+  return <Ariakit.TabList {...props} className={classnames('tabs__list', className)} />;
+}
+
+function Tab({ index, ...props }: { index: number, disabled?: boolean, children: React.Node }): React.Node {
+  const id = useContext(TabsContext);
+  return <Ariakit.Tab {...props} id={`${id}-${index}`} className="tab" type="button" accessibleWhenDisabled={false} />;
+}
+
+function TabPanels({ header, children, ...props }: { header?: React.Node, children: React.Node }): React.Node {
+  const id = useContext(TabsContext);
+  return (
+    <>
+      {header}
+      <div {...props} className="tab__panels">
+        {React.Children.map(children, (child, index) => (
+          <TabPanelContext.Provider value={`${id}-${index}`}>{child}</TabPanelContext.Provider>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function TabPanel(props: { tabId?: string, children: React.Node }): React.Node {
+  const tabId = useContext(TabPanelContext);
+  return <Ariakit.TabPanel tabId={tabId} {...props} className="tab__panel" />;
 }
 
 export { Tabs, TabList, Tab, TabPanels, TabPanel };

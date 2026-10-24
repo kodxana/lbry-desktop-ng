@@ -1,53 +1,59 @@
 // @flow
-import * as ACTIONS from 'constants/action_types';
 
 declare type SearchOptions = {
-  // :(
-  // https://github.com/facebook/flow/issues/6492
-  RESULT_COUNT: number,
-  CLAIM_TYPE: string,
-  INCLUDE_FILES: string,
-  INCLUDE_CHANNELS: string,
-  INCLUDE_FILES_AND_CHANNELS: string,
-  MEDIA_AUDIO: string,
-  MEDIA_VIDEO: string,
-  MEDIA_TEXT: string,
-  MEDIA_IMAGE: string,
-  MEDIA_APPLICATION: string,
-  SORT: string,
-  SORT_ACCENDING: string,
-  SORT_DESCENDING: string,
-  EXACT: string,
-  TIME_FILTER: string,
-  TIME_FILTER_LAST_HOUR: string,
-  TIME_FILTER_TODAY: string,
-  TIME_FILTER_THIS_WEEK: string,
-  TIME_FILTER_THIS_MONTH: string,
-  TIME_FILTER_THIS_YEAR: string,
+  // Option keys are the values in SEARCH_OPTIONS, not the constant names.
+  size?: number,
+  from?: number,
+  claimType?: string,
+  related_to?: string,
+  nsfw?: boolean,
+  audio?: boolean,
+  video?: boolean,
+  text?: boolean,
+  image?: boolean,
+  application?: boolean,
+  sort_by?: string,
+  exact?: boolean,
+  free_only?: boolean,
+  time_filter?: string,
+  isBackgroundSearch?: boolean,
+  ...
 };
 
 declare type SearchState = {
+  // Search-option updates read this optional query; the reducer does not populate it.
+  searchQuery?: string,
   options: SearchOptions,
-  resultsByQuery: {},
+  resultsByQuery: { [string]: { uris: Array<string>, recsys: string | null, ... } },
   results: Array<string>,
-  hasReachedMaxResultsLength: {},
+  // The reducer's size && comparison also preserves zero and omitted sizes.
+  hasReachedMaxResultsLength: { [string]: boolean | 0 | void },
   searching: boolean,
   mentionQuery: string,
+  ...
 };
 
 declare type SearchSuccess = {
-  type: ACTIONS.SEARCH_SUCCESS,
+  type: 'SEARCH_SUCCESS',
   data: {
     query: string,
-    from: number,
-    size: number,
+    from: number | void,
+    size: number | void,
     uris: Array<string>,
-    recsys: string,
-    query: string,
+    recsys: string | null,
+    ...
   },
+  ...
+};
+
+declare type MentionSearchResults = {
+  type: 'SET_MENTION_SEARCH_RESULTS',
+  data: { query: string, uris: Array<string>, ... },
+  ...
 };
 
 declare type UpdateSearchOptions = {
-  type: ACTIONS.UPDATE_SEARCH_OPTIONS,
+  type: 'UPDATE_SEARCH_OPTIONS',
   data: SearchOptions,
+  ...
 };

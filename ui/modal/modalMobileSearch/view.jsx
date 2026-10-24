@@ -11,7 +11,7 @@ type Props = {
   customSelectAction?: (string) => void,
 };
 
-export default function ModalMobileSearch(props: Props) {
+export default function ModalMobileSearch(props: Props): React.Node {
   const { closeModal, channelsOnly, noTopSuggestion, noBottomLinks, customSelectAction } = props;
 
   return (

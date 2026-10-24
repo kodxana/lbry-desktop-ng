@@ -24,7 +24,7 @@ type Props = {
   setDaemonSetting: (string, ?SetDaemonSettingArg) => void,
 };
 
-export default function MaxPurchasePrice(props: Props) {
+export default function MaxPurchasePrice(props: Props): React.Node {
   const { daemonSettings, setDaemonSetting } = props;
 
   const defaultMaxKeyFee = { currency: 'USD', amount: 50 };

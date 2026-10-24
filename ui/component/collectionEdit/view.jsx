@@ -1,7 +1,6 @@
 // @flow
 
-// $FlowFixMe
-import { DragDropContext, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import React from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';
@@ -13,7 +12,7 @@ import ClaimList from 'component/claimList';
 import Card from 'component/common/card';
 import LbcSymbol from 'component/common/lbc-symbol';
 import SelectThumbnail from 'component/selectThumbnail';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { isNameValid, regexInvalidURI } from 'util/lbryURI';
 import * as THUMBNAIL_STATUSES from 'constants/thumbnail_upload_statuses';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
@@ -28,31 +27,31 @@ import analytics from 'analytics';
 const LANG_NONE = 'none';
 const MAX_TAG_SELECT = 5;
 
-type Props = {
-  uri: string,
-  claim: CollectionClaim,
+export type Props = {
+  uri: ?string,
+  claim: ?CollectionClaim,
   balance: number,
   disabled: boolean,
   activeChannelClaim: ?ChannelClaim,
   incognito: boolean,
   // params
-  title: string,
-  amount: number,
-  thumbnailUrl: string,
-  description: string,
-  tags: Array<string>,
-  locations: Array<string>,
-  languages: Array<string>,
+  title: ?string,
+  amount: ?number,
+  thumbnailUrl: ?string,
+  description: ?string,
+  tags: ?Array<string>,
+  locations: ?Array<ClaimLocation>,
+  languages: ?Array<string>,
   collectionId: string,
-  collection: Collection,
-  collectionClaimIds: Array<string>,
-  collectionUrls: Array<string>,
+  collection: ?Collection,
+  collectionClaimIds: ?Array<string>,
+  collectionUrls: ?Array<?string>,
   updatingCollection: boolean,
-  updateError: string,
-  createError: string,
+  updateError: ?string,
+  createError: ?string,
   creatingCollection: boolean,
-  publishCollectionUpdate: (CollectionUpdateParams) => Promise<any>,
-  publishCollection: (CollectionPublishParams, string) => Promise<any>,
+  publishCollectionUpdate: (CollectionUpdateOptions) => Promise<Claim | void>,
+  publishCollection: (CollectionCreateOptions, string) => Promise<Claim | void>,
   clearCollectionErrors: () => void,
   onDone: (string) => void,
   setActiveChannel: (string) => void,
@@ -61,7 +60,7 @@ type Props = {
   resetThumbnailStatus: () => void,
 };
 
-function CollectionForm(props: Props) {
+function CollectionForm(props: Props): React.Node {
   const {
     uri, // collection uri
     claim,
@@ -105,41 +104,44 @@ function CollectionForm(props: Props) {
   const collectionChannel = claim && claim.signing_channel ? claim.signing_channel.claim_id : undefined;
   const hasClaim = !!claim;
   const [initialized, setInitialized] = React.useState(false);
-  const [nameError, setNameError] = React.useState(undefined);
+  const [nameError, setNameError] = React.useState<string | void>(undefined);
   const [bidError, setBidError] = React.useState('');
   const [thumbStatus, setThumbStatus] = React.useState('');
-  const [thumbError, setThumbError] = React.useState('');
-  const [params, setParams]: [any, (any) => void] = React.useState({});
+  const [thumbError, setThumbError] = React.useState(false);
+  const [params, setParams] = React.useState<CollectionFormData>({
+    name: '',
+    bid: '0.001',
+    tags: [],
+    languages: [],
+    locations: [],
+    claims: [],
+  });
   const name = params.name;
   const isNewCollection = !uri;
-  const { replace } = useHistory();
-  const languageParam = params.languages || [];
-  const primaryLanguage = Array.isArray(languageParam) && languageParam.length && languageParam[0];
-  const secondaryLanguage = Array.isArray(languageParam) && languageParam.length >= 2 && languageParam[1];
+  const { replace } = useDesktopHistory();
+  const languageParam = params.languages;
+  const primaryLanguage = languageParam[0] || LANG_NONE;
+  const secondaryLanguage = languageParam[1] || LANG_NONE;
   const hasClaims = params.claims && params.claims.length;
-  const collectionClaimIdsString = JSON.stringify(collectionClaimIds);
+  const collectionClaimIdsString = JSON.stringify(collectionClaimIds || []);
   const itemError = !hasClaims ? __('Cannot publish empty list') : '';
   const thumbnailError =
     (thumbError && thumbStatus !== THUMBNAIL_STATUSES.COMPLETE && __('Invalid thumbnail')) ||
     (thumbStatus === THUMBNAIL_STATUSES.IN_PROGRESS && __('Please wait for thumbnail to finish uploading'));
   const submitError = nameError || bidError || itemError || updateError || createError || thumbnailError;
 
-  function parseName(newName) {
+  function parseName(newName: string): string {
     let INVALID_URI_CHARS = new RegExp(regexInvalidURI, 'gu');
     return newName.replace(INVALID_URI_CHARS, '-');
   }
 
-  function setParam(paramObj) {
-    setParams({ ...params, ...paramObj });
-  }
-
-  function updateParams(paramsObj) {
-    setParams({ ...params, ...paramsObj });
+  function setParam(paramObj: Readonly<Partial<CollectionFormData>>): void {
+    setParams((previous) => ({ ...previous, ...paramObj }));
   }
 
   // TODO remove this or better decide whether app should delete languages[2+]
   // This was added because a previous update setting was duplicating language codes
-  function dedupeLanguages(languages) {
+  function dedupeLanguages(languages: Array<string>): Array<string> {
     if (languages.length <= 1) {
       return languages;
     } else if (languages.length === 2) {
@@ -149,7 +151,7 @@ function CollectionForm(props: Props) {
         return [languages[0]];
       }
     } else if (languages.length > 2) {
-      const newLangs = [];
+      const newLangs: Array<string> = [];
       languages.forEach((l) => {
         if (!newLangs.includes(l)) {
           newLangs.push(l);
@@ -157,36 +159,25 @@ function CollectionForm(props: Props) {
       });
       return newLangs;
     }
+    return [];
   }
 
-  function handleUpdateThumbnail(update: { [string]: string }) {
+  function handleUpdateThumbnail(update: ThumbnailParams): void {
     if (update.thumbnail_url !== undefined) {
-      setParam(update);
+      setParam({ thumbnail_url: update.thumbnail_url });
     } else if (update.thumbnail_status) {
       setThumbStatus(update.thumbnail_status);
     } else {
-      setThumbError(update.thumbnail_error);
+      setThumbError(Boolean(update.thumbnail_error));
     }
   }
 
-  function getCollectionParams() {
-    const collectionParams: {
-      thumbnail_url?: string,
-      name?: string,
-      description?: string,
-      title?: string,
-      bid: string,
-      languages?: ?Array<string>,
-      locations?: ?Array<string>,
-      tags?: ?Array<{ name: string }>,
-      claim_id?: string,
-      channel_id?: string,
-      claims: ?Array<string>,
-    } = {
-      thumbnail_url: thumbnailUrl,
-      name: parseName(collectionName),
-      description,
-      title: claim ? title : collectionName,
+  function getCollectionParams(): CollectionFormData {
+    const collectionParams: CollectionFormData = {
+      thumbnail_url: thumbnailUrl ?? undefined,
+      name: parseName(collectionName || ''),
+      description: description ?? undefined,
+      title: (claim ? title : collectionName) ?? undefined,
       bid: String(amount || 0.001),
       languages: languages ? dedupeLanguages(languages) : [],
       locations: locations || [],
@@ -197,13 +188,13 @@ function CollectionForm(props: Props) {
         : [],
       claim_id: claim ? claim.claim_id : undefined,
       channel_id: claim ? collectionChannel : activeChannelId || undefined,
-      claims: collectionClaimIds,
+      claims: collectionClaimIds || [],
     };
 
     return collectionParams;
   }
 
-  function handleOnDragEnd(result) {
+  function handleOnDragEnd(result: CollectionDropResult): void {
     const { source, destination } = result;
 
     if (!destination) return;
@@ -214,7 +205,7 @@ function CollectionForm(props: Props) {
     doCollectionEdit({ order: { from, to } });
   }
 
-  function handleLanguageChange(index, code) {
+  function handleLanguageChange(index: number, code: string): void {
     let langs = [...languageParam];
     if (index === 0) {
       if (code === LANG_NONE) {
@@ -233,12 +224,13 @@ function CollectionForm(props: Props) {
         langs[index] = code;
       }
     }
-    setParams({ ...params, languages: langs });
+    setParam({ languages: langs });
   }
 
-  function handleSubmit() {
+  function handleSubmit(): void {
     if (uri) {
-      publishCollectionUpdate(params).then((pendingClaim) => {
+      if (!params.claim_id) return;
+      publishCollectionUpdate({ ...params, claim_id: params.claim_id }).then((pendingClaim) => {
         if (pendingClaim) {
           const claimId = pendingClaim.claim_id;
           analytics.apiLogPublish(pendingClaim);
@@ -257,8 +249,8 @@ function CollectionForm(props: Props) {
   }
 
   React.useEffect(() => {
-    const collectionClaimIds = JSON.parse(collectionClaimIdsString);
-    setParams({ ...params, claims: collectionClaimIds });
+    const collectionClaimIds: Array<string> = JSON.parse(collectionClaimIdsString) || [];
+    setParams((previous) => ({ ...previous, claims: collectionClaimIds }));
     clearCollectionErrors();
   }, [collectionClaimIdsString, setParams]);
 
@@ -280,7 +272,7 @@ function CollectionForm(props: Props) {
         if (collectionChannel) {
           setActiveChannel(collectionChannel);
           setIncognito(false);
-        } else if (!collectionChannel && hasClaim) {
+        } else {
           setIncognito(true);
         }
       } else {
@@ -306,8 +298,8 @@ function CollectionForm(props: Props) {
 
   // setup initial params after we're sure if it's published or not
   React.useEffect(() => {
-    if (!uri || (uri && hasClaim)) {
-      updateParams(getCollectionParams());
+    if (!uri || hasClaim) {
+      setParam(getCollectionParams());
     }
   }, [uri, hasClaim]);
 
@@ -320,11 +312,11 @@ function CollectionForm(props: Props) {
       <div className={classnames('main--contained', { 'card--disabled': disabled })}>
         <Tabs>
           <TabList className="tabs__list--collection-edit-page">
-            <Tab>{__('General')}</Tab>
-            <Tab>{__('Items')}</Tab>
-            <Tab>{__('Credits')}</Tab>
-            <Tab>{__('Tags')}</Tab>
-            <Tab>{__('Other')}</Tab>
+            <Tab index={0}>{__('General')}</Tab>
+            <Tab index={1}>{__('Items')}</Tab>
+            <Tab index={2}>{__('Credits')}</Tab>
+            <Tab index={3}>{__('Tags')}</Tab>
+            <Tab index={4}>{__('Other')}</Tab>
           </TabList>
           <TabPanels>
             <TabPanel>
@@ -347,7 +339,7 @@ function CollectionForm(props: Props) {
                           value={params.name}
                           error={nameError}
                           disabled={!isNewCollection}
-                          onChange={(e) => setParams({ ...params, name: e.target.value || '' })}
+                          onChange={(e) => setParam({ name: e.target.value || '' })}
                         />
                       </fieldset-group>
                       {!isNewCollection && (
@@ -360,7 +352,7 @@ function CollectionForm(props: Props) {
                         label={__('Title')}
                         placeholder={__('My Awesome List')}
                         value={params.title}
-                        onChange={(e) => setParams({ ...params, title: e.target.value })}
+                        onChange={(e) => setParam({ title: e.target.value })}
                       />
                       <fieldset-section>
                         <SelectThumbnail
@@ -377,7 +369,7 @@ function CollectionForm(props: Props) {
                         label={__('Description')}
                         placeholder={__('Description of your content')}
                         value={params.description}
-                        onChange={(text) => setParams({ ...params, description: text })}
+                        onChange={(text) => setParam({ description: text })}
                         textAreaMaxLength={FF_MAX_CHARS_IN_DESCRIPTION}
                       />
                     </>
@@ -411,7 +403,7 @@ function CollectionForm(props: Props) {
                     label={<LbcSymbol postfix={__('Deposit')} size={14} />}
                     value={params.bid}
                     error={bidError}
-                    min="0.0"
+                    min={0}
                     disabled={false}
                     onChange={(event) =>
                       handleBidChange(parseFloat(event.target.value), amount, balance, setBidError, setParam)
@@ -431,18 +423,20 @@ function CollectionForm(props: Props) {
                     limitSelect={MAX_TAG_SELECT}
                     tagsPassedIn={params.tags || []}
                     label={__('Selected Tags')}
-                    onRemove={(clickedTag) => {
-                      const newTags = params.tags.slice().filter((tag) => tag.name !== clickedTag.name);
-                      setParams({ ...params, tags: newTags });
+                    onRemove={(clickedTag: Tag) => {
+                      setParams((previous) => ({
+                        ...previous,
+                        tags: previous.tags.filter((tag) => tag.name !== clickedTag.name),
+                      }));
                     }}
-                    onSelect={(newTags) => {
+                    onSelect={(newTags: Array<Tag>) => {
                       newTags.forEach((newTag) => {
-                        if (!params.tags.map((savedTag) => savedTag.name).includes(newTag.name)) {
-                          setParams({ ...params, tags: [...params.tags, newTag] });
-                        } else {
-                          // If it already exists and the user types it in, remove it
-                          setParams({ ...params, tags: params.tags.filter((tag) => tag.name !== newTag.name) });
-                        }
+                        setParams((previous) => ({
+                          ...previous,
+                          tags: previous.tags.some((tag) => tag.name === newTag.name)
+                            ? previous.tags.filter((tag) => tag.name !== newTag.name)
+                            : [...previous.tags, newTag],
+                        }));
                       });
                     }}
                   />
@@ -503,9 +497,9 @@ function CollectionForm(props: Props) {
               <div className="section__actions">
                 <Button
                   button="primary"
-                  disabled={
+                  disabled={Boolean(
                     creatingCollection || updatingCollection || nameError || bidError || thumbnailError || !hasClaims
-                  }
+                  )}
                   label={creatingCollection || updatingCollection ? __('Submitting') : __('Submit')}
                   onClick={handleSubmit}
                 />
@@ -518,7 +512,7 @@ function CollectionForm(props: Props) {
                   {__('After submitting, it will take a few minutes for your changes to be live for everyone.')}
                 </p>
               )}
-              {!isNewCollection && (
+              {uri && (
                 <div className="section__actions">
                   <ClaimAbandonButton uri={uri} abandonActionCallback={() => replace(`/$/${PAGES.LIBRARY}`)} />
                 </div>

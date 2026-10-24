@@ -22,24 +22,17 @@ type Props = {
   darkModeTimes: DarkModeTimes,
   clock24h: boolean,
   setClientSetting: (string, SetDaemonSettingArg) => void,
-  setDarkTime: (string, {}) => void,
+  setDarkTime: (string, OptionTimes) => void,
 };
 
-export default function ThemeSelector(props: Props) {
-  const {
-    currentTheme,
-    themes,
-    automaticDarkModeEnabled,
-    darkModeTimes,
-    clock24h,
-    setClientSetting,
-    setDarkTime,
-  } = props;
+export default function ThemeSelector(props: Props): React.Node {
+  const { currentTheme, themes, automaticDarkModeEnabled, darkModeTimes, clock24h, setClientSetting, setDarkTime } =
+    props;
 
   const startHours = ['18', '19', '20', '21'];
   const endHours = ['5', '6', '7', '8'];
 
-  function onThemeChange(event: SyntheticInputEvent<*>) {
+  function onThemeChange(event: { target: HTMLInputElement | HTMLSelectElement, ... }) {
     const { value } = event.target;
     if (value === 'dark') {
       onAutomaticDarkModeChange(false);
@@ -51,7 +44,7 @@ export default function ThemeSelector(props: Props) {
     setClientSetting(SETTINGS.AUTOMATIC_DARK_MODE_ENABLED, value);
   }
 
-  function onChangeTime(event: SyntheticInputEvent<*>, options: OptionTimes) {
+  function onChangeTime(event: { target: HTMLInputElement | HTMLSelectElement, ... }, options: OptionTimes) {
     setDarkTime(event.target.value, options);
   }
 

@@ -10,15 +10,16 @@ type Props = {
 };
 
 class LoadingScreen extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { spinner: boolean, isDocument: boolean } = {
     spinner: true,
     isDocument: false,
   };
 
-  render() {
+  render(): React.Node {
     const { status, spinner, isDocument } = this.props;
     return (
       <div className={classnames('content__loading', { 'content__loading--document': isDocument })}>
+        {!spinner && status && <span className="content__loading-text">{status}</span>}
         {spinner && (
           <Spinner
             light={!isDocument}

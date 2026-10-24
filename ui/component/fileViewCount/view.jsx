@@ -9,10 +9,10 @@ type Props = {
   fetchViewCount: (string) => void,
   fetchingViewCount: boolean,
   uri: string,
-  viewCount: string,
+  viewCount: number,
 };
 
-function FileViewCount(props: Props) {
+function FileViewCount(props: Props): React.Node {
   const { claimId, uri, fetchViewCount, viewCount } = props; // claimId
   const countCompact = formatNumber(Number(viewCount), 2, true);
   const countFullResolution = formatNumber(Number(viewCount), 2, false);

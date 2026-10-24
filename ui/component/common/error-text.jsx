@@ -5,7 +5,7 @@ type Props = {
   children: string,
 };
 
-export default function ErrorText(props: Props) {
+export default function ErrorText(props: Props): React.Node {
   const { children } = props;
 
   if (!children) {

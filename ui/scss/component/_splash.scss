@@ -1,58 +1,148 @@
-.splash {
-  -webkit-app-region: drag;
-  width: 100vw;
-  height: 100vh;
-
-  align-items: center;
-  background-color: var(--color-background--splash);
+.setup-layout {
+  min-height: 100vh;
+  padding: var(--spacing-xl);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-}
+  align-items: center;
+  background: var(--color-background);
+  color: var(--color-text);
+  -webkit-app-region: no-drag;
 
-.splash__details {
-  position: absolute;
-  line-height: 1;
-  font-weight: var(--font-weight-light);
-  color: #fff;
-  margin-top: 2rem;
-}
+  > .main--contained {
+    width: 100%;
+  }
+  .first-run__left {
+    min-width: 0;
+  }
+  .first-run__image-wrapper {
+    align-self: center;
+  }
+  .privacy-img {
+    object-fit: contain;
+  }
+  .first-run__actions {
+    margin-top: var(--spacing-l);
+    gap: var(--spacing-s);
+    flex-wrap: wrap;
+  }
+  .first-run__actions > * {
+    margin: 0;
+  }
 
-.splash__title {
-  position: absolute;
-  font-size: 40px;
-  line-height: 1;
-  font-weight: var(--font-weight-bold);
-  color: #fff;
-  margin-top: -1rem;
-}
-
-.splash__error-title {
-  font-size: 22px;
-  line-height: 1;
-  font-weight: var(--font-weight-bold);
-  color: #fff;
-}
-
-.splash__animation-toggle {
-  position: fixed;
-  top: var(--spacing-l);
-  right: var(--spacing-l);
-  padding: var(--spacing-m);
-  border-color: #fff;
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.205);
-  font-size: var(--font-small);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.5);
-    .icon {
-      stroke: #fff;
-    }
+  button:focus-visible,
+  input:focus-visible,
+  summary:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
   }
 }
 
-.doodle {
-  position: fixed;
+.hub-setup {
+  &__servers {
+    max-height: 35vh;
+    overflow-y: auto;
+    padding: var(--spacing-xs);
+    margin: var(--spacing-s) 0;
+  }
+  &__server-label {
+    display: flex;
+    gap: var(--spacing-s);
+    justify-content: space-between;
+    width: 100%;
+  }
+  &__endpoint {
+    overflow-wrap: anywhere;
+  }
+  &__response {
+    color: var(--color-text-subtitle);
+    white-space: nowrap;
+    font-size: var(--font-small);
+  }
+  &__servers .radio {
+    padding: var(--spacing-xs) 0;
+    margin: 0;
+  }
+  &__servers .radio label {
+    display: block;
+  }
+  &__custom {
+    margin-top: var(--spacing-m);
+  }
+  &__custom summary {
+    cursor: pointer;
+    color: var(--color-link);
+  }
+  &__custom-field {
+    margin-top: var(--spacing-s);
+  }
+  &__status {
+    min-height: 2em;
+    margin-top: var(--spacing-s);
+  }
+  &__status [role='alert'] {
+    color: var(--color-text-error);
+  }
+}
+
+.wallet-startup {
+  &__status {
+    margin-bottom: var(--spacing-l);
+  }
+  &__steps {
+    margin: var(--spacing-l) 0;
+  }
+  &__steps li {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-s);
+    color: var(--color-text-subtitle);
+  }
+  &__steps .is-current {
+    color: var(--color-text);
+  }
+  &__steps .is-complete .icon {
+    color: var(--color-primary);
+  }
+  &__progress {
+    margin: var(--spacing-m) 0;
+  }
+  &__progress > div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xs);
+  }
+  &__progress progress {
+    display: block;
+    width: 100%;
+    height: 6px;
+    border: 0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    appearance: none;
+  }
+  &__progress progress::-webkit-progress-bar {
+    background: var(--color-input-bg);
+  }
+  &__progress progress::-webkit-progress-value {
+    background: var(--color-primary);
+  }
+  &__connection {
+    margin-top: var(--spacing-m);
+    overflow-wrap: anywhere;
+  }
+  &__notice {
+    margin-top: var(--spacing-m);
+    padding-left: var(--spacing-s);
+    border-left: 2px solid var(--color-primary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .setup-layout *,
+  .setup-layout *::before,
+  .setup-layout *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -3,7 +3,7 @@ import React from 'react';
 import Button from 'component/button';
 import { Form } from 'component/common/form-components/form';
 import SettingStorage from 'component/settingStorage';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 
 type Props = {
   handleNextPage: () => void,
@@ -28,4 +28,6 @@ function HostingSplashCustom(props: Props) {
   );
 }
 
-export default withRouter(HostingSplashCustom);
+const RoutedHostingSplashCustom: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(HostingSplashCustom);
+export default RoutedHostingSplashCustom;

@@ -2,7 +2,7 @@
 import * as PAGES from 'constants/pages';
 import React from 'react';
 import Nag from 'component/common/nag';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 
 type Props = {
   followingAcknowledged: boolean,
@@ -11,12 +11,12 @@ type Props = {
   syncSetttings: () => void,
 };
 
-export default function NagContinueFirstRun(props: Props) {
+export default function NagContinueFirstRun(props: Props): React.Node {
   const { firstRunStarted, followingAcknowledged } = props;
   const {
     location: { pathname },
     push,
-  } = useHistory();
+  } = useDesktopHistory();
   const isOnFirstRun = pathname.includes(PAGES.AUTH);
 
   function handleContinue() {

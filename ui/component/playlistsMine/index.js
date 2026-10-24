@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import {
   selectMyPublishedPlaylistCollections,
   selectMyUnpublishedCollections, // should probably distinguish types
@@ -17,4 +17,4 @@ const select = (state) => {
   };
 };
 
-export default withRouter(connect(select)(PlaylistsMine));
+export default withDesktopRouter(connect(select)(PlaylistsMine));

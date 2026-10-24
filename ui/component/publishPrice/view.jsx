@@ -5,12 +5,12 @@ import Card from 'component/common/card';
 
 type Props = {
   contentIsFree: boolean,
-  fee: Fee,
+  fee: PublishFee,
   disabled: boolean,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
-function PublishPrice(props: Props) {
+function PublishPrice(props: Props): React.Node {
   const { contentIsFree, fee, updatePublishForm, disabled } = props;
 
   return (
@@ -40,7 +40,7 @@ function PublishPrice(props: Props) {
               <FormFieldPrice
                 name="content_cost_amount"
                 min={0}
-                price={fee}
+                price={{ amount: Number(fee.amount), currency: fee.currency }}
                 onChange={(newFee) => updatePublishForm({ fee: newFee })}
               />
             )}

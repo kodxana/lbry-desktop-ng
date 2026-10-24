@@ -1,16 +1,16 @@
 // @flow
 import React from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import UserEmailReturning from 'component/userEmailReturning';
 import UserSignInPassword from 'component/userSignInPassword';
 import Spinner from 'component/spinner';
 
 type Props = {
   user: ?User,
-  history: { push: string => void, replace: string => void },
+  history: { push: (string) => void, replace: (string) => void },
   location: { search: string },
   userFetchPending: boolean,
-  doUserSignIn: string => void,
+  doUserSignIn: (string) => void,
   emailToVerify: ?string,
   passwordExists: boolean,
 };
@@ -55,4 +55,5 @@ function UserSignIn(props: Props) {
   );
 }
 
-export default withRouter(UserSignIn);
+const RoutedUserSignIn: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(UserSignIn);
+export default RoutedUserSignIn;

@@ -10,7 +10,7 @@ type Props = {
   small: boolean,
 };
 
-function FileType(props: Props) {
+function FileType(props: Props): React.Node {
   const { mediaType, small } = props;
   const size = small ? COL.ICON_SIZE : undefined;
 
