@@ -9,7 +9,7 @@ import * as CLAIM from 'constants/claim';
 
 type State = { claims: any };
 
-const selectState = (state: State) => state.claims || {};
+const selectState = (state: { ...State, ... }) => state.claims || {};
 
 export const selectById = (state: State) => selectState(state).byId || {};
 export const selectPendingClaimsById = (state: State) => selectState(state).pendingById || {};
@@ -18,7 +18,7 @@ export const selectClaimsById = createSelector(selectById, selectPendingClaimsBy
   return { ...byId, ...pendingById };
 });
 
-export const selectClaimIdsByUri = (state: State) => selectState(state).claimsByUri || {};
+export const selectClaimIdsByUri = (state: { ...State, ... }) => selectState(state).claimsByUri || {};
 export const selectCurrentChannelPage = (state: State) => selectState(state).currentChannelPage || 1;
 export const selectCreatingChannel = (state: State) => selectState(state).creatingChannel;
 export const selectCreateChannelError = (state: State) => selectState(state).createChannelError;
@@ -80,7 +80,7 @@ export const makeSelectClaimIdIsPending = (claimId: string) =>
     return Boolean(pendingById[claimId]);
   });
 
-export const selectClaimIdForUri = (state: State, uri: string) => selectClaimIdsByUri(state)[uri];
+export const selectClaimIdForUri = (state: { ...State, ... }, uri: string) => selectClaimIdsByUri(state)[uri];
 
 export const selectReflectingById = (state: State) => selectState(state).reflectingById;
 
@@ -404,8 +404,8 @@ export const selectDateForUri = createCachedSelector(
       (claim.value.release_time
         ? claim.value.release_time * 1000
         : claim.meta && claim.meta.creation_timestamp
-        ? claim.meta.creation_timestamp * 1000
-        : null);
+          ? claim.meta.creation_timestamp * 1000
+          : null);
     if (!timestamp) {
       return undefined;
     }

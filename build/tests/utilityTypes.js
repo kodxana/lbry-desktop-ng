@@ -8,10 +8,23 @@ import { toCapitalCase, toCompactNotation } from 'util/string';
 import { secondsToHms, hmsToSeconds } from 'util/time';
 import { walletSyncProgress, readWalletSnapshot } from 'util/wallet-sync';
 import { startupProgress } from 'util/startup-progress';
+import { sortComments, buildValidSticker, parseSticker, getStickerUrl, getCommentsListTitle } from 'util/comments';
+import type { Sticker } from 'constants/stickers';
 import type { WalletSyncProgress } from 'util/wallet-sync';
 import type { StartupProgress } from 'util/startup-progress';
 
 declare var status: StatusResponse;
+declare var comments: Array<LbryComment>;
+export const sortedComments: Array<LbryComment> = sortComments({
+  comments,
+  reactionsById: { id: { like: 2, dislike: 1 } },
+  sort: 'new',
+  isMyComment: (id: string) => id === 'mine',
+});
+export const stickerText: string = buildValidSticker(':HYPE:');
+export const sticker: Sticker | false | null | void = parseSticker(stickerText);
+export const stickerUrl: string | false | null | void = getStickerUrl(stickerText);
+export const commentTitle: string = getCommentsListTitle(10);
 const balance: BalanceResponse = {
   available: '1.00000001',
   total: '1.00000001',

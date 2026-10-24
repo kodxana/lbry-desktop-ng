@@ -1,5 +1,6 @@
 // @flow
 import { SORT_COMMENTS_NEW, SORT_COMMENTS_BEST, SORT_COMMENTS_CONTROVERSIAL } from 'constants/comment';
+import type { Sticker } from 'constants/stickers';
 import { FREE_GLOBAL_STICKERS, PAID_GLOBAL_STICKERS } from 'constants/stickers';
 import * as REACTION_TYPES from 'constants/reactions';
 import { formatNumber } from 'util/number';
@@ -12,7 +13,7 @@ const stickerRegex = /(<stkr>:[A-Z0-9_]+:<stkr>)/;
 
 type SortProps = {
   comments: ?Array<LbryComment>,
-  reactionsById: {},
+  reactionsById: { [string]: { [string]: number } },
   sort: string,
   isMyComment: (string) => boolean,
 };
@@ -94,28 +95,22 @@ export function sortComments(sortProps: SortProps): Array<LbryComment> {
   });
 }
 
-export const buildValidSticker = (sticker: string) => `<stkr>${sticker}<stkr>`;
+export const buildValidSticker = (sticker: string): string => `<stkr>${sticker}<stkr>`;
 
-export function parseSticker(comment: string) {
+export function parseSticker(comment: string): Sticker | false | null | void {
   const matchSticker = comment.match(stickerRegex);
   const stickerValue = matchSticker && matchSticker[0];
-  const commentIsSticker = stickerValue && stickerValue.length === comment.length;
-
-  return (
-    commentIsSticker &&
-    ALL_VALID_STICKERS.find((sticker) => {
-      // $FlowFixMe
-      return sticker.name === stickerValue.replaceAll('<stkr>', '');
-    })
-  );
+  if (!stickerValue) return null;
+  if (stickerValue.length !== comment.length) return false;
+  return ALL_VALID_STICKERS.find((sticker) => sticker.name === stickerValue.replaceAll('<stkr>', ''));
 }
 
-export function getStickerUrl(comment: string) {
+export function getStickerUrl(comment: string): string | false | null | void {
   const stickerFromComment = parseSticker(comment);
   return stickerFromComment && stickerFromComment.url;
 }
 
-export function getCommentsListTitle(totalComments: number) {
+export function getCommentsListTitle(totalComments: number): string {
   const title =
     (totalComments === 0 && __('Leave a comment')) ||
     (totalComments === 1 && __('1 comment')) ||

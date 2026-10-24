@@ -35,15 +35,15 @@ declare type CommentsState = {
   commentsByUri: { [string]: string },
   superChatsByUri: { [string]: { totalAmount: number, comments: Array<LbryComment>, ... } },
   byId: { [string]: Array<string> }, // ClaimID -> list of fetched comment IDs.
-  totalCommentsById: { ... }, // ClaimId -> ultimate total (including replies) in commentron.
+  totalCommentsById: { [string]: number }, // ClaimId -> ultimate total (including replies) in commentron.
   repliesByParentId: { [string]: Array<string> }, // ParentCommentID -> list of fetched replies.
-  repliesTotalPagesByParentId: { ... }, // ParentCommentID -> total number of reply pages for a parentId in commentron.
+  repliesTotalPagesByParentId: { [string]: number }, // ParentCommentID -> total number of reply pages for a parentId in commentron.
   topLevelCommentsById: { [string]: Array<string> }, // ClaimID -> list of fetched top level comments.
   topLevelTotalPagesById: { [string]: number }, // ClaimID -> total number of top-level pages in commentron. Based on COMMENT_PAGE_SIZE_TOP_LEVEL.
   topLevelTotalCommentsById: { [string]: number }, // ClaimID -> total top level comments in commentron.
   commentById: { [string]: LbryComment },
   linkedCommentAncestors: { [string]: Array<string> }, // {"linkedCommentId": ["parentId", "grandParentId", ...]}
-  pinnedCommentsById: { ... }, // ClaimId -> array of pinned comment IDs
+  pinnedCommentsById: { [string]: Array<string> }, // ClaimId -> array of pinned comment IDs
   isLoading: boolean,
   isLoadingById: boolean,
   isLoadingByParentId: { [string]: boolean },
@@ -62,8 +62,8 @@ declare type CommentsState = {
   fetchingModerationDelegates: boolean,
   moderationDelegatorsById: { [string]: { global: boolean, delegators: { name: string, claimId: string, ... }, ... } },
   fetchingModerationDelegators: boolean,
-  blockingByUri: { ... },
-  unBlockingByUri: { ... },
+  blockingByUri: { [string]: boolean },
+  unBlockingByUri: { [string]: boolean },
   personalTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number, ... } },
   adminTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number, ... } },
   moderatorTimeoutMap: { [uri: string]: { blockedAt: string, bannedFor: number, banRemaining: number, ... } },

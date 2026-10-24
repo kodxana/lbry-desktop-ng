@@ -502,7 +502,7 @@ export function doCommentReact(commentId: string, type: string) {
     });
 
     // simulate api return shape: ['like'] -> { 'like': 1 }
-    const myReactsObj = myReacts.reduce((acc, el) => {
+    const myReactsObj = myReacts.reduce<{ [string]: number }>((acc, el) => {
       acc[el] = 1;
       return acc;
     }, {});
@@ -530,7 +530,7 @@ export function doCommentReact(commentId: string, type: string) {
 
         const myRevertedReactsObj = myReacts
           .filter((el) => el !== type)
-          .reduce((acc, el) => {
+          .reduce<{ [string]: number }>((acc, el) => {
             acc[el] = 1;
             return acc;
           }, {});
