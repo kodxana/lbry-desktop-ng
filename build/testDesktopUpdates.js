@@ -31,7 +31,14 @@ function testLogging(root) {
   assert.equal(logger.transports.file.getFile().path, file);
   let content = fs.readFileSync(file, 'utf8');
   assert(content.startsWith('Existing updater log\n'));
-  for (const text of ['[info]', 'Update available', '[warn]', 'Download retry', '[error]', 'Synthetic update failure']) {
+  for (const text of [
+    '[info]',
+    'Update available',
+    '[warn]',
+    'Download retry',
+    '[error]',
+    'Synthetic update failure',
+  ]) {
     assert(content.includes(text), 'Missing log content: ' + text);
   }
   const reopened = createLogger(directory);
@@ -61,7 +68,9 @@ function testLogging(root) {
     ipcMain.handle('__ELECTRON_LOG__', () => {});
     ipcMain.removeHandler('__ELECTRON_LOG__');
   }
-  console.log('PASS: updater log append, formatting, rotation, profile isolation and write failure without renderer IPC');
+  console.log(
+    'PASS: updater log append, formatting, rotation, profile isolation and write failure without renderer IPC'
+  );
 }
 
 async function testVersionPolicy() {
@@ -79,10 +88,24 @@ async function testVersionPolicy() {
     ['0.54.0', 'v0.54.1', false, true],
   ];
   for (const invalid of [
-    null, undefined, 55, {}, [], '', '0.55', '^0.55.0',
-    ' 0.55.0', '0.55.0 ', '\t0.55.0', '0.55.0\n',
-    '0.055.0', '0.55.0-rc.01', '9007199254740992.0.0', '0.55.0-' + 'a'.repeat(1000),
-  ]) cases.push(['0.54.0', invalid, true, false]);
+    null,
+    undefined,
+    55,
+    {},
+    [],
+    '',
+    '0.55',
+    '^0.55.0',
+    ' 0.55.0',
+    '0.55.0 ',
+    '\t0.55.0',
+    '0.55.0\n',
+    '0.055.0',
+    '0.55.0-rc.01',
+    '9007199254740992.0.0',
+    '0.55.0-' + 'a'.repeat(1000),
+  ])
+    cases.push(['0.54.0', invalid, true, false]);
 
   for (const [local, remote, prereleases, expected] of cases) {
     const { library, updates, calls } = updaterFixture();
@@ -100,7 +123,9 @@ async function testVersionPolicy() {
       assert.deepEqual(calls, { checks: 0, downloads: 0, stops: 0, installs: 0, errors: [] });
     }
   }
-  console.log('PASS: numeric RC ordering, stable graduation, metadata equality, downgrade prevention and invalid versions');
+  console.log(
+    'PASS: numeric RC ordering, stable graduation, metadata equality, downgrade prevention and invalid versions'
+  );
 }
 
 async function testInstallation() {
@@ -366,6 +391,33 @@ async function testDownloads(root, legacy = false, builtMetadata = null) {
     await recovered.control.download();
     assert.equal(assetRequests, requestsAfterDownload + 1, 'Corrupt cached bytes must be downloaded again');
     assert.deepEqual(fs.readFileSync(recovered.updater.downloadedUpdateHelper.file), payload);
+
+    if (!legacy) {
+      const pending = recovered.updater.downloadedUpdateHelper.cacheDirForPendingUpdate;
+      const infoPath = path.join(pending, 'update-info.json');
+      const validInfo = JSON.parse(fs.readFileSync(infoPath, 'utf8'));
+      const outside = path.join(path.dirname(pending), 'outside.exe');
+      fs.writeFileSync(outside, payload);
+      const invalidNames = [undefined, null, 7, '', '../outside.exe', outside, 'nested/installer.exe'];
+      if (process.platform === 'win32') invalidNames.push('..\\outside.exe');
+      const invalidInfo = [null, ...invalidNames.map((fileName) => ({ ...validInfo, fileName }))];
+      for (const info of invalidInfo) {
+        fs.writeFileSync(infoPath, JSON.stringify(info));
+        const requestsBefore = assetRequests;
+        const errorsBefore = errors.length;
+        const fresh = createUpdater();
+        await fresh.control.check({ allowPrerelease: true });
+        await fresh.control.download();
+        assert.equal(fresh.control.state, 'downloaded');
+        assert.equal(errors.length, errorsBefore, 'Invalid cache metadata must recover without an update error');
+        assert.equal(assetRequests, requestsBefore + 1, 'Invalid cache filenames must trigger a new download');
+        assert.equal(path.dirname(fresh.updater.downloadedUpdateHelper.file), pending);
+        assert.deepEqual(fs.readFileSync(fresh.updater.downloadedUpdateHelper.file), payload);
+        assert.deepEqual(fs.readFileSync(outside), payload, 'Cache recovery must preserve files outside pending');
+        assert.deepEqual(JSON.parse(fs.readFileSync(infoPath, 'utf8')), validInfo);
+      }
+      console.log('PASS: missing, invalid and path-valued cached installer names recover within the update cache');
+    }
 
     const partial = createUpdater(path.join(root, 'interrupted'));
     await partial.control.check({ allowPrerelease: true });

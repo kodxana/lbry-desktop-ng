@@ -3,7 +3,7 @@
 | Package | Previous resolved version | Current |
 | --- | --- | --- |
 | node-fetch | 2.6.7 | 3.3.2 |
-| js-yaml | 4.1.0 | 5.4.3 |
+| js-yaml | 4.1.0 | 5.5.0 |
 
 Remove the unused LBRYFirst downloader, old release-signing script and inactive
 sandbox stub, along with the direct decompress, del, node-wget and sudo-prompt

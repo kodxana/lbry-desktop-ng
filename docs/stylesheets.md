@@ -1,6 +1,6 @@
 # Stylesheet compiler
 
-The desktop uses Sass 1.105.1, upgraded from the RC3 lockfile's 1.53.0, through
+The desktop uses Sass 1.106.1, upgraded from the RC3 lockfile's 1.53.0, through
 sass-loader's modern JavaScript API. Its existing PostCSS 8 RTL transform stays
 in place. Sass is a build dependency; the packaged renderer receives CSS.
 

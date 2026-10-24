@@ -13,6 +13,11 @@ for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels
     plugin + ' must use the application Video.js instance'
   );
 }
+assert.equal(
+  require.resolve('typo-js', { paths: [path.dirname(require.resolve('codemirror-spell-checker'))] }),
+  require.resolve('typo-js'),
+  'The Markdown editor and spelling plugin must share the upgraded Typo.js instance'
+);
 const output = path.resolve('dist/renderer-tests');
 fs.mkdirSync(output, { recursive: true });
 fs.mkdirSync(path.join(output, 'webworkers'), { recursive: true });
