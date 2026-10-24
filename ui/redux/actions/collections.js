@@ -18,9 +18,16 @@ const getTimestamp = () => {
 };
 
 const FETCH_BATCH_SIZE = 50;
+type CollectionItemsResult = { claimId: string, items: Array<Claim> | null };
 
 export const doLocalCollectionCreate =
-  (name: string, collectionItems: Array<string>, type: string, sourceId: string) => (dispatch: Dispatch) => {
+  (
+    name: string,
+    collectionItems: Array<string>,
+    type: string,
+    sourceId?: string
+  ): ThunkAction<{ type: string, data: { entry: Collection } }> =>
+  (dispatch: Dispatch) => {
     return dispatch({
       type: ACTIONS.COLLECTION_NEW,
       data: {
@@ -37,7 +44,7 @@ export const doLocalCollectionCreate =
   };
 
 export const doCollectionDelete =
-  (id: string, colKey: ?string = undefined) =>
+  (id: string, colKey: ?string = undefined): ThunkAction<unknown> =>
   (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = makeSelectClaimForClaimId(id)(state);
@@ -87,7 +94,7 @@ export const doFetchItemsInCollections =
       pageSize?: number,
     },
     resolveStartedCallback?: () => void
-  ) =>
+  ): ThunkAction<Promise<void>> =>
   async (dispatch: Dispatch, getState: GetState) => {
     /*
   1) make sure all the collection claims are loaded into claims reducer, search/resolve if necessary.
@@ -114,12 +121,15 @@ export const doFetchItemsInCollections =
 
     const stateAfterClaimSearch = getState();
 
-    async function fetchItemsForCollectionClaim(claim: CollectionClaim, pageSize?: number) {
+    async function fetchItemsForCollectionClaim(
+      claim: CollectionClaim,
+      pageSize?: number
+    ): Promise<CollectionItemsResult> {
       const totalItems = claim.value.claims && claim.value.claims.length;
       const claimId = claim.claim_id;
       const itemOrder = claim.value.claims;
 
-      const sortResults = (items: Array<Claim>, claimList) => {
+      const sortResults = (items: Array<Claim>, claimList: Array<string>): Array<Claim> => {
         const newItems: Array<Claim> = [];
         claimList.forEach((id) => {
           const index = items.findIndex((i) => i.claim_id === id);
@@ -134,26 +144,9 @@ export const doFetchItemsInCollections =
         return newItems;
       };
 
-      const mergeBatches = (
-        arrayOfResults: Array<{ items: Array<Claim>, total_items: number }>,
-        claimList: Array<string>
-      ) => {
-        const mergedResults: { items: Array<Claim>, total_items: number } = {
-          items: [],
-          total_items: 0,
-        };
-        arrayOfResults.forEach((result) => {
-          mergedResults.items = mergedResults.items.concat(result.items);
-          mergedResults.total_items = result.total_items;
-        });
-
-        mergedResults.items = sortResults(mergedResults.items, claimList);
-        return mergedResults;
-      };
-
       try {
         const batchSize = pageSize || FETCH_BATCH_SIZE;
-        const batches: Array<Promise<any>> = [];
+        const batches: Array<Promise<ClaimSearchResponse>> = [];
 
         for (let i = 0; i < Math.ceil(totalItems / batchSize); i++) {
           batches[i] = Lbry.claim_search({
@@ -164,16 +157,13 @@ export const doFetchItemsInCollections =
           });
         }
         const itemsInBatches = await Promise.all(batches);
-        const result = mergeBatches(itemsInBatches, itemOrder);
-
-        // $FlowFixMe
-        const itemsById: { claimId: string, items?: ?Array<GenericClaim> } = { claimId: claimId };
-        if (result.items) {
-          itemsById.items = result.items;
-        } else {
-          itemsById.items = null;
-        }
-        return itemsById;
+        return {
+          claimId,
+          items: sortResults(
+            itemsInBatches.flatMap((result) => result.items),
+            itemOrder
+          ),
+        };
       } catch (e) {
         return {
           claimId: claimId,
@@ -182,16 +172,13 @@ export const doFetchItemsInCollections =
       }
     }
 
-    function formatForClaimActions(resultClaimsByUri) {
-      const formattedClaims = {};
+    function formatForClaimActions(resultClaimsByUri: { [string]: Claim }): { [string]: ClaimResolveResult } {
+      const formattedClaims: { [string]: ClaimResolveResult } = {};
       Object.entries(resultClaimsByUri).forEach(([uri, uriResolveInfo]) => {
-        // Flow has terrible Object.entries support
-        // https://github.com/facebook/flow/issues/2221
         if (uriResolveInfo) {
-          let result = {};
+          const result: ClaimResolveResult = {};
           if (uriResolveInfo.value_type === 'channel') {
             result.channel = uriResolveInfo;
-            // $FlowFixMe
             result.claimsInChannel = uriResolveInfo.meta.claims_in_channel;
             // ALSO SKIP COLLECTIONS
           } else if (uriResolveInfo.value_type === 'collection') {
@@ -204,7 +191,6 @@ export const doFetchItemsInCollections =
                 (uriResolveInfo.signing_channel.meta && uriResolveInfo.signing_channel.meta.claims_in_channel) || 0;
             }
           }
-          // $FlowFixMe
           formattedClaims[uri] = result;
         }
       });
@@ -222,17 +208,12 @@ export const doFetchItemsInCollections =
       }
     });
 
-    // $FlowFixMe
-    const collectionItemsById: Array<{
-      claimId: string,
-      items: ?Array<GenericClaim>,
-    }> = await Promise.all(promisedCollectionItemFetches);
+    const collectionItemsById = await Promise.all(promisedCollectionItemFetches);
 
-    const newCollectionObjectsById = {};
-    const resolvedItemsByUrl = {};
+    const newCollectionObjectsById: CollectionGroup = {};
+    const resolvedItemsByUrl: { [string]: Claim } = {};
     collectionItemsById.forEach((entry) => {
-      // $FlowFixMe
-      const collectionItems: Array<any> = entry.items;
+      const collectionItems = entry.items;
       const collectionId = entry.claimId;
       if (collectionItems) {
         const claim = makeSelectClaimForClaimId(collectionId)(stateAfterClaimSearch);
@@ -244,17 +225,17 @@ export const doFetchItemsInCollections =
         }
         const { name, timestamp, value } = claim;
         const { title } = value;
-        const valueTypes = new Set();
-        const streamTypes = new Set();
+        const valueTypes = new Set<string>();
+        const streamTypes = new Set<string>();
 
-        let newItems = [];
+        let newItems: Array<?string> = [];
         let isPlaylist;
 
         if (collectionItems) {
           collectionItems.forEach((collectionItem) => {
             newItems.push(collectionItem.permanent_url);
             valueTypes.add(collectionItem.value_type);
-            if (collectionItem.value.stream_type) {
+            if (collectionItem.value_type === 'stream') {
               streamTypes.add(collectionItem.value.stream_type);
             }
             resolvedItemsByUrl[collectionItem.canonical_url] = collectionItem;
@@ -272,7 +253,7 @@ export const doFetchItemsInCollections =
           name: title || name,
           itemCount: claim.value.claims.length,
           type: isPlaylist ? 'playlist' : 'collection',
-          updatedAt: timestamp,
+          updatedAt: timestamp ?? 0,
         };
 
         if (editedCollection && timestamp !== undefined && timestamp > editedCollection['updatedAt']) {
@@ -288,7 +269,7 @@ export const doFetchItemsInCollections =
         invalidCollectionIds.push(collectionId);
       }
     });
-    const formattedClaimsByUri = formatForClaimActions(collectionItemsById);
+    const formattedClaimsByUri = formatForClaimActions(resolvedItemsByUrl);
 
     dispatch({
       type: ACTIONS.RESOLVE_URIS_COMPLETED,
@@ -304,7 +285,10 @@ export const doFetchItemsInCollections =
     });
   };
 
-export const doFetchItemsInCollection = (options: { collectionId: string, pageSize?: number }, cb?: () => void) => {
+export const doFetchItemsInCollection = (
+  options: { collectionId: string, pageSize?: number },
+  cb?: () => void
+): ThunkAction<Promise<void>> => {
   const { collectionId, pageSize } = options;
   const newOptions: { collectionIds: Array<string>, pageSize?: number } = {
     collectionIds: [collectionId],
@@ -314,7 +298,11 @@ export const doFetchItemsInCollection = (options: { collectionId: string, pageSi
 };
 
 export const doCollectionEdit =
-  (collectionId: string, params: CollectionEditParams) => async (dispatch: Dispatch, getState: GetState) => {
+  (
+    collectionId: string,
+    params: CollectionEditParams
+  ): ThunkAction<Promise<boolean | { type: string, data: { message: string } }>> =>
+  async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const collection: Collection | void = makeSelectCollectionForId(collectionId)(state);
 

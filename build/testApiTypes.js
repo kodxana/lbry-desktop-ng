@@ -39,6 +39,16 @@ export function resolveResult(response: ResolveResponse): ?string {
 export function syncResult(action: ThunkAction<Promise<boolean>>, dispatch: Dispatch, getState: GetState): Promise<boolean> {
   return action(dispatch, getState);
 }
+export function firstOutputs(created: ChannelCreateResponse, updated: ChannelUpdateResponse, repost: StreamRepostResponse, collection: CollectionCreateResponse): Array<Claim> {
+  const channel: ChannelClaim = created.outputs[0];
+  const edited: ChannelClaim = updated.outputs[0];
+  const shared: RepostClaim = repost.outputs[0];
+  const list: CollectionClaim = collection.outputs[0];
+  return [channel, edited, shared, list];
+}
+export function withChange(response: CollectionCreateResponse, claim: CollectionClaim): CollectionCreateResponse {
+  return {...response, outputs: [claim, {type: 'payment', amount: '0.001'}]};
+}
 `;
 write('valid.js', fixture);
 const check = () => {
@@ -66,6 +76,11 @@ const invalid = {
   resolverError: 'export function invalid(response: ResolveResponse): string { return response.uri.claim_id; }',
   asyncThunk:
     'export function invalid(action: ThunkAction<Promise<boolean>>, dispatch: Dispatch, getState: GetState): boolean { return action(dispatch, getState); }',
+  firstOutput:
+    'export function invalid(response: CollectionCreateResponse, claim: StreamClaim): CollectionCreateResponse { return {...response, outputs: [claim]}; }',
+  changeOutput: 'export function invalid(response: StreamRepostResponse): Claim { return response.outputs[1]; }',
+  emptyOutputs:
+    'export function invalid(response: ChannelCreateResponse): ChannelCreateResponse { return {...response, outputs: []}; }',
 };
 for (const [name, source] of Object.entries(invalid)) {
   write('invalid-' + name + '.js', fixture + '\n' + source.replace('const invalid =', 'const invalid: unknown ='));

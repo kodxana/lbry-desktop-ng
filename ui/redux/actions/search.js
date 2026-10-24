@@ -62,7 +62,7 @@ export const doSearch =
       .then((data: SearchResponse) => {
         const { body: result, poweredBy } = data;
         const uris = [];
-        const actions = [];
+        const actions: Array<{ type: string, ... } | ThunkAction<Promise<ResolveResponse> | void>> = [];
 
         result.forEach((item: ?SearchResult) => {
           if (item) {

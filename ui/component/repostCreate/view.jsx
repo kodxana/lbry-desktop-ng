@@ -22,7 +22,7 @@ import Spinner from 'component/spinner';
 type Props = {
   doToast: ({ message: string }) => void,
   doClearRepostError: () => void,
-  doRepost: (StreamRepostOptions) => Promise<*>,
+  doRepost: (StreamRepostOptions) => Promise<Claim | void>,
   doHideModal: () => void,
   title: string,
   claim?: StreamClaim,
@@ -289,7 +289,8 @@ function RepostCreate(props: Props): React.Node {
         bid: creditsToString(repostBid),
         channel_id: activeChannelClaim && !incognito ? activeChannelClaim.claim_id : undefined,
         claim_id: repostClaimId,
-      }).then((repostClaim: StreamClaim) => {
+      }).then((repostClaim) => {
+        if (!repostClaim) return;
         doCheckPendingClaims();
         analytics.apiLogPublish(repostClaim);
         doToast({

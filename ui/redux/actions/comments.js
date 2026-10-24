@@ -22,6 +22,7 @@ import Comments from 'comments';
 import { selectPrefsReady } from 'redux/selectors/sync';
 import { doAlertWaitingForSync } from 'redux/actions/app';
 
+declare var process: { env: { NODE_ENV?: string } };
 const isDev = process.env.NODE_ENV !== 'production';
 const FETCH_API_FAILED_TO_FETCH = 'Failed to fetch';
 const PROMISE_FULFILLED = 'fulfilled';
@@ -119,7 +120,7 @@ export function doCommentList(
   page: number = 1,
   pageSize: number = 99999,
   sortBy: number = SORT_BY.NEWEST
-) {
+): ThunkAction<Promise<CommentListResponse | void> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = selectClaimsByUri(state)[uri];
@@ -208,7 +209,7 @@ export function doCommentListOwn(
   page: number = 1,
   pageSize: number = 99999,
   sortBy: number = SORT_BY.NEWEST_NO_PINS
-) {
+): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannelClaims = selectMyChannelClaims(state);
@@ -300,7 +301,7 @@ export function doCommentListOwn(
   };
 }
 
-export function doCommentById(commentId: string, toastIfNotFound: boolean = true) {
+export function doCommentById(commentId: string, toastIfNotFound: boolean = true): ThunkAction<Promise<unknown>> {
   return (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.COMMENT_BY_ID_STARTED,
@@ -338,7 +339,7 @@ export function doCommentById(commentId: string, toastIfNotFound: boolean = true
   };
 }
 
-export function doCommentReset(claimId: string) {
+export function doCommentReset(claimId: string): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     if (!claimId) {
       console.error(`Failed to reset comments`); //eslint-disable-line
@@ -354,7 +355,7 @@ export function doCommentReset(claimId: string) {
   };
 }
 
-export function doSuperChatList(uri: string) {
+export function doSuperChatList(uri: string): ThunkAction<Promise<void> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = selectClaimsByUri(state)[uri];
@@ -392,7 +393,7 @@ export function doSuperChatList(uri: string) {
   };
 }
 
-export function doCommentReactList(commentIds: Array<string>) {
+export function doCommentReactList(commentIds: Array<string>): ThunkAction<Promise<void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const activeChannelClaim = selectActiveChannelClaim(state);
@@ -439,7 +440,7 @@ export function doCommentReactList(commentIds: Array<string>) {
   };
 }
 
-export function doCommentReact(commentId: string, type: string) {
+export function doCommentReact(commentId: string, type: string): ThunkAction<Promise<void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const activeChannelClaim = selectActiveChannelClaim(state);
@@ -567,7 +568,7 @@ export function doCommentCreate(
   payment_intent_id?: string,
   environment?: string,
   sticker: boolean
-) {
+): ThunkAction<Promise<CommentCreateResponse | void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
 
@@ -634,7 +635,11 @@ export function doCommentCreate(
   };
 }
 
-export function doCommentPin(commentId: string, claimId: string, remove: boolean) {
+export function doCommentPin(
+  commentId: string,
+  claimId: string,
+  remove: boolean
+): ThunkAction<Promise<void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const activeChannel = selectActiveChannelClaim(state);
@@ -688,7 +693,7 @@ export function doCommentPin(commentId: string, claimId: string, remove: boolean
   };
 }
 
-export function doCommentAbandon(commentId: string, creatorChannelUri?: string) {
+export function doCommentAbandon(commentId: string, creatorChannelUri?: string): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = creatorChannelUri ? selectClaimsByUri(state)[creatorChannelUri] : undefined;
@@ -758,7 +763,10 @@ export function doCommentAbandon(commentId: string, creatorChannelUri?: string) 
   };
 }
 
-export function doCommentUpdate(comment_id: string, comment: string) {
+export function doCommentUpdate(
+  comment_id: string,
+  comment: string
+): ThunkAction<Promise<void>> | ThunkAction<Promise<void | DoToast>> {
   // if they provided an empty string, they must have wanted to abandon
   if (comment === '') {
     return doCommentAbandon(comment_id);
@@ -1048,7 +1056,11 @@ function doCommentModToggleBlock(
  * @param showLink
  * @returns {function(Dispatch): *}
  */
-export function doCommentModBlock(commenterUri: string, timeoutSec?: number, showLink: boolean = true) {
+export function doCommentModBlock(
+  commenterUri: string,
+  timeoutSec?: number,
+  showLink: boolean = true
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentModToggleBlock(false, commenterUri, '', [], BLOCK_LEVEL.SELF, timeoutSec, showLink));
   };
@@ -1062,7 +1074,11 @@ export function doCommentModBlock(commenterUri: string, timeoutSec?: number, sho
  * @param timeoutSec
  * @returns {function(Dispatch): *}
  */
-export function doCommentModBlockAsAdmin(commenterUri: string, blockerId: string, timeoutSec?: number) {
+export function doCommentModBlockAsAdmin(
+  commenterUri: string,
+  blockerId: string,
+  timeoutSec?: number
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(
       doCommentModToggleBlock(false, commenterUri, '', blockerId ? [blockerId] : [], BLOCK_LEVEL.ADMIN, timeoutSec)
@@ -1085,7 +1101,7 @@ export function doCommentModBlockAsModerator(
   creatorUri: string,
   blockerId: string,
   timeoutSec?: number
-) {
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(
       doCommentModToggleBlock(
@@ -1107,7 +1123,10 @@ export function doCommentModBlockAsModerator(
  * @param showLink
  * @returns {function(Dispatch): *}
  */
-export function doCommentModUnBlock(commenterUri: string, showLink: boolean = true) {
+export function doCommentModUnBlock(
+  commenterUri: string,
+  showLink: boolean = true
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentModToggleBlock(true, commenterUri, '', [], BLOCK_LEVEL.SELF, undefined, showLink));
   };
@@ -1120,7 +1139,10 @@ export function doCommentModUnBlock(commenterUri: string, showLink: boolean = tr
  * @param blockerId
  * @returns {function(Dispatch): *}
  */
-export function doCommentModUnBlockAsAdmin(commenterUri: string, blockerId: string) {
+export function doCommentModUnBlockAsAdmin(
+  commenterUri: string,
+  blockerId: string
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentModToggleBlock(true, commenterUri, '', blockerId ? [blockerId] : [], BLOCK_LEVEL.ADMIN));
   };
@@ -1135,7 +1157,11 @@ export function doCommentModUnBlockAsAdmin(commenterUri: string, blockerId: stri
  * @param blockerId
  * @returns {function(Dispatch): *}
  */
-export function doCommentModUnBlockAsModerator(commenterUri: string, creatorUri: string, blockerId: string) {
+export function doCommentModUnBlockAsModerator(
+  commenterUri: string,
+  creatorUri: string,
+  blockerId: string
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(
       doCommentModToggleBlock(true, commenterUri, creatorUri, blockerId ? [blockerId] : [], BLOCK_LEVEL.MODERATOR)
@@ -1143,7 +1169,7 @@ export function doCommentModUnBlockAsModerator(commenterUri: string, creatorUri:
   };
 }
 
-export function doFetchModBlockedList() {
+export function doFetchModBlockedList(): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const LOOP_CHUNK_SIZE = 1;
     const yieldThread = () => new Promise((resolve) => setTimeout(resolve));
@@ -1311,7 +1337,9 @@ export function doFetchModBlockedList() {
   };
 }
 
-export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim) => {
+export const doUpdateBlockListForPublishedChannel = (
+  channelClaim: ChannelClaim
+): ThunkAction<Promise<Array<ModerationBlockResponse | void> | void>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const blockedUris = selectModerationBlockList(state);
@@ -1352,7 +1380,7 @@ export function doCommentModAddDelegate(
   modChannelName: string,
   creatorChannelClaim: ChannelClaim,
   showToast: boolean = false
-) {
+): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     let signature: ?ChannelSignResponse;
     try {
@@ -1403,7 +1431,7 @@ export function doCommentModRemoveDelegate(
   modChannelId: string,
   modChannelName: string,
   creatorChannelClaim: ChannelClaim
-) {
+): ThunkAction<Promise<unknown>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     let signature: ?ChannelSignResponse;
     try {
@@ -1435,7 +1463,7 @@ export function doCommentModRemoveDelegate(
   };
 }
 
-export function doCommentModListDelegates(channelClaim: ChannelClaim) {
+export function doCommentModListDelegates(channelClaim: ChannelClaim): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.COMMENT_FETCH_MODERATION_DELEGATES_STARTED,
@@ -1479,7 +1507,7 @@ export function doCommentModListDelegates(channelClaim: ChannelClaim) {
   };
 }
 
-export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
+export function doFetchCommentModAmIList(channelClaim: ChannelClaim): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannels = selectMyChannelClaims(state);
@@ -1534,7 +1562,7 @@ export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
   };
 }
 
-export const doFetchCreatorSettings = (channelId: string) => {
+export const doFetchCreatorSettings = (channelId: string): ThunkAction<Promise<void>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannels = selectMyChannelClaims(state);
@@ -1598,7 +1626,10 @@ export const doFetchCreatorSettings = (channelId: string) => {
  * @param settings
  * @returns {function(Dispatch, GetState): any}
  */
-export const doUpdateCreatorSettings = (channelClaim: ChannelClaim, settings: PerChannelSettings) => {
+export const doUpdateCreatorSettings = (
+  channelClaim: ChannelClaim,
+  settings: PerChannelSettings
+): ThunkAction<Promise<unknown>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const channelSignature = await channelSignName(channelClaim.claim_id, channelClaim.name);
     if (!channelSignature) {
@@ -1618,7 +1649,11 @@ export const doUpdateCreatorSettings = (channelClaim: ChannelClaim, settings: Pe
   };
 };
 
-export const doCommentWords = (channelClaim: ChannelClaim, words: Array<string>, isUnblock: boolean) => {
+export const doCommentWords = (
+  channelClaim: ChannelClaim,
+  words: Array<string>,
+  isUnblock: boolean
+): ThunkAction<Promise<unknown>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     let channelSignature: ?ChannelSignResponse;
     try {
@@ -1651,19 +1686,25 @@ export const doCommentWords = (channelClaim: ChannelClaim, words: Array<string>,
   };
 };
 
-export const doCommentBlockWords = (channelClaim: ChannelClaim, words: Array<string>) => {
+export const doCommentBlockWords = (
+  channelClaim: ChannelClaim,
+  words: Array<string>
+): ThunkAction<Promise<unknown>> => {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentWords(channelClaim, words, false));
   };
 };
 
-export const doCommentUnblockWords = (channelClaim: ChannelClaim, words: Array<string>) => {
+export const doCommentUnblockWords = (
+  channelClaim: ChannelClaim,
+  words: Array<string>
+): ThunkAction<Promise<unknown>> => {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentWords(channelClaim, words, true));
   };
 };
 
-export const doFetchBlockedWords = () => {
+export const doFetchBlockedWords = (): ThunkAction<Promise<void>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannels = selectMyChannelClaims(state);

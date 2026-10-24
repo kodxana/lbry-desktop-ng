@@ -71,7 +71,7 @@ export const edited: DoEditNotification = {
   data: { notification: notification.data },
 };
 export const deleted: DoDeleteNotification = { type: ACTIONS.DELETE_NOTIFICATION, data: { id: '1' } };
-export const error: DoError = { type: ACTIONS.CREATE_ERROR, data: { title: 'Test', text: 'Fixture' } };
+export const error: DoError = { type: ACTIONS.CREATE_ERROR, data: { error: 'Fixture' } };
 export const dismissed: DoDismissError = { type: ACTIONS.DISMISS_ERROR };
 export const options: UpdateSearchOptions = { type: ACTIONS.UPDATE_SEARCH_OPTIONS, data: { video: true, size: 20 } };
 export const search: SearchSuccess = {

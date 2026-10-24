@@ -28,7 +28,7 @@ import { makeSelectClientSetting, selectosNotificationsEnabled, selectDaemonSett
 
 const DOWNLOAD_POLL_INTERVAL = 1000;
 
-export function doUpdateLoadStatus(uri: string, outpoint: string) {
+export function doUpdateLoadStatus(uri: string, outpoint: string): ThunkAction<Promise<void>> {
   // Updates the loading status for a uri as it's downloading
   // Calls file_list and checks the written_bytes value to see if the number has increased
   // Not needed on web as users aren't actually downloading the file
@@ -103,7 +103,7 @@ export function doUpdateLoadStatus(uri: string, outpoint: string) {
   // @endif
 }
 
-export function doSetPrimaryUri(uri: ?string) {
+export function doSetPrimaryUri(uri: ?string): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.SET_PRIMARY_URI,
@@ -112,7 +112,8 @@ export function doSetPrimaryUri(uri: ?string) {
   };
 }
 
-export const doClearPlayingUri = () => (dispatch: Dispatch) => dispatch(doSetPlayingUri({ uri: null }));
+export const doClearPlayingUri = (): ThunkAction<void> => (dispatch: Dispatch) =>
+  dispatch(doSetPlayingUri({ uri: null }));
 
 export function doSetPlayingUri({
   uri,
@@ -126,7 +127,7 @@ export function doSetPlayingUri({
   commentId?: string,
   pathname?: string,
   collectionId?: string,
-}) {
+}): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.SET_PLAYING_URI,
@@ -135,9 +136,14 @@ export function doSetPlayingUri({
   };
 }
 
-export function doPurchaseUriWrapper(uri: string, cost: number, saveFile: boolean, cb: ?(GetResponse) => void) {
+export function doPurchaseUriWrapper(
+  uri: string,
+  cost: number,
+  saveFile: boolean,
+  cb: ?(GetResponse) => void
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
-    function onSuccess(fileInfo) {
+    function onSuccess(fileInfo: GetResponse): void {
       if (saveFile) {
         dispatch(doUpdateLoadStatus(uri, fileInfo.outpoint));
       }
@@ -157,7 +163,7 @@ export function doPlayUri(
   saveFileOverride: boolean = false,
   cb?: () => void,
   hideFailModal: boolean = false
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
     const isMine = makeSelectClaimIsMine(uri)(state);
@@ -184,7 +190,7 @@ export function doPlayUri(
       dispatch(doPurchaseUriWrapper(uri, cost, saveFile, cb));
     }
 
-    function attemptPlay(instantPurchaseMax = null) {
+    function attemptPlay(instantPurchaseMax: ?number = null): void {
       // If you have a file_list entry, you have already purchased the file
       if (
         !isMine &&
@@ -223,7 +229,7 @@ export function doPlayUri(
   };
 }
 
-export function savePosition(uri: string, position: number) {
+export function savePosition(uri: string, position: number): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
     const claim = selectClaimForUri(state, uri);
@@ -238,7 +244,7 @@ export function savePosition(uri: string, position: number) {
   };
 }
 
-export function clearPosition(uri: string) {
+export function clearPosition(uri: string): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
     const claim = makeSelectClaimForUri(uri)(state);
@@ -262,13 +268,13 @@ export function clearPosition(uri: string) {
   };
 }
 
-export function clearContentCache() {
+export function clearContentCache(): { type: string } {
   return {
     type: ACTIONS.CLEAR_CONTENT_CACHE,
   };
 }
 
-export function doSetContentHistoryItem(uri: string) {
+export function doSetContentHistoryItem(uri: string): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.SET_CONTENT_LAST_VIEWED,
@@ -277,7 +283,7 @@ export function doSetContentHistoryItem(uri: string) {
   };
 }
 
-export function doClearContentHistoryUri(uri: string) {
+export function doClearContentHistoryUri(uri: string): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.CLEAR_CONTENT_HISTORY_URI,
@@ -286,30 +292,33 @@ export function doClearContentHistoryUri(uri: string) {
   };
 }
 
-export function doClearContentHistoryAll() {
+export function doClearContentHistoryAll(): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({ type: ACTIONS.CLEAR_CONTENT_HISTORY_ALL });
   };
 }
 
 export const doRecommendationUpdate =
-  (claimId: string, urls: Array<string>, id: string, parentId: string) => (dispatch: Dispatch) => {
+  (claimId: string, urls: Array<string>, id: string, parentId: string): ThunkAction<void> =>
+  (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.RECOMMENDATION_UPDATED,
       data: { claimId, urls, id, parentId },
     });
   };
 
-export const doRecommendationClicked = (claimId: string, index: number) => (dispatch: Dispatch) => {
-  if (index !== undefined && index !== null) {
-    dispatch({
-      type: ACTIONS.RECOMMENDATION_CLICKED,
-      data: { claimId, index },
-    });
-  }
-};
+export const doRecommendationClicked =
+  (claimId: string, index: ?number): ThunkAction<void> =>
+  (dispatch: Dispatch) => {
+    if (index !== undefined && index !== null) {
+      dispatch({
+        type: ACTIONS.RECOMMENDATION_CLICKED,
+        data: { claimId, index },
+      });
+    }
+  };
 
-export function doToggleLoopList(collectionId: string, loop: boolean, hideToast: boolean) {
+export function doToggleLoopList(collectionId: string, loop: boolean, hideToast: boolean): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.TOGGLE_LOOP_LIST,
@@ -325,7 +334,12 @@ export function doToggleLoopList(collectionId: string, loop: boolean, hideToast:
   };
 }
 
-export function doToggleShuffleList(currentUri: string, collectionId: string, shuffle: boolean, hideToast: boolean) {
+export function doToggleShuffleList(
+  currentUri: string,
+  collectionId: string,
+  shuffle: boolean,
+  hideToast: boolean
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
     if (shuffle) {
       const state = getState();

@@ -112,10 +112,11 @@ declare type GenericTxResponse = {
   ...
 };
 
-declare type PublishResponse = GenericTxResponse & {
+declare type PublishResponse = {
+  ...Omit<GenericTxResponse, 'outputs'>,
   // Only first value in outputs is a claim
   // That's the only value we care about
-  outputs: Array<Claim>,
+  outputs: [Claim, ...Array<{ ... }>],
   ...
 };
 
@@ -137,13 +138,15 @@ declare type ClaimListResponse = {
   ...
 };
 
-declare type ChannelCreateResponse = GenericTxResponse & {
-  outputs: Array<ChannelClaim>,
+declare type ChannelCreateResponse = {
+  ...Omit<GenericTxResponse, 'outputs'>,
+  outputs: [ChannelClaim, ...Array<{ ... }>],
   ...
 };
 
-declare type ChannelUpdateResponse = GenericTxResponse & {
-  outputs: Array<ChannelClaim>,
+declare type ChannelUpdateResponse = {
+  ...Omit<GenericTxResponse, 'outputs'>,
+  outputs: [ChannelClaim, ...Array<{ ... }>],
   ...
 };
 
@@ -196,16 +199,13 @@ declare type ChannelSignResponse = {
 };
 
 declare type CollectionCreateResponse = {
-  outputs: Array<Claim>,
-  page: number,
-  page_size: number,
-  total_items: number,
-  total_pages: number,
+  ...Omit<GenericTxResponse, 'outputs'>,
+  outputs: [CollectionClaim, ...Array<{ ... }>],
   ...
 };
 
 declare type CollectionListResponse = {
-  items: Array<Claim>,
+  items: Array<CollectionClaim>,
   page: number,
   page_size: number,
   total_items: number,
@@ -298,7 +298,11 @@ declare type StreamRepostOptions = {
   ...
 };
 
-declare type StreamRepostResponse = GenericTxResponse;
+declare type StreamRepostResponse = {
+  ...Omit<GenericTxResponse, 'outputs'>,
+  outputs: [RepostClaim, ...Array<{ ... }>],
+  ...
+};
 
 declare type PurchaseListResponse = {
   items: Array<PurchaseReceipt & { claim: StreamClaim, ... }>,

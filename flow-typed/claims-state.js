@@ -24,8 +24,8 @@ declare type ClaimsState = {
   myPurchasesPageTotalResults: ?number,
   fetchingMyPurchases: boolean,
   fetchingMyPurchasesError: ?string,
-  claimSearchByQuery: { [string]: Array<string> },
-  claimSearchByQueryLastPageReached: { [string]: Array<boolean> },
+  claimSearchByQuery: { [string]: Array<string> | null },
+  claimSearchByQueryLastPageReached: { [string]: boolean },
   creatingChannel: boolean,
   creatingCollection: boolean,
   paginatedClaimsByChannel: {
