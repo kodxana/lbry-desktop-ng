@@ -1,5 +1,7 @@
 // @flow
 import * as React from 'react';
+import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
+import stringify from 'json-stringify-safe';
 import { countries } from 'country-data-list';
 import {
   connect,
@@ -136,3 +138,6 @@ export const colored: string = chalk.yellow.bold('test', 1);
 export const countryNames: Array<string> = countries.all
   .filter((country) => country.status !== 'deleted')
   .map((country) => country.name);
+
+export const encodedState: string = compressToUTF16(stringify({ value: true }));
+export const decodedState: string | null = decompressFromUTF16(encodedState);

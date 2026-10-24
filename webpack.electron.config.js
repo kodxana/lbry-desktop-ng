@@ -1,4 +1,4 @@
-// Load desktop defaults before resolving aliases and preprocess-loader conditions.
+// Load desktop defaults before resolving aliases and desktop build conditions.
 require('./config');
 const path = require('path');
 const webpack = require('webpack');
@@ -31,14 +31,13 @@ const mainConfig = {
       { test: /\.cjs$/, type: 'javascript/auto' },
       {
         test: /\.(jsx?$|s?css$)/,
+        exclude: /node_modules/,
         use: [
           {
-            loader: 'preprocess-loader',
+            loader: path.resolve(__dirname, 'build/conditionalLoader.cjs'),
             options: {
               TARGET: 'app',
-              ppOptions: {
-                type: 'js',
-              },
+              CUSTOM_HOMEPAGE: process.env.CUSTOM_HOMEPAGE,
             },
           },
         ],
@@ -136,14 +135,13 @@ const renderConfig = {
     rules: [
       {
         test: /\.jsx?$/,
+        exclude: /node_modules/,
         use: [
           {
-            loader: 'preprocess-loader',
+            loader: path.resolve(__dirname, 'build/conditionalLoader.cjs'),
             options: {
               TARGET: 'app',
-              ppOptions: {
-                type: 'js',
-              },
+              CUSTOM_HOMEPAGE: process.env.CUSTOM_HOMEPAGE,
             },
           },
         ],

@@ -57,6 +57,7 @@ for (const file of [
   'testDesktopBridge.js',
   'testContentFiles.js',
   'testMediaAdapters.js',
+  'testPersistenceBuild.js',
 ]) {
   const result = spawnSync(process.execPath, [path.join(__dirname, file)], { stdio: 'inherit', timeout: 120000 });
   if (result.error) throw result.error;

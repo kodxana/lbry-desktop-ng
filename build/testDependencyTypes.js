@@ -6,6 +6,8 @@ const { spawnSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const versions = {
+  'lz-string': '1.5.0',
+  'json-stringify-safe': '5.0.1',
   'country-data-list': '1.6.3',
   'react-redux': '9.3.0',
   express: '5.3.0',
@@ -71,6 +73,11 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Current dependency APIs and valid application patterns must type-check');
 const invalid = {
+  'codec-input': "import {compressToUTF16} from 'lz-string'; compressToUTF16({state: true});",
+  'codec-null':
+    "import {decompressFromUTF16} from 'lz-string'; export const text: string = decompressFromUTF16('invalid');",
+  'safe-json-undefined':
+    "import stringify from 'json-stringify-safe'; export const text: string = stringify(undefined);",
   'country-name': "import { countries } from 'country-data-list'; export const value: number = countries.all[0].name;",
   'country-status':
     "import { countries } from 'country-data-list'; export const value: number = countries.all[0].status;",
