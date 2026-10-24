@@ -91,7 +91,7 @@ function ChannelForm(props: Props) {
     isClaimingInitialRewards,
     hasClaimedInitialRewards,
   } = props;
-  const [nameError, setNameError] = React.useState(undefined);
+  const [nameError, setNameError] = React.useState<string | void>(undefined);
   const [bidError, setBidError] = React.useState('');
   const [isUpload, setIsUpload] = React.useState({ cover: false, thumbnail: false });
   const [thumbError, setThumbError] = React.useState(false);

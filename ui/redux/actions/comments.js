@@ -125,7 +125,7 @@ export function doCommentList(
     const claim = selectClaimsByUri(state)[uri];
     const claimId = claim ? claim.claim_id : null;
 
-    if (!claimId) {
+    if (!claim || !claimId) {
       dispatch({
         type: ACTIONS.COMMENT_LIST_FAILED,
         data: 'unable to find claim for uri',
@@ -818,20 +818,16 @@ export function doCommentUpdate(comment_id: string, comment: string) {
   }
 }
 
-async function channelSignName(channelClaimId: string, channelName: string) {
-  let signedObject;
+type ChannelNameSignature = { ...ChannelSignResponse, claim_id: string, name: string };
 
+async function channelSignName(channelClaimId: string, channelName: string): Promise<ChannelNameSignature | void> {
   try {
-    signedObject = await Lbry.channel_sign({
+    const signedObject = await Lbry.channel_sign({
       channel_id: channelClaimId,
       hexdata: toHex(channelName),
     });
-
-    signedObject['claim_id'] = channelClaimId;
-    signedObject['name'] = channelName;
+    return { ...signedObject, claim_id: channelClaimId, name: channelName };
   } catch (e) {}
-
-  return signedObject;
 }
 
 async function channelSignData(channelClaimId: string, data: string) {
@@ -893,12 +889,11 @@ function doCommentModToggleBlock(
           {
             // Find the first channel that is a moderator for 'creatorId'.
             const delegatorsById = selectModerationDelegatorsById(state);
-            blockerChannelClaims = [
-              blockerChannelClaims.find((x) => {
-                const delegatorDataForId = delegatorsById[x.claim_id];
-                return delegatorDataForId && Object.values(delegatorDataForId.delegators).includes(creatorId);
-              }),
-            ];
+            const moderator = blockerChannelClaims.find((x) => {
+              const delegatorDataForId = delegatorsById[x.claim_id];
+              return delegatorDataForId && Object.values(delegatorDataForId.delegators).includes(creatorId);
+            });
+            blockerChannelClaims = moderator ? [moderator] : [];
           }
           break;
 
@@ -906,9 +901,10 @@ function doCommentModToggleBlock(
           {
             // Find the first admin channel and use that.
             const delegatorsById = selectModerationDelegatorsById(state);
-            blockerChannelClaims = [
-              blockerChannelClaims.find((x) => delegatorsById[x.claim_id] && delegatorsById[x.claim_id].global),
-            ];
+            const admin = blockerChannelClaims.find(
+              (x) => delegatorsById[x.claim_id] && delegatorsById[x.claim_id].global
+            );
+            blockerChannelClaims = admin ? [admin] : [];
           }
           break;
       }
@@ -926,10 +922,19 @@ function doCommentModToggleBlock(
       },
     });
 
+    if (!blockerChannelClaims.length) {
+      dispatch({
+        type: unblock ? ACTIONS.COMMENT_MODERATION_UN_BLOCK_FAILED : ACTIONS.COMMENT_MODERATION_BLOCK_FAILED,
+        data: { blockedUri: commenterUri, creatorUri: creatorUri || undefined, blockLevel },
+      });
+      dispatch(doToast({ message: __('No channel is available to perform this moderation action.'), isError: true }));
+      return;
+    }
+
     const commenterIdForAction = channelClaimId;
     const commenterNameForAction = channelName;
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
 
     const sharedModBlockParams = unblock
       ? {
@@ -945,29 +950,27 @@ function doCommentModToggleBlock(
 
     return Promise.all(blockerChannelClaims.map((x) => channelSignName(x.claim_id, x.name)))
       .then((response) => {
-        channelSignatures = response;
+        channelSignatures = response.filter((signature) => signature !== undefined);
         // $FlowFixMe
         return Promise.allSettled(
-          channelSignatures
-            .filter((x) => x !== undefined && x !== null)
-            .map((signatureData) =>
-              commentAction({
-                // $FlowFixMe
-                mod_channel_id: signatureData.claim_id,
-                // $FlowFixMe
-                mod_channel_name: signatureData.name,
-                // $FlowFixMe
-                signature: signatureData.signature,
-                // $FlowFixMe
-                signing_ts: signatureData.signing_ts,
-                creator_channel_id: creatorUri ? creatorId : undefined,
-                creator_channel_name: creatorUri ? creatorName : undefined,
-                block_all: unblock ? undefined : blockLevel === BLOCK_LEVEL.ADMIN,
-                global_un_block: unblock ? blockLevel === BLOCK_LEVEL.ADMIN : undefined,
-                ...sharedModBlockParams,
-                time_out: unblock ? undefined : timeoutSec,
-              })
-            )
+          channelSignatures.map((signatureData) =>
+            commentAction({
+              // $FlowFixMe
+              mod_channel_id: signatureData.claim_id,
+              // $FlowFixMe
+              mod_channel_name: signatureData.name,
+              // $FlowFixMe
+              signature: signatureData.signature,
+              // $FlowFixMe
+              signing_ts: signatureData.signing_ts,
+              creator_channel_id: creatorUri ? creatorId : undefined,
+              creator_channel_name: creatorUri ? creatorName : undefined,
+              block_all: unblock ? undefined : blockLevel === BLOCK_LEVEL.ADMIN,
+              global_un_block: unblock ? blockLevel === BLOCK_LEVEL.ADMIN : undefined,
+              ...sharedModBlockParams,
+              time_out: unblock ? undefined : timeoutSec,
+            })
+          )
         )
           .then((response) => {
             const failures = [];
@@ -1157,23 +1160,21 @@ export function doFetchModBlockedList() {
       type: ACTIONS.COMMENT_MODERATION_BLOCK_LIST_STARTED,
     });
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
 
     return Promise.all(myChannels.map((channel) => channelSignName(channel.claim_id, channel.name)))
       .then((response) => {
-        channelSignatures = response;
+        channelSignatures = response.filter((signature) => signature !== undefined);
         // $FlowFixMe
         return Promise.allSettled(
-          channelSignatures
-            .filter((x) => x !== undefined && x !== null)
-            .map((signatureData) =>
-              Comments.moderation_block_list({
-                mod_channel_id: signatureData.claim_id,
-                mod_channel_name: signatureData.name,
-                signature: signatureData.signature,
-                signing_ts: signatureData.signing_ts,
-              })
-            )
+          channelSignatures.map((signatureData) =>
+            Comments.moderation_block_list({
+              mod_channel_id: signatureData.claim_id,
+              mod_channel_name: signatureData.name,
+              signature: signatureData.signature,
+              signing_ts: signatureData.signing_ts,
+            })
+          )
         )
           .then(async (res) => {
             let personalBlockList = [];
@@ -1492,23 +1493,21 @@ export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
 
     dispatch({ type: ACTIONS.COMMENT_MODERATION_AM_I_LIST_STARTED });
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
 
     return Promise.all(myChannels.map((channel) => channelSignName(channel.claim_id, channel.name)))
       .then((response) => {
-        channelSignatures = response;
+        channelSignatures = response.filter((signature) => signature !== undefined);
         // $FlowFixMe
         return Promise.allSettled(
-          channelSignatures
-            .filter((x) => x !== undefined && x !== null)
-            .map((signatureData) =>
-              Comments.moderation_am_i({
-                channel_name: signatureData.name,
-                channel_id: signatureData.claim_id,
-                signature: signatureData.signature,
-                signing_ts: signatureData.signing_ts,
-              })
-            )
+          channelSignatures.map((signatureData) =>
+            Comments.moderation_am_i({
+              channel_name: signatureData.name,
+              channel_id: signatureData.claim_id,
+              signature: signatureData.signature,
+              signing_ts: signatureData.signing_ts,
+            })
+          )
         )
           .then((results) => {
             const delegatorsById = {};
@@ -1680,7 +1679,7 @@ export const doFetchBlockedWords = () => {
       type: ACTIONS.COMMENT_FETCH_BLOCKED_WORDS_STARTED,
     });
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
     if (myChannels) {
       for (const channelClaim of myChannels) {
         try {
@@ -1705,7 +1704,7 @@ export const doFetchBlockedWords = () => {
       )
     )
       .then((blockedWords) => {
-        const blockedWordsByChannelId = {};
+        const blockedWordsByChannelId: { [string]: Array<string> } = {};
 
         for (let i = 0; i < channelSignatures.length; ++i) {
           const claim_id = channelSignatures[i].claim_id;

@@ -248,9 +248,20 @@ controls, amount clearing, eight-decimal amounts and currency changes. Existing
 Markdown tests retain draft, undo, live-limit, preview and cleanup coverage.
 The field, row, form and submit changes produce unchanged runtime JavaScript.
 
-**The application is not yet type-clean.** The full check now reports 2,521
+The claim pass shares the reducer state with selectors and distinguishes stream,
+channel, collection and repost values. A focused source gate checks nullable
+lookups, metadata field types, pagination and ownership, rejecting 21 invalid
+contracts. The generic metadata signature lives in the declaration file so both
+the current Flow checker and the production Babel parser can consume it.
+Regression fixtures cover pending/reposted claims, immutable ordering, purchase
+filtering, numeric bids, missing action inputs and moderation identity after a
+signing failure. Support abandonment tests use a mock SDK; renderer tip tests
+use callbacks that never submit transactions. Channel updates require the saved
+metadata before replacing it, preserving location fields not exposed in the form.
+
+**The application is not yet type-clean.** The full check now reports 2,296
 application diagnostics and zero library-definition diagnostics, down from
-2,586 before the form-control pass (65 fewer, with no newly introduced diagnostics).
+2,521 before the claim pass (225 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

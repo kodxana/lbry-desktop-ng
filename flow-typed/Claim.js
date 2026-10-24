@@ -1,19 +1,32 @@
 // @flow
 
-declare type Claim = StreamClaim | ChannelClaim | CollectionClaim;
+declare type Claim = StreamClaim | ChannelClaim | CollectionClaim | RepostClaim;
 
-declare type ChannelClaim = GenericClaim & {
+declare type ChannelClaim = {
+  ...GenericClaim,
+  value_type: 'channel',
   value: ChannelMetadata,
   ...
 };
 
-declare type CollectionClaim = GenericClaim & {
+declare type CollectionClaim = {
+  ...GenericClaim,
+  value_type: 'collection',
   value: CollectionMetadata,
   ...
 };
 
-declare type StreamClaim = GenericClaim & {
+declare type StreamClaim = {
+  ...GenericClaim,
+  value_type: 'stream',
   value: StreamMetadata,
+  ...
+};
+
+declare type RepostClaim = {
+  ...GenericClaim,
+  value_type: 'repost',
+  value: { ...GenericMetadata, claim_id?: string, ... },
   ...
 };
 
@@ -37,12 +50,12 @@ declare type GenericClaim = {
   short_url: string, // permanent_url with short id, no channel
   txid: string, // unique tx id
   type: 'claim' | 'update' | 'support',
-  value_type: 'stream' | 'channel' | 'collection',
+  value_type: 'stream' | 'channel' | 'collection' | 'repost',
   signing_channel?: ChannelClaim,
-  reposted_claim?: GenericClaim,
-  repost_channel_url?: string,
+  reposted_claim?: Claim,
+  repost_channel_url?: string | void,
   repost_url?: string,
-  repost_bid_amount?: string,
+  repost_bid_amount?: string | void,
   purchase_receipt?: PurchaseReceipt,
   meta: {
     activation_height: number,
@@ -80,6 +93,7 @@ declare type ChannelMetadata = GenericMetadata & {
   public_key: string,
   public_key_id: string,
   cover_url?: string,
+  cover?: { url?: string, ... },
   email?: string,
   website_url?: string,
   featured?: Array<string>,
@@ -229,6 +243,13 @@ declare type ChannelUpdateParams = {
   blocking?: boolean,
   ...
 };
+
+declare type ClaimMetadataFields = Readonly<{ ...GenericMetadata, website_url?: string, email?: string, ... }>;
+declare type ClaimMetadataKey = keyof ClaimMetadataFields;
+declare type ClaimMetadataSelector = <K extends ClaimMetadataKey>(
+  uri: string,
+  key: K
+) => (state: { claims: ClaimsState, ... }) => ClaimMetadataFields[K] | void;
 
 declare type ChannelPublishParams = {
   name: string,

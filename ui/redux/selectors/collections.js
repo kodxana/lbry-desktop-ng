@@ -8,13 +8,7 @@ import { findPlayableUrl } from 'util/collection-playback';
 type State = {
   collections: CollectionState,
   content: CollectionPlaybackState,
-  claims: {
-    byId: { [string]: Claim },
-    pendingById?: { [string]: Claim },
-    claimsByUri: { [string]: string | null },
-    myCollectionClaims: Array<string>,
-    ...
-  },
+  claims: ClaimsState,
   ...
 };
 type CollectionSelector<T> = (state: State) => T;

@@ -227,6 +227,7 @@ export function savePosition(uri: string, position: number) {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
     const claim = selectClaimForUri(state, uri);
+    if (!claim) return;
     const { claim_id: claimId, txid, nout } = claim;
     const outpoint = `${txid}:${nout}`;
 
@@ -241,6 +242,7 @@ export function clearPosition(uri: string) {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
     const claim = makeSelectClaimForUri(uri)(state);
+    if (!claim) return;
     const persistWatchTime = makeSelectClientSetting(SETTINGS.PERSIST_WATCH_TIME)(state);
     const { claim_id: claimId, txid, nout } = claim;
     const outpoint = `${txid}:${nout}`;

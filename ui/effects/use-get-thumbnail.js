@@ -6,15 +6,13 @@ export default function useGetThumbnail(
   uri: string,
   claim: ?Claim,
   streamingUrl: ?string,
-  getFile: string => void,
+  getFile: (string) => void,
   shouldHide: boolean
 ) {
   let thumbnailToUse;
 
-  // $FlowFixMe
-  const isImage = claim && claim.value && claim.value.stream_type === 'image';
-  // $FlowFixMe
-  const isFree = claim && claim.value && (!claim.value.fee || Number(claim.value.fee.amount) <= 0);
+  const isImage = claim && claim.value_type === 'stream' && claim.value.stream_type === 'image';
+  const isFree = claim && claim.value_type === 'stream' && (!claim.value.fee || Number(claim.value.fee.amount) <= 0);
   const isCollection = claim && claim.value_type === 'collection';
   const thumbnailInClaim = claim && claim.value && claim.value.thumbnail && claim.value.thumbnail.url;
 

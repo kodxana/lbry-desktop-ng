@@ -294,7 +294,7 @@ export function doAbandonClaim(claim: Claim, cb: (string) => void) {
 
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
-    const myClaims: Array<Claim> = selectMyClaimsRaw(state);
+    const myClaims = selectMyClaimsRaw(state) || [];
     const mySupports: { [string]: Support } = selectSupportsByOutpoint(state);
 
     // A user could be trying to abandon a support or one of their claims
@@ -499,9 +499,16 @@ export function doUpdateChannel(params: any, cb: any) {
       type: ACTIONS.UPDATE_CHANNEL_STARTED,
     });
     const state = getState();
-    const myChannels = selectMyChannelClaims(state);
+    const myChannels = selectMyChannelClaims(state) || [];
     const channelClaim = myChannels.find((myChannel) => myChannel.claim_id === params.claim_id);
+    if (!channelClaim) {
+      const message = __('This channel is not available yet. Please try again.');
+      dispatch({ type: ACTIONS.UPDATE_CHANNEL_FAILED, data: message });
+      dispatch(doToast({ message, isError: true }));
+      return;
+    }
 
+    const locations: Array<ClaimLocation> = [];
     const updateParams = {
       claim_id: params.claim_id,
       bid: creditsToString(params.amount),
@@ -514,7 +521,7 @@ export function doUpdateChannel(params: any, cb: any) {
       tags: [],
       replace: true,
       languages: params.languages || [],
-      locations: [],
+      locations,
       blocking: true,
     };
 

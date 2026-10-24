@@ -20,7 +20,7 @@ type Props = {
   claimIsMine: boolean,
   activeChannelId: ?string,
   uri: string,
-  claim: ?ChannelClaim,
+  claim: ?Claim,
   doToast: ({ message: string }) => void,
   hideCreatorLike: boolean,
   resolve: (string) => void,

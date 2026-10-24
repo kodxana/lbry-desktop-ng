@@ -105,7 +105,7 @@ function CollectionForm(props: Props) {
   const collectionChannel = claim && claim.signing_channel ? claim.signing_channel.claim_id : undefined;
   const hasClaim = !!claim;
   const [initialized, setInitialized] = React.useState(false);
-  const [nameError, setNameError] = React.useState(undefined);
+  const [nameError, setNameError] = React.useState<string | void>(undefined);
   const [bidError, setBidError] = React.useState('');
   const [thumbStatus, setThumbStatus] = React.useState('');
   const [thumbError, setThumbError] = React.useState('');

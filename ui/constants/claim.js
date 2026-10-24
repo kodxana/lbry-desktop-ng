@@ -15,7 +15,7 @@ export const LEVEL_2_STAKED_AMOUNT = 1;
 export const LEVEL_3_STAKED_AMOUNT = 50;
 export const LEVEL_4_STAKED_AMOUNT = 250;
 export const LEVEL_5_STAKED_AMOUNT = 1000;
-export const INVALID_NAME_ERROR =
+export const INVALID_NAME_ERROR: string =
   __('LBRY names cannot contain spaces or reserved symbols') + ' ' + '(?$#@;:/\\="<>%{}|^~[]`)';
 
 export const FORCE_CONTENT_TYPE_PLAYER = [
@@ -62,7 +62,7 @@ export const isClaimNsfw = (claim: Claim): boolean => {
   return false;
 };
 
-export function createNormalizedClaimSearchKey(options: { page: number, release_time?: string }) {
+export function createNormalizedClaimSearchKey(options: { page: number, release_time?: string }): string {
   // Ignore page because we don't care what the last page searched was, we want everything
   // Ignore release_time because that will change depending on when you call claim_search ex: release_time: ">12344567"
   const { page: optionToIgnoreForQuery, release_time: anotherToIgnore, ...rest } = options;

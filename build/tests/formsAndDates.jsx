@@ -3,6 +3,7 @@ import React from 'react';
 import { flushSync } from 'react-dom';
 import moment from 'moment';
 import WalletSend from 'component/walletSend/view';
+import WalletSendTip from 'component/walletSendTip/view';
 import ConfirmTransaction from 'modal/modalConfirmTransaction/view';
 import PublishReleaseDate from 'component/publishReleaseDate/view';
 import DateTime from 'component/dateTime/view';
@@ -123,6 +124,51 @@ async function walletSend(store, history, uri) {
   confirm(modals[3].values);
   submit();
   assert.deepEqual(sends[1], ['tip', { amount: '1.25000000', claim_id: 'fixture-tip' }, false]);
+  unmount();
+}
+
+async function walletTip(store, history, uri) {
+  const sends = [];
+  let hidden = 0;
+  localStorage.setItem('comment-support:customTip', '1');
+  localStorage.setItem('comment-tip:tab', 'TabBoost');
+  const draw = (claim) =>
+    render(
+      <WalletSendTip
+        claim={claim}
+        uri={uri}
+        title="Fixture recipient"
+        balance={10}
+        incognito
+        fetchingChannels={false}
+        instantTipEnabled={false}
+        instantTipMax={{ amount: 1, currency: 'LBC' }}
+        doSendTip={(...args) => sends.push(args)}
+        doHideModal={() => hidden++}
+      />,
+      store,
+      history
+    );
+  for (const claim of [undefined, null]) {
+    draw(claim);
+    submit();
+    await tick();
+    assert.equal(sends.length, 0, 'Unresolved tip recipients must not submit a transaction');
+    assert.equal(button('Confirm'), undefined);
+    assert.equal(hidden, 0);
+    unmount();
+  }
+  draw({ claim_id: 'fixture-tip', value_type: 'stream', name: 'fixture' });
+  submit();
+  await waitFor(() => button('Confirm'), 'Resolved tip recipient must open confirmation');
+  assert.equal(sends.length, 0);
+  flushSync(() => button('Cancel').click());
+  assert.equal(sends.length, 0);
+  submit();
+  await waitFor(() => button('Confirm'), 'Cancelled tip must allow retry');
+  flushSync(() => button('Confirm').click());
+  assert.deepEqual(sends, [[{ amount: 1, claim_id: 'fixture-tip', channel_id: undefined }, true]]);
+  assert.equal(hidden, 1);
   unmount();
 }
 
@@ -317,10 +363,11 @@ export default async function formsAndDates(store, history) {
   try {
     await formControls(store, history);
     await walletSend(store, history, uri);
+    await walletTip(store, history, uri);
     await publishDate(store, history);
     await durations(store, history, uri);
     await dateFormatting(store, history);
-    return 'shared form focus/checkboxes/textarea/submit/disabled state, price precision/currency/clearing, wallet send validation/confirmation/retry, publish dates, timed blocks, localized dates and media duration';
+    return 'shared form focus/checkboxes/textarea/submit/disabled state, price precision/currency/clearing, wallet send and tip validation/confirmation/retry, unresolved tip recipients, publish dates, timed blocks, localized dates and media duration';
   } finally {
     moment.locale('en');
     unmount();

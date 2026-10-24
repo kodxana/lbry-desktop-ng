@@ -109,8 +109,14 @@ export const selectRecommendedContentForUri: (state: State, uri: string) => Arra
       const nextUriToPlay = recommendedContent.filter((nextRecommendedUri) => {
         const costInfo = costInfoByUri[nextRecommendedUri] && costInfoByUri[nextRecommendedUri].cost;
         const recommendedClaim = claimsByUri[nextRecommendedUri];
-        const isVideo = recommendedClaim && recommendedClaim.value && recommendedClaim.value.stream_type === 'video';
-        const isAudio = recommendedClaim && recommendedClaim.value && recommendedClaim.value.stream_type === 'audio';
+        const isVideo =
+          recommendedClaim &&
+          recommendedClaim.value_type === 'stream' &&
+          recommendedClaim.value.stream_type === 'video';
+        const isAudio =
+          recommendedClaim &&
+          recommendedClaim.value_type === 'stream' &&
+          recommendedClaim.value.stream_type === 'audio';
 
         let historyMatch = false;
         try {
@@ -185,7 +191,7 @@ export const makeSelectWinningUriForQuery = (query: string): ((state: State) => 
     (matureEnabled, pendingClaim, claim1, claim2) => {
       const claim1Mature = claim1 && isClaimNsfw(claim1);
       const claim2Mature = claim2 && isClaimNsfw(claim2);
-      let pendingAmount = pendingClaim && pendingClaim.amount;
+      const pendingAmount = pendingClaim && Number(pendingClaim.amount);
 
       if (!claim1 && !claim2) {
         return undefined;
@@ -199,9 +205,10 @@ export const makeSelectWinningUriForQuery = (query: string): ((state: State) => 
             : claim1.repost_url || claim1.canonical_url;
       }
 
-      const effectiveAmount1 = claim1 && (claim1.repost_bid_amount || claim1.meta.effective_amount);
+      if (!claim1 || !claim2) return undefined;
+      const effectiveAmount1 = Number(claim1.repost_bid_amount || claim1.meta.effective_amount);
       // claim2 will never have a repost_bid_amount because reposts never start with "@"
-      const effectiveAmount2 = claim2 && claim2.meta.effective_amount;
+      const effectiveAmount2 = Number(claim2.meta.effective_amount);
 
       if (!matureEnabled) {
         if (claim1Mature && !claim2Mature) {
@@ -217,8 +224,13 @@ export const makeSelectWinningUriForQuery = (query: string): ((state: State) => 
         Number(effectiveAmount1) > Number(effectiveAmount2)
           ? claim1.repost_url || claim1.canonical_url
           : claim2.canonical_url;
-      if (pendingAmount && pendingAmount > effectiveAmount1 && pendingAmount > effectiveAmount2) {
-        return pendingAmount.permanent_url;
+      if (
+        pendingClaim &&
+        pendingAmount != null &&
+        pendingAmount > effectiveAmount1 &&
+        pendingAmount > effectiveAmount2
+      ) {
+        return pendingClaim.permanent_url;
       } else {
         return returnBeforePending;
       }

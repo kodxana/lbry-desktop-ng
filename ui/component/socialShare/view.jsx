@@ -19,7 +19,7 @@ const SUPPORTS_SHARE_API = typeof navigator.share !== 'undefined';
 const TWITTER_INTENT_API = 'https://twitter.com/intent/tweet?';
 
 type Props = {
-  claim: StreamClaim,
+  claim: Claim,
   title: ?string,
   webShareable: boolean,
   position: number,
@@ -47,8 +47,8 @@ function SocialShare(props: Props) {
   const isChannel = claim.value_type === 'channel';
   const isCollection = claim.value_type === 'collection';
   const isStream = claim.value_type === 'stream';
-  const isVideo = isStream && claim.value.stream_type === 'video';
-  const isAudio = isStream && claim.value.stream_type === 'audio';
+  const isVideo = claim.value_type === 'stream' && claim.value.stream_type === 'video';
+  const isAudio = claim.value_type === 'stream' && claim.value.stream_type === 'audio';
   const showStartAt = isVideo || isAudio;
   const lbryUrl: string = generateLbryContentUrl(canonicalUrl, permanentUrl);
   const lbryWebUrl: string = generateLbryWebUrl(lbryUrl);

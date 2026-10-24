@@ -22,7 +22,7 @@ type Props = {
   uri: string,
   claim: StreamClaim,
   openModal: (id: string, { uri: string, claimIsMine?: boolean, isSupport?: boolean }) => void,
-  prepareEdit: ({}, string, {}) => void,
+  prepareEdit: (Claim, string, ?FileListItem) => void,
   claimIsMine: boolean,
   fileInfo: FileListItem,
   costInfo: ?{ cost: number },

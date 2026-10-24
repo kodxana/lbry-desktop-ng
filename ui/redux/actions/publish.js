@@ -18,7 +18,7 @@ import Lbry from 'lbry';
 import { isClaimNsfw } from 'util/claim';
 
 export const NO_FILE = '---';
-export const doPublishDesktop = (filePath: ?File, preview?: boolean) => (dispatch: Dispatch, getState: () => {}) => {
+export const doPublishDesktop = (filePath: ?File, preview?: boolean) => (dispatch: Dispatch, getState: GetState) => {
   const publishPreview = (previewResponse) => {
     dispatch(
       doOpenModal(MODALS.PUBLISH_PREVIEW, {
@@ -312,7 +312,7 @@ export const doPrepareEdit =
   };
 
 export const doPublish =
-  (success: Function, fail: Function, preview: Function) => (dispatch: Dispatch, getState: () => {}) => {
+  (success: Function, fail: Function, preview: Function) => (dispatch: Dispatch, getState: GetState) => {
     if (!preview) {
       dispatch({ type: ACTIONS.PUBLISH_START });
     }

@@ -1,4 +1,5 @@
 // @flow
+import { isClaimPlayable } from 'util/claim';
 import { URL, SHARE_DOMAIN_URL } from 'config';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
@@ -51,7 +52,7 @@ type Props = {
   doToast: ({ message: string, isError?: boolean }) => void,
   claimIsMine: boolean,
   fileInfo: FileListItem,
-  prepareEdit: ({}, string, {}) => void,
+  prepareEdit: (Claim, string, ?FileListItem) => void,
   isSubscribed: boolean,
   doChannelSubscribe: (SubscriptionArgs) => void,
   doChannelUnsubscribe: (SubscriptionArgs) => void,
@@ -112,7 +113,7 @@ function ClaimMenuList(props: Props) {
   const incognitoClaim = contentChannelUri && !contentChannelUri.includes('@');
   const isChannel = !incognitoClaim && !contentSigningChannel;
   // $FlowFixMe
-  const claimLength = claim && claim.value && claim.value.claims && claim.value.claims.length;
+  const claimLength = claim && claim.value_type === 'collection' ? claim.value.claims.length : undefined;
   // $FlowFixMe
   const claimCount = editedCollection ? editedCollection.items.length : claimLength;
   const isEmptyCollection = (Number(claimCount) || 0) <= 0;
@@ -154,15 +155,7 @@ function ClaimMenuList(props: Props) {
   const lbryUrl: string = generateLbryContentUrl(claim.canonical_url, claim.permanent_url);
   const shareUrl: string = generateShareUrl(SHARE_DOMAIN, lbryUrl);
   const isCollectionClaim = claim && claim.value_type === 'collection';
-  // $FlowFixMe
-  const isPlayable =
-    contentClaim &&
-    // $FlowFixMe
-    contentClaim.value &&
-    // $FlowFixMe
-    contentClaim.value.stream_type &&
-    // $FlowFixMe
-    (contentClaim.value.stream_type === 'audio' || contentClaim.value.stream_type === 'video');
+  const isPlayable = isClaimPlayable(contentClaim);
 
   function handleAdd(source, name, collectionId) {
     doToast({
@@ -201,6 +194,7 @@ function ClaimMenuList(props: Props) {
   }
 
   function handleEdit() {
+    if (!claim) return;
     if (!isChannel) {
       const signingChannelName = contentSigningChannel && contentSigningChannel.name;
 

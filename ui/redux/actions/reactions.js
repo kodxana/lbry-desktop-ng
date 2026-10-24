@@ -21,6 +21,7 @@ export const doReactionLike = (uri: string) => (dispatch: Dispatch, getState: Ge
   const state = getState();
   const myReaction = makeSelectMyReactionForUri(uri)(state);
   const claim = selectClaimForUri(state, uri);
+  if (!claim) return;
   const claimId = claim.claim_id;
   const shouldRemove = myReaction === REACTION_TYPES.LIKE;
 
@@ -47,6 +48,7 @@ export const doReactionDislike = (uri: string) => (dispatch: Dispatch, getState:
   const state = getState();
   const myReaction = makeSelectMyReactionForUri(uri)(state);
   const claim = selectClaimForUri(state, uri);
+  if (!claim) return;
   const claimId = claim.claim_id;
   const shouldRemove = myReaction === REACTION_TYPES.DISLIKE;
 

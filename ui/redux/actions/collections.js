@@ -215,7 +215,7 @@ export const doFetchItemsInCollections =
     const promisedCollectionItemFetches = [];
     collectionIds.forEach((collectionId) => {
       const claim = makeSelectClaimForClaimId(collectionId)(stateAfterClaimSearch);
-      if (!claim) {
+      if (!claim || claim.value_type !== 'collection') {
         invalidCollectionIds.push(collectionId);
       } else {
         promisedCollectionItemFetches.push(fetchItemsForCollectionClaim(claim, pageSize));
@@ -238,7 +238,11 @@ export const doFetchItemsInCollections =
         const claim = makeSelectClaimForClaimId(collectionId)(stateAfterClaimSearch);
 
         const editedCollection = makeSelectEditedCollectionForId(collectionId)(stateAfterClaimSearch);
-        const { name, timestamp, value } = claim || {};
+        if (!claim || claim.value_type !== 'collection') {
+          invalidCollectionIds.push(collectionId);
+          return;
+        }
+        const { name, timestamp, value } = claim;
         const { title } = value;
         const valueTypes = new Set();
         const streamTypes = new Set();
@@ -271,7 +275,7 @@ export const doFetchItemsInCollections =
           updatedAt: timestamp,
         };
 
-        if (editedCollection && timestamp > editedCollection['updatedAt']) {
+        if (editedCollection && timestamp !== undefined && timestamp > editedCollection['updatedAt']) {
           dispatch({
             type: ACTIONS.COLLECTION_DELETE,
             data: {

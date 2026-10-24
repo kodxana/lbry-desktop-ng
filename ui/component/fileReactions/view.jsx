@@ -7,7 +7,7 @@ import Button from 'component/button';
 import { formatNumber } from 'util/number';
 import NudgeFloating from 'component/nudgeFloating';
 type Props = {
-  claim: StreamClaim,
+  claim: Claim,
   doFetchReactions: (string) => void,
   doReactionLike: (string) => void,
   doReactionDislike: (string) => void,
