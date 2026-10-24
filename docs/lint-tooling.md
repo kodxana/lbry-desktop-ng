@@ -328,18 +328,25 @@ cannot replace a newer document. Image observers disconnect when the source
 changes or the component unmounts, and CodeMirror disposes its editor. Runtime
 and renderer regressions cover these lifecycle paths and existing content behavior.
 
-**The application is not yet type-clean.** The full check now reports 926
-application diagnostics and zero library-definition diagnostics, down from
-1,067 before the content-rendering pass (141 fewer, with no newly introduced diagnostics).
-Missing export annotations, mismatched state shapes, nullable results,
-exact-object rules, old utility types
-and casts still need work. Inherited `any` stubs remain, so a clean declaration
-check does not mean every dependency API is fully typed.
+**The full application check is clean.** The remaining 926 diagnostics were
+fixed together. CI now runs `yarn flow` on both Windows and Linux, in addition
+to the focused positive and negative contract tests. It fails on any application
+or library-definition diagnostic; there is no allowed-error baseline.
 
-No application errors are baselined, suppressed or converted into a successful
-exit. These counts describe this revision, not a baseline that permits new
-errors. Full application checking remains outside the required CI gates and
-commit hook; the tool and contract tests do not establish whole-app type safety.
+Prettier uses its Flow parser for application sources, renderer fixtures and
+definitions, preserving modern generic bounds instead of rewriting them into
+deprecated syntax. The tooling regression checks this through the saved config.
+
+This pass types the remaining component exports, refs, state, selectors, actions,
+media lifecycle and renderer fixtures, and removes obsolete suppressions and the
+unused LbryFirst JavaScript client. Preferences merge without modifying either
+source profile; tags render without sorting saved metadata in place. Tab panels
+receive their IDs through context, and routing tests inject a small discovery
+page instead of inspecting opaque React elements.
+
+Inherited `any` declarations and untyped modules still limit coverage. A clean
+Flow run is a maintained check for the configured application, not proof that
+every dependency API or runtime response is fully typed.
 
 Hermes and the Flow lint rules check syntax and lint behavior. Desktop, renderer,
 native password, SDK backup/encryption and installed-upgrade regressions remain

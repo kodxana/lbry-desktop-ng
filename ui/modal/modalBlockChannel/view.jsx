@@ -103,7 +103,7 @@ export default function ModalBlockChannel(props: Props): React.Node {
       }
     };
 
-    const handleValidInput = (seconds) => {
+    const handleValidInput = (seconds: number) => {
       if (seconds !== timeoutSec) {
         setTimeoutSec(seconds);
       }
@@ -134,7 +134,7 @@ export default function ModalBlockChannel(props: Props): React.Node {
   // **************************************************************************
   // **************************************************************************
 
-  function getTabElem(value, label) {
+  function getTabElem(value: string, label: string) {
     return (
       <Button
         key={value}
@@ -146,7 +146,7 @@ export default function ModalBlockChannel(props: Props): React.Node {
     );
   }
 
-  function getTabHelperElem(tab) {
+  function getTabHelperElem(tab: string) {
     switch (tab) {
       case TAB.PERSONAL:
         return null;
@@ -163,7 +163,7 @@ export default function ModalBlockChannel(props: Props): React.Node {
     }
   }
 
-  function getBlockTypeElem(value, label, disabled = false, disabledLabel = '') {
+  function getBlockTypeElem(value: string, label: string, disabled: boolean = false, disabledLabel: string = '') {
     return (
       <FormField
         type="radio"
@@ -203,7 +203,7 @@ export default function ModalBlockChannel(props: Props): React.Node {
     );
   }
 
-  function getCommenterPreview(uri) {
+  function getCommenterPreview(uri: string) {
     return (
       <div className="content__non-clickable">
         <ClaimPreview uri={uri} hideMenu hideActions type="small" />

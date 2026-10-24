@@ -14,6 +14,7 @@ import { AppRoutes } from 'component/router/view';
 import usePersistedState from 'effects/use-persisted-state';
 import { WELCOME_VERSION } from 'config';
 import ViewImage from 'modal/modalViewImage/view';
+import SyncEnableFlow from 'component/syncEnableFlow/view';
 import Unlock from 'modal/modalWalletUnlock/view';
 import Encrypt from 'modal/modalWalletEncrypt/view';
 import ErrorBoundary from 'component/errorBoundary/view';
@@ -26,17 +27,19 @@ import { selectWalletUnlockSucceeded } from 'redux/selectors/wallet';
 import { getSavedPassword, setSavedPassword, deleteSavedPassword } from 'util/saved-passwords';
 import * as ACTIONS from 'constants/action_types';
 import { render, unmount, waitFor, tick, input, submit } from './helpers';
+import { element } from './fixture-types';
+import type { FixtureStore, FixtureState, FixtureHistory, FixtureTransition } from './fixture-types';
 import imageUrl from './fixtures/build-probe.svg';
 import 'scss/all.scss';
 
-const Navigation = withDesktopRouter(NavigationButton);
+const Navigation = withDesktopRouter<React.ComponentProps<typeof NavigationButton>>(NavigationButton);
 
-async function navigation(store, history) {
-  const commits = [];
-  let batch;
+async function navigation(store: FixtureStore, history: FixtureHistory): Promise<void> {
+  const commits: Array<[number, number]> = [];
+  let batch: () => Promise<void> = () => Promise.reject(new Error('Batch was not initialized'));
   function Location() {
     const location = useLocation();
-    const stored = useSelector((state) => state.router.location);
+    const stored = useSelector((state: FixtureState) => state.router.location);
     const [first, setFirst] = React.useState(0);
     const [second, setSecond] = React.useState(0);
     batch = () =>
@@ -45,7 +48,8 @@ async function navigation(store, history) {
         setSecond(2);
       });
     React.useLayoutEffect(() => {
-      for (const key of ['pathname', 'search', 'hash', 'key']) {
+      const keys: Array<'pathname' | 'search' | 'hash' | 'key'> = ['pathname', 'search', 'hash', 'key'];
+      for (const key of keys) {
         assert.equal(location[key], stored[key], `Router and Redux must commit the same ${key}`);
       }
       assert.deepEqual(location.state, stored.state ?? null, 'Navigation state must stay consistent');
@@ -70,7 +74,7 @@ async function navigation(store, history) {
     history
   );
   await batch();
-  await waitFor(() => document.querySelector('output').textContent.endsWith(':1:2'), 'Promise updates must render');
+  await waitFor(() => element('output').textContent.endsWith(':1:2'), 'Promise updates must render');
   assert.deepEqual(
     commits,
     [
@@ -80,17 +84,17 @@ async function navigation(store, history) {
     'The fixture must use automatic batching'
   );
   store.dispatch(push('/second'));
-  await waitFor(() => document.querySelector('output').textContent.startsWith('/second:'), 'Redux push must render');
+  await waitFor(() => element('output').textContent.startsWith('/second:'), 'Redux push must render');
   assert.equal(history.index, initialIndex + 1);
   assert.equal(history.entries[initialIndex].title, 'First page');
-  const back = document.querySelector('.header__navigation-item--back');
-  assert(!back.disabled);
+  const back = element('.header__navigation-item--back');
+  assert(!back.hasAttribute('disabled'));
   back.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
   await waitFor(() => document.querySelector('.header__navigation-dropdown'), 'History menu must open');
   const entry = Array.from(document.querySelectorAll('.header__navigation-button')).find((node) =>
     node.textContent.includes('First page')
   );
-  assert(entry, 'The history menu must retain page titles');
+  if (!entry) throw new Error('The history menu must retain page titles');
   entry.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
   await waitFor(() => history.index === initialIndex, 'History menu must navigate to its selected entry');
   assert.equal(history.location.search, '?tab=history');
@@ -103,19 +107,23 @@ async function navigation(store, history) {
   assert.equal(history.length, length, 'Replace must not append to the back stack');
   store.dispatch(goBack());
   assert.equal(history.location.pathname, '/first');
-  let pendingNavigation;
+  let pendingNavigation: FixtureTransition | void;
   const stopBlocking = history.block((transition) => {
     pendingNavigation = transition;
   });
   const blocked = history.location;
   store.dispatch(push('/blocked'));
   assert.equal(history.location, blocked, 'Blocked navigation must not change Redux');
-  assert.equal(pendingNavigation.location.pathname, '/blocked');
+  if (!pendingNavigation) throw new Error('Navigation blocker did not run');
+  const transition = pendingNavigation;
+  assert.equal(transition.location.pathname, '/blocked');
   stopBlocking();
-  pendingNavigation.retry();
+  transition.retry();
   assert.equal(history.location.pathname, '/blocked', 'Accepted navigation must retry through Redux');
   let visits = 0;
-  const stop = history.listen(() => visits++);
+  const stop = history.listen(() => {
+    visits++;
+  });
   history.push('/after-block');
   stop();
   history.push('/after-unsubscribe');
@@ -151,7 +159,7 @@ async function navigation(store, history) {
   unmount();
 }
 
-async function links(store, history) {
+async function links(store: FixtureStore, history: FixtureHistory): Promise<void> {
   history.replace('/$/wallet?tab=history#details');
   render(
     <>
@@ -160,9 +168,7 @@ async function links(store, history) {
       <Link id="state-nav" to="/$/backup?from=wallet#export" state={{ from: 'wallet' }}>
         Backup
       </Link>
-      <Link id="cancel-nav" to="/$/send" onClick={(event) => event.preventDefault()}>
-        Stay here
-      </Link>
+      <Button id="cancel-nav" navigate="/$/send" label="Stay here" onClick={(event) => event.preventDefault()} />
       <Link id="query-nav" to="?tab=transactions" relative="path">
         Transactions
       </Link>
@@ -170,38 +176,35 @@ async function links(store, history) {
     store,
     history
   );
-  assert(document.getElementById('wallet-nav').classList.contains('selected-wallet'));
-  assert.equal(document.getElementById('wallet-nav').getAttribute('aria-current'), 'page');
-  document.getElementById('state-nav').click();
+  assert(element('#wallet-nav').classList.contains('selected-wallet'));
+  assert.equal(element('#wallet-nav').getAttribute('aria-current'), 'page');
+  element('#state-nav').click();
   await waitFor(() => history.location.pathname === '/$/backup', 'Link must use the Redux history');
   assert.equal(history.location.search, '?from=wallet');
   assert.equal(history.location.hash, '#export');
   assert.deepEqual(history.location.state, { from: 'wallet' });
-  document.getElementById('cancel-nav').click();
+  element('#cancel-nav').click();
   await tick();
   assert.equal(history.location.pathname, '/$/backup', 'A prevented click must not navigate');
   // Prevent native browser navigation after React handles this modified click.
   // Button stops propagation at React's root, so document would not see the event.
-  document.getElementById('app').addEventListener('click', (event) => event.preventDefault(), { once: true });
+  element('#app').addEventListener('click', (event) => event.preventDefault(), { once: true });
   const modifiedClick = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
-  document.getElementById('wallet-nav').dispatchEvent(modifiedClick);
+  element('#wallet-nav').dispatchEvent(modifiedClick);
   assert(modifiedClick.defaultPrevented, 'The fixture must suppress native navigation after testing React');
   await tick();
   assert.equal(history.location.pathname, '/$/backup', 'Modified clicks must not change the current page');
-  document.getElementById('query-nav').click();
+  element('#query-nav').click();
   await waitFor(() => history.location.search === '?tab=transactions', 'Query-only links must retain the pathname');
   assert.equal(history.location.pathname, '/$/backup');
-  document.getElementById('content-nav').click();
+  element('#content-nav').click();
   await waitFor(
     () => history.location.pathname === '/@fixture:abc/video:def',
     'LBRY links must keep channel and claim IDs'
   );
   history.push('/$/wallet/child');
   await tick();
-  assert(
-    !document.getElementById('wallet-nav').classList.contains('selected-wallet'),
-    'Navigation buttons must match exactly'
-  );
+  assert(!element('#wallet-nav').classList.contains('selected-wallet'), 'Navigation buttons must match exactly');
   unmount();
 
   const length = history.length;
@@ -214,13 +217,13 @@ async function links(store, history) {
   unmount();
 }
 
-async function discoveryNavigation(store, history) {
+async function discoveryNavigation(store: FixtureStore, history: FixtureHistory): Promise<void> {
   const first = '/$/fixture-category-one';
   const second = '/$/fixture-category-two';
-  const key = (pathname) => `fixture-order-${pathname}`;
+  const key = (pathname: string) => `fixture-order-${pathname}`;
   localStorage.setItem(key(first), 'new');
   localStorage.setItem(key(second), 'top');
-  function Discovery({ location }: { location: { pathname: string } }) {
+  function Discovery({ location }: { location: { pathname: string, ... }, dynamicRouteProps?: RowDataItem }) {
     const [order, setOrder] = usePersistedState(key(location.pathname), 'trending');
     return (
       <button id="discovery-order" onClick={() => setOrder('edited')}>
@@ -230,45 +233,34 @@ async function discoveryNavigation(store, history) {
   }
   function Fixture() {
     const location = useLocation();
-    const routes = AppRoutes({
-      location,
-      welcomeVersion: WELCOME_VERSION,
-      dynamicRoutes: [{ route: first }, { route: second }],
-    });
-    // Use the production route tree and element identity, with a small page body
-    // that exercises the same persisted-state hook as discovery sorting.
-    return React.cloneElement(
-      routes,
-      {},
-      React.Children.map(routes.props.children, (route) => {
-        const element = route?.props.element;
-        if (!element?.props.dynamicRouteProps) return route;
-        return React.cloneElement(route, {
-          element: React.createElement(Discovery, { ...element.props, key: element.key }),
-        });
-      })
+    return (
+      <AppRoutes
+        location={location}
+        welcomeVersion={WELCOME_VERSION}
+        dynamicRoutes={[
+          { route: first, title: 'First' },
+          { route: second, title: 'Second' },
+        ]}
+        discoveryPage={Discovery}
+      />
     );
   }
   try {
     history.replace(first);
     render(<Fixture />, store, history);
-    assert.equal(document.getElementById('discovery-order').textContent, 'new');
-    document.getElementById('discovery-order').click();
+    assert.equal(element('#discovery-order').textContent, 'new');
+    element('#discovery-order').click();
     await waitFor(() => localStorage.getItem(key(first)) === 'edited', 'Category sorting must save');
     history.push(second);
     await tick();
-    assert.equal(
-      document.getElementById('discovery-order').textContent,
-      'top',
-      'Categories must load their own saved sort order'
-    );
+    assert.equal(element('#discovery-order').textContent, 'top', 'Categories must load their own saved sort order');
     assert.equal(localStorage.getItem(key(second)), 'top', 'Navigation must not overwrite another category preference');
     history.goBack();
     await tick();
-    assert.equal(document.getElementById('discovery-order').textContent, 'edited');
+    assert.equal(element('#discovery-order').textContent, 'edited');
     history.push('?page=2');
     await tick();
-    assert.equal(document.getElementById('discovery-order').textContent, 'edited');
+    assert.equal(element('#discovery-order').textContent, 'edited');
   } finally {
     unmount();
     localStorage.removeItem(key(first));
@@ -276,26 +268,40 @@ async function discoveryNavigation(store, history) {
   }
 }
 
-async function collectionPlayback(store, history) {
-  const shuffle = [];
+async function collectionPlayback(store: FixtureStore, history: FixtureHistory): Promise<void> {
+  const shuffle: Array<[string, boolean]> = [];
   render(
     <CollectionActions
+      uri=""
+      claim={null}
+      openModal={() => {
+        throw new Error('Unexpected modal');
+      }}
+      claimIsPending={false}
+      isMyCollection={false}
+      showInfo={false}
+      setShowInfo={() => {}}
+      showEdit={false}
+      setShowEdit={() => {}}
+      collectionHasEdits={false}
       collectionId="fixture-list"
       isBuiltin
       firstItem="lbry://first:abc"
       playNextUri="lbry://next:def"
-      doToggleShuffleList={(...args) => shuffle.push(args)}
+      doToggleShuffleList={(id, enabled) => {
+        shuffle.push([id, enabled]);
+      }}
     />,
     store,
     history
   );
-  document.querySelector('button[title="Play"]').click();
+  element('button[title="Play"]').click();
   await waitFor(() => history.location.pathname === '/first:abc', 'Collection Play must navigate');
-  assert.equal(history.location.state.forceAutoplay, true, 'Collection Play must retain autoplay state');
+  assert.deepEqual(history.location.state, { forceAutoplay: true }, 'Collection Play must retain autoplay state');
   assert(history.location.search.includes('fixture-list'), 'Collection Play must retain the list query');
-  document.querySelector('button[title="Shuffle Play"]').click();
+  element('button[title="Shuffle Play"]').click();
   await waitFor(() => history.location.pathname === '/next:def', 'Shuffle must navigate to the chosen item');
-  assert.equal(history.location.state.forceAutoplay, true, 'Shuffle must retain autoplay state');
+  assert.deepEqual(history.location.state, { forceAutoplay: true }, 'Shuffle must retain autoplay state');
   assert.deepEqual(shuffle, [
     ['fixture-list', false],
     ['fixture-list', true],
@@ -303,7 +309,89 @@ async function collectionPlayback(store, history) {
   unmount();
 }
 
-async function fastUnlock(store, history) {
+async function syncProfiles(store: FixtureStore, history: FixtureHistory): Promise<void> {
+  const originalGet = Lbry.preference_get;
+  const originalSet = Lbry.preference_set;
+  const profiles = {
+    local: {
+      type: 'object',
+      version: '0.1',
+      value: {
+        tags: ['local', 'both'],
+        blocked: ['local-block'],
+        subscriptions: ['local-channel'],
+        settings: { theme: 'dark' },
+      },
+    },
+    shared: {
+      type: 'object',
+      version: '0.1',
+      value: {
+        tags: ['both', 'shared'],
+        blocked: ['shared-block'],
+        subscriptions: ['shared-channel'],
+        settings: { theme: 'light' },
+      },
+    },
+  };
+  const before = JSON.stringify(profiles);
+  try {
+    for (const mode of ['enable', 'disable']) {
+      let saved: Parameters<typeof Lbry.preference_set>[0] | void;
+      const order: Array<string> = [];
+      Lbry.preference_get = async () => profiles;
+      Lbry.preference_set = async (params) => {
+        saved = params;
+        order.push('saved');
+        return {};
+      };
+      render(
+        <SyncEnableFlow
+          mode={mode}
+          syncEnabled={mode !== 'enable'}
+          getSyncError={null}
+          getSyncPending={false}
+          checkSync={() => {}}
+          getSync={(_password, done) => done(undefined, false)}
+          setSyncEnabled={(enabled) => {
+            order.push(enabled ? 'enabled' : 'disabled');
+          }}
+          updatePreferences={() => {
+            order.push('refreshed');
+          }}
+          closeModal={() => {
+            order.push('closed');
+          }}
+        />,
+        store,
+        history
+      );
+      await waitFor(
+        () => document.querySelector('button[name="syncbutton"]:not(:disabled)'),
+        'Profile confirmation must become available'
+      );
+      element('button[name="syncbutton"]').click();
+      await waitFor(() => order.includes('closed'), 'Profile switch must finish');
+      const result = saved;
+      if (!result) throw new Error('Profile was not saved');
+      const target = mode === 'enable' ? 'shared' : 'local';
+      assert.equal(result.key, target);
+      const value = JSON.parse(JSON.stringify(result.value));
+      assert.equal(value.version, '0.1');
+      assert.deepEqual(value.value.tags, mode === 'enable' ? ['both', 'shared', 'local'] : ['local', 'both', 'shared']);
+      assert.deepEqual(value.value.settings, profiles[target].value.settings);
+      assert.deepEqual(order, ['saved', mode === 'enable' ? 'enabled' : 'disabled', 'refreshed', 'closed']);
+      assert.equal(JSON.stringify(profiles), before, 'Profile switching must not mutate either SDK response');
+      unmount();
+    }
+  } finally {
+    unmount();
+    Lbry.preference_get = originalGet;
+    Lbry.preference_set = originalSet;
+  }
+}
+
+async function fastUnlock(store: FixtureStore, history: FixtureHistory): Promise<void> {
   const ConnectedUnlock = connect((state) => ({ walletUnlockSucceded: selectWalletUnlockSucceeded(state) }))(Unlock);
   let closed = 0;
   const calls = [];
@@ -317,8 +405,11 @@ async function fastUnlock(store, history) {
     };
     render(
       <ConnectedUnlock
+        shouldTryWithBlankPassword={false}
         unlockWallet={(password) => store.dispatch(doWalletUnlock(password))}
-        closeModal={() => closed++}
+        closeModal={() => {
+          closed++;
+        }}
         quit={() => assert.fail('Unexpected quit')}
       />,
       store,
@@ -329,15 +420,20 @@ async function fastUnlock(store, history) {
     assert.equal(await getSavedPassword(), 'fixture-batched-unlock');
     unmount();
     await deleteSavedPassword();
-    let settle;
+    let settle: (boolean) => void = () => {
+      throw new Error('Wallet request did not start');
+    };
     Lbry.wallet_unlock = () =>
       new Promise((resolve) => {
         settle = resolve;
       });
     render(
       <ConnectedUnlock
+        shouldTryWithBlankPassword={false}
         unlockWallet={(password) => store.dispatch(doWalletUnlock(password))}
-        closeModal={() => closed++}
+        closeModal={() => {
+          closed++;
+        }}
         quit={() => assert.fail('Unexpected quit')}
       />,
       store,
@@ -358,7 +454,7 @@ async function fastUnlock(store, history) {
   }
 }
 
-async function encryptionCompletion(store, history) {
+async function encryptionCompletion(store: FixtureStore, history: FixtureHistory): Promise<void> {
   let closed = 0;
   let refreshed = 0;
   let calls = 0;
@@ -366,8 +462,12 @@ async function encryptionCompletion(store, history) {
     render(
       <Encrypt
         encryptWallet={(password) => store.dispatch(doWalletEncrypt(password))}
-        closeModal={() => closed++}
-        updateWalletStatus={() => refreshed++}
+        closeModal={() => {
+          closed++;
+        }}
+        updateWalletStatus={() => {
+          refreshed++;
+        }}
       />,
       store,
       history
@@ -393,7 +493,9 @@ async function encryptionCompletion(store, history) {
     unmount();
     await deleteSavedPassword();
 
-    let settle;
+    let settle: (boolean) => void = () => {
+      throw new Error('Wallet request did not start');
+    };
     Lbry.wallet_encrypt = () =>
       new Promise((resolve) => {
         settle = resolve;
@@ -413,14 +515,14 @@ async function encryptionCompletion(store, history) {
   }
 }
 
-async function lightbox(store, history) {
+async function lightbox(store: FixtureStore, history: FixtureHistory): Promise<void> {
   await ipcRenderer.invoke('fixture-controls-focus');
-  ReactModal.setAppElement(document.getElementById('app'));
+  ReactModal.setAppElement(element('#app'));
   const opener = document.createElement('button');
   document.body.append(opener);
   opener.focus();
   let closed = 0;
-  const show = (src) =>
+  const show = (src: string) =>
     render(
       <ViewImage
         src={src}
@@ -433,31 +535,25 @@ async function lightbox(store, history) {
       store,
       history
     );
-  const button = (label) => document.querySelector(`.lb-root button[aria-label="${label}"]`);
-  const key = (key) => ipcRenderer.invoke('fixture-controls-key', key);
+  const button = (label: string) => element(`.lb-root button[aria-label="${label}"]`);
+  const key = (key: string) => ipcRenderer.invoke('fixture-controls-key', key);
   show(imageUrl);
-  await waitFor(() => document.querySelector('.lb-img')?.naturalWidth > 0, 'Lightbox must decode the image');
-  const root = document.querySelector('.lb-root');
+  await waitFor(
+    () => (document.querySelector<HTMLImageElement>('.lb-img')?.naturalWidth || 0) > 0,
+    'Lightbox must decode the image'
+  );
+  const root = element('.lb-root');
   assert(root.closest('.modal--image'), 'Keep the image inside the application modal focus boundary');
   assert.equal(document.querySelectorAll('[role="dialog"]').length, 1);
-  assert.equal(document.getElementById('app').getAttribute('aria-hidden'), 'true');
-  assert.equal(getComputedStyle(root.closest('.modal')).backdropFilter, 'none');
-  const initial = document.querySelector('.lb-img').style.transform;
+  assert.equal(element('#app').getAttribute('aria-hidden'), 'true');
+  assert.equal(getComputedStyle(element('.modal')).backdropFilter, 'none');
+  const initial = element('.lb-img').style.transform;
   button('Zoom in').click();
-  await waitFor(
-    () => document.querySelector('.lb-img').style.transform !== initial,
-    'Zoom must change the rendered image'
-  );
+  await waitFor(() => element('.lb-img').style.transform !== initial, 'Zoom must change the rendered image');
   button('Rotate right').click();
-  await waitFor(
-    () => document.querySelector('.lb-img').style.transform.includes('rotate(90deg)'),
-    'Rotation must work'
-  );
+  await waitFor(() => element('.lb-img').style.transform.includes('rotate(90deg)'), 'Rotation must work');
   await key('Escape');
-  await waitFor(
-    () => document.querySelector('.lb-img').style.transform === initial,
-    'Escape resets an image transformation first'
-  );
+  await waitFor(() => element('.lb-img').style.transform === initial, 'Escape resets an image transformation first');
   assert.equal(closed, 0);
   button('Close').focus();
   await key('Tab');
@@ -466,7 +562,7 @@ async function lightbox(store, history) {
   await waitFor(() => closed === 1, 'Escape must close the reset viewer once');
   assert.equal(document.activeElement, opener);
   assert(!document.body.classList.contains('lb-open'));
-  assert(!document.getElementById('app').hasAttribute('aria-hidden'));
+  assert(!element('#app').hasAttribute('aria-hidden'));
   show('data:image/png;base64,bm90IGFuIGltYWdl');
   await waitFor(() => document.querySelector('.lb-error'), 'A broken image must report its error');
   button('Close').click();
@@ -474,7 +570,7 @@ async function lightbox(store, history) {
   opener.remove();
 }
 
-async function renderingCompatibility(store, history) {
+async function renderingCompatibility(store: FixtureStore, history: FixtureHistory): Promise<void> {
   render(
     <>
       <TruncatedText text="A long title" lines={2} />
@@ -483,7 +579,7 @@ async function renderingCompatibility(store, history) {
     store,
     history
   );
-  const titles = document.querySelectorAll('.truncated-text');
+  const titles = document.querySelectorAll<HTMLElement>('.truncated-text');
   assert.equal(titles[0].title, 'A long title', 'Omitted tooltip preference must retain the default');
   assert.equal(titles[0].style.webkitLineClamp, '2');
   assert.equal(titles[1].title, '', 'Explicitly disabling tooltips must still work');
@@ -525,9 +621,9 @@ async function renderingCompatibility(store, history) {
     assert(reports[0].includes('Fixture render failure'));
     assert(reports[0].includes('fixture-desktop'));
     assert(reports[0].includes('fixture-sdk'));
-    assert(document.querySelector('.error__text').textContent.includes('not reported'));
+    assert(element('.error__text').textContent.includes('not reported'));
     broken = false;
-    document.querySelector('.load-screen__button').click();
+    element('.load-screen__button').click();
     await waitFor(
       () => document.querySelector('output')?.textContent === 'Recovered page',
       'Error fallback must recover'
@@ -542,7 +638,7 @@ async function renderingCompatibility(store, history) {
   }
 }
 
-export default async function reactState(store, history) {
+export default async function reactState(store: FixtureStore, history: FixtureHistory): Promise<string> {
   try {
     assert.match(React.version, /^19\./, 'Exercise the upgraded React runtime');
     await renderingCompatibility(store, history);
@@ -550,6 +646,7 @@ export default async function reactState(store, history) {
     await links(store, history);
     await collectionPlayback(store, history);
     await discoveryNavigation(store, history);
+    await syncProfiles(store, history);
     await fastUnlock(store, history);
     await encryptionCompletion(store, history);
     await lightbox(store, history);

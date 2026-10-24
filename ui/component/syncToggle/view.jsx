@@ -48,4 +48,5 @@ function SyncToggle(props: Props) {
   );
 }
 
-export default withDesktopRouter(SyncToggle);
+const RoutedSyncToggle: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(SyncToggle);
+export default RoutedSyncToggle;

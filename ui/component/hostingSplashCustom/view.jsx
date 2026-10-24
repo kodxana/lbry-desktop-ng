@@ -28,4 +28,6 @@ function HostingSplashCustom(props: Props) {
   );
 }
 
-export default withDesktopRouter(HostingSplashCustom);
+const RoutedHostingSplashCustom: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(HostingSplashCustom);
+export default RoutedHostingSplashCustom;

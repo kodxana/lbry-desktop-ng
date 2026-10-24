@@ -53,9 +53,6 @@ class HelpPage extends React.PureComponent<Props, State> {
       upgradeAvailable: null,
       accessTokenHidden: true,
     };
-
-    (this: any).showAccessToken = this.showAccessToken.bind(this);
-    (this: any).openLogFile = this.openLogFile.bind(this);
   }
 
   componentDidMount() {
@@ -81,15 +78,15 @@ class HelpPage extends React.PureComponent<Props, State> {
     });
   }
 
-  showAccessToken() {
+  showAccessToken = () => {
     this.setState({
       accessTokenHidden: false,
     });
-  }
+  };
 
-  openLogFile() {
+  openLogFile = () => {
     desktop.openLogs();
-  }
+  };
 
   render() {
     let ver;

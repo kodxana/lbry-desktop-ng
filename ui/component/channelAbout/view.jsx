@@ -95,7 +95,6 @@ function ChannelAbout(props: Props): React.Node {
           <label>{__('Staked LBRY Credits')}</label>
           <div className="media__info-text">
             <CreditAmount
-              badge={false}
               amount={parseFloat(claim.amount) + parseFloat(claim.meta.support_amount)}
               precision={8}
             />{' '}

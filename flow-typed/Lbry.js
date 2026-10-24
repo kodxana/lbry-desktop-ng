@@ -98,7 +98,7 @@ declare type ResolveResponse = {
   [string]: Claim | { error: string | { censor?: ClaimErrorCensor, ... }, value_type?: empty, ... },
 };
 
-declare type GetResponse = FileListItem & { error?: string, ... };
+declare type GetResponse = { ...FileListItem, error?: string, ... };
 
 declare type GenericTxResponse = {
   height: number,
@@ -379,7 +379,7 @@ declare type LbryTypes = {
 
   // Preferences
   preference_get: (params?: { ... }) => Promise<any>,
-  preference_set: (params: { key: string, value: string, ... }) => Promise<any>,
+  preference_set: (params: Readonly<{ key: string, value: string | { ... }, ... }>) => Promise<any>,
 
   // Commenting
   comment_update: (params: { ... }) => Promise<CommentUpdateResponse>,

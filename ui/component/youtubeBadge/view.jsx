@@ -10,7 +10,7 @@ type Props = {
 export default function YoutubeBadge(props: Props): React.Node {
   const { channelClaimId } = props;
   const [isVerified, setIsVerified] = React.useState<boolean | void>();
-  const [lastYtSyncDate, setLastYtSyncDate] = React.useState();
+  const [lastYtSyncDate, setLastYtSyncDate] = React.useState<string | void>();
 
   React.useEffect(() => {
     if (channelClaimId) {

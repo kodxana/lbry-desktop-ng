@@ -29,8 +29,8 @@ Item object examples:
 
   SOME_CHANNEL_IDS = ['channelId1', 'channelId2']
   SOME_TAG = '
-  const SOME_CHANNELS_ITEM = {
-      title: '#aTitle',
+  const SOME_CHANNELS_ITEM: RowDataItem = {
+    title: '#aTitle',
       link: `/$/${PAGES.DISCOVER}?${CS.TAGS_KEY}=aTag&fee_amount=>0&${CS.CLAIM_TYPE}=${CS.CLAIM_STREAM}&${
         CS.CHANNEL_IDS_KEY
         }=${SOME_CHANNEL_IDS.join(',')}`,
@@ -57,7 +57,7 @@ Item object examples:
 import * as PAGES from 'constants/pages';
 import * as CS from 'constants/claim_search';
 import * as ICONS from 'constants/icons';
-import { parseURI } from 'lbry-redux';
+import { parseURI } from 'util/lbryURI';
 import moment from 'moment';
 import { toCapitalCase } from 'util/string';
 import React from 'react';
@@ -66,8 +66,8 @@ import Icon from 'component/common/icon';
 export type RowDataItem = {
   title: string,
   link?: string,
-  help?: any,
-  options?: {},
+  help?: React.Node,
+  options?: HomepageSearchOptions,
 };
 
 export default function GetHomePageRowData(
@@ -77,7 +77,7 @@ export default function GetHomePageRowData(
   subscribedChannels: Array<Subscription>,
   followedTags: Array<Tag>,
   showIndividualTags: boolean
-) {
+): Array<RowDataItem> {
   let rowData: Array<RowDataItem> = [];
   const individualTagDataItems: Array<RowDataItem> = [];
   const PAID_BETA_CHANNEL_IDS_KEY = [
@@ -139,7 +139,7 @@ export default function GetHomePageRowData(
     '7644fdb8342624f6c647c79de25610801573fa68',
   ];
 
-  const TV_PAID_BETA_ROW = {
+  const TV_PAID_BETA_ROW: RowDataItem = {
     title: '#lbrytvpaidbeta',
     link: `/$/${PAGES.DISCOVER}?${CS.TAGS_KEY}=lbrytvpaidbeta&fee_amount=>0&${CS.CLAIM_TYPE}=${CS.CLAIM_STREAM}&${
       CS.CHANNEL_IDS_KEY
@@ -178,50 +178,35 @@ export default function GetHomePageRowData(
     });
   }
 
-  const RECENT_FROM_FOLLOWING = {
+  const RECENT_FROM_FOLLOWING: RowDataItem = {
     title: 'Recent From Following',
     link: `/$/${PAGES.CHANNELS_FOLLOWING}`,
     options: {
       orderBy: ['release_time'],
       releaseTime:
         subscribedChannels.length > 20
-          ? `>${Math.floor(
-              moment()
-                .subtract(6, 'months')
-                .startOf('week')
-                .unix()
-            )}`
-          : `>${Math.floor(
-              moment()
-                .subtract(1, 'year')
-                .startOf('week')
-                .unix()
-            )}`,
+          ? `>${Math.floor(moment().subtract(6, 'months').startOf('week').unix())}`
+          : `>${Math.floor(moment().subtract(1, 'year').startOf('week').unix())}`,
       pageSize: subscribedChannels.length > 3 ? 8 : 4,
-      channelIds: subscribedChannels.map((subscription: Subscription) => {
+      channelIds: subscribedChannels.flatMap((subscription: Subscription) => {
         const { channelClaimId } = parseURI(subscription.uri);
-        return channelClaimId;
+        return channelClaimId ? [channelClaimId] : [];
       }),
     },
   };
 
-  const TOP_CONTENT_TODAY = {
+  const TOP_CONTENT_TODAY: RowDataItem = {
     title: 'Top Content from Today',
     link: `/$/${PAGES.DISCOVER}?${CS.ORDER_BY_KEY}=${CS.ORDER_BY_TOP}&${CS.FRESH_KEY}=${CS.FRESH_DAY}`,
     options: {
       pageSize: showPersonalizedChannels || showPersonalizedTags ? 4 : 8,
       orderBy: ['effective_amount'],
       claimType: ['stream'],
-      releaseTime: `>${Math.floor(
-        moment()
-          .subtract(1, 'day')
-          .startOf('day')
-          .unix()
-      )}`,
+      releaseTime: `>${Math.floor(moment().subtract(1, 'day').startOf('day').unix())}`,
     },
   };
 
-  const TOP_CHANNELS = {
+  const TOP_CHANNELS: RowDataItem = {
     title: 'Top Channels On LBRY',
     link: `/$/${PAGES.DISCOVER}?claim_type=channel&${CS.ORDER_BY_KEY}=${CS.ORDER_BY_TOP}&${CS.FRESH_KEY}=${CS.FRESH_ALL}`,
     options: {
@@ -230,22 +215,17 @@ export default function GetHomePageRowData(
     },
   };
 
-  const TRENDING_CLASSICS = {
+  const TRENDING_CLASSICS: RowDataItem = {
     title: 'Trending Classics',
     link: `/$/${PAGES.DISCOVER}?${CS.ORDER_BY_KEY}=${CS.ORDER_BY_TRENDING}&${CS.FRESH_KEY}=${CS.FRESH_WEEK}`,
     options: {
       pageSize: 4,
       claimType: ['stream'],
-      releaseTime: `<${Math.floor(
-        moment()
-          .subtract(6, 'month')
-          .startOf('day')
-          .unix()
-      )}`,
+      releaseTime: `<${Math.floor(moment().subtract(6, 'month').startOf('day').unix())}`,
     },
   };
 
-  const TRENDING_ON_LBRY = {
+  const TRENDING_ON_LBRY: RowDataItem = {
     title: 'Trending On LBRY',
     link: `/$/${PAGES.DISCOVER}`,
     options: {
@@ -253,16 +233,16 @@ export default function GetHomePageRowData(
     },
   };
 
-  const TRENDING_FOR_TAGS = {
+  const TRENDING_FOR_TAGS: RowDataItem = {
     title: 'Trending For Your Tags',
     link: `/$/${PAGES.TAGS_FOLLOWING}`,
     options: {
-      tags: followedTags.map(tag => tag.name),
+      tags: followedTags.map((tag) => tag.name),
       claimType: ['stream'],
     },
   };
 
-  const LATEST_FROM_LBRY = {
+  const LATEST_FROM_LBRY: RowDataItem = {
     title: 'Latest From @lbry',
     link: `/@lbry:3f`,
     options: {
@@ -272,7 +252,7 @@ export default function GetHomePageRowData(
     },
   };
 
-  const LATEST_FROM_LBRYCAST = {
+  const LATEST_FROM_LBRYCAST: RowDataItem = {
     title: 'Latest From @lbrycast',
     link: `/@lbrycast:4`,
     options: {

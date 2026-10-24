@@ -76,6 +76,9 @@ async function tabs(store, history) {
             <TabPanel>Playlists panel</TabPanel>
             <TabPanel>About panel</TabPanel>
             <TabPanel>Community panel</TabPanel>
+            {false}
+            {null}
+            Text after panels
           </TabPanels>
         </Tabs>
       </form>

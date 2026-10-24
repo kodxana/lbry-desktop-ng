@@ -27,6 +27,7 @@ module.name_mapper='^lbryinc\(.*\)$' -> '<PROJECT_ROOT>/extras/lbryinc\1'
 module.name_mapper='^rewards\(.*\)$' -> '<PROJECT_ROOT>/ui/rewards\1'
 module.name_mapper='^i18n\(.*\)$' -> '<PROJECT_ROOT>/ui/i18n\1'
 module.name_mapper='^effects\(.*\)$' -> '<PROJECT_ROOT>/ui/effects\1'
+module.name_mapper='^homepages$' -> '<PROJECT_ROOT>/homepages/index.js'
 module.name_mapper='^comments\(.*\)$' -> '<PROJECT_ROOT>/ui/comments\1'
 module.name_mapper='^config$' -> '<PROJECT_ROOT>/configValues.js'
 module.name_mapper='^static\(.*\)$' -> '<PROJECT_ROOT>/static\1'
@@ -34,10 +35,11 @@ module.name_mapper='^web\/component\(.*\)$' -> '<PROJECT_ROOT>/web/component\1'
 module.name_mapper='^web\/effects\(.*\)$' -> '<PROJECT_ROOT>/web/effects\1'
 module.name_mapper='^web\/page\(.*\)$' -> '<PROJECT_ROOT>/web/page\1'
 module.name_mapper='^homepage\(.*\)$' -> '<PROJECT_ROOT>/ui/util/homepage\1'
-module.name_mapper='^scss\/component\(.*\)$' -> '<PROJECT_ROOT>/ui/scss/component/\1'
+module.name_mapper='^scss\(.*\)$' -> '<PROJECT_ROOT>/ui/scss\1'
 
 ; Extensions
 module.file_ext=.js
+module.file_ext=.cjs
 module.file_ext=.jsx
 module.file_ext=.json
 module.file_ext=.css

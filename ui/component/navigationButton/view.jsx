@@ -9,7 +9,7 @@ const MAX_HISTORY_SIZE = 12;
 type Props = {
   isBackward: boolean,
   history: {
-    entries: Array<{ key: string, title: string, pathname: string }>,
+    entries: Array<{ key: string, title?: string, pathname: string }>,
     go: (number) => void,
     goBack: () => void,
     goForward: () => void,
@@ -21,7 +21,13 @@ type Props = {
 };
 
 // determines which slice of entries should make up the back or forward button drop-downs (isBackward vs !isBackward respectively)
-const sliceEntries = (currentIndex, entries, historyLength, isBackward, maxSize) => {
+const sliceEntries = (
+  currentIndex: number,
+  entries: Props['history']['entries'],
+  historyLength: number,
+  isBackward: boolean,
+  maxSize: number
+) => {
   let l = isBackward ? 0 : currentIndex + 1;
   let r = isBackward ? currentIndex : historyLength;
   const exceedsMax = maxSize < r - l;
@@ -44,7 +50,7 @@ const NavigationButton = (props: Props): React.Node => {
 
   // creates an <li> intended for the button's <ul>
   const makeItem = useCallback(
-    (entry: { pathname: string, title: string, key: string }, index: number) => {
+    (entry: { pathname: string, title?: string, key: string }, index: number) => {
       // difference between the current index and the index of the entry
       const backwardDif = index - (currentIndex < MAX_HISTORY_SIZE ? currentIndex : MAX_HISTORY_SIZE);
       const forwardDif = index + 1;

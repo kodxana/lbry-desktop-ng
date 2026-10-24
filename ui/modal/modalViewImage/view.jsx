@@ -6,7 +6,7 @@ import 'react-awesome-lightbox/style.css';
 
 type Props = {
   src: string,
-  title: String,
+  title: string,
   closeModal: () => void,
 };
 

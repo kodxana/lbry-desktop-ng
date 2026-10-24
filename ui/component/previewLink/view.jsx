@@ -22,7 +22,7 @@ class PreviewLink extends React.PureComponent<Props> {
     history.push(formatLbryUrlForWeb(uri));
   };
 
-  render() {
+  render(): React.Node {
     const { uri, title, description, thumbnail } = this.props;
     const { isChannel } = parseURI(uri);
     const placeholder = 'static/img/placeholder.png';
@@ -63,4 +63,6 @@ class PreviewLink extends React.PureComponent<Props> {
   }
 }
 
-export default withDesktopRouter(PreviewLink);
+const RoutedPreviewLink: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(PreviewLink);
+export default RoutedPreviewLink;

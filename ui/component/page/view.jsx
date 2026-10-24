@@ -11,7 +11,7 @@ import SettingsSideNavigation from 'component/settingsSideNavigation';
 import SideNavigation from 'component/sideNavigation';
 import StatusBar from 'component/common/status-bar';
 import usePersistedState from 'effects/use-persisted-state';
-import type { Element, Node } from 'react';
+import type { Node } from 'react';
 
 type Props = {
   className: ?string,
@@ -31,7 +31,7 @@ type Props = {
   isMarkdown?: boolean,
   noHeader: boolean,
   noSideNavigation: boolean,
-  rightSide?: Element<any>,
+  rightSide?: React.Node,
   settingsPage?: boolean,
   videoTheaterMode: boolean,
 };

@@ -10,7 +10,7 @@ import LbcSymbol from 'component/common/lbc-symbol';
 
 type Props = {
   includeWalletLink: boolean,
-  type?: string,
+  type?: 'happy' | 'sad',
   actions?: Node,
 };
 export default function YrblHelp(props: Props): React.Node {

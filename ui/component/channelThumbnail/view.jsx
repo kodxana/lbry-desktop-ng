@@ -26,7 +26,7 @@ type Props = {
   hideTooltip?: boolean,
   xsmall?: boolean,
   noOptimization?: boolean,
-  setThumbUploadError: (boolean) => void,
+  setThumbUploadError?: (boolean) => void,
   ThumbUploadError: boolean,
 };
 

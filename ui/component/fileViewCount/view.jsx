@@ -9,7 +9,7 @@ type Props = {
   fetchViewCount: (string) => void,
   fetchingViewCount: boolean,
   uri: string,
-  viewCount: string,
+  viewCount: number,
 };
 
 function FileViewCount(props: Props): React.Node {

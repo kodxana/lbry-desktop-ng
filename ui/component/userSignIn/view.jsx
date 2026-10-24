@@ -55,4 +55,5 @@ function UserSignIn(props: Props) {
   );
 }
 
-export default withDesktopRouter(UserSignIn);
+const RoutedUserSignIn: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(UserSignIn);
+export default RoutedUserSignIn;

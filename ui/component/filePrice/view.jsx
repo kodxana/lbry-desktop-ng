@@ -24,7 +24,7 @@ type Props = {
 };
 
 class FilePrice extends React.PureComponent<Props> {
-  static defaultProps = { showFullPrice: false };
+  static defaultProps: { showFullPrice: boolean } = { showFullPrice: false };
 
   componentDidMount() {
     this.fetchCost(this.props);

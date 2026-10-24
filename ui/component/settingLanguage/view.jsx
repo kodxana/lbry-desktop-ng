@@ -20,7 +20,7 @@ function SettingLanguage(props: Props): React.Node {
     setPreviousLanguage(null);
   }
 
-  function onLanguageChange(e) {
+  function onLanguageChange(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     setPreviousLanguage(language || getDefaultLanguage());
     setLanguage(value);

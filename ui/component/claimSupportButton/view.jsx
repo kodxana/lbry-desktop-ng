@@ -7,7 +7,7 @@ import Button from 'component/button';
 
 type Props = {
   uri: string,
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { uri: string, isSupport: boolean }) => void,
   fileAction?: boolean,
   disableSupport: boolean,
   claim: GenericClaim,

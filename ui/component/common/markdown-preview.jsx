@@ -13,8 +13,8 @@ import { parse } from 'node-html-parser';
 
 const RE_EMOTE = /:\+1:|:-1:|:[\w-]+:/;
 
-function isEmote(title, src) {
-  return title && RE_EMOTE.test(title) && src.includes('static.odycdn.com/emoticons');
+function isEmote(title: ?string, src: string): boolean {
+  return Boolean(title && RE_EMOTE.test(title) && src.includes('static.odycdn.com/emoticons'));
 }
 
 type SimpleTextProps = {
@@ -124,14 +124,16 @@ const REPLACE_REGEX = /(<iframe\s+src=["'])(.*?(?=))(["']\s*><\/iframe>)/g;
 // ****************************************************************************
 // ****************************************************************************
 
-function isStakeEnoughForPreview(stakedLevel) {
+function isStakeEnoughForPreview(stakedLevel: ?number): boolean {
   return !stakedLevel || stakedLevel >= CHANNEL_STAKED_LEVEL_VIDEO_COMMENTS;
 }
 
 // ****************************************************************************
 // ****************************************************************************
 
-export default React.memo<MarkdownProps>(function MarkdownPreview(props: MarkdownProps) {
+const MarkdownPreview: React.ComponentType<MarkdownProps> = React.memo<MarkdownProps>(function MarkdownPreview(
+  props: MarkdownProps
+): React.Node {
   const {
     content,
     strip,
@@ -162,8 +164,9 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
       })
     : '';
 
-  const remarkOptions: Object = {
+  const remarkOptions = {
     components: {
+      ...(strip ? { p: SimpleText } : {}),
       a: noDataStore
         ? SimpleLink
         : (linkProps) => (
@@ -175,7 +178,7 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
               allowPreview={isStakeEnoughForPreview(stakedLevel)}
             />
           ),
-      img: (imgProps) =>
+      img: (imgProps: ImageLinkProps) =>
         noDataStore ? (
           <div className="file-viewer file-viewer--document">
             <img {...imgProps} />
@@ -191,7 +194,6 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
   // Strip all content and just render text
   if (strip) {
     // Remove new lines and extra space
-    remarkOptions.components.p = SimpleText;
     return (
       <span dir="auto" className="markdown-preview">
         {
@@ -213,3 +215,5 @@ export default React.memo<MarkdownProps>(function MarkdownPreview(props: Markdow
     </div>
   );
 });
+
+export default MarkdownPreview;

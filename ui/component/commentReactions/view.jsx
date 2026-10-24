@@ -64,7 +64,7 @@ export default function CommentReactions(props: Props): React.Node {
       ? claim.canonical_url
       : claim && claim.signing_channel && claim.signing_channel.canonical_url;
 
-  const getCountForReact = (type) => {
+  const getCountForReact = (type: string) => {
     let count = 0;
     if (othersReacts && othersReacts[type]) {
       count += othersReacts[type];

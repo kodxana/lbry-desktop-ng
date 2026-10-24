@@ -48,9 +48,11 @@ const click = (selector: string): void => {
 
 export default async function collections(store: TestStore, history: TestHistory): Promise<string> {
   const preferenceSet = Lbry.preference_set;
+  const emptyTags: Array<string> = [];
   const preferences: Array<{ unpublishedCollections: CollectionGroup, ... }> = [];
   Lbry.preference_set = async ({ key, value }) => {
     assert.equal(key, 'local');
+    if (typeof value !== 'string') throw new Error('Collection preferences must use the versioned JSON envelope');
     const preference = JSON.parse(value);
     assert.equal(preference.version, '0.1');
     preferences.push(preference.value);
@@ -98,7 +100,7 @@ export default async function collections(store: TestStore, history: TestHistory
                   stream_type: 'video',
                   video: { duration: 60 },
                   source: { media_type: 'video/mp4', size: 1000 },
-                  tags: [],
+                  tags: emptyTags,
                 },
               },
             },

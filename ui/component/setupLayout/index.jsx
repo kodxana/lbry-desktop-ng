@@ -1,7 +1,6 @@
 // @flow
 import React from 'react';
 import type { Node } from 'react';
-// $FlowFixMe cannot resolve asset imports
 import YrblHappy from 'static/img/yrblhappy.svg';
 
 type Props = { children: Node };

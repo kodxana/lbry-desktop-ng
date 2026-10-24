@@ -56,7 +56,7 @@ type Props = {
   encryptWallet: () => void,
   decryptWallet: () => void,
   updateWalletStatus: () => void,
-  confirmForgetPassword: ({}) => void,
+  confirmForgetPassword: ({ callback: () => void }) => void,
   toggle3PAnalytics: (boolean) => void,
 };
 
@@ -239,7 +239,6 @@ export default function SettingSystem(props: Props): React.Node {
                 placeholder={__('A Folder containing FFmpeg')}
                 currentPath={ffmpegPath || daemonSettings.ffmpeg_path}
                 onFileChosen={(newDirectory: FileWithPath) => {
-                  // $FlowFixMe
                   setDaemonSetting('ffmpeg_path', newDirectory.path);
                   findFFmpeg();
                 }}

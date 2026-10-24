@@ -29,7 +29,7 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
   pendingRequest = false;
   unmounted = false;
 
-  state = {
+  state: State = {
     newPassword: null,
     newPasswordConfirm: null,
     passwordMismatch: false,
@@ -48,19 +48,19 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
     this.unmounted = true;
   }
 
-  onChangeNewPassword(event: SyntheticInputEvent<>) {
+  onChangeNewPassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ newPassword: event.target.value });
   }
 
-  onChangeRememberPassword(event: SyntheticInputEvent<>) {
+  onChangeRememberPassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ rememberPassword: event.target.checked });
   }
 
-  onChangeNewPasswordConfirm(event: SyntheticInputEvent<>) {
+  onChangeNewPasswordConfirm(event: { target: HTMLInputElement, ... }) {
     this.setState({ newPasswordConfirm: event.target.value });
   }
 
-  onChangeUnderstandConfirm(event: SyntheticInputEvent<>) {
+  onChangeUnderstandConfirm(event: { target: HTMLInputElement, ... }) {
     const regex = new RegExp('^.?' + acknowledgementText + '.?$', 'i');
     this.setState({
       understandConfirmed: regex.test(event.target.value),

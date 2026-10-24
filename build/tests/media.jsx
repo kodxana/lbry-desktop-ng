@@ -2,6 +2,8 @@ import { strict as assert } from 'assert';
 import React from 'react';
 import { ipcRenderer } from 'electron';
 import videojs from 'video.js';
+import VideoViewer from 'component/viewers/videoViewer/view';
+import analytics from 'analytics';
 import VideoJs from 'component/viewers/videoViewer/internal/videojs';
 import LbryVolumeBar from 'component/viewers/videoViewer/internal/lbry-volume-bar';
 import hlsQualitySelector from 'component/viewers/videoViewer/internal/plugins/videojs-hls-quality-selector/plugin';
@@ -106,6 +108,81 @@ async function lifecycle(store, history, origin) {
   }
 }
 
+async function viewerCallbacks(store, history, origin) {
+  const noop = () => {};
+  const notifications = [];
+  const previous = 'lbry://previous#def';
+  const current = 'lbry://current#abc';
+  const original = analytics.videoIsPlaying;
+  analytics.videoIsPlaying = (playing, player) => notifications.push({ playing, player });
+  history.replace('/current:abc');
+  try {
+    render(
+      <VideoViewer
+        source={origin + '/sample.mp4'}
+        contentType="video/mp4"
+        thumbnail=""
+        claim={{
+          claim_id: 'abc',
+          permanent_url: current,
+          canonical_url: current,
+          value: { source: { size: 1000 }, video: { duration: 6 } },
+        }}
+        uri={current}
+        position={0}
+        muted
+        volume={0.5}
+        videoPlaybackRate={1}
+        autoplayNext={false}
+        changeVolume={noop}
+        changeMute={noop}
+        doAnalyticsView={async () => {}}
+        doAnalyticsBuffer={noop}
+        claimRewards={noop}
+        savePosition={noop}
+        clearPosition={noop}
+        toggleVideoTheaterMode={noop}
+        toggleAutoplayNext={noop}
+        setVideoPlaybackRate={noop}
+        userId={0}
+        shareTelemetry={false}
+        isFloating={false}
+        doPlayUri={noop}
+        collectionId="fixture-playlist"
+        nextRecommendedUri=""
+        previousListUri={previous}
+        videoTheaterMode={false}
+        isMarkdownOrComment={false}
+      />,
+      store,
+      history
+    );
+    await waitFor(() => window.player && window.player.readyState() >= 2, 'Viewer must initialize a real player');
+    const player = window.player;
+    player.pause();
+    await player.play();
+    await waitFor(() => notifications.some((event) => event.playing), 'Play notification must be delivered');
+    assert(
+      notifications.every((event) => event.player === player),
+      'Playback callbacks must receive the player, not the DOM event'
+    );
+    player.pause();
+    player.currentTime(5.5);
+    await waitFor(() => player.currentTime() > 5, 'Seek before testing Previous');
+    document.querySelector('.vjs-button--play-previous').click();
+    await waitFor(() => player.currentTime() < 0.1, 'Previous after five seconds restarts the current video');
+    assert.equal(history.location.pathname, '/current:abc');
+    document.querySelector('.vjs-button--play-previous').click();
+    await waitFor(
+      () => history.location.pathname === '/previous:def',
+      'Previous near the start navigates to the preceding item'
+    );
+  } finally {
+    unmount();
+    analytics.videoIsPlaying = original;
+  }
+}
+
 export default async function media(store, history) {
   await lateQualityMenu();
   assert.equal(videojs.VERSION, '8.24.1');
@@ -149,10 +226,13 @@ export default async function media(store, history) {
       history
     );
     const loaded = (predicate, message) =>
-      waitFor(() => {
-        assert(!player || !player.error(), file + ': ' + JSON.stringify(player && player.error()));
-        return player && predicate();
-      }, file + ': ' + message);
+      waitFor(
+        () => {
+          assert(!player || !player.error(), file + ': ' + JSON.stringify(player && player.error()));
+          return player && predicate();
+        },
+        file + ': ' + message
+      );
     try {
       await loaded(() => element.readyState >= 2, 'media did not decode');
       assert(Math.abs(player.duration() - 6) < 0.2, 'Read the actual fixture duration');
@@ -252,5 +332,6 @@ export default async function media(store, history) {
     'Exercise HTTP range playback'
   );
   await lifecycle(store, history, origin);
+  await viewerCallbacks(store, history, origin);
   return 'Video.js 8: MP4, HLS/MediaSource and audio decode; controls, quality choices, overlays, tracking, seek, source changes and disposal';
 }

@@ -27,7 +27,17 @@ type Props = {
   // --- perform ---
   doToast: ({ message: string }) => void,
   handleEditComment: () => void,
-  openModal: (id: string, {}) => void,
+  openModal: (
+    id: string,
+    | {
+        commentId: string,
+        commentIsMine: boolean,
+        contentChannelPermanentUrl: ?string,
+        setQuickReply: (unknown) => void,
+        supportAmount?: number,
+      }
+    | { contentUri: ?string, commenterUri: string }
+  ) => void,
   clearPlayingUri: () => void,
   muteChannel: (string) => void,
   pinComment: (string, string, boolean) => Promise<any>,

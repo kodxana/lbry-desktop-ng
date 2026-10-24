@@ -210,7 +210,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
     });
   }
 
-  const handleNavLinkClick = (e) => {
+  const handleNavLinkClick = (e: { stopPropagation: () => void, preventDefault: () => void, ... }) => {
     if (onClick) {
       onClick(e, claim, indexInContainer); // not sure indexInContainer is used for anything.
     }
@@ -252,7 +252,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   // Make sure this happens after we figure out if this claim needs to be hidden
   const thumbnailUrl = useGetThumbnail(uri, claim, streamingUrl, getFile, shouldHide);
 
-  function handleOnClick(e) {
+  function handleOnClick(e: unknown) {
     if (onClick) {
       onClick(e, claim, indexInContainer);
     }
@@ -430,4 +430,6 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   );
 });
 
-export default withDesktopRouter(ClaimPreview);
+const RoutedClaimPreview: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ClaimPreview);
+export default RoutedClaimPreview;

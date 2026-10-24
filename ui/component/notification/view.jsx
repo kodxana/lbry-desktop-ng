@@ -37,7 +37,7 @@ export default function Notification(props: Props): React.Node {
 
   const { push } = useDesktopHistory();
   const [isReplying, setReplying] = React.useState(false);
-  const [quickReply, setQuickReply] = React.useState();
+  const [quickReply, setQuickReply] = React.useState<Comment | void>();
 
   // ?
   const isIgnoredNotification = notification_rule === RULE.NEW_LIVESTREAM;
@@ -53,7 +53,7 @@ export default function Notification(props: Props): React.Node {
   const stickerFromComment = isCommentNotification && commentText && parseSticker(commentText);
   const notificationTarget = getNotificationTarget();
 
-  const creatorIcon = (channelUrl) => (
+  const creatorIcon = (channelUrl: string) => (
     <UriIndicator uri={channelUrl} link>
       <ChannelThumbnail small uri={channelUrl} />
     </UriIndicator>
@@ -125,7 +125,10 @@ export default function Notification(props: Props): React.Node {
   } catch (e) {}
 
   notificationLink += `?${urlParams.toString()}`;
-  const navLinkProps = { to: notificationLink, onClick: (e) => e.stopPropagation() };
+  const navLinkProps = {
+    to: notificationLink,
+    onClick: (e: { stopPropagation: () => void, ... }) => e.stopPropagation(),
+  };
 
   function getNotificationTarget() {
     // switch (notification_rule) {

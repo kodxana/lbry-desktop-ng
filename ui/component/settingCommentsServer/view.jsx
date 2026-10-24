@@ -61,14 +61,20 @@ function SettingCommentsServer(props: Props): React.Node {
     setCustomServers(newCustomServers);
   };
 
-  const commentServerLabel = (serverDetails, onRemove) => (
+  const commentServerLabel = (serverDetails: CommentServerDetails, onRemove: ?(CommentServerDetails) => void) => (
     <span className={'compound-label'}>
       <span>{serverDetails.name}</span>
       <span className="compound-label__details">{serverDetails.url}</span>
       {onRemove && <Button button={'inverse'} label={__('Remove')} onClick={() => onRemove(serverDetails)} />}
     </span>
   );
-  const commentServerRadio = (customServerEnabled, customServerUrl, onClick, onRemove, serverDetails) => (
+  const commentServerRadio = (
+    customServerEnabled: boolean,
+    customServerUrl: string,
+    onClick: (CommentServerDetails) => void,
+    onRemove: ?(CommentServerDetails) => void,
+    serverDetails: CommentServerDetails
+  ) => (
     <FormField
       type="radio"
       checked={(!customServerEnabled && !onRemove) || (customServerEnabled && customServerUrl === serverDetails.url)}

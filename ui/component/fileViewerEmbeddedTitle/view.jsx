@@ -53,4 +53,6 @@ function FileViewerEmbeddedTitle(props: Props) {
   );
 }
 
-export default withDesktopRouter(FileViewerEmbeddedTitle);
+const RoutedFileViewerEmbeddedTitle: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(FileViewerEmbeddedTitle);
+export default RoutedFileViewerEmbeddedTitle;

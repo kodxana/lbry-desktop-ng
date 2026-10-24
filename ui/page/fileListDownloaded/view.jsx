@@ -45,7 +45,7 @@ function FileListDownloaded(props: Props) {
   const [viewMode, setViewMode] = usePersistedState('library-view-mode', VIEW_PURCHASES);
   const [searchQuery, setSearchQuery] = useState('');
 
-  function handleInputChange(e) {
+  function handleInputChange(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     if (value !== searchQuery) {
       setSearchQuery(value);
@@ -114,4 +114,6 @@ function FileListDownloaded(props: Props) {
   );
 }
 
-export default withDesktopRouter(FileListDownloaded);
+const RoutedFileListDownloaded: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(FileListDownloaded);
+export default RoutedFileListDownloaded;

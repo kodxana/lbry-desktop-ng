@@ -108,7 +108,7 @@ function VideoViewer(props: Props): React.Node {
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
   const [isLoading, setIsLoading] = useState(false);
   const [replay, setReplay] = useState(false);
-  const [videoNode, setVideoNode] = useState();
+  const [activePlayer, setActivePlayer] = useState<?Player>();
 
   const updateVolumeState = React.useCallback(
     debounce((volume, muted) => {
@@ -140,7 +140,7 @@ function VideoViewer(props: Props): React.Node {
     });
   }
 
-  function doTrackingFirstPlay(e: Event, data: any) {
+  function doTrackingFirstPlay(this: Player, e: Event, data: any) {
     let timeToStart = data.secondsToLoad;
 
     if (desktopPlayStartTime !== undefined) {
@@ -176,7 +176,7 @@ function VideoViewer(props: Props): React.Node {
   }
 
   const doPlay = useCallback(
-    (playUri) => {
+    (playUri: string) => {
       setDoNavigate(false);
       if (!isFloating) {
         const navigateUrl = formatLbryUrlForWeb(playUri);
@@ -204,13 +204,13 @@ function VideoViewer(props: Props): React.Node {
         setReplay(true);
       }
     } else {
-      if (videoNode) {
-        const currentTime = videoNode.currentTime;
+      if (activePlayer) {
+        const currentTime = activePlayer.currentTime();
 
         if (currentTime <= 5) {
           if (previousListUri && permanentUrl !== previousListUri) doPlay(previousListUri);
         } else {
-          videoNode.currentTime = 0;
+          activePlayer.currentTime(0);
         }
         setDoNavigate(false);
       }
@@ -228,7 +228,7 @@ function VideoViewer(props: Props): React.Node {
     permanentUrl,
     playNextUrl,
     previousListUri,
-    videoNode,
+    activePlayer,
   ]);
 
   React.useEffect(() => {
@@ -245,7 +245,7 @@ function VideoViewer(props: Props): React.Node {
     clearPosition(uri);
   }, [autoplayNext, clearPosition, collectionId, ended, uri]);
 
-  function onPlay(player) {
+  function onPlay(player: Player) {
     setEnded(false);
     setIsLoading(false);
     setIsPlaying(true);
@@ -255,18 +255,18 @@ function VideoViewer(props: Props): React.Node {
     analytics.videoIsPlaying(true, player);
   }
 
-  function onPause(event, player) {
+  function onPause(event: Event, player: Player) {
     setIsPlaying(false);
     handlePosition(player);
     analytics.videoIsPlaying(false, player);
   }
 
-  function onDispose(event, player) {
+  function onDispose(event: Event, player: Player) {
     handlePosition(player);
     analytics.videoIsPlaying(false, player);
   }
 
-  function handlePosition(player) {
+  function handlePosition(player: Player) {
     const currTime = player.currentTime();
     const durationInSeconds = claim.value.video && claim.value.video.duration;
     if (Number(durationInSeconds) > Number(currTime)) {
@@ -274,14 +274,13 @@ function VideoViewer(props: Props): React.Node {
     }
   }
 
-  function restorePlaybackRate(player) {
+  function restorePlaybackRate(player: Player) {
     if (!vjsCallbackDataRef.current.embedded) {
       player.playbackRate(vjsCallbackDataRef.current.videoPlaybackRate);
     }
   }
 
-  const playerReadyDependencyList = [uri];
-  playerReadyDependencyList.push(desktopPlayStartTime);
+  const playerReadyDependencyList = [uri, desktopPlayStartTime];
 
   const doPlayNext = () => {
     setPlayNextUrl(true);
@@ -293,8 +292,8 @@ function VideoViewer(props: Props): React.Node {
     setEnded(true);
   };
 
-  const onPlayerReady = useCallback((player: Player, videoNode: any) => {
-    setVideoNode(videoNode);
+  const onPlayerReady = useCallback((player: Player) => {
+    setActivePlayer(player);
     player.muted(muted);
     player.volume(volume);
     player.playbackRate(videoPlaybackRate);
@@ -339,7 +338,7 @@ function VideoViewer(props: Props): React.Node {
     // first play tracking, used for initializing the watchman api
     player.on('tracking:firstplay', doTrackingFirstPlay);
     player.on('ended', () => setEnded(true));
-    player.on('play', onPlay);
+    player.on('play', () => onPlay(player));
     player.on('pause', (event) => onPause(event, player));
     player.on('dispose', (event) => onDispose(event, player));
 

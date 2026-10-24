@@ -55,14 +55,14 @@ const SupportsLiquidate = (props: Props): React.Node => {
   }
 
   const handleRangeChange = useCallback(
-    (newValue) => {
+    (newValue: number) => {
       setUnlockTextAmount(String(newValue));
     },
     [setUnlockTextAmount]
   );
 
   const handleChangeUnlockText = useCallback(
-    (newValue) => {
+    (newValue: string) => {
       // Get rid of all characters except digits, commas and periods.
       const onlyValidAmount = newValue.replace(/[^0-9.,]+/, '');
       setUnlockTextAmount(onlyValidAmount);

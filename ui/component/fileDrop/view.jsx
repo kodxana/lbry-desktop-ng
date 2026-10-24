@@ -15,7 +15,7 @@ type Props = {
   modal: { id: string, modalProps: {} },
   filePath: ?string,
   clearPublish: () => void,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: ({ filePath: string }) => void,
   openModal: (id: string, { files: Array<File> }) => void,
   // React router
   history: {
@@ -36,16 +36,16 @@ const PUBLISH_URL = `/$/${PAGES.UPLOAD}`;
 function FileDrop(props: Props) {
   const { modal, history, openModal, updatePublishForm } = props;
   const { drag, dropData } = useDragDrop();
-  const [files, setFiles] = React.useState([]);
+  const [files, setFiles] = React.useState<Array<File>>([]);
   const [error, setError] = React.useState(false);
   const [target, setTarget] = React.useState<?File>(null);
-  const hideTimer = React.useRef(null);
-  const navigationTimer = React.useRef(null);
+  const hideTimer = React.useRef<ReturnType<typeof setTimeout> | void>();
+  const navigationTimer = React.useRef<ReturnType<typeof setTimeout> | void>();
   const handledDrop = React.useRef(null);
   const choosingFile = modal && modal.id === MODALS.FILE_SELECTION;
 
   // Gets respective icon given a mimetype
-  const getFileIcon = (type) => {
+  const getFileIcon = (type: string) => {
     // Not all files have a type
     if (!type) return ICONS.FILE;
     // Detect common types
@@ -69,7 +69,7 @@ function FileDrop(props: Props) {
 
   // Handle file selection
   const handleFileSelected = React.useCallback(
-    (selectedFile) => {
+    (selectedFile: File) => {
       const filePath = getFilePath(selectedFile);
       if (!filePath) {
         setError(true);
@@ -163,4 +163,5 @@ function FileDrop(props: Props) {
   );
 }
 
-export default withDesktopRouter(FileDrop);
+const RoutedFileDrop: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(FileDrop);
+export default RoutedFileDrop;

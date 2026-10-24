@@ -124,7 +124,7 @@ function WalletSendTip(props: Props): React.Node {
   }
 
   // make call to the backend to send lbc or fiat
-  function sendSupportOrConfirm(instantTipMaxAmount = null) {
+  function sendSupportOrConfirm(instantTipMaxAmount: ?number = null) {
     if (!claimId) return;
     if (!isOnConfirmationPage && (!instantTipMaxAmount || !instantTipEnabled || tipAmount > instantTipMaxAmount)) {
       setConfirmationPage(true);
@@ -160,14 +160,14 @@ function WalletSendTip(props: Props): React.Node {
 
   function buildButtonText() {
     // test if frontend will show up as isNan
-    function isNan(tipAmount) {
+    function isNan(tipAmount: number | string) {
       // testing for NaN ES5 style https://stackoverflow.com/a/35912757/3973137
       // also sometimes it's returned as a string
       // eslint-disable-next-line
       return tipAmount !== tipAmount || tipAmount === 'NaN';
     }
 
-    function convertToTwoDecimals(number) {
+    function convertToTwoDecimals(number: number) {
       return (Math.round(number * 100) / 100).toFixed(2);
     }
 

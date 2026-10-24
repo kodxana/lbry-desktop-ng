@@ -182,7 +182,7 @@ function ChannelForm(props: Props): React.Node {
     }
   }
 
-  function handleLanguageChange(index, code) {
+  function handleLanguageChange(index: number, code: string) {
     let langs = [...languageParam];
     if (index === 0) {
       if (code === LANG_NONE) {

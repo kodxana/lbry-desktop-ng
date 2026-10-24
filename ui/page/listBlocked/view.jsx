@@ -55,7 +55,7 @@ function ListBlocked(props: Props): React.Node {
   } = props;
   const [viewMode, setViewMode] = usePersistedState('blocked-muted:display', VIEW.BLOCKED);
 
-  const [localDelegatorsMap, setLocalDelegatorsMap] = React.useState(undefined);
+  const [localDelegatorsMap, setLocalDelegatorsMap] = React.useState<{ [string]: Array<string> } | void>();
 
   const stringifiedDelegatorsMap = JSON.stringify(delegatorsMap);
   const stringifiedLocalDelegatorsMap = JSON.stringify(localDelegatorsMap);
@@ -68,7 +68,7 @@ function ListBlocked(props: Props): React.Node {
 
   // **************************************************************************
 
-  function getList(view) {
+  function getList(view: string) {
     switch (view) {
       case VIEW.BLOCKED:
         return personalBlockList;
@@ -81,13 +81,13 @@ function ListBlocked(props: Props): React.Node {
     }
   }
 
-  function getActionButtons(uri) {
-    const getDurationStr = (durationNs) => {
+  function getActionButtons(uri: string) {
+    const getDurationStr = (durationNs: number) => {
       const NANO_TO_MS = 1000000;
       return humanizeDuration(durationNs / NANO_TO_MS, { round: true });
     };
 
-    const getBanInfoElem = (timeoutInfo) => {
+    const getBanInfoElem = (timeoutInfo: { blockedAt: string, bannedFor: number, banRemaining: number }) => {
       return (
         <div>
           <div className="help">
@@ -154,7 +154,7 @@ function ListBlocked(props: Props): React.Node {
     }
   }
 
-  function getHelpText(view) {
+  function getHelpText(view: string) {
     switch (view) {
       case VIEW.BLOCKED:
         return __(
@@ -171,7 +171,7 @@ function ListBlocked(props: Props): React.Node {
     }
   }
 
-  function getEmptyListTitle(view) {
+  function getEmptyListTitle(view: string) {
     switch (view) {
       case VIEW.BLOCKED:
         return __('You do not have any blocked channels');
@@ -184,7 +184,7 @@ function ListBlocked(props: Props): React.Node {
     }
   }
 
-  function getEmptyListSubtitle(view) {
+  function getEmptyListSubtitle(view: string) {
     switch (view) {
       case VIEW.BLOCKED:
       case VIEW.MUTED:
@@ -196,13 +196,13 @@ function ListBlocked(props: Props): React.Node {
     }
   }
 
-  function isSourceListLarger(source, local) {
+  function isSourceListLarger(source: ?string, local: ?string) {
     // Comparing the length of stringified is not perfect, but what are the
     // chances of having different lists with the exact same length?
     return source && (!local || local.length < source.length);
   }
 
-  function getViewElem(view, label, icon) {
+  function getViewElem(view: string, label: string, icon: string) {
     return (
       <Button
         icon={icon}
@@ -270,7 +270,7 @@ function ListBlocked(props: Props): React.Node {
             uris={getList(viewMode)}
             help={getHelpText(viewMode)}
             titleEmptyList={getEmptyListTitle(viewMode)}
-            subtitle={getEmptyListSubtitle(viewMode)}
+            subtitleEmptyList={getEmptyListSubtitle(viewMode)}
             getActionButtons={getActionButtons}
             className={viewMode === VIEW.MODERATOR ? 'block-list--moderator' : undefined}
           />

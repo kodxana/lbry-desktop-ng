@@ -27,7 +27,7 @@ type Props = {
   uri: string,
   claim: ?StreamClaim,
   claimIsMine: boolean,
-  doOpenModal: (id: string, {}) => void,
+  doOpenModal: (id: string, { uri: string }) => void,
 };
 
 function PostViewer(props: Props): React.Node {
@@ -42,7 +42,7 @@ function PostViewer(props: Props): React.Node {
   const formattedAmount = formatCredits(amount, 2, true);
   const hasSupport = claim && claim.meta && claim.meta.support_amount && Number(claim.meta.support_amount) > 0;
 
-  function handleExpand(newExpand) {
+  function handleExpand(newExpand: string) {
     if (expand === newExpand) {
       setExpand(EXPAND.NONE);
     } else {

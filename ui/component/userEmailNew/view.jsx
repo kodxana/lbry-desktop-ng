@@ -64,7 +64,7 @@ function UserEmailNew(props: Props): React.Node {
     });
   }
 
-  function handleChangeToSignIn(additionalParams) {
+  function handleChangeToSignIn() {
     clearEmailEntry();
 
     let url = `/$/${PAGES.AUTH_SIGNIN}`;

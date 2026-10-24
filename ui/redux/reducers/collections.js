@@ -34,7 +34,9 @@ const defaultState: CollectionState = {
   error: null,
 };
 
-const collectionsReducer = handleActions(
+type CollectionReducer = (state: CollectionState | void, action: { type: string, ... }) => CollectionState;
+
+const collectionsReducer: CollectionReducer = handleActions(
   {
     [ACTIONS.COLLECTION_NEW]: (state, action) => {
       const { entry: params } = action.data; // { id:, items: Array<string>}

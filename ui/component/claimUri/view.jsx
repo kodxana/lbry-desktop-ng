@@ -6,7 +6,7 @@ import Button from 'component/button';
 type Props = {
   shortUrl: ?string,
   uri: string,
-  doToast: ({ message: string }) => void,
+  doToast: ({ message: string, isError?: boolean }) => void,
   inline?: boolean,
   noShortUrl?: boolean,
 };

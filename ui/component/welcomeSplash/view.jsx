@@ -3,7 +3,6 @@ import React from 'react';
 import Button from 'component/button';
 import { withDesktopRouter } from 'component/common/desktop-router';
 import I18nMessage from 'component/i18nMessage';
-// $FlowFixMe cannot resolve ...
 import YrblHappy from 'static/img/yrblhappy.svg';
 
 type Props = {
@@ -45,4 +44,6 @@ function WelcomePage(props: Props) {
   );
 }
 
-export default withDesktopRouter(WelcomePage);
+const RoutedWelcomePage: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(WelcomePage);
+export default RoutedWelcomePage;

@@ -42,7 +42,7 @@ function MarkdownLink(props: Props): React.Node {
 
   // Regex for url protocol
   const protocolRegex = new RegExp('^(https?|lbry|mailto)+:', 'i');
-  const protocol = href ? protocolRegex.exec(href) : null;
+  const protocol = protocolRegex.exec(href);
 
   let linkUrlObject;
   try {

@@ -57,7 +57,7 @@ export default function YoutubeTransferStatus(props: Props): React.Node {
     total = videosImported[1];
   }
 
-  function getMessage(channel) {
+  function getMessage(channel: { transferable: boolean, transfer_state: string, sync_status: string, ... }) {
     const { transferable, transfer_state: transferState, sync_status: syncStatus } = channel;
     if (!transferable) {
       switch (transferState) {

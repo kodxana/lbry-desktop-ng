@@ -73,7 +73,7 @@ export function filterClaims(claims: Array<Claim>, query: ?string): Array<Claim>
  * @param claim
  * @param uri An abandoned claim will be null, so provide the `uri` as a fallback to parse.
  */
-export function isChannelClaim(claim: ?Claim, uri?: string) {
+export function isChannelClaim(claim: ?Claim, uri?: string): boolean {
   // 1. parseURI can't resolve a repost's channel, so a `claim` will be needed.
   // 2. parseURI is still needed to cover the case of abandoned claims.
   if (claim) {
@@ -89,7 +89,7 @@ export function isChannelClaim(claim: ?Claim, uri?: string) {
   }
 }
 
-export function getChannelIdFromClaim(claim: ?Claim) {
+export function getChannelIdFromClaim(claim: ?Claim): string | void {
   if (claim) {
     if (claim.value_type === 'channel') {
       return claim.claim_id;
@@ -99,7 +99,7 @@ export function getChannelIdFromClaim(claim: ?Claim) {
   }
 }
 
-export function getChannelFromClaim(claim: ?Claim) {
+export function getChannelFromClaim(claim: ?Claim): ?ChannelClaim {
   return !claim
     ? null
     : claim.value_type === 'channel'

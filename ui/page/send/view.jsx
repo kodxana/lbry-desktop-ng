@@ -18,7 +18,7 @@ export default function SendPage(props: Props): React.Node {
   const [confirmed, setConfirmed] = React.useState(false);
   const [sendLabel, setSendLabel] = React.useState('Send');
 
-  function getSearchUri(value) {
+  function getSearchUri(value: string) {
     const WEB_DEV_PREFIX = `${URL_DEV}/`;
     const WEB_LOCAL_PREFIX = `${URL_LOCAL}/`;
     const WEB_PROD_PREFIX = `${SITE_URL}/`;
@@ -31,7 +31,7 @@ export default function SendPage(props: Props): React.Node {
     const isLbryUrl = value.startsWith('lbry://') && value !== 'lbry://';
     const error = '';
 
-    const addLbryIfNot = (term) => {
+    const addLbryIfNot = (term: string) => {
       return term.startsWith('lbry://') ? term : `lbry://${term}`;
     };
     if (wasCopiedFromWeb) {

@@ -2,8 +2,10 @@
 import type { Player } from './videojs';
 import videojs from 'video.js';
 
-class TheaterModeButton extends videojs.getComponent('Button') {
-  constructor(player, options = {}) {
+const VideoButton = videojs.getComponent('Button');
+
+class TheaterModeButton extends VideoButton {
+  constructor(player: Player, options: { ... } = {}) {
     super(player, options);
     this.addClass('vjs-button--theater-mode');
     this.controlText('Theater Mode');

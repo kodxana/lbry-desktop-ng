@@ -39,6 +39,13 @@ async function main() {
 
   const options = await prettier.resolveConfig(path.join(root, 'ui/lint-fixture.jsx'));
   assert.equal(options.trailingComma, 'es5');
+  const modernFlow = await prettier.format(
+    'type Keys = keyof {name: string}; export function identity<T extends { ... }>(value: T): T { return value; }',
+    { ...options, filepath: 'ui/lint-fixture.jsx' }
+  );
+  assert.match(modernFlow, /keyof/);
+  assert.match(modernFlow, /T extends/);
+  assert(await prettier.check(modernFlow, { ...options, filepath: 'ui/lint-fixture.jsx' }));
   for (const [parser, input] of [
     ['babel-flow', 'export const value:number=1'],
     ['scss', '.fixture {color:red;}'],

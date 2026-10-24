@@ -7,11 +7,11 @@ import React, { useRef } from 'react';
 type Props = {
   copyable: string,
   snackMessage: ?string,
-  doToast: ({ message: string }) => void,
+  doToast: ({ message: string, isError?: boolean }) => void,
   label?: string,
   primaryButton?: boolean,
   name?: string,
-  onCopy?: (string) => string,
+  onCopy?: (HTMLInputElement | HTMLTextAreaElement) => void,
   enableInputMask?: boolean,
 };
 
@@ -19,7 +19,7 @@ export default function CopyableText(props: Props): React.Node {
   const { copyable, doToast, snackMessage, label, primaryButton = false, name, onCopy, enableInputMask } = props;
   const [maskInput, setMaskInput] = React.useState(enableInputMask);
 
-  const input = useRef();
+  const input = useRef<{ input: { current: HTMLInputElement | HTMLTextAreaElement | null } } | null>(null);
 
   function handleCopyText() {
     if (enableInputMask) {
@@ -33,11 +33,12 @@ export default function CopyableText(props: Props): React.Node {
         });
     } else {
       const topRef = input.current;
-      if (topRef && topRef.input && topRef.input.current) {
-        topRef.input.current.select();
+      const field = topRef?.input.current;
+      if (field) {
+        field.select();
         if (onCopy) {
           // Allow clients to change the selection before making the copy.
-          onCopy(topRef.input.current);
+          onCopy(field);
         }
       }
 

@@ -17,7 +17,7 @@ type Props = {
   winningUri: ?string,
   doResolveUris: (Array<string>) => void,
   hideLink?: boolean,
-  setChannelActive: (boolean) => void,
+  setChannelActive?: (boolean) => void,
   beginPublish: (?string) => void,
   pendingIds: Array<string>,
   isResolvingWinningUri: boolean,
@@ -64,10 +64,7 @@ export default function SearchTopClaim(props: Props): React.Node {
   }, [setChannelActive, winningUriIsChannel]);
 
   React.useEffect(() => {
-    let urisToResolve = [];
-    if (uriFromQuery) {
-      urisToResolve.push(uriFromQuery);
-    }
+    const urisToResolve = [uriFromQuery];
 
     if (channelUriFromQuery) {
       urisToResolve.push(channelUriFromQuery);

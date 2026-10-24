@@ -47,13 +47,13 @@ export default function BlockList(props: Props): React.Node {
   const { uris: list, help, titleEmptyList, subtitleEmptyList, getActionButtons, className } = props;
 
   // Keep a local list to allow for undoing actions in this component
-  const [localList, setLocalList] = React.useState(undefined);
+  const [localList, setLocalList] = React.useState<Array<string> | void>();
   const stringifiedList = JSON.stringify(list);
   const hasLocalList = localList && localList.length > 0;
   const justBlocked = list && localList && localList.length < list.length;
 
   const [page, setPage] = React.useState(1);
-  const [searchList, setSearchList] = React.useState(null); // null: not searching; []: no results;
+  const [searchList, setSearchList] = React.useState<?Array<string>>(null); // null: not searching; []: no results;
   const isShowingSearchResults = searchList !== null;
 
   let totalPages = 0;
@@ -68,7 +68,7 @@ export default function BlockList(props: Props): React.Node {
 
   function getRenderActions() {
     if (getActionButtons) {
-      return (claim) => <div className="section__actions">{getActionButtons(claim.permanent_url)}</div>;
+      return (claim: Claim) => <div className="section__actions">{getActionButtons(claim.permanent_url)}</div>;
     }
     return undefined;
   }
@@ -160,7 +160,7 @@ function SearchList(props: LsbProps) {
   const { list, placeholder, formatter, onResultsUpdated } = props;
   const [term, setTerm] = React.useState('');
   const results = useAuthorMatch(term, list);
-  const handleSelect = (e) => setTerm(e);
+  const handleSelect = (value: string) => setTerm(value);
 
   React.useEffect(() => {
     if (onResultsUpdated) {
@@ -201,12 +201,12 @@ function SearchList(props: LsbProps) {
   );
 }
 
-function useAuthorMatch(term, list) {
+function useAuthorMatch(term: string, list: ?Array<string>): ?Array<string> {
   const throttledTerm = useThrottle(term, 200);
   return React.useMemo(() => {
     return !throttledTerm || throttledTerm.trim() === ''
       ? null
-      : matchSorter(list, throttledTerm, {
+      : matchSorter(list || [], throttledTerm, {
           keys: [(item) => reduceUriToChannelName(item)],
           threshold: matchSorter.rankings.CONTAINS,
         });

@@ -5,6 +5,10 @@ import webpack from 'webpack';
 import type { Stats, Compiler, MultiStats } from 'webpack';
 import Modal from 'react-modal';
 
+import * as Ariakit from '@ariakit/react';
+import Lightbox from 'react-awesome-lightbox';
+import { parse } from 'node-html-parser';
+
 type State = { balance: string, addresses: Array<string> };
 const balance = (state: State): string => state.balance;
 const address = (state: State, index: number): string => state.addresses[index];
@@ -97,3 +101,13 @@ export const defaultSuffix: string = optionalSuffix({ balance: '0.25', addresses
 export const explicitSuffix: string = optionalSuffix({ balance: '0.25', addresses: ['fixture'] }, 0, '!');
 
 export const closedModal: React.Node = <Modal />;
+export const imageViewer: React.Node = <Lightbox image="fixture.png" onClose={() => {}} portal={false} />;
+export const imageSource: string | void = parse('<img src="fixture.png">').getAttribute('src');
+export function useMenuOpen(): boolean {
+  const menu = Ariakit.useMenuContext();
+  return menu ? menu.getState().open : false;
+}
+export function useSelectedTab(): ?string {
+  const tabs = Ariakit.useTabStore({ selectedId: 'first', setSelectedId: (id: ?string) => {} });
+  return Ariakit.useStoreState(tabs, 'selectedId');
+}

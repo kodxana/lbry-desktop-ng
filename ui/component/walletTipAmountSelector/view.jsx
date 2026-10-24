@@ -32,7 +32,7 @@ type Props = {
   uri: string,
   onChange: (number) => void,
   setConvertedAmount?: (number) => void,
-  setDisableSubmitButton: (boolean) => void,
+  setDisableSubmitButton?: (boolean) => void,
   setTipError: (string | false) => void,
 };
 
@@ -83,7 +83,6 @@ function WalletTipAmountSelector(props: Props): React.Node {
    */
   function shouldDisableAmountSelector(amount: number) {
     // if it's LBC but the balance isn't enough, or fiat conditions met
-    // $FlowFixMe
     return (
       ((amount > balance || balance === 0) && activeTab !== TAB_FIAT) ||
       shouldDisableFiatSelectors ||

@@ -45,7 +45,12 @@ type Props = {
 export default function BuyPage(props: Props): React.Node {
   const { receiveAddress, gettingNewAddress, doGetNewAddress, email, user, doUserSetCountry } = props;
   const initialCountry = (user && user.country) || '';
-  const [signedPurchase, setSignedPurchase] = React.useState();
+  const [signedPurchase, setSignedPurchase] = React.useState<{
+    address: string,
+    email: string,
+    url?: string,
+    error?: boolean,
+  } | void>();
   const [country, setCountry] = React.useState(initialCountry);
   const [showPurchaseScreen, setShowPurchaseScreen] = React.useState(false);
   const isValid = SUPPORTED_MOONPAY_COUNTRIES.includes(country);

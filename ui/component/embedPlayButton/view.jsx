@@ -8,6 +8,8 @@ import { useDesktopHistory } from 'component/common/desktop-router';
 import { useIsMobile } from 'effects/use-screensize';
 import { formatLbryUrlForWeb } from 'util/url';
 
+type PlayingOptions = { uri: string, pathname: string, source?: string, commentId?: string };
+
 type Props = {
   uri: string,
   thumbnail: string,
@@ -20,7 +22,7 @@ type Props = {
   doAnaltyicsPurchaseEvent: (GetResponse) => void,
   parentCommentId?: string,
   isMarkdownPost: boolean,
-  doSetPlayingUri: ({}) => void,
+  doSetPlayingUri: (PlayingOptions) => void,
   renderMode: string,
 };
 
@@ -70,7 +72,7 @@ export default function EmbedPlayButton(props: Props): React.Node {
       push(formattedUrl);
     } else {
       doPlayUri(uri, undefined, undefined, (fileInfo) => {
-        let playingOptions = { uri, pathname, source: undefined, commentId: undefined };
+        const playingOptions: PlayingOptions = { uri, pathname, source: undefined, commentId: undefined };
         if (parentCommentId) {
           playingOptions.source = 'comment';
           playingOptions.commentId = parentCommentId;

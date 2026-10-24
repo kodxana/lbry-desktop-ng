@@ -13,11 +13,11 @@ type Props = {
   level: number,
   large?: boolean,
   inline?: boolean,
-  hideTooltip?: Boolean,
+  hideTooltip?: boolean,
 };
 
 function getChannelIcon(level: number): string {
-  const icons = {
+  const icons: { [number]: string } = {
     '1': ICONS.CHANNEL_LEVEL_1,
     '2': ICONS.CHANNEL_LEVEL_2,
     '3': ICONS.CHANNEL_LEVEL_3,
@@ -44,7 +44,7 @@ function ChannelStakedIndicator(props: Props): React.Node {
         title={
           <div className="channel-staked__tooltip">
             <div className="channel-staked__tooltip-icons">
-              <LevelIcon icon={icon} isControlling={isControlling} size={isControlling ? 14 : 10} />
+              <LevelIcon icon={icon} isControlling={isControlling} />
             </div>
 
             <div className="channel-staked__tooltip-text">

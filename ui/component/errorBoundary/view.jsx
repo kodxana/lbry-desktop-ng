@@ -22,18 +22,16 @@ type State = {
 };
 
 class ErrorBoundary extends React.Component<Props, State> {
-  constructor() {
-    super();
+  constructor(props: Props) {
+    super(props);
     this.state = { hasError: false, desktopErrorReported: false };
-
-    (this: any).refresh = this.refresh.bind(this);
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(): { hasError: boolean } {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error): void {
     // @if TARGET='app'
     let errorMessage = 'Uncaught error\n';
     Native.getAppVersionInfo().then(({ localVersion }) => {
@@ -50,15 +48,15 @@ class ErrorBoundary extends React.Component<Props, State> {
     // @endif
   }
 
-  refresh() {
+  refresh = (): void => {
     const { history } = this.props;
 
     // use history.replace instead of history.push so the user can't click back to the errored page
     history.replace('/');
     this.setState({ hasError: false });
-  }
+  };
 
-  render() {
+  render(): React.Node {
     const { hasError } = this.state;
     const { desktopErrorReported } = this.state;
 
@@ -111,4 +109,6 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-export default withDesktopRouter(ErrorBoundary);
+const RoutedErrorBoundary: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ErrorBoundary);
+export default RoutedErrorBoundary;

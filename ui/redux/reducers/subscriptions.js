@@ -10,7 +10,7 @@ const defaultState: SubscriptionState = {
   firstRunCompleted: false,
 };
 
-export default handleActions(
+const reducer: (state: SubscriptionState | void, action: { type: string, ... }) => SubscriptionState = handleActions(
   {
     [ACTIONS.CHANNEL_SUBSCRIBE]: (state: SubscriptionState, action): SubscriptionState => {
       const newSubscription: { uri: string, channelName: string, notificationsDisabled: boolean } = action.data;
@@ -18,8 +18,7 @@ export default handleActions(
       let newFollowing: Array<Following> = state.following.slice();
       // prevent duplicates in the sidebar
       if (!newSubscriptions.some((sub) => isURIEqual(sub.uri, newSubscription.uri))) {
-        //   $FlowFixMe
-        newSubscriptions.unshift(newSubscription);
+        newSubscriptions.unshift({ ...newSubscription });
       }
 
       if (!newFollowing.some((sub) => isURIEqual(sub.uri, newSubscription.uri))) {
@@ -128,3 +127,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

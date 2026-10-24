@@ -1,7 +1,7 @@
 // @flow
 import * as React from 'react';
 import classnames from 'classnames';
-import Tag from 'component/tag';
+import TagView from 'component/tag';
 
 const SLIM_TAGS = 1;
 const NORMAL_TAGS = 3;
@@ -23,7 +23,7 @@ export default function ClaimTags(props: Props): React.Node {
     tagsToDisplay.push('mature');
   }
 
-  for (var i = 0; tagsToDisplay.length < numberOfTags - 2; i++) {
+  for (let i = 0; tagsToDisplay.length < numberOfTags - 2; i++) {
     const tag = followedTags[i];
     if (!tag) {
       break;
@@ -34,9 +34,9 @@ export default function ClaimTags(props: Props): React.Node {
     }
   }
 
-  const sortedTags = tags.sort((a, b) => a.localeCompare(b));
+  const sortedTags = [...tags].sort((a, b) => a.localeCompare(b));
 
-  for (var i = 0; i < sortedTags.length; i++) {
+  for (let i = 0; i < sortedTags.length; i++) {
     const tag = sortedTags[i];
     if (!tag || tagsToDisplay.length === numberOfTags) {
       break;
@@ -54,7 +54,7 @@ export default function ClaimTags(props: Props): React.Node {
   return (
     <div className={classnames('claim__tags', { 'claim__tags--large': type === 'large' })}>
       {tagsToDisplay.map((tag) => (
-        <Tag key={tag} title={tag} name={tag} />
+        <TagView key={tag} title={tag} name={tag} />
       ))}
     </div>
   );

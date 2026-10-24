@@ -15,7 +15,7 @@ const defaultState: TagState = {
   knownTags: getDefaultKnownTags(),
 };
 
-export default handleActions(
+const reducer: (state: TagState | void, action: { type: string, ... }) => TagState = handleActions(
   {
     [ACTIONS.TOGGLE_TAG_FOLLOW]: (state: TagState, action: TagAction): TagState => {
       const { followedTags } = state;
@@ -88,3 +88,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

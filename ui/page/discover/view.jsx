@@ -57,7 +57,7 @@ function DiscoverPage(props: Props): React.Node {
   const channelIds =
     (dynamicRouteProps && dynamicRouteProps.options && dynamicRouteProps.options.channelIds) || undefined;
 
-  const isFollowing = followedTags.map(({ name }) => name).includes(tag);
+  const isFollowing = tag != null && followedTags.map(({ name }) => name).includes(tag);
   let label = isFollowing ? __('Following --[button label indicating a channel has been followed]--') : __('Follow');
   if (isHovering && isFollowing) {
     label = __('Unfollow');

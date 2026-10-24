@@ -42,8 +42,8 @@ function StorageViz(props: Props): React.Node {
       ? freeMB - (autoHostingLimit - autoBlobSpace) + viewBlobSpace
       : viewHostingLimit + viewBlobSpace;
 
-  const getPercent = (val, lim = totalMB) => (val / lim) * 100;
-  const getGB = (val) => (Number(val) / 1024).toFixed(2);
+  const getPercent = (val: number, lim: number = totalMB) => (val / lim) * 100;
+  const getGB = (val: number) => (val / 1024).toFixed(2);
 
   const otherPercent = getPercent(otherMB);
   const privatePercent = getPercent(privateBlobSpace);

@@ -2,7 +2,7 @@
 import * as ICONS from 'constants/icons';
 import * as React from 'react';
 import Button from 'component/button';
-import Tag from 'component/tag';
+
 import TagsSearch from 'component/tagsSearch';
 import usePersistedState from 'effects/use-persisted-state';
 import analytics from 'analytics';
@@ -16,7 +16,7 @@ type Props = {
   // Overrides
   // The default component is for following tags
   title?: string | boolean,
-  help?: string,
+  help?: string | false,
   label?: string,
   tagsChosen?: Array<Tag>,
   onSelect?: (Array<Tag>) => void,
@@ -35,7 +35,7 @@ export default function TagsSelect(props: Props): React.Node {
   const {
     showClose,
     followedTags,
-    doToggleTagFollowDesktop = null,
+    doToggleTagFollowDesktop,
     title,
     help,
     tagsChosen,
@@ -58,7 +58,7 @@ export default function TagsSelect(props: Props): React.Node {
     setHasClosed(true);
   }
 
-  function handleTagClick(tag) {
+  function handleTagClick(tag: Tag) {
     if (onRemove) {
       onRemove(tag);
     } else if (doToggleTagFollowDesktop) {

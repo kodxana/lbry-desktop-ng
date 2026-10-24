@@ -63,7 +63,7 @@ type Props = {
   playingUri: ?PlayingUri,
   stakedLevel: number,
   supportDisabled: boolean,
-  setQuickReply: (any) => void,
+  setQuickReply?: (any) => void,
   quickReply: any,
 };
 
@@ -158,7 +158,7 @@ function CommentView(props: Props): React.Node {
       setCharCount(editedMessage.length);
 
       // a user will try and press the escape key to cancel editing their comment
-      const handleEscape = (event) => {
+      const handleEscape = (event: KeyboardEvent) => {
         if (event.keyCode === KEYCODES.ESCAPE) {
           setEditing(false);
         }
@@ -179,8 +179,8 @@ function CommentView(props: Props): React.Node {
     }
   }, [page, uri, commentId, fetchReplies]);
 
-  function handleEditMessageChanged(event) {
-    setCommentValue(advancedEditor ? event : event.target.value);
+  function handleEditMessageChanged(event: string | { target: { value: string }, ... }) {
+    setCommentValue(typeof event === 'string' ? event : event.target.value);
   }
 
   function handleEditComment() {
@@ -347,20 +347,10 @@ function CommentView(props: Props): React.Node {
                     </div>
                   ) : editedMessage.length >= LENGTH_TO_COLLAPSE ? (
                     <Expandable>
-                      <MarkdownPreview
-                        content={message}
-                        promptLinks
-                        parentCommentId={commentId}
-                        stakedLevel={stakedLevel}
-                      />
+                      <MarkdownPreview content={message} parentCommentId={commentId} stakedLevel={stakedLevel} />
                     </Expandable>
                   ) : (
-                    <MarkdownPreview
-                      content={message}
-                      promptLinks
-                      parentCommentId={commentId}
-                      stakedLevel={stakedLevel}
-                    />
+                    <MarkdownPreview content={message} parentCommentId={commentId} stakedLevel={stakedLevel} />
                   )}
                 </div>
 

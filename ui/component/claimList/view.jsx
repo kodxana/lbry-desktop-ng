@@ -1,6 +1,5 @@
 // @flow
 
-// $FlowFixMe
 import { Draggable } from '@hello-pangea/dnd';
 import { MAIN_CLASS } from 'constants/classnames';
 import type { Node } from 'react';
@@ -18,7 +17,7 @@ const SORT_NEW = 'new';
 const SORT_OLD = 'old';
 
 type Props = {
-  uris: Array<string>,
+  uris: ?Array<string>,
   prefixUris?: Array<string>,
   header: Node | boolean,
   headerAltControls: Node,
@@ -123,7 +122,7 @@ export default function ClaimList(props: Props): React.Node {
   }
 
   const handleClaimClicked = React.useCallback(
-    (e, claim, index) => {
+    (e: unknown, claim?: ?Claim, index?: number) => {
       if (onClick) {
         onClick(e, claim, index);
       }
