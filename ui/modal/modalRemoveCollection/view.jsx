@@ -17,7 +17,7 @@ type Props = {
   redirect: ?string,
 };
 
-function ModalRemoveCollection(props: Props) {
+function ModalRemoveCollection(props: Props): React.Node {
   const { closeModal, claim, collectionDelete, collectionId, collectionName, uri, redirect } = props;
   const title = claim && claim.value && claim.value.title;
   const { replace } = useDesktopHistory();

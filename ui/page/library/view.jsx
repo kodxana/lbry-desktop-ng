@@ -18,7 +18,7 @@ type Props = {
   doPurchaseList: (number, number) => void,
 };
 
-function LibraryPage(props: Props) {
+function LibraryPage(props: Props): React.Node {
   const { allDownloadedUrlsCount, myPurchases, fetchingMyPurchases, fetchingFileList, doPurchaseList } = props;
   const { location } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);

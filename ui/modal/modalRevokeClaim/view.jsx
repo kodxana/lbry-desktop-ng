@@ -18,7 +18,7 @@ type Props = {
   doResolveUri: (string) => void,
 };
 
-export default function ModalRevokeClaim(props: Props) {
+export default function ModalRevokeClaim(props: Props): React.Node {
   const { tx, claim, closeModal, abandonTxo, abandonClaim, cb, doResolveUri } = props;
   const { value_type: valueType, type, normalized_name: name, is_my_input: isSupport } = tx || claim;
   const [channelName, setChannelName] = useState('');

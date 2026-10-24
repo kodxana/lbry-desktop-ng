@@ -15,7 +15,7 @@ class QRCode extends React.Component<Props> {
     paddingTop: false,
   };
 
-  render() {
+  render(): React.Node {
     const { value, paddingRight, paddingTop } = this.props;
     return (
       <div

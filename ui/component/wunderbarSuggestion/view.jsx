@@ -13,7 +13,7 @@ type Props = {
   isResolvingUri: boolean,
 };
 
-export default function WunderbarSuggestion(props: Props) {
+export default function WunderbarSuggestion(props: Props): React.Node {
   const { claim, uri, isResolvingUri } = props;
 
   if (isResolvingUri) {

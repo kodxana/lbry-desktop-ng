@@ -9,7 +9,7 @@ type Props = {
   doOpenModal: (id: string, {}) => void,
 };
 
-export default function ShareButton(props: Props) {
+export default function ShareButton(props: Props): React.Node {
   const { uri, doOpenModal } = props;
 
   return (

@@ -49,7 +49,7 @@ type Props = {
 };
 
 // class ModalPublishPreview extends React.PureComponent<Props> {
-const ModalPublishPreview = (props: Props) => {
+const ModalPublishPreview = (props: Props): React.Node => {
   const {
     filePath,
     isMarkdownPost,

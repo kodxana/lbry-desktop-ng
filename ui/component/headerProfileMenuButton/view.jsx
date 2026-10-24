@@ -16,7 +16,7 @@ type HeaderMenuButtonProps = {
   openSignOutModal: () => void,
 };
 
-export default function HeaderProfileMenuButton(props: HeaderMenuButtonProps) {
+export default function HeaderProfileMenuButton(props: HeaderMenuButtonProps): React.Node {
   const { activeChannelClaim, email, openSignOutModal, authenticated } = props;
 
   const activeChannelUrl = activeChannelClaim && activeChannelClaim.permanent_url;

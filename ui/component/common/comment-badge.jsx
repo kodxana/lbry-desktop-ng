@@ -17,7 +17,7 @@ type Props = {
   size?: number,
 };
 
-export default function CommentBadge(props: Props) {
+export default function CommentBadge(props: Props): React.Node {
   const { icon, label, size = 20 } = props;
 
   return (

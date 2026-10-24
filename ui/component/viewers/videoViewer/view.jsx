@@ -59,7 +59,7 @@ codesandbox of idealized/clean videojs and react 16+
 https://codesandbox.io/s/71z2lm4ko6
  */
 
-function VideoViewer(props: Props) {
+function VideoViewer(props: Props): React.Node {
   const {
     contentType,
     source,

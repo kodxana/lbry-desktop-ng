@@ -8,7 +8,7 @@ type Props = {
   type: string,
 };
 
-function ClaimPreviewNoContent(props: Props) {
+function ClaimPreviewNoContent(props: Props): React.Node {
   const { isChannel, type } = props;
   return (
     <li

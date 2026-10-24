@@ -12,7 +12,7 @@ type Props = {
 };
 
 class ModalUpgrade extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { downloadUpgrade, skipUpgrade, releaseVersion } = this.props;
 
     return (

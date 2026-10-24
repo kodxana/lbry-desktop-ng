@@ -65,7 +65,7 @@ class DocxViewer extends React.PureComponent<Props, State> {
     this.mounted = false;
   }
 
-  render() {
+  render(): React.Node {
     const { content, error, loading } = this.state;
     const loadingMessage = __('Rendering document.');
     const errorMessage = __("Sorry, looks like we can't load the document.");

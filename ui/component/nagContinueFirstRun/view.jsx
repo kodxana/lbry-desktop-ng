@@ -11,7 +11,7 @@ type Props = {
   syncSetttings: () => void,
 };
 
-export default function NagContinueFirstRun(props: Props) {
+export default function NagContinueFirstRun(props: Props): React.Node {
   const { firstRunStarted, followingAcknowledged } = props;
   const {
     location: { pathname },

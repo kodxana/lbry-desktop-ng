@@ -18,7 +18,7 @@ type Props = {
   incognito: boolean,
 };
 
-function PublishName(props: Props) {
+function PublishName(props: Props): React.Node {
   const { name, uri, isStillEditing, myClaimForUri, prepareEdit, updatePublishForm, activeChannelClaim, incognito } =
     props;
   const [nameError, setNameError] = useState<string | void>(undefined);

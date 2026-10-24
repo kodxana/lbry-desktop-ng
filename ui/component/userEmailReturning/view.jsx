@@ -24,7 +24,7 @@ type Props = {
   isPending: boolean,
 };
 
-function UserEmailReturning(props: Props) {
+function UserEmailReturning(props: Props): React.Node {
   const {
     user,
     errorMessage,

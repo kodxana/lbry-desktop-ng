@@ -25,7 +25,7 @@ type Props = {
   isSearching: boolean,
 };
 
-export default function SearchTopClaim(props: Props) {
+export default function SearchTopClaim(props: Props): React.Node {
   const {
     doResolveUris,
     query = '',

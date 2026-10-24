@@ -3,7 +3,7 @@ import React from 'react';
 import { SITE_NAME, LOGIN_IMG_URL } from 'config';
 import { getThumbnailCdnUrl } from 'util/thumbnail';
 
-function LoginGraphic(props: any) {
+function LoginGraphic(props: any): React.Node {
   const [error, setError] = React.useState(false);
   const [src, setSrc] = React.useState('---');
   const containerRef = React.useRef<any>();

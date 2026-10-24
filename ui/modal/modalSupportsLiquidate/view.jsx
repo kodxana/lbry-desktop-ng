@@ -8,7 +8,7 @@ type Props = {
   uri: string,
 };
 
-export default function ModalSupportsLiquidate(props: Props) {
+export default function ModalSupportsLiquidate(props: Props): React.Node {
   const { closeModal, uri } = props;
 
   return (

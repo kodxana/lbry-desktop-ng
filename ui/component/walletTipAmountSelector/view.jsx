@@ -28,16 +28,15 @@ type Props = {
   customTipAmount?: number,
   exchangeRate?: any,
   fiatConversion?: boolean,
-  tipError: boolean,
-  tipError: string,
+  tipError: string | false | void,
   uri: string,
   onChange: (number) => void,
   setConvertedAmount?: (number) => void,
   setDisableSubmitButton: (boolean) => void,
-  setTipError: (any) => void,
+  setTipError: (string | false) => void,
 };
 
-function WalletTipAmountSelector(props: Props) {
+function WalletTipAmountSelector(props: Props): React.Node {
   const {
     activeTab,
     amount,
@@ -57,7 +56,7 @@ function WalletTipAmountSelector(props: Props) {
   const isMobile = useIsMobile();
   const [useCustomTip, setUseCustomTip] = usePersistedState('comment-support:useCustomTip', true);
   const [hasCardSaved, setHasSavedCard] = usePersistedState('comment-support:hasCardSaved', false);
-  const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState(); // dont persist because it needs to be calc'd per creator
+  const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState<boolean | void>(); // dont persist because it needs to be calc'd per creator
 
   const convertToTwoDecimalsOrMore = (number: number, decimals: number = 2) =>
     Number((Math.round(number * 10 ** decimals) / 10 ** decimals).toFixed(decimals));

@@ -17,7 +17,7 @@ const STICKER_SIDE_LINKS = [
 
 type Props = { claimIsMine: boolean, onSelect: (any) => void };
 
-export default function StickerSelector(props: Props) {
+export default function StickerSelector(props: Props): React.Node {
   const { claimIsMine, onSelect } = props;
 
   function scrollToStickerSection(section: string) {

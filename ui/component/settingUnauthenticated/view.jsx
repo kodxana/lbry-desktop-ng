@@ -17,7 +17,7 @@ type Props = {
   setSearchInLanguage: (boolean) => void,
 };
 
-export default function SettingUnauthenticated(props: Props) {
+export default function SettingUnauthenticated(props: Props): React.Node {
   const { searchInLanguage, setSearchInLanguage } = props;
 
   return (

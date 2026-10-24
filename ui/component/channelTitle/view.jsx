@@ -6,7 +6,7 @@ type Props = {
   title: ?string,
 };
 
-function ChannelTitle(props: Props) {
+function ChannelTitle(props: Props): React.Node {
   const { title, claim } = props;
 
   if (!claim) {

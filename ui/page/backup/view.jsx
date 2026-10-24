@@ -3,7 +3,7 @@ import * as React from 'react';
 import Page from 'component/page';
 import WalletBackup from 'component/walletBackup';
 
-function BackupPage() {
+function BackupPage(): React.Node {
   return (
     <Page>
       <WalletBackup />

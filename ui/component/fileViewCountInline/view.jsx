@@ -12,7 +12,7 @@ type Props = {
   lang: ?string,
 };
 
-export default function FileViewCountInline(props: Props) {
+export default function FileViewCountInline(props: Props): React.Node {
   const { claim, viewCount, lang } = props;
   const {
     location: { pathname },

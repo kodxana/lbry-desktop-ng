@@ -26,7 +26,7 @@ type Props = {
   doCommentReactList: (Array<string>) => Promise<any>,
 };
 
-export default function NotificationsPage(props: Props) {
+export default function NotificationsPage(props: Props): React.Node {
   const {
     notifications,
     notificationsFiltered,

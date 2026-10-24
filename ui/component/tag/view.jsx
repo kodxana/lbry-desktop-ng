@@ -14,7 +14,7 @@ type Props = {
   disabled: boolean,
 };
 
-export default function Tag(props: Props) {
+export default function Tag(props: Props): React.Node {
   const { name, onClick, type = 'link', disabled = false } = props;
   const isMature = MATURE_TAGS.includes(name);
   const clickProps = onClick ? { onClick } : { navigate: `/$/${PAGES.DISCOVER}?t=${encodeURIComponent(name)}` };

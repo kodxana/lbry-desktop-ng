@@ -7,8 +7,8 @@ import Card from 'component/common/card';
 import I18nMessage from 'component/i18nMessage';
 
 type Props = {
-  daemonSettings: {
-    wallet_dir: ?string,
+  daemonSettings?: {
+    wallet_dir?: ?string,
   },
 };
 
@@ -19,6 +19,8 @@ type State = {
 };
 
 class WalletBackup extends React.PureComponent<Props, State> {
+  mounted: boolean | void;
+  backupPending: string | false | void;
   constructor(props: Props) {
     super(props);
 
@@ -50,8 +52,11 @@ class WalletBackup extends React.PureComponent<Props, State> {
     if (this.backupPending) desktop.cancelBackup(this.backupPending);
   }
 
-  componentDidUpdate(previous) {
-    if (this.backupPending && (previous.daemonSettings || {}).wallet_dir !== (this.props.daemonSettings || {}).wallet_dir) {
+  componentDidUpdate(previous: Props) {
+    if (
+      this.backupPending &&
+      (previous.daemonSettings || {}).wallet_dir !== (this.props.daemonSettings || {}).wallet_dir
+    ) {
       desktop.cancelBackup(this.backupPending);
     }
   }
@@ -63,14 +68,17 @@ class WalletBackup extends React.PureComponent<Props, State> {
       this.showErrorMessage(__('No wallet folder was found.'));
       return;
     }
-    this.backupPending = crypto.randomUUID();
+    const requestId = crypto.randomUUID();
+    this.backupPending = requestId;
     this.setState({ pending: true });
     try {
-      const result = await desktop.backupWallet({ id: this.backupPending, directory: lbryumWalletDir });
+      const result = await desktop.backupWallet({ id: requestId, directory: lbryumWalletDir });
       if (!this.mounted || (this.props.daemonSettings || {}).wallet_dir !== lbryumWalletDir) return;
       if (result.ok) this.showSuccessMessage(__('Saved zip archive to %outputPath%', { outputPath: result.path }));
-      else if (result.error === 'archive') this.showErrorMessage(__('The wallet folder could not be added to the zip archive.'));
-      else if (result.error === 'write') this.showErrorMessage(__('There was a problem writing the zip archive to disk.'));
+      else if (result.error === 'archive')
+        this.showErrorMessage(__('The wallet folder could not be added to the zip archive.'));
+      else if (result.error === 'write')
+        this.showErrorMessage(__('There was a problem writing the zip archive to disk.'));
       else this.showErrorMessage(__('The wallet folder could not be determined. Please try again.'));
     } catch (_) {
       if (this.mounted) this.showErrorMessage(__('The wallet folder could not be determined. Please try again.'));
@@ -79,7 +87,7 @@ class WalletBackup extends React.PureComponent<Props, State> {
       if (this.mounted) this.setState({ pending: false });
     }
   }
-  render() {
+  render(): React.Node {
     const { daemonSettings = {} } = this.props;
     const { wallet_dir: lbryumWalletDir } = daemonSettings;
 

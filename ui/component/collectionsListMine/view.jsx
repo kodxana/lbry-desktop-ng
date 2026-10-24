@@ -27,7 +27,7 @@ const PUBLIC = 'Public';
 const COLLECTION_FILTERS = [ALL, PRIVATE, PUBLIC];
 const COLLECTION_SHOW_COUNT = 12;
 
-export default function CollectionsListMine(props: Props) {
+export default function CollectionsListMine(props: Props): React.Node {
   const {
     builtinCollections,
     publishedCollections,

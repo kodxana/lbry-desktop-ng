@@ -9,7 +9,7 @@ type Props = {
   children?: Node,
 };
 
-function FileTitle(props: Props) {
+function FileTitle(props: Props): React.Node {
   const { title, children, className } = props;
 
   return (

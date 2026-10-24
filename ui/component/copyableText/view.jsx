@@ -15,7 +15,7 @@ type Props = {
   enableInputMask?: boolean,
 };
 
-export default function CopyableText(props: Props) {
+export default function CopyableText(props: Props): React.Node {
   const { copyable, doToast, snackMessage, label, primaryButton = false, name, onCopy, enableInputMask } = props;
   const [maskInput, setMaskInput] = React.useState(enableInputMask);
 

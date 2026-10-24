@@ -10,7 +10,7 @@ type Props = {
   hideReleaseVersion?: boolean,
 };
 
-const LastReleaseChanges = (props: Props) => {
+const LastReleaseChanges = (props: Props): React.Node => {
   const { hideReleaseVersion, releaseVersion } = props;
   const [releaseTag, setReleaseTag] = useState(releaseVersion);
   const [releaseChanges, setReleaseChanges] = useState('');
@@ -26,9 +26,7 @@ const LastReleaseChanges = (props: Props) => {
     <p className="help">
       <I18nMessage
         tokens={{
-          release_notes: (
-            <Button button="link" label={__('release notes')} href={releasesUrl} />
-          ),
+          release_notes: <Button button="link" label={__('release notes')} href={releasesUrl} />,
         }}
       >
         Want to know what has changed? See the %release_notes%.

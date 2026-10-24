@@ -21,7 +21,7 @@ type Props = {
   passwordSetError: ?string,
 };
 
-function UserPasswordReset(props: Props) {
+function UserPasswordReset(props: Props): React.Node {
   const { doClearEmailEntry, doToast, doUserFetch } = props;
   const { location, push } = useDesktopHistory();
   const urlParams = new URLSearchParams(location.search);
@@ -29,7 +29,7 @@ function UserPasswordReset(props: Props) {
   const authToken = urlParams.get('auth_token');
   const verificationToken = urlParams.get('verification_token');
   const [password, setPassword] = React.useState('');
-  const [error, setError] = React.useState();
+  const [error, setError] = React.useState<string | void>();
   const [loading, setLoading] = React.useState(false);
 
   function handleSubmit() {

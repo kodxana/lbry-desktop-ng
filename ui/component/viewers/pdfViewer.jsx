@@ -10,7 +10,7 @@ type Props = {
 };
 
 class PdfViewer extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { source } = this.props;
     const src = pathToFileURL(source).href;
     return (

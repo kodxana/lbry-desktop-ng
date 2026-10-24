@@ -30,7 +30,7 @@ type Props = {
   ThumbUploadError: boolean,
 };
 
-function ChannelThumbnail(props: Props) {
+function ChannelThumbnail(props: Props): React.Node {
   const {
     thumbnail: rawThumbnail,
     uri,

@@ -6,7 +6,7 @@ type Props = {
   setClientSetting: (boolean) => void,
   enablePrereleases: boolean,
 };
-function SettingEnablePrereleases(props: Props) {
+function SettingEnablePrereleases(props: Props): React.Node {
   const { setClientSetting, enablePrereleases } = props;
   return (
     <React.Fragment>

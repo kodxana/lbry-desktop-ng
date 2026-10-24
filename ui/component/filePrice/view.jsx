@@ -40,7 +40,7 @@ class FilePrice extends React.PureComponent<Props> {
     if (uri && costInfo === undefined && !fetching && claim) doFetchCostInfoForUri(uri);
   };
 
-  render() {
+  render(): React.Node {
     const {
       costInfo,
       showFullPrice,

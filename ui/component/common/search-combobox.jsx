@@ -14,7 +14,7 @@ type ComboboxProps = {
   className?: string,
 };
 
-function Combobox({ children, onSelect, value, setValue, openOnFocus = false, ...props }: ComboboxProps) {
+function Combobox({ children, onSelect, value, setValue, openOnFocus = false, ...props }: ComboboxProps): React.Node {
   return (
     <Ariakit.ComboboxProvider
       inputValue={value}
@@ -47,15 +47,23 @@ const ComboboxInput = React.forwardRef<any, any>(function ComboboxInput({ select
   );
 });
 
-function ComboboxPopover(props: any) {
+function ComboboxPopover(props: any): React.Node {
   return <Ariakit.ComboboxPopover {...props} portal={false} unmountOnHide sameWidth gutter={8} />;
 }
 
-function ComboboxList(props: any) {
+function ComboboxList(props: any): React.Node {
   return <div {...props} className="search__list" />;
 }
 
-function ComboboxOption({ value, children, ...props }: { value: string, children?: React.Node, className?: string }) {
+function ComboboxOption({
+  value,
+  children,
+  ...props
+}: {
+  value: string,
+  children?: React.Node,
+  className?: string,
+}): React.Node {
   const { onSelect } = React.useContext(SelectionContext);
   return (
     <Ariakit.ComboboxItem

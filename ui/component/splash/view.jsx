@@ -176,7 +176,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const { status, waitingForUnlock, connectionFailed, waitingForProgress } = this.state;
     const { onChooseHub, modal } = this.props;
     const progress = startupProgress(status, waitingForUnlock);

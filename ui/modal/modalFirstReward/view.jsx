@@ -9,7 +9,7 @@ type Props = {
 };
 
 class ModalFirstReward extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { closeModal } = this.props;
 
     return (

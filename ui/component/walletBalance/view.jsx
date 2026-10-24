@@ -35,7 +35,7 @@ type Props = {
 export const WALLET_CONSOLIDATE_UTXOS = 400;
 const LARGE_WALLET_BALANCE = 100;
 
-const WalletBalance = (props: Props) => {
+const WalletBalance = (props: Props): React.Node => {
   const {
     syncStatus,
     balance,

@@ -13,7 +13,7 @@ type Props = {
   doCollectionEdit: (string, any) => void,
 };
 
-function FileWatchLaterLink(props: Props) {
+function FileWatchLaterLink(props: Props): React.Node {
   const { uri, hasClaimInWatchLater, doToast, doCollectionEdit, focusable = true } = props;
   const buttonRef = useRef();
   let isHovering = useHover(buttonRef);

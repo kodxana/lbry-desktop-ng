@@ -70,7 +70,7 @@ class CodeViewer extends React.PureComponent<Props> {
   textarea: ?HTMLTextAreaElement;
   codeMirror: any;
 
-  render() {
+  render(): React.Node {
     const { value } = this.props;
     return (
       <div className="file-render__content" onContextMenu={stopContextMenu}>

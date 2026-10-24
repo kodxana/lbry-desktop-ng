@@ -14,7 +14,7 @@ type Props = {
   onLoad?: () => void,
 };
 
-function OptimizedImage(props: Props) {
+function OptimizedImage(props: Props): React.Node {
   const { objectFit, src, waitLoad, ...imgProps } = props;
   const [optimizedSrc, setOptimizedSrc] = React.useState('');
   const ref = React.useRef<any>();

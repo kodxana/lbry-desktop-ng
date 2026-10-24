@@ -11,7 +11,7 @@ type Props = {
   setHomepage: (string) => void,
 };
 
-function SelectHomepage(props: Props) {
+function SelectHomepage(props: Props): React.Node {
   const { homepage, setHomepage } = props;
 
   function handleSetHomepage(e) {

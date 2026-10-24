@@ -11,7 +11,7 @@ type Props = {
   balance: number,
   resolveUri: (string) => void,
 };
-function RepostPage(props: Props) {
+function RepostPage(props: Props): React.Node {
   const { balance, resolveUri } = props;
 
   const REPOST_FROM = 'from';

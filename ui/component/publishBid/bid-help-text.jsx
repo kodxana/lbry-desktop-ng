@@ -1,4 +1,5 @@
 // @flow
+import type { Node as ReactNode } from 'react';
 import { formatCredits } from 'util/format-credits';
 
 type Props = {
@@ -7,7 +8,7 @@ type Props = {
   amountNeededForTakeover: number,
 };
 
-function BidHelpText(props: Props) {
+function BidHelpText(props: Props): ReactNode {
   const { uri, isResolvingUri, amountNeededForTakeover } = props;
 
   let bidHelpText;

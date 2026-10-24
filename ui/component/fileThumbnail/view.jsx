@@ -20,7 +20,7 @@ type Props = {
   showPercentage: boolean,
 };
 
-function FileThumbnail(props: Props) {
+function FileThumbnail(props: Props): React.Node {
   const {
     claim,
     uri,

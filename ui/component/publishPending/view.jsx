@@ -10,7 +10,7 @@ type Props = {
   checkReflecting: () => void,
 };
 
-const PublishPending = (props: Props) => {
+const PublishPending = (props: Props): React.Node => {
   const { reflectingInfo = {}, checkReflecting } = props;
   const { fileListItem, progress, stalled } = reflectingInfo;
   const sdHash = fileListItem && fileListItem.sd_hash;

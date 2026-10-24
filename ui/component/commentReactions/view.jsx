@@ -26,7 +26,7 @@ type Props = {
   resolve: (string) => void,
 };
 
-export default function CommentReactions(props: Props) {
+export default function CommentReactions(props: Props): React.Node {
   const {
     myReacts,
     othersReacts,

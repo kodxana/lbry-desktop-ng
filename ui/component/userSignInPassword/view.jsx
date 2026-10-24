@@ -16,7 +16,7 @@ type Props = {
   isPending: boolean,
 };
 
-export default function UserSignInPassword(props: Props) {
+export default function UserSignInPassword(props: Props): React.Node {
   const { errorMessage, doUserSignIn, emailToVerify, onHandleEmailOnly, isPending } = props;
   const [password, setPassword] = useState('');
   const [forgotPassword, setForgotPassword] = React.useState(false);

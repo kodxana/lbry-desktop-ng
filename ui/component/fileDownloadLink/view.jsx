@@ -23,7 +23,7 @@ type Props = {
   streamingUrl: ?string,
 };
 
-function FileDownloadLink(props: Props) {
+function FileDownloadLink(props: Props): React.Node {
   const {
     fileInfo,
     downloading,

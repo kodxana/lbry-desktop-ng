@@ -29,7 +29,7 @@ const COLLECTION_FILTERS = [ALL, PRIVATE, PUBLIC];
 const FILTER_TYPE_PARAM = 'type';
 const PAGE_PARAM = 'page';
 
-export default function PlaylistsMine(props: Props) {
+export default function PlaylistsMine(props: Props): React.Node {
   const {
     publishedCollections,
     unpublishedCollections,

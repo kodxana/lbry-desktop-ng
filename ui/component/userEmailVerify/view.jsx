@@ -71,7 +71,7 @@ class UserEmailVerify extends React.PureComponent<Props, State> {
 
   emailVerifyCheckInterval: ?IntervalID;
 
-  render() {
+  render(): React.Node {
     const { email, isReturningUser, resendingEmail } = this.props;
 
     return (

@@ -91,7 +91,7 @@ class DateTime extends React.Component<Props, State> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const { date, timeAgo, show, clock24h } = this.props;
 
     let clockFormat = 'hh:mm A';
@@ -104,7 +104,11 @@ class DateTime extends React.Component<Props, State> {
         return null;
       }
 
-      return <span className="date_time" title={moment(date).format(`MMMM Do, YYYY ${clockFormat}`)}>{DateTime.getTimeAgoStr(date)}</span>;
+      return (
+        <span className="date_time" title={moment(date).format(`MMMM Do, YYYY ${clockFormat}`)}>
+          {DateTime.getTimeAgoStr(date)}
+        </span>
+      );
     }
 
     return (

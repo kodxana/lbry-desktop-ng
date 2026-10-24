@@ -14,7 +14,7 @@ type Props = {
   customSelectAction?: (string) => void,
 };
 
-export default function WunderBar(props: Props) {
+export default function WunderBar(props: Props): React.Node {
   const { doOpenMobileSearch, channelsOnly, noTopSuggestion, noBottomLinks, customSelectAction } = props;
   const isMobile = useIsMobile();
 

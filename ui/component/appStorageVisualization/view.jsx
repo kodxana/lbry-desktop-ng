@@ -14,7 +14,7 @@ type Props = {
   privateBlobSpace: number,
 };
 
-function StorageViz(props: Props) {
+function StorageViz(props: Props): React.Node {
   const { diskSpace, viewHostingLimit, autoHostingLimit, viewBlobSpace, autoBlobSpace, privateBlobSpace } = props;
   React.useEffect(() => {
     desktop.requestDiskSpace();

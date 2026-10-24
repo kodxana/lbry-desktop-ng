@@ -28,7 +28,7 @@ type Props = {
   tileLayout: boolean,
 };
 
-function DiscoverPage(props: Props) {
+function DiscoverPage(props: Props): React.Node {
   const {
     location: { search },
     followedTags,

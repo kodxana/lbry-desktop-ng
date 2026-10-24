@@ -48,7 +48,7 @@ const SIDE_LINKS: Array<SideNavLink> = [
   },
 ];
 
-export default function SettingsSideNavigation() {
+export default function SettingsSideNavigation(): React.Node {
   const sidebarOpen = true;
   const isMediumScreen = useIsMediumScreen();
   const isAbsolute = isMediumScreen;

@@ -36,7 +36,7 @@ type Props = {
   collectionId: string,
 };
 
-export default function FileRenderInitiator(props: Props) {
+export default function FileRenderInitiator(props: Props): React.Node {
   const {
     play,
     isPlaying,

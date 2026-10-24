@@ -3,7 +3,7 @@ import React from 'react';
 import Page from 'component/page';
 import ReportContent from 'component/reportContent';
 
-export default function ReportContentPage(props: any) {
+export default function ReportContentPage(props: any): React.Node {
   return (
     <Page
       noSideNavigation

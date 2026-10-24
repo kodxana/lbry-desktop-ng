@@ -16,7 +16,7 @@ type Props = {
   tileLayout: boolean,
 };
 
-function ChannelsFollowingPage(props: Props) {
+function ChannelsFollowingPage(props: Props): React.Node {
   const { subscribedChannels, tileLayout } = props;
 
   const hasSubsribedChannels = subscribedChannels.length > 0;

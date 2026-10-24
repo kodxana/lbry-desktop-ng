@@ -39,7 +39,7 @@ const UNALLOWED_TAGS = ['lbry-first'];
  We suggest tags based on followed, unfollowed, and passedIn
  */
 
-export default function TagsSearch(props: Props) {
+export default function TagsSearch(props: Props): React.Node {
   const TAG_FOLLOW_MAX = 1000;
   const {
     tagsPassedIn = [],

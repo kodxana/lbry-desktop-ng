@@ -11,7 +11,7 @@ type Props = {
   noShortUrl?: boolean,
 };
 
-function ClaimUri(props: Props) {
+function ClaimUri(props: Props): React.Node {
   const { shortUrl, uri, doToast, inline = false, noShortUrl = false } = props;
 
   return (

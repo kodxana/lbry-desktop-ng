@@ -17,7 +17,7 @@ type Props = {
   handleSyncComplete: (any, boolean) => void,
 };
 
-function SyncPassword(props: Props) {
+function SyncPassword(props: Props): React.Node {
   const { getSync, getSyncIsPending, email, signOut, passwordError, handleSyncComplete } = props;
   const {
     push,

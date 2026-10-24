@@ -10,7 +10,7 @@ type Props = {
   closeModal: () => void,
 };
 
-export default function ModalMobileSearch(props: Props) {
+export default function ModalMobileSearch(props: Props): React.Node {
   const { src, title, closeModal } = props;
 
   return (

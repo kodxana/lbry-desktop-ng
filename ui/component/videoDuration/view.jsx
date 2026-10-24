@@ -6,7 +6,7 @@ type Props = {
   className?: string,
 };
 
-function VideoDuration(props: Props) {
+function VideoDuration(props: Props): React.Node {
   const { claim, className } = props;
 
   const media = claim && claim.value && (claim.value.video || claim.value.audio);

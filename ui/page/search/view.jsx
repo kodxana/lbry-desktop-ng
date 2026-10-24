@@ -19,7 +19,7 @@ type Props = {
   hasReachedMaxResultsLength: boolean,
 };
 
-export default function SearchPage(props: Props) {
+export default function SearchPage(props: Props): React.Node {
   const { urlQuery, searchOptions, search, uris, isSearching, hasReachedMaxResultsLength } = props;
   const { push } = useDesktopHistory();
   const [from, setFrom] = React.useState(0);

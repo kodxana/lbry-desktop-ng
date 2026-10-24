@@ -8,13 +8,14 @@ import SetupLayout from 'component/setupLayout';
 
 type Props = { onReadyToLaunch: () => void };
 
-export default function SdkStartup({ onReadyToLaunch }: Props) {
+export default function SdkStartup({ onReadyToLaunch }: Props): React.Node {
   const [phase, setPhase] = React.useState('loading');
   const [error, setError] = React.useState('');
 
   React.useEffect(() => {
     let active = true;
-    desktop.startupState()
+    desktop
+      .startupState()
       .then((state) => {
         if (active) setPhase(state.settingsOnly ? 'choose' : 'sync');
       })

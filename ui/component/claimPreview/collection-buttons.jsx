@@ -10,7 +10,7 @@ type Props = {
   claim: ?Claim,
 };
 
-function CollectionButtons(props: Props) {
+function CollectionButtons(props: Props): React.Node {
   const { collectionIndex, editCollection, listId, lastCollectionIndex, claim } = props;
   const [confirmDelete, setConfirmDelete] = React.useState(false);
   return (

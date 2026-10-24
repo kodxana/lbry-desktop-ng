@@ -19,7 +19,7 @@ type Props = {
   yOffset?: number,
 };
 
-export default function WaitUntilOnPage(props: Props) {
+export default function WaitUntilOnPage(props: Props): React.Node {
   const { yOffset } = props;
   const ref = React.useRef();
   const [shouldRender, setShouldRender] = React.useState(false);

@@ -11,7 +11,7 @@ type Props = {
   title?: string | Node,
 };
 
-function Tooltip(props: Props) {
+function Tooltip(props: Props): React.Node {
   const { arrow = true, children, disableInteractive = true, enterDelay = 300, title } = props;
 
   return (

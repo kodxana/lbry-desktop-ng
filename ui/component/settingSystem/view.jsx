@@ -60,7 +60,7 @@ type Props = {
   toggle3PAnalytics: (boolean) => void,
 };
 
-export default function SettingSystem(props: Props) {
+export default function SettingSystem(props: Props): React.Node {
   const {
     daemonSettings,
     ffmpegStatus,
@@ -176,8 +176,8 @@ export default function SettingSystem(props: Props) {
                   isolatedTestBuild
                     ? __('Usage reporting is disabled in this community build.')
                     : isAuthenticated
-                    ? __('Internal sharing is required while signed in.')
-                    : __('Internal sharing is required to participate in rewards programs.')
+                      ? __('Internal sharing is required while signed in.')
+                      : __('Internal sharing is required to participate in rewards programs.')
                 }
                 disabled={isolatedTestBuild || (isAuthenticated && daemonSettings.share_usage_data)}
               />

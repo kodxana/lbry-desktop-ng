@@ -18,7 +18,7 @@ type Props = {
   uri: string,
 };
 
-const ClaimCollectionAdd = (props: Props) => {
+const ClaimCollectionAdd = (props: Props): React.Node => {
   const { builtin, published, unpublished, addCollection, claim, closeModal, uri } = props;
   const buttonref: ElementRef<any> = React.useRef();
   const permanentUrl = claim && claim.permanent_url;

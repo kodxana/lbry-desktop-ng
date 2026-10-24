@@ -3,11 +3,13 @@
 import * as ICONS from 'constants/icons';
 import * as React from 'react';
 import ReactModal from 'react-modal';
+import type { Props as ReactModalProps } from 'react-modal';
 import Button from 'component/button';
 import classnames from 'classnames';
 import { useIsMobile } from 'effects/use-screensize';
 
 type ModalProps = {
+  ...ReactModalProps,
   type?: string,
   overlay?: boolean,
   confirmButtonLabel?: string,
@@ -24,7 +26,7 @@ type ModalProps = {
   title?: string | React.Node,
 };
 
-export function Modal(props: ModalProps) {
+export function Modal(props: ModalProps): React.Node {
   const {
     children,
     type = 'alert',
@@ -78,7 +80,7 @@ type State = {
 };
 
 export class ExpandableModal extends React.PureComponent<ModalProps, State> {
-  static defaultProps = {
+  static defaultProps: { confirmButtonLabel: string, expandButtonLabel: string, hideButtonLabel: string } = {
     confirmButtonLabel: __('OK'),
     expandButtonLabel: __('Show More...'),
     hideButtonLabel: __('Show Less'),
@@ -98,7 +100,7 @@ export class ExpandableModal extends React.PureComponent<ModalProps, State> {
     });
   }
 
-  render() {
+  render(): React.Node {
     return (
       <Modal type="custom" {...this.props}>
         {this.props.children}

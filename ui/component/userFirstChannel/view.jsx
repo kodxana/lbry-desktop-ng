@@ -19,7 +19,7 @@ type Props = {
   doToggleInterestedInYoutubeSync: () => void,
 };
 
-function UserFirstChannel(props: Props) {
+function UserFirstChannel(props: Props): React.Node {
   const { createChannel, creatingChannel, claimingReward, user, createChannelError, doToggleInterestedInYoutubeSync } =
     props;
   const { primary_email: primaryEmail } = user;

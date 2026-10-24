@@ -15,7 +15,7 @@ const VALID_HOSTNAME_REGEX = new RegExp(
 );
 const VALID_PORT_REGEX = new RegExp('^([0-9]){1,5}$');
 
-function ServerInputRow(props: Props) {
+function ServerInputRow(props: Props): React.Node {
   const { update } = props;
   const [hostString, setHostString] = useState('');
   const [portString, setPortString] = useState('');
@@ -42,7 +42,7 @@ function ServerInputRow(props: Props) {
           label={__('Host')}
           placeholder={'code.freezepeach.fun'}
           value={hostString}
-          onChange={e => setHostString(e.target.value)}
+          onChange={(e) => setHostString(e.target.value)}
         />
         <span className="form-field__conjuction">:</span>
         <FormField
@@ -50,7 +50,7 @@ function ServerInputRow(props: Props) {
           label={__('Port')}
           placeholder={'50001'}
           value={portString}
-          onChange={e => setPortString(String(e.target.value))}
+          onChange={(e) => setPortString(String(e.target.value))}
         />
       </div>
 

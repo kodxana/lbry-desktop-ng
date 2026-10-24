@@ -21,7 +21,7 @@ type Props = {
   updatePublishForm: ({}) => void,
 };
 
-const PublishReleaseDate = (props: Props) => {
+const PublishReleaseDate = (props: Props): React.Node => {
   const { releaseTime, releaseTimeEdited, updatePublishForm } = props;
   const maxDate = new Date();
   const [date, setDate] = React.useState(releaseTime ? linuxTimestampToDate(releaseTime) : new Date());

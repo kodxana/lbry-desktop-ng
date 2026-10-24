@@ -28,7 +28,7 @@ const TWENTY_PERCENT = 0.2;
 const TEN_PERCENT = 0.1;
 const MINIMUM_VIEW_SETTING = '0.01';
 
-function SettingViewHosting(props: Props) {
+function SettingViewHosting(props: Props): React.Node {
   const {
     diskSpace,
     viewHostingLimit,

@@ -22,7 +22,7 @@ class ModalPublishSuccess extends React.PureComponent<Props> {
     const { clearPublish } = this.props;
     clearPublish();
   }
-  render() {
+  render(): React.Node {
     const { closeModal, clearPublish, navigate, uri, isEdit, filePath, lbryFirstError } = this.props;
     //   $FlowFixMe
     let contentLabel;

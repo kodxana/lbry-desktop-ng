@@ -14,7 +14,7 @@ type Props = {
   isSaved: boolean,
 };
 
-export default function CollectionAddButton(props: Props) {
+export default function CollectionAddButton(props: Props): React.Node {
   const { doOpenModal, uri, fileAction, type = 'playlist', claim, isSaved } = props;
 
   // $FlowFixMe

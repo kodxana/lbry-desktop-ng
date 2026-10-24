@@ -69,7 +69,7 @@ type Props = {
 
 const LENGTH_TO_COLLAPSE = 300;
 
-function CommentView(props: Props) {
+function CommentView(props: Props): React.Node {
   const {
     comment,
     myChannelIds,

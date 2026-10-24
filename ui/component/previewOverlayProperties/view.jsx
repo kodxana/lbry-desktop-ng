@@ -22,7 +22,7 @@ type Props = {
   editedCollection: Collection,
 };
 
-export default function PreviewOverlayProperties(props: Props) {
+export default function PreviewOverlayProperties(props: Props): React.Node {
   const {
     uri,
     downloaded,

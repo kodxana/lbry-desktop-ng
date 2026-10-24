@@ -15,7 +15,7 @@ type Props = {
   collectionPending: Collection,
 };
 
-function CollectionSelectItem(props: Props) {
+function CollectionSelectItem(props: Props): React.Node {
   const { collection, hasClaim, category, editCollection, uri, collectionPending } = props;
   const { name, id } = collection;
   const handleChange = (e) => {

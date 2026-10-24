@@ -54,7 +54,7 @@ class Spinner extends PureComponent<Props, State> {
 
   delayedTimeout: ?TimeoutID;
 
-  render() {
+  render(): React.Node {
     const { dark, light, theme, type, text } = this.props;
     const { show } = this.state;
 

@@ -115,7 +115,7 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const { closeModal } = this.props;
 
     const { passwordMismatch, understandError, failMessage } = this.state;

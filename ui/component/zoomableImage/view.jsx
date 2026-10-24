@@ -6,7 +6,7 @@ type Props = {
   openModal: (string, {}) => void,
 };
 
-function ZoomableImage(props: Props) {
+function ZoomableImage(props: Props): React.Node {
   const { openModal, ...imgProps } = props;
 
   const onClick = () => {

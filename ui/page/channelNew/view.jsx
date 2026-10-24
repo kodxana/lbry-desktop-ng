@@ -12,7 +12,7 @@ type Props = {
   isAuthenticated: boolean,
 };
 
-function ChannelNew(props: Props) {
+function ChannelNew(props: Props): React.Node {
   const { balance, claimConfirmEmailReward, isAuthenticated } = props;
   const { push, location } = useDesktopHistory();
   const urlSearchParams = new URLSearchParams(location.search);

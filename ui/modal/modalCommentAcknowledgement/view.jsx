@@ -8,7 +8,7 @@ type Props = {
 };
 
 class ModalCommentAcknowledgement extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { closeModal, onCommentAcknowledge } = this.props;
 
     function onAbortedOrConfirmed() {

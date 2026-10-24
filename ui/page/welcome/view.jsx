@@ -38,7 +38,7 @@ type Props = {
   // -- perform ---
   updateWelcomeVersion: () => void,
 };
-export default function Welcome(props: Props) {
+export default function Welcome(props: Props): React.Node {
   const { updateWelcomeVersion } = props;
   // const { save_blobs: saveBlobs } = daemonSettings || {};
   const [welcomePage, setWelcomePage] = React.useState(SPLASH_PAGE);

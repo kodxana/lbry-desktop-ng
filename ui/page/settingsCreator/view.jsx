@@ -38,7 +38,7 @@ type Props = {
   doToast: ({ message: string }) => void,
 };
 
-export default function SettingsCreatorPage(props: Props) {
+export default function SettingsCreatorPage(props: Props): React.Node {
   const {
     activeChannelClaim,
     settingsByChannelId,

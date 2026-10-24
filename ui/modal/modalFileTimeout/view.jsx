@@ -9,7 +9,7 @@ type Props = {
 };
 
 class ModalFileTimeout extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const {
       uri,
       metadata: { title },

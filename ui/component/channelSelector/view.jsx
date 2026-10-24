@@ -51,7 +51,7 @@ function IncognitoSelector(props: IncognitoSelectorProps) {
   );
 }
 
-function ChannelSelector(props: Props) {
+function ChannelSelector(props: Props): React.Node {
   const { channels, activeChannelClaim, doSetActiveChannel, hideAnon = false, incognito, doSetIncognito } = props;
   const {
     push,

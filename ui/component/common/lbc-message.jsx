@@ -7,7 +7,7 @@ type Props = {
   children: string,
 };
 
-export default function LbcMessage(props: Props) {
+export default function LbcMessage(props: Props): React.Node {
   let amount;
   const tokenizedMessage = props.children.replace(
     /(\d?\.?\d?-?\d?\.?-?\d+?)\s(LBC|LBRY Credits?)/g,

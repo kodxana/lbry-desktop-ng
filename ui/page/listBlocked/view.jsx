@@ -37,7 +37,7 @@ type Props = {
   myChannelClaimIds: ?Array<string>,
 };
 
-function ListBlocked(props: Props) {
+function ListBlocked(props: Props): React.Node {
   const {
     mutedUris,
     personalBlockList,

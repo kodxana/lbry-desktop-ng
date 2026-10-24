@@ -13,7 +13,7 @@ type Props = {
   txos: Array<Txo>,
 };
 
-function TransactionListTable(props: Props) {
+function TransactionListTable(props: Props): React.Node {
   const { emptyMessage, rewards, loading, txos } = props;
   const REVOCABLE_TYPES = ['channel', 'stream', 'repost', 'support', 'claim', 'collection'];
   function revokeClaim(tx: any, cb: (string) => void) {

@@ -16,7 +16,7 @@ type Props = {
   passwordSetError: ?string,
 };
 
-export default function SettingAccountPassword(props: Props) {
+export default function SettingAccountPassword(props: Props): React.Node {
   const { user, doToast, doUserPasswordSet, passwordSetSuccess, passwordSetError, doClearPasswordEntry } = props;
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');

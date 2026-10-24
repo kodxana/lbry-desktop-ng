@@ -13,7 +13,7 @@ type Props = {
 };
 
 class FirstRunEmailCollection extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { completeFirstRun, email, user, emailCollectionAcknowledged, acknowledgeEmail } = this.props;
 
     // this shouldn't happen

@@ -10,7 +10,7 @@ type Props = {
   updatePublishForm: ({}) => void,
 };
 
-function PublishPrice(props: Props) {
+function PublishPrice(props: Props): React.Node {
   const { contentIsFree, fee, updatePublishForm, disabled } = props;
 
   return (

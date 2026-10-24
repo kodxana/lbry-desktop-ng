@@ -19,6 +19,24 @@ import type { FormPrice } from 'component/common/form-components/form-field-pric
 import FormRow from 'component/common/form-components/form-row';
 import Form from 'component/common/form-components/form';
 import type { EditorPosition, EditorChange, EditorBeforeChange, MarkdownCodeMirror } from 'types/markdown-editor';
+import WalletBackup from 'component/walletBackup/view';
+import { Modal, ExpandableModal } from 'modal/modal';
+
+export const backupWithoutSettings: React.Node = <WalletBackup />;
+export const backupBeforeStartup: React.Node = <WalletBackup daemonSettings={{}} />;
+export const backupWithDirectory: React.Node = <WalletBackup daemonSettings={{ wallet_dir: 'fixture-wallet' }} />;
+export function backupLifecycle(backup: WalletBackup): void {
+  backup.mounted = undefined;
+  backup.mounted = true;
+  backup.backupPending = undefined;
+  backup.backupPending = 'fixture-request';
+  backup.backupPending = false;
+  backup.backupWalletDir(null);
+  backup.backupWalletDir(undefined);
+  backup.backupWalletDir('fixture-wallet');
+}
+export const accessibleModal: React.Node = <Modal isOpen contentLabel="Backup" ariaHideApp={false} />;
+export const expandableModal: React.Node = <ExpandableModal isOpen extraContent={<p>Details</p>} />;
 
 export const price: FormPrice = { amount: 0.00000001, currency: 'LBC' };
 export const position: EditorPosition = { line: 0, ch: 1 };

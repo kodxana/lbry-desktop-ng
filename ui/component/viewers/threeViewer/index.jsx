@@ -249,7 +249,7 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     updateScene();
   }
 
-  render() {
+  render(): React.Node {
     const { error, isReady, isLoading } = this.state;
     return (
       <div className="file-render__viewer file-render__viewer--three">

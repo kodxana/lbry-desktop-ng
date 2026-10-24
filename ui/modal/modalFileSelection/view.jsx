@@ -23,7 +23,7 @@ const PUBLISH_URL = `/$/${PAGES.UPLOAD}`;
 
 const ModalFileSelection = (props: Props) => {
   const { history, files, hideModal, updatePublishForm } = props;
-  const [selectedFile, setSelectedFile] = React.useState(null);
+  const [selectedFile, setSelectedFile] = React.useState<?File>(null);
 
   const navigateToPublish = React.useCallback(() => {
     // Navigate only if location is not publish area:
@@ -49,7 +49,6 @@ const ModalFileSelection = (props: Props) => {
   }
 
   const handleFileChange = (file?: File) => {
-    // $FlowFixMe
     setSelectedFile(file);
   };
 

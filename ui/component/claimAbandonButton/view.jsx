@@ -11,7 +11,7 @@ type Props = {
   iconSize: number,
 };
 
-export default function ClaimAbandonButton(props: Props) {
+export default function ClaimAbandonButton(props: Props): React.Node {
   const { doOpenModal, claim, abandonActionCallback } = props;
   const { value_type } = claim || {};
   let buttonLabel;

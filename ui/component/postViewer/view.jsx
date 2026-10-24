@@ -30,7 +30,7 @@ type Props = {
   doOpenModal: (id: string, {}) => void,
 };
 
-function PostViewer(props: Props) {
+function PostViewer(props: Props): React.Node {
   const { uri, claim, claimIsMine, doOpenModal } = props;
   const [expand, setExpand] = React.useState(EXPAND.NONE);
 

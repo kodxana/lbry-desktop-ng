@@ -43,7 +43,7 @@ type Props = {
   className: ?string,
 };
 
-export default function BlockList(props: Props) {
+export default function BlockList(props: Props): React.Node {
   const { uris: list, help, titleEmptyList, subtitleEmptyList, getActionButtons, className } = props;
 
   // Keep a local list to allow for undoing actions in this component

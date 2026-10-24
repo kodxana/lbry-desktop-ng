@@ -35,7 +35,7 @@ type Props = {
   empty?: string,
 };
 
-function ChannelContent(props: Props) {
+function ChannelContent(props: Props): React.Node {
   const {
     uri,
     fetching,

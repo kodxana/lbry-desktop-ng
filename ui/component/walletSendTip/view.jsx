@@ -40,7 +40,7 @@ type Props = {
   doSendTip: (SupportParams, boolean) => void,
 };
 
-function WalletSendTip(props: Props) {
+function WalletSendTip(props: Props): React.Node {
   const {
     activeChannelClaim,
     balance,
@@ -61,9 +61,9 @@ function WalletSendTip(props: Props) {
 
   const [tipAmount, setTipAmount] = usePersistedState('comment-support:customTip', 1.0);
   const [isOnConfirmationPage, setConfirmationPage] = React.useState(false);
-  const [tipError, setTipError] = React.useState();
+  const [tipError, setTipError] = React.useState<string | false | void>();
   const [activeTab, setActiveTab] = usePersistedState('comment-tip:tab', TAB_BOOST);
-  const [disableSubmitButton, setDisableSubmitButton] = React.useState();
+  const [disableSubmitButton, setDisableSubmitButton] = React.useState<boolean | void>();
 
   /** CONSTS **/
 

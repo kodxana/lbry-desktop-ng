@@ -23,7 +23,7 @@ type Props = {
   isAbandoning: boolean,
 };
 
-function ModalRemoveFile(props: Props) {
+function ModalRemoveFile(props: Props): React.Node {
   const { uri, claimIsMine, doResolveUri, closeModal, deleteFile, doGoBack = true, title, claim, isAbandoning } = props;
   const [deleteChecked, setDeleteChecked] = usePersistedState('modal-remove-file:delete', true);
   const [abandonChecked, setAbandonChecked] = usePersistedState('modal-remove-file:abandon', true);

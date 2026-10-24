@@ -10,7 +10,7 @@ type Props = {
   page: string,
 };
 
-export default function HeaderMenuLink(props: Props) {
+export default function HeaderMenuLink(props: Props): React.Node {
   const { icon, name, page } = props;
 
   return (

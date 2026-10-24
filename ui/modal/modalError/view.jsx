@@ -23,7 +23,7 @@ class ModalError extends React.PureComponent<Props> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const { closeModal, error } = this.props;
 
     const errorObj = typeof error === 'string' ? { message: error } : error;

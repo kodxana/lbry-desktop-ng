@@ -30,7 +30,7 @@ type Props = {
   readNotification: () => void,
 };
 
-export default function Notification(props: Props) {
+export default function Notification(props: Props): React.Node {
   const { menuButton = false, notification, readNotification, deleteNotification } = props;
 
   const { notification_rule, notification_parameters, is_read } = notification;

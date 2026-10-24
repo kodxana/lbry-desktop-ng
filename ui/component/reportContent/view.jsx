@@ -67,7 +67,7 @@ type Props = {
   doReportContent: (string, string) => void,
 };
 
-export default function ReportContent(props: Props) {
+export default function ReportContent(props: Props): React.Node {
   const { isReporting, error, activeChannelClaim, incognito, claimId, claim, doClaimSearch, doReportContent } = props;
 
   const [input, setInput] = React.useState({ ...DEFAULT_INPUT_DATA });

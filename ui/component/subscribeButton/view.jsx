@@ -25,7 +25,7 @@ type Props = {
   uri: string,
 };
 
-export default function SubscribeButton(props: Props) {
+export default function SubscribeButton(props: Props): React.Node {
   const {
     permanentUrl,
     doChannelSubscribe,
