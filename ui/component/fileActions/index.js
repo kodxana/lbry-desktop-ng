@@ -26,7 +26,7 @@ const select = (state, props) => {
 
 const perform = (dispatch) => ({
   openModal: (modal, props) => dispatch(doOpenModal(modal, props)),
-  prepareEdit: (publishData, uri, fileInfo) => {
+  prepareEdit: (publishData, uri) => {
     if (publishData.signing_channel) {
       dispatch(doSetIncognito(false));
       dispatch(doSetActiveChannel(publishData.signing_channel.claim_id));
@@ -34,7 +34,7 @@ const perform = (dispatch) => ({
       dispatch(doSetIncognito(true));
     }
 
-    dispatch(doPrepareEdit(publishData, uri, fileInfo));
+    dispatch(doPrepareEdit(publishData, uri));
   },
   clearPlayingUri: () => dispatch(doSetPlayingUri({ uri: null })),
   doToast: (options) => dispatch(doToast(options)),

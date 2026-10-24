@@ -24,7 +24,6 @@ class ModalPublishSuccess extends React.PureComponent<Props> {
   }
   render(): React.Node {
     const { closeModal, clearPublish, navigate, uri, isEdit, filePath, lbryFirstError } = this.props;
-    //   $FlowFixMe
     let contentLabel;
     if (isEdit) {
       contentLabel = __('Update published');

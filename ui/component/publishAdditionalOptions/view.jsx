@@ -24,7 +24,7 @@ type Props = {
   otherLicenseDescription: ?string,
   licenseUrl: ?string,
   disabled: boolean,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   useLBRYUploader: boolean,
   needsYTAuth: boolean,
   fetchAccessToken: () => void,

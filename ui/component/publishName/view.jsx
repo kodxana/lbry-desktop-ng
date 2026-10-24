@@ -13,7 +13,7 @@ type Props = {
   myClaimForUri: ?StreamClaim,
   amountNeededForTakeover: number,
   prepareEdit: (Claim, string) => void,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   activeChannelClaim: ?ChannelClaim,
   incognito: boolean,
 };
@@ -35,7 +35,7 @@ function PublishName(props: Props): React.Node {
     }
   }
 
-  function handleNameChange(event) {
+  function handleNameChange(event: { target: { value: string, ... }, ... }): void {
     updatePublishForm({ name: event.target.value });
   }
 

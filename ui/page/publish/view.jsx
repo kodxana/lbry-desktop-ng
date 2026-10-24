@@ -16,7 +16,6 @@ function PublishPage(props: Props): React.Node {
   function scrollToTop() {
     const mainContent = document.querySelector('main');
     if (mainContent) {
-      // $FlowFixMe
       mainContent.scrollTo({
         top: 0,
         behavior: 'smooth',

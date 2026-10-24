@@ -5,10 +5,10 @@ import { DOMAIN } from 'config';
 
 type Props = {
   file: FileWithPath,
-  upload: (FileWithPath, (string) => void) => void,
-  cb: (string) => void,
+  upload: (FileWithPath, ?(string) => void) => void,
+  cb?: (string) => void,
   closeModal: () => void,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
 class ModalConfirmThumbnailUpload extends React.PureComponent<Props> {

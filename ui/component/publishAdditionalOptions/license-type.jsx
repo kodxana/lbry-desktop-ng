@@ -7,28 +7,21 @@ type Props = {
   licenseType: ?string,
   licenseUrl: ?string,
   otherLicenseDescription: ?string,
-  handleLicenseChange: (string, string) => void,
-  handleLicenseDescriptionChange: (SyntheticInputEvent<*>) => void,
-  handleLicenseUrlChange: (SyntheticInputEvent<*>) => void,
+  handleLicenseChange: (string, ?string) => void,
+  handleLicenseDescriptionChange: ({ target: { value: string, ... }, ... }) => void,
+  handleLicenseUrlChange: ({ target: { value: string, ... }, ... }) => void,
 };
 
 class LicenseType extends React.PureComponent<Props> {
-  constructor() {
-    super();
-
-    (this: any).handleLicenseOnChange = this.handleLicenseOnChange.bind(this);
-  }
-
-  handleLicenseOnChange(event: SyntheticInputEvent<*>) {
+  handleLicenseOnChange = (event: { target: HTMLSelectElement, ... }): void => {
     const { handleLicenseChange } = this.props;
-    // $FlowFixMe
     const { options, selectedIndex } = event.target;
     const selectedOption = options[selectedIndex];
     const licenseType = selectedOption.value;
     const licenseUrl = selectedOption.getAttribute('data-url');
 
     handleLicenseChange(licenseType, licenseUrl);
-  }
+  };
 
   render(): React.Node {
     const { licenseType, otherLicenseDescription, licenseUrl, handleLicenseDescriptionChange, handleLicenseUrlChange } =

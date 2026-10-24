@@ -20,7 +20,7 @@ import {
   makeSelectIsResolvingCollectionForId,
 } from 'redux/selectors/collections';
 import { doResolveUri } from 'redux/actions/claims';
-import { doClearPublish, doPrepareEdit } from 'redux/actions/publish';
+import { doClearPublish, doUpdatePublishForm } from 'redux/actions/publish';
 import { doFetchItemsInCollection } from 'redux/actions/collections';
 import { normalizeURI } from 'util/lbryURI';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
@@ -93,7 +93,7 @@ const perform = (dispatch) => ({
   resolveUri: (uri) => dispatch(doResolveUri(uri)),
   beginPublish: (name) => {
     dispatch(doClearPublish());
-    dispatch(doPrepareEdit({ name }));
+    dispatch(doUpdatePublishForm({ name }));
     dispatch(push(`/$/${PAGES.UPLOAD}`));
   },
   fetchCollectionItems: (claimId) => dispatch(doFetchItemsInCollection({ collectionId: claimId })),

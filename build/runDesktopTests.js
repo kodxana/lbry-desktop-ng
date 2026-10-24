@@ -11,6 +11,8 @@ for (const file of [
   'testClaimTypes.js',
   'testApiTypes.js',
   'testReduxTypes.js',
+  'testPublishTypes.js',
+  'testPublishing.js',
   'testRpcContracts.js',
   'testSyncContracts.js',
   'testApiActions.js',

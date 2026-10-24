@@ -24,13 +24,13 @@ type Props = {
   fileMimeType: ?string,
   isStillEditing: boolean,
   balance: number,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   disabled: boolean,
   publishing: boolean,
   showToast: (string) => void,
   inProgress: boolean,
   clearPublish: () => void,
-  ffmpegStatus: any,
+  ffmpegStatus?: { available?: boolean, ... },
   optimize: boolean,
   size: number,
   duration: number,
@@ -139,18 +139,18 @@ function PublishFile(props: Props): React.Node {
   }, [filePath]);
 
   useEffect(() => {
-    const isOptimizeAvail = currentFile && currentFile !== '' && isVid && ffmpegAvail;
+    const isOptimizeAvail = Boolean(currentFile && isVid && ffmpegAvail);
     const finalOptimizeState = isOptimizeAvail && userOptimize;
 
     setOptimizeAvail(isOptimizeAvail);
     updatePublishForm({ optimize: finalOptimizeState });
   }, [currentFile, filePath, isVid, ffmpegAvail, userOptimize, updatePublishForm]);
 
-  function updateFileInfo(duration, size, isvid) {
+  function updateFileInfo(duration: number, size: number, isvid: boolean): void {
     updatePublishForm({ fileDur: duration, fileSize: size, fileVid: isvid });
   }
 
-  function getBitrate(size, duration) {
+  function getBitrate(size: number, duration: number): number {
     const s = Number(size);
     const d = Number(duration);
     if (s && d) {
@@ -160,7 +160,7 @@ function PublishFile(props: Props): React.Node {
     }
   }
 
-  function getTimeForMB(s) {
+  function getTimeForMB(s: number): number {
     if (s < MINUTES_THRESHOLD) {
       return Math.floor(secondsToProcess);
     } else if (s >= MINUTES_THRESHOLD && s < HOURS_THRESHOLD) {
@@ -170,7 +170,7 @@ function PublishFile(props: Props): React.Node {
     }
   }
 
-  function getUnitsForMB(s) {
+  function getUnitsForMB(s: number): string {
     if (s < MINUTES_THRESHOLD) {
       if (secondsToProcess > 1) return __('seconds');
       return __('second');
@@ -224,29 +224,29 @@ function PublishFile(props: Props): React.Node {
     }
   }
 
-  function parseName(newName) {
+  function parseName(newName: string): string {
     let INVALID_URI_CHARS = new RegExp(regexInvalidURI, 'gu');
     return newName.replace(INVALID_URI_CHARS, '-');
   }
 
-  function handleTitleChange(event) {
+  function handleTitleChange(event: { target: { value: string, ... }, ... }): void {
     const title = event.target.value;
     // Update title
     updatePublishForm({ title });
   }
 
-  function handleFileReaderLoaded(event: ProgressEvent) {
+  function handleFileReaderLoaded(event: Event): void {
     // See: https://github.com/facebook/flow/issues/3470
     if (event.target instanceof FileReader) {
       const text = event.target.result;
-      updatePublishForm({ fileText: text });
-      setPublishMode(PUBLISH_MODES.POST);
+      if (typeof text === 'string') {
+        updatePublishForm({ fileText: text });
+        setPublishMode(PUBLISH_MODES.POST);
+      }
     }
   }
 
-  function processSelectedFile(fileData: FileData, clearName = true) {
-    window.URL = window.URL || window.webkitURL;
-
+  function processSelectedFile(fileData: FileData, clearName: boolean = true): void {
     // select file, start to select a new one, then cancel
     if (!fileData || fileData.error) {
       if (isStillEditing || !clearName) {
@@ -262,8 +262,8 @@ function PublishFile(props: Props): React.Node {
     // Check to see if it's a video and if mp4
     const contentType = fileData.mimeType && fileData.mimeType.split('/'); // get this from electron side
     const duration = fileData.duration;
-    const size = fileData.size;
-    const isVideo = contentType && contentType[0] === 'video';
+    const size = fileData.size || 0;
+    const isVideo = Boolean(contentType && contentType[0] === 'video');
     const isMp4 = contentType && contentType[1] === 'mp4';
 
     let isTextPost = false;
@@ -274,7 +274,7 @@ function PublishFile(props: Props): React.Node {
     } else if (path.parse(fileData.path).ext) {
       // If user's machine is missing a valid content type registration
       // for markdown content: text/markdown, file extension will be used instead
-      const extension = path.parse(fileData.path).ext;
+      const extension = path.parse(fileData.path).ext.slice(1).toLowerCase();
       isTextPost = MARKDOWN_FILE_EXTENSIONS.includes(extension);
     }
 

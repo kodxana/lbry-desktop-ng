@@ -11,10 +11,12 @@ type Props = {
 };
 
 const PublishPending = (props: Props): React.Node => {
-  const { reflectingInfo = {}, checkReflecting } = props;
-  const { fileListItem, progress, stalled } = reflectingInfo;
+  const { reflectingInfo, checkReflecting } = props;
+  const fileListItem = reflectingInfo?.fileListItem;
+  const progress = reflectingInfo?.progress;
+  const stalled = reflectingInfo?.stalled;
   const sdHash = fileListItem && fileListItem.sd_hash;
-  const reflecting = Object.keys(reflectingInfo).length;
+  const reflecting = reflectingInfo && Object.keys(reflectingInfo).length;
   if (stalled) {
     return (
       <Button
