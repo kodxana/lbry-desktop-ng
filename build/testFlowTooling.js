@@ -57,22 +57,12 @@ assert(invalid.errors.some((error) => error.error_codes.includes('incompatible-t
 write('ui/view.jsx', '// @flow\nconst broken = ;\n');
 assert.equal(check().passed, false, 'Invalid source syntax must fail the check');
 
-// Exercise the public definition CLI offline; hand-written definitions must survive regeneration.
-const definitions = (...args) => run(process.execPath, [require.resolve('flow-typed/dist/cli.js'), ...args]);
-write('node_modules/fixture-module/package.json', JSON.stringify({ name: 'fixture-module', version: '1.0.0' }));
-write('node_modules/fixture-module/index.js', 'module.exports = function (value) { return String(value); };\n');
-const created = definitions('create-stub', 'fixture-module');
-assert.equal(created.status, 0, created.stdout + created.stderr);
-const stub = path.join(cwd, 'flow-typed/npm/fixture-module_vx.x.x.js');
-assert.match(fs.readFileSync(stub, 'utf8'), /declare module 'fixture-module'/);
+// Maintained declarations are read directly; no definition-download CLI is needed.
 const custom = "declare module 'fixture-module' { declare module.exports: (value: number) => string; }\n";
-fs.writeFileSync(stub, custom);
-const repeated = definitions('create-stub', 'fixture-module');
-assert.equal(repeated.status, 1, repeated.stdout + repeated.stderr);
-assert.match(repeated.stdout + repeated.stderr, /already exists and has been modified/);
-assert.equal(fs.readFileSync(stub, 'utf8'), custom);
+write('flow-typed/npm/fixture-module.js', custom);
 write('ui/view.jsx', "// @flow\nimport format from 'fixture-module';\nexport const result: string = format(50);\n");
 assert.deepEqual(check().errors, [], 'The checked-in custom definition must be used');
 write('ui/view.jsx', "// @flow\nimport format from 'fixture-module';\nexport const result: string = format('50');\n");
 assert.equal(check().passed, false, 'Incorrect calls through a custom definition must fail');
-console.log('PASS Flow CLI types, errors, aliases, ignored outputs and definition preservation');
+assert.equal(fs.readFileSync(path.join(cwd, 'flow-typed/npm/fixture-module.js'), 'utf8'), custom);
+console.log('PASS Flow types, errors, aliases, ignored outputs and maintained definitions');

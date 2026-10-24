@@ -1,6 +1,6 @@
 # Electron runtime migration
 
-The source build moves from Electron 34.5.8 to 44.7.0, a supported stable release
+The source build moves from Electron 34.5.8 to 44.9.3, a supported stable release
 as of October 13, 2026. Embedded Node moves from 20 to 24.21.0 and Chromium to
 152.0.7977.130. The published 0.54.0-rc.3 installers remain on Electron 17.2.0.
 The source renderer now uses a sandboxed preload; other application dependencies
@@ -9,8 +9,8 @@ The SDK binary, wallet format, React, updater and application version are unchan
 
 ## Breaking changes reviewed
 
-References: [Electron 44.7.0 runtime versions](https://releases.electronjs.org/release/v44.7.0)
-and [the pinned release's migration notes](https://github.com/electron/electron/blob/v44.7.0/docs/breaking-changes.md).
+References: [Electron 44.9.3 runtime versions](https://releases.electronjs.org/release/v44.9.3)
+and [the pinned release's migration notes](https://github.com/electron/electron/blob/v44.9.3/docs/breaking-changes.md).
 
 - Electron 44 removes renderer access to `clipboard` and makes main-process
   clipboard reads/writes asynchronous. Claim links and URI buttons now use

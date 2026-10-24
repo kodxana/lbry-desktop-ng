@@ -19,7 +19,7 @@ Staged commands are split at 4,000 characters so large migrations also work
 through Yarn's Windows command shims. The hook test commits an 80-file batch
 whose full paths exceed the Windows shell's 8,191-character limit.
 
-Hook installation is explicit. Yarn 3 does not use npm's `prepare` lifecycle,
+Hook installation is explicit. Yarn does not use npm's `prepare` lifecycle,
 and CI installs with lifecycle scripts disabled. Run `yarn hooks:install` after
 installing dependencies in a new checkout, or when migrating from Husky 3.
 It updates this checkout's `core.hooksPath` to `.husky/_`; the old generated
@@ -60,7 +60,7 @@ remain visible and are not blanket-suppressed.
 
 ## Flow is separate
 
-Flow 0.337.0 and flow-typed 4.1.1 replace the inherited tools. `yarn flow` runs
+Flow 0.337.0 replaces the inherited checker. `yarn flow` runs
 the foreground `full-check` command with two workers and exits nonzero when it
 finds errors. In this Flow release, `check` starts a server; on Windows that
 server can keep a captured output pipe open after reporting results. The
@@ -73,19 +73,19 @@ options, and pins the checker version. `config` resolves to the desktop's
 the retired package's `any` stub. Forty-seven declarations for retired packages
 are removed. Definitions for still-used packages are retained for migration.
 
-`yarn flow-defs` installs available definitions without generating untyped stubs,
-overwriting hand-written definitions or restarting Flow. Its cache stays in
-`.yarn/flow-typed`. Review generated definitions before committing them: a
-package/version match does not guarantee compatibility with the current checker.
-The installer was also exercised against the actual package manifest with output
-redirected to a disposable directory.
+Dependency definitions are maintained in `flow-typed/` and reviewed with their
+package upgrades. The obsolete `flow-typed` download CLI and `yarn flow-defs`
+command have been removed: their Git/GitHub client dependencies have unresolved
+security advisories, and the completed migration uses checked-in definitions.
+When changing a library API, edit its declaration and add valid/invalid examples
+to `build/testDependencyTypes.js`. Do not replace a maintained contract with an
+untyped generated stub.
 
 `node build/testFlowTooling.js` runs offline in the desktop regression suite. It
 checks the real configuration with JSX, global storage types, desktop aliases,
 optional chaining and ignored generated files. Incorrect types, invalid syntax
-and incorrect calls through a custom definition must fail. It also exercises
-flow-typed's public CLI and verifies that regenerating a modified definition is
-rejected without changing the file.
+and incorrect calls through a maintained definition must fail. The checker must
+leave declaration files unchanged.
 
 `node build/testFlowContracts.js` adds a required check for all 31 first-party
 global definition files. It loads the real declarations and action constants in

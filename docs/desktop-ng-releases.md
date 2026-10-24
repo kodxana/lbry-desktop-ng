@@ -12,7 +12,7 @@ same CI run. See [Linux desktop builds and validation](linux-desktop.md).
 
 ## Build locally
 
-Use Node 24.21.0 and the checked-in Yarn 3.2.0. Follow the dependency and SDK
+Use Node 24.21.0 and the checked-in Yarn 4.18.1. Follow the dependency and SDK
 acquisition steps in [the test build guide](isolated-desktop-test.md), then run:
 
 ```powershell
@@ -28,7 +28,7 @@ The current build version is `0.54.0-rc.3`. Expected release files are:
 - `latest.yml`
 
 These builds are unsigned. A community signing identity has not been
-configured. Source builds use the supported Electron 44.7.0 release;
+configured. Source builds use the supported Electron 44.9.3 release;
 the published RC3 still uses Electron 17.2.0. See the
 [runtime migration](electron-runtime.md) for scope and installed-upgrade coverage.
 Current Windows source builds require Windows 10 or later. The installer rejects

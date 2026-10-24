@@ -34,13 +34,13 @@ jobs:
           node-version-file: .node-version
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
-        run: node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
+        run: node .yarn/releases/yarn-4.18.1.cjs install --immutable --mode=skip-build --check-resolutions --refresh-lockfile
       - name: Install Electron
-        run: node .yarn/releases/yarn-3.2.0.cjs exec install-electron
+        run: node .yarn/releases/yarn-4.18.1.cjs exec install-electron
       - name: Lint application and test sources
-        run: node .yarn/releases/yarn-3.2.0.cjs lint
+        run: node .yarn/releases/yarn-4.18.1.cjs lint
       - name: Type-check the full application
-        run: node .yarn/releases/yarn-3.2.0.cjs flow
+        run: node .yarn/releases/yarn-4.18.1.cjs flow
       - name: Install Linux runtime libraries
         if: runner.os == 'Linux'
         run: |

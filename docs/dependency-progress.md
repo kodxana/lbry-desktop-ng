@@ -7,19 +7,19 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After the persistence/build batch (based on merged PR #77):
+After the package-manager/security batch (based on merged PR #78):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
-| Upgraded to a newer resolved version   |    92 |
-| Removed or replaced                    |    76 |
+| Upgraded to a newer resolved version   |    91 |
+| Removed or replaced                    |    77 |
 | Still at the original resolved version |     1 |
 | Total                                  |   169 |
 
 That is **99.4% upgraded, removed or replaced** (168/169). Strict version upgrades
-alone account for 54.4% (92/169). This is package-count progress, not a measure of
+alone account for 53.8% (91/169). This is package-count progress, not a measure of
 remaining engineering effort, security or release readiness. The current direct
-dependency set has 147 packages, including 54 additions/replacements.
+dependency set has 146 packages, including 54 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
 The checker runs again. Required checks load all 89 declaration files, reject
@@ -137,3 +137,8 @@ patch treats that marker like its existing open-ended span representation,
 keeping invalid-column and invalid-line checks enabled. `testBundleAnalysis.js`
 checks exact UTF-8 byte attribution, HTML output and rejection of invalid maps.
 The existing analysis command is also checked against the production bundle.
+
+The [package-manager/security batch](package-manager-security.md) upgrades Yarn
+and Electron 44, refreshes compatible nested dependencies and removes the obsolete
+flow-typed download CLI. That CLI moves from the upgraded count to removed;
+all maintained definitions and the required full Flow check remain in place.

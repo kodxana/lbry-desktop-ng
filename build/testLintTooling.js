@@ -90,7 +90,7 @@ async function main() {
     '.prettierrc.json',
     '.lintstagedrc.json',
     '.husky/pre-commit',
-    '.yarn/releases/yarn-3.2.0.cjs',
+    '.yarn/releases/yarn-4.18.1.cjs',
   ]) {
     fs.copyFileSync(path.join(root, file), path.join(cwd, file));
   }
@@ -109,7 +109,7 @@ async function main() {
       },
     })
   );
-  run(process.execPath, ['.yarn/releases/yarn-3.2.0.cjs', 'install', '--mode=skip-build']);
+  run(process.execPath, ['.yarn/releases/yarn-4.18.1.cjs', 'install', '--mode=skip-build']);
   write('.gitignore', 'node_modules/\n.yarn/\n.husky/_/\n');
   write('ui/partly staged.js', 'export const staged = 1;\n\nexport const unfinished = 1;\n');
   write('electron/service.cjs', "module.exports = 'old';\n");

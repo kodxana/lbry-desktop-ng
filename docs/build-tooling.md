@@ -1,7 +1,7 @@
 # Node 24 and Webpack 5 migration
 
 The build host uses Node 24.21.0, pinned in `.node-version`, with the checked-in
-Yarn 3.2.0 and immutable lockfile. CI and the packaging script use the same Node
+Yarn 4.18.1 and immutable lockfile. CI and the packaging script use the same Node
 pin. No OpenSSL legacy-provider option is needed.
 
 This stage updates Webpack to 5.111.1 and its CLI, middleware, merge utility,
@@ -14,7 +14,7 @@ updates Sass and handles its declaration-order changes.
 
 That build-tooling migration kept Electron 17.2.0, React and the SDK pin at their
 RC3 versions. The [subsequent runtime migration](electron-runtime.md) moves to
-the supported Electron 44.7.0 release. Packaging and
+the supported Electron 44.9.3 release. Packaging and
 updater changes are described in [their migration notes](packaging-updater.md).
 Updating build-host Node does not update the Node or
 Chromium embedded in Electron. RC3 remains the published regression baseline;

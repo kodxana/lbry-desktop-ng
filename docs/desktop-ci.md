@@ -14,7 +14,7 @@ cancelled and modified clicks, redirects and back/forward navigation.
 
 The Desktop workflow runs on pull requests, pushes to master and the restoration
 branches, and manual dispatches. Windows 2022 and Ubuntu 24.04 runners use the
-Node 24.21.0 from `.node-version`, Yarn 3.2.0 and Electron 44.7.0. The
+Node 24.21.0 from `.node-version`, Yarn 4.18.1 and Electron 44.9.3. The
 [build-tooling migration](build-tooling.md) moves compilation to Webpack 5.
 The [packaging/updater migration](packaging-updater.md) adds old-client metadata
 compatibility, cache recovery, interrupted downloads and install-handoff checks.
@@ -242,8 +242,8 @@ are uploaded as artifacts. macOS Keychain is not covered by this matrix.
 From a checkout with Node 24.21.0 on PATH:
 
 ```text
-node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
-node .yarn/releases/yarn-3.2.0.cjs exec install-electron
+node .yarn/releases/yarn-4.18.1.cjs install --immutable --mode=skip-build
+node .yarn/releases/yarn-4.18.1.cjs exec install-electron
 node build/runDesktopTests.js
 node build/testRenderer.js
 ```

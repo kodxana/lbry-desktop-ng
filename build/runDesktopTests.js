@@ -58,6 +58,7 @@ for (const file of [
   'testContentFiles.js',
   'testMediaAdapters.js',
   'testPersistenceBuild.js',
+  'testPackageManager.js',
 ]) {
   const result = spawnSync(process.execPath, [path.join(__dirname, file)], { stdio: 'inherit', timeout: 120000 });
   if (result.error) throw result.error;

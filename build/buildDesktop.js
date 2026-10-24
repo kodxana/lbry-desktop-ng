@@ -9,8 +9,8 @@ const linux = process.platform === 'linux';
 const configFile = testBuild
   ? 'electron-builder.sdk-test.json'
   : linux
-  ? 'electron-builder.linux.json'
-  : 'electron-builder.json';
+    ? 'electron-builder.linux.json'
+    : 'electron-builder.json';
 const config = { ...require('../electron-builder.json'), ...require('../' + configFile) };
 const settings = require(testBuild ? '../sdk-test.json' : '../desktop-settings.json');
 
@@ -41,7 +41,7 @@ for (const args of [
   ['build/testSdkIsolation.js'],
   ['--max_old_space_size=4096', 'node_modules/webpack/bin/webpack.js', '--config', 'webpack.electron.config.js'],
   [
-    '.yarn/releases/yarn-3.2.0.cjs',
+    '.yarn/releases/yarn-4.18.1.cjs',
     'exec',
     'electron-builder',
     linux ? '--linux' : '--win',

@@ -1,7 +1,7 @@
 # Development helper dependencies
 
 This batch updates the command-line and developer-extension helpers on the
-existing Node 24.21.0 and Electron 44.7.0 baseline.
+existing Node 24.21.0 and Electron 44.9.3 baseline.
 
 | Package | Previous resolved version | Current |
 | --- | --- | --- |

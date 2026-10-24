@@ -94,7 +94,7 @@ assert.equal(run(empty).port, undefined, 'Missing optional config files must not
 
 for (const mode of ['production', 'development']) {
   const result = run(root, {}, [
-    path.join(repository, '.yarn/releases/yarn-3.2.0.cjs'),
+    path.join(repository, '.yarn/releases/yarn-4.18.1.cjs'),
     'crossenv',
     'NODE_ENV=' + mode,
     'LBRY_BUILD_HELPER_VALUE=build ł value',
@@ -106,7 +106,7 @@ for (const mode of ['production', 'development']) {
   assert.equal(result.value, 'build ł value');
 }
 run(root, { LBRY_BUILD_HELPER_EXIT: '37' }, [
-  path.join(repository, '.yarn/releases/yarn-3.2.0.cjs'),
+  path.join(repository, '.yarn/releases/yarn-4.18.1.cjs'),
   'crossenv',
   process.execPath,
   child,
