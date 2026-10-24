@@ -352,7 +352,7 @@ async function fastUnlock(store, history) {
     assert.equal(await getSavedPassword(), null, 'Leaving a pending unlock must not save its password');
   } finally {
     unmount();
-    delete Lbry.wallet_unlock;
+    Lbry.wallet_unlock = original;
     assert.equal(typeof original, 'function');
     await deleteSavedPassword();
   }
@@ -407,7 +407,7 @@ async function encryptionCompletion(store, history) {
     assert.equal(await getSavedPassword(), null, 'Leaving a pending encryption must not save its password');
   } finally {
     unmount();
-    delete Lbry.wallet_encrypt;
+    Lbry.wallet_encrypt = original;
     assert.equal(typeof original, 'function');
     await deleteSavedPassword();
   }
@@ -500,7 +500,15 @@ async function renderingCompatibility(store, history) {
   }
   try {
     Native.getAppVersionInfo = async () => ({ localVersion: 'fixture-desktop' });
-    Lbry.version = async () => ({ lbrynet_version: 'fixture-sdk' });
+    Lbry.version = async () => ({
+      lbrynet_version: 'fixture-sdk',
+      build: 'fixture',
+      os_release: 'fixture',
+      os_system: 'fixture',
+      platform: 'fixture',
+      processor: 'fixture',
+      python_version: 'fixture',
+    });
     analytics.error = async (message) => {
       reports.push(message);
       return false;

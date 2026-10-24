@@ -60,52 +60,47 @@ export function doResolveUris(
       data: { uris: normalizedUris },
     });
 
-    const resolveInfo: {
-      [string]: {
-        stream: ?StreamClaim,
-        channel: ?ChannelClaim,
-        claimsInChannel: ?number,
-        collection: ?CollectionClaim,
-      },
-    } = {};
+    const resolveInfo: { [string]: ClaimResolveResult } = {};
 
     const collectionIds: Array<string> = [];
 
     return Lbry.resolve({ urls: urisToResolve, ...options }).then(async (result: ResolveResponse) => {
-      let repostedResults = {};
-      const repostsToResolve = [];
+      let repostedResults: ResolveResponse = {};
+      const repostsToResolve: Array<string> = [];
       const fallbackResolveInfo = {
         stream: null,
         claimsInChannel: null,
         channel: null,
       };
 
-      function processResult(result, resolveInfo = {}, checkReposts = false) {
+      function processResult(
+        result: ResolveResponse,
+        resolveInfo: { [string]: ClaimResolveResult } = {},
+        checkReposts: boolean = false
+      ): void {
         Object.entries(result).forEach(([uri, uriResolveInfo]) => {
-          // Flow has terrible Object.entries support
-          // https://github.com/facebook/flow/issues/2221
           if (uriResolveInfo) {
-            if (uriResolveInfo.error) {
-              // $FlowFixMe
-              resolveInfo[uri] = { ...fallbackResolveInfo, errorCensor: uriResolveInfo.error.censor };
+            if (uriResolveInfo.value_type === undefined) {
+              const { error } = uriResolveInfo;
+              resolveInfo[uri] = {
+                ...fallbackResolveInfo,
+                errorCensor: typeof error === 'object' ? error.censor : undefined,
+              };
             } else {
               if (checkReposts) {
                 if (uriResolveInfo.reposted_claim) {
-                  // $FlowFixMe
                   const repostUrl = uriResolveInfo.reposted_claim.permanent_url;
                   if (!resolvingUris.includes(repostUrl)) {
                     repostsToResolve.push(repostUrl);
                   }
                 }
               }
-              let result = {};
+              const result: ClaimResolveResult = {};
               if (uriResolveInfo.value_type === 'channel') {
                 result.channel = uriResolveInfo;
-                // $FlowFixMe
                 result.claimsInChannel = uriResolveInfo.meta.claims_in_channel;
               } else if (uriResolveInfo.value_type === 'collection') {
                 result.collection = uriResolveInfo;
-                // $FlowFixMe
                 collectionIds.push(uriResolveInfo.claim_id);
               } else {
                 result.stream = uriResolveInfo;
@@ -115,7 +110,6 @@ export function doResolveUris(
                     (uriResolveInfo.signing_channel.meta && uriResolveInfo.signing_channel.meta.claims_in_channel) || 0;
                 }
               }
-              // $FlowFixMe
               resolveInfo[uri] = result;
             }
           }
@@ -166,13 +160,12 @@ export function doFetchClaimListMine(
       claimTypes = claimTypes.filter((t) => filterBy.includes(t));
     }
 
-    // $FlowFixMe
     Lbry.claim_list({
       page: page,
       page_size: pageSize,
       claim_type: claimTypes,
       resolve,
-    }).then((result: StreamListResponse) => {
+    }).then((result: ClaimListResponse) => {
       dispatch({
         type: ACTIONS.FETCH_CLAIM_LIST_MINE_COMPLETED,
         data: {
@@ -190,13 +183,12 @@ export function doFetchAllClaimListMine() {
       type: ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_STARTED,
     });
 
-    // $FlowFixMe
     Lbry.claim_list({
       page: 1,
       page_size: 99999,
       claim_type: ['stream', 'repost'],
       resolve: true,
-    }).then((result: StreamListResponse) => {
+    }).then((result: ClaimListResponse) => {
       dispatch({
         type: ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_COMPLETED,
         data: {
@@ -258,6 +250,7 @@ export function doAbandonTxo(txo: Txo, cb: (string) => void) {
     };
 
     const abandonParams: {
+      blocking: boolean,
       claim_id?: string,
       txid?: string,
       nout?: number,
@@ -271,7 +264,7 @@ export function doAbandonTxo(txo: Txo, cb: (string) => void) {
       abandonParams['nout'] = txo.nout;
     }
 
-    let method;
+    let method: 'support_abandon' | 'channel_abandon' | 'stream_abandon' | void;
     if (isSupport || isTip) {
       method = 'support_abandon';
     } else if (isClaim) {
@@ -360,7 +353,7 @@ export function doAbandonClaim(claim: Claim, cb: (string) => void) {
       blocking: true,
     };
 
-    let method;
+    let method: 'support_abandon' | 'channel_abandon' | 'stream_abandon' | void;
     if (supportToAbandon) {
       method = 'support_abandon';
     } else if (claimToAbandon) {

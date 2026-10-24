@@ -584,9 +584,11 @@ export function doWalletDecrypt() {
             result,
           });
         }
+        return result === true;
       })
       .catch(() => {
         dispatch({ type: ACTIONS.WALLET_DECRYPT_FAILED, result: false });
+        return false;
       });
   };
 }

@@ -95,14 +95,7 @@ declare type BalanceResponse = {
 
 declare type ResolveResponse = {
   // Keys are the url(s) passed to resolve
-  [string]: {
-    error?: { ... },
-    stream?: StreamClaim,
-    channel?: ChannelClaim,
-    collection?: CollectionClaim,
-    claimsInChannel?: number,
-    ...
-  },
+  [string]: Claim | { error: string | { censor?: ClaimErrorCensor, ... }, value_type?: empty, ... },
 };
 
 declare type GetResponse = FileListItem & { error?: string, ... };
@@ -316,22 +309,22 @@ declare type PurchaseListResponse = {
   ...
 };
 
-declare type PurchaseListOptions = {
-  page: number,
-  page_size: number,
-  resolve: boolean,
+declare type PurchaseListOptions = Readonly<{
+  page?: number,
+  page_size?: number,
+  resolve?: boolean,
   claim_id?: string,
   channel_id?: string,
   ...
-};
+}>;
 
 //
 // Types used in the generic Lbry object that is exported
 //
 declare type LbryTypes = {
   isConnected: boolean,
-  connectPromise: any, // null |
-  connect: () => any, // void | Promise<any> ?
+  connectPromise: Promise<StatusResponse> | null,
+  connect: () => Promise<StatusResponse>,
   daemonConnectionString: string,
   alternateConnectionString: string,
   methodsUsingAlternateConnectionString: Array<string>,
@@ -339,13 +332,14 @@ declare type LbryTypes = {
   setDaemonConnectionString: (string) => void,
   setApiHeader: (string, string) => void,
   unsetApiHeader: (string) => void,
-  overrides: { [string]: ?Function },
-  setOverride: (string, Function) => void,
-  // getMediaType: (?string, ?string) => string,
+  overrides: { [string]: (params: { ... }) => Promise<PublishResponse> },
+  setOverride: (string, (params: { ... }) => Promise<PublishResponse>) => void,
+  getApiRequestHeaders: () => { [string]: string },
+  getMediaType: (?string, ?string) => string,
 
   // Lbry Methods
   stop: () => Promise<string>,
-  status: () => Promise<StatusResponse>,
+  status: (params?: { ... }) => Promise<StatusResponse>,
   version: () => Promise<VersionResponse>,
   resolve: (params: { ... }) => Promise<ResolveResponse>,
   get: (params: { ... }) => Promise<GetResponse>,
@@ -381,7 +375,7 @@ declare type LbryTypes = {
 
   // Preferences
   preference_get: (params?: { ... }) => Promise<any>,
-  preference_set: (params: { ... }) => Promise<any>,
+  preference_set: (params: { key: string, value: string, ... }) => Promise<any>,
 
   // Commenting
   comment_update: (params: { ... }) => Promise<CommentUpdateResponse>,
@@ -392,7 +386,9 @@ declare type LbryTypes = {
 
   // Wallet utilities
   wallet_balance: (params: { ... }) => Promise<BalanceResponse>,
-  wallet_decrypt: (prams: { ... }) => Promise<boolean>,
+  wallet_decrypt: () => Promise<boolean>,
+  wallet_lock: () => Promise<boolean>,
+  wallet_reconnect: () => Promise<unknown>,
   wallet_encrypt: (params: { ... }) => Promise<boolean>,
   wallet_unlock: (params: { ... }) => Promise<boolean>,
   wallet_list: (params: { ... }) => Promise<WalletListResponse>,
@@ -402,6 +398,8 @@ declare type LbryTypes = {
   address_unused: (params: { ... }) => Promise<string>, // New address
   address_list: (params: { ... }) => Promise<string>,
   transaction_list: (params: { ... }) => Promise<TxListResponse>,
+  transaction_show: (params: { txid: string, ... }) => Promise<GenericTxResponse>,
+  txo_spend: (params: { ... }) => Promise<Array<GenericTxResponse>>,
   txo_list: (params: { ... }) => Promise<any>,
   account_set: (params: { ... }) => Promise<any>,
   account_list: (params?: { ... }) => Promise<any>,
@@ -412,6 +410,11 @@ declare type LbryTypes = {
   // syncGet
 
   // The app shouldn't need to do this
-  utxo_release: () => Promise<any>,
+  utxo_release: (params?: { ... }) => Promise<any>,
+  settings_get: () => Promise<{ [string]: unknown }>,
+  settings_set: (params: { key: string, value: unknown }) => Promise<{ [string]: unknown }>,
+  settings_clear: (params: { key: string }) => Promise<{ [string]: unknown }>,
+  blob_clean: () => Promise<unknown>,
+  ffmpeg_find: () => Promise<unknown>,
   ...
 };
