@@ -7,36 +7,29 @@ type Props = {
   upload: (File) => void,
   filePath: string,
   closeModal: () => void,
-  showToast: ({}) => void,
+  showToast: (ToastParams) => void,
 };
 
 function ModalAutoGenerateThumbnail(props: Props): React.Node {
   const { closeModal, filePath, upload, showToast } = props;
-  const playerRef = useRef();
-  let videoSrc;
-  if (typeof filePath === 'string') {
-    videoSrc = formatFileSystemPath(filePath);
-  } else {
-    videoSrc = URL.createObjectURL(filePath);
-  }
+  const playerRef = useRef<HTMLVideoElement | null>(null);
+  const videoSrc = formatFileSystemPath(filePath);
 
   function uploadImage() {
-    const imageBuffer = captureSnapshot();
-    // $FlowFixMe
-    const file = new File([imageBuffer], 'thumbnail.png', { type: 'image/png' });
-
-    if (imageBuffer) {
-      // $FlowFixMe
+    try {
+      const imageBuffer = captureSnapshot();
+      if (!imageBuffer) return onError();
+      const file = new File([imageBuffer], 'thumbnail.png', { type: 'image/png' });
       upload(file);
       closeModal();
-    } else {
+    } catch (_) {
       onError();
     }
   }
 
-  function captureSnapshot(): ?Buffer {
+  function captureSnapshot(): ArrayBuffer | void {
     const player = playerRef.current;
-    if (!player) {
+    if (!player || !player.videoWidth || !player.videoHeight) {
       return;
     }
 
@@ -44,16 +37,19 @@ function ModalAutoGenerateThumbnail(props: Props): React.Node {
     canvas.width = player.videoWidth;
     canvas.height = player.videoHeight;
     const context = canvas.getContext('2d');
+    if (!context) return;
     context.drawImage(player, 0, 0, canvas.width, canvas.height);
     const dataURL = canvas.toDataURL();
-    const rawData = dataURL.replace(/data:image\/\w+;base64,/i, '');
+    const rawData = atob(dataURL.replace(/data:image\/\w+;base64,/i, ''));
     canvas.remove();
-    return Buffer.from(rawData, 'base64');
+    const bytes = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; i++) bytes[i] = rawData.charCodeAt(i);
+    return bytes.buffer;
   }
 
   function resize(): void {
     const player = playerRef.current;
-    if (!player) {
+    if (!player || !player.videoWidth || !player.videoHeight) {
       return;
     }
 

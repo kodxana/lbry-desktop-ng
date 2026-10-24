@@ -8,7 +8,7 @@ import Card from 'component/common/card';
 type Props = {
   description: ?string,
   disabled: boolean,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
 function PublishDescription(props: Props): React.Node {
@@ -18,8 +18,8 @@ function PublishDescription(props: Props): React.Node {
     setAdvancedEditor(!advancedEditor);
   }
 
-  function handleCommentChange(event) {
-    let descriptionValue = advancedEditor ? event : event.target.value;
+  function handleCommentChange(event: string | { target: { value: string, ... }, ... }): void {
+    const descriptionValue = typeof event === 'string' ? event : event.target.value;
 
     updatePublishForm({ description: descriptionValue });
   }

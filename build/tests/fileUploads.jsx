@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import React from 'react';
+import { flushSync } from 'react-dom';
 import fs from 'fs';
 import path from 'path';
 import { ipcRenderer, webUtils } from 'electron';
@@ -13,6 +14,7 @@ import ModalConfirmThumbnailUpload from 'modal/modalConfirmThumbnailUpload/view'
 import PublishFile from 'component/publishFile/view';
 import * as PUBLISH_MODES from 'constants/publish_types';
 import { render, unmount, waitFor, tick } from './helpers';
+import publishing from './publishing';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const button = (label) => Array.from(document.querySelectorAll('button')).find((item) => item.textContent === label);
@@ -90,8 +92,9 @@ export default async function fileUploads(store, history, root) {
   assert.equal(document.activeElement, radios[1]);
   await ipcRenderer.invoke('fixture-controls-key', 'ArrowUp');
   await waitFor(() => radios[0].checked, 'Native arrow navigation must return to the first file');
-  document.querySelector(`label[for="${radios[1].id}"]`).click();
+  flushSync(() => document.querySelector(`label[for="${radios[1].id}"]`).click());
   await tick();
+  assert(radios[1].checked, 'The label must select the second file before confirmation');
   button('Accept').click();
   assert.equal(closed, 2);
   assert.deepEqual(updates[2], { filePath: second }, 'Identical filenames must still select the chosen directory');
@@ -267,5 +270,6 @@ export default async function fileUploads(store, history, root) {
   );
   assert.equal(document.querySelector('[role=alert]'), null);
   unmount();
-  return 'native file drops, duplicate filenames, chooser cancel/accept, pending navigation cleanup, thumbnails and restored draft file selection';
+  await publishing(store, history, root);
+  return 'native file drops, chooser cancel/accept, restored drafts, publish preview paths, licenses, Markdown selection and video thumbnail capture';
 }

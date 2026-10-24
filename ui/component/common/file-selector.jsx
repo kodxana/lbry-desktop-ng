@@ -6,7 +6,7 @@ import { FormField } from 'component/common/form';
 import { getFilePath } from 'util/file-path';
 
 type Props = {
-  type: string,
+  type?: string,
   currentPath?: ?string,
   onFileChosen: (FileWithPath) => void,
   label?: string,
@@ -22,24 +22,16 @@ type Props = {
 type State = { selectionError?: string, selecting: boolean };
 
 class FileSelector extends React.PureComponent<Props, State> {
-  state = { selectionError: undefined, selecting: false };
+  state: State = { selectionError: undefined, selecting: false };
   mounted = false;
   selecting = false;
-  static defaultProps = {
+  static defaultProps: { autoFocus: boolean, type: string, readFile: boolean } = {
     autoFocus: false,
     type: 'file',
     readFile: true,
   };
 
-  fileInput: React.ElementRef<any>;
-
-  constructor() {
-    super();
-    this.fileInput = React.createRef();
-    this.handleFileInputSelection = this.handleFileInputSelection.bind(this);
-    this.handleDirectoryInputSelection = this.handleDirectoryInputSelection.bind(this);
-    this.fileInputButton = this.fileInputButton.bind(this);
-  }
+  fileInput: { current: HTMLInputElement | null } = React.createRef<HTMLInputElement>();
 
   componentDidMount() {
     this.mounted = true;
@@ -49,8 +41,10 @@ class FileSelector extends React.PureComponent<Props, State> {
     this.mounted = false;
   }
 
-  handleFileInputSelection = () => {
-    const { files } = this.fileInput.current;
+  handleFileInputSelection = (): void => {
+    const input = this.fileInput.current;
+    if (!input) return;
+    const { files } = input;
     if (!files || !files.length) {
       return;
     }
@@ -65,11 +59,11 @@ class FileSelector extends React.PureComponent<Props, State> {
     } catch (_) {
       this.setState({ selectionError: __('The selected file or folder could not be opened.') });
     } finally {
-      this.fileInput.current.value = ''; // Allow choosing the same file again.
+      input.value = ''; // Allow choosing the same file again.
     }
   };
 
-  handleDirectoryInputSelection = async () => {
+  handleDirectoryInputSelection = async (): Promise<void> => {
     if (this.selecting || this.props.disabled) return;
     this.selecting = true;
     this.setState({ selectionError: undefined, selecting: true });
@@ -95,7 +89,7 @@ class FileSelector extends React.PureComponent<Props, State> {
   };
 
   fileInputButton = () => {
-    this.fileInput.current.click();
+    this.fileInput.current?.click();
   };
 
   input: ?HTMLInputElement;

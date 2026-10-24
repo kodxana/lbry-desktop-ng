@@ -14,7 +14,7 @@ type Props = {
   myClaimForUri: ?StreamClaim,
   isResolvingUri: boolean,
   amountNeededForTakeover: number,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
 function PublishName(props: Props): React.Node {

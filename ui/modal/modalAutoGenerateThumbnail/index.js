@@ -6,7 +6,7 @@ import ModalAutoGenerateThumbnail from './view';
 
 const perform = (dispatch) => ({
   closeModal: () => dispatch(doHideModal()),
-  upload: (file) => dispatch(doUploadThumbnail(null, file, null, null, 'Generated')),
+  upload: (file) => dispatch(doUploadThumbnail(file)),
   showToast: (options) => dispatch(doToast(options)),
 });
 

@@ -296,9 +296,22 @@ eight-decimal bids and background edit parameters; notification failure loading
 state and IDs; and comment reply/reaction/unblock state. Renderer tests cover
 repost success, failure and cancellation without submitting transactions.
 
-**The application is not yet type-clean.** The full check now reports 1,363
+The publishing pass shares typed form state and partial updates across actions,
+reducer and controls. Its source gate checks actual publishing actions, reducer
+and SDK contracts against narrow selector/navigation interfaces, rejecting nine
+invalid caller contracts. Native input refs, file paths, thumbnail callbacks,
+license fields and release dates are typed. Unused filesystem upload adapters
+are removed; both desktop thumbnail callers pass a browser File.
+
+Runtime tests cover suggested-name defaults, preview/live payloads, eight-decimal
+fees, metadata-only edits, publish failures and thumbnail service failures.
+Renderer tests cover price conversion, confirmation/cancellation and full file
+paths, custom license events, Markdown MIME fallback and real local-video PNG
+capture. Publish selectors and the general dispatch boundary remain untyped.
+
+**The application is not yet type-clean.** The full check now reports 1,221
 application diagnostics and zero library-definition diagnostics, down from
-1,549 before the Redux pass (186 fewer, with no newly introduced diagnostics).
+1,363 before the publishing pass (142 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

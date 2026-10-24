@@ -1,7 +1,7 @@
 import * as PAGES from 'constants/pages';
 import { connect } from 'react-redux';
 import { makeSelectClaimForUri, makeSelectClaimIsPending } from 'redux/selectors/claims';
-import { doClearPublish, doPrepareEdit } from 'redux/actions/publish';
+import { doClearPublish, doUpdatePublishForm } from 'redux/actions/publish';
 import { push } from 'redux-first-history';
 import ClaimPreviewSubtitle from './view';
 
@@ -13,7 +13,7 @@ const select = (state, props) => ({
 const perform = (dispatch) => ({
   beginPublish: (name) => {
     dispatch(doClearPublish());
-    dispatch(doPrepareEdit({ name }));
+    dispatch(doUpdatePublishForm({ name }));
     dispatch(push(`/$/${PAGES.UPLOAD}`));
   },
 });

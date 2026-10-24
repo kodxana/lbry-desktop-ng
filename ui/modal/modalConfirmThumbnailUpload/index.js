@@ -5,7 +5,7 @@ import ModalConfirmThumbnailUpload from './view';
 
 const perform = (dispatch) => ({
   closeModal: () => dispatch(doHideModal()),
-  upload: (fileWithPath, cb) => dispatch(doUploadThumbnail(null, fileWithPath.file, null, null, fileWithPath.path, cb)),
+  upload: (fileWithPath, cb) => dispatch(doUploadThumbnail(fileWithPath.file, cb)),
   updatePublishForm: (value) => dispatch(doUpdatePublishForm(value)),
 });
 

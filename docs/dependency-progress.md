@@ -32,7 +32,8 @@ that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
 2,798. Comment contracts reduce that to 2,719, collection contracts to 2,644,
 comment-input contracts to 2,586, form-control contracts to 2,521, claim contracts to 2,296,
 renderer return/state contracts to 1,755, and SDK/comment API and async action
-contracts to 1,549, then Redux action/reducer contracts to 1,363,
+contracts to 1,549, then Redux action/reducer contracts to 1,363 and publishing
+contracts to 1,221,
 with no newly introduced diagnostics in these passes.
 Required gates cover twenty-two shared UI/type source modules (37 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
@@ -92,6 +93,13 @@ Notification list failures clear loading, and unblocking a commenter copies the
 pending-unblock map. Regression tests cover these paths with synthetic requests,
 alongside the existing wallet, password, updater and packaged SDK checks.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
+The publishing pass shares the form state across actions, reducer and controls,
+types native file/thumbnail events and adds a source gate rejecting nine invalid
+contracts. Suggested names retain a valid default deposit; previews retain full
+file paths, and Markdown selection works without a MIME registration. Thumbnail
+failures preserve maturity metadata, and video snapshots use browser byte arrays.
+Regression tests cover publish/preview payloads, metadata-only edits, exact decimal
+fees, failures, license selection and thumbnail capture without submitting transactions.
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change
 the package-version percentages above; see

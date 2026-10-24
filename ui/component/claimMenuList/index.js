@@ -85,7 +85,7 @@ const select = (state, props) => {
 };
 
 const perform = (dispatch) => ({
-  prepareEdit: (publishData, uri, fileInfo) => {
+  prepareEdit: (publishData, uri) => {
     if (publishData.signing_channel) {
       dispatch(doSetIncognito(false));
       dispatch(doSetActiveChannel(publishData.signing_channel.claim_id));
@@ -93,7 +93,7 @@ const perform = (dispatch) => ({
       dispatch(doSetIncognito(true));
     }
 
-    dispatch(doPrepareEdit(publishData, uri, fileInfo));
+    dispatch(doPrepareEdit(publishData, uri));
   },
   doToast: (props) => dispatch(doToast(props)),
   openModal: (modal, props) => dispatch(doOpenModal(modal, props)),
