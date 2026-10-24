@@ -42,3 +42,44 @@ declare type CollectionEditParams = {
   name?: string,
   ...
 };
+
+declare type CollectionDropResult = {
+  source: { index: number, ... },
+  destination: ?{ index: number, ... },
+  ...
+};
+
+declare type CollectionMetadataOptions = {
+  name?: string,
+  claim_id?: string,
+  bid?: string | number,
+  blocking?: true,
+  title?: string,
+  channel_id?: string,
+  thumbnail_url?: string,
+  description?: string,
+  tags?: Array<Tag>,
+  languages?: Array<string>,
+  locations?: Array<ClaimLocation>,
+  claims?: Array<string>,
+};
+
+declare type CollectionCreateOptions = Readonly<{
+  ...CollectionMetadataOptions,
+  name: string,
+  bid: string | number,
+  claims: Array<string>,
+}>;
+
+declare type CollectionUpdateOptions = Readonly<{
+  ...CollectionMetadataOptions,
+  claim_id: string,
+}>;
+
+declare type CollectionFormData = {
+  ...CollectionCreateOptions,
+  claim_id?: string,
+  tags: Array<Tag>,
+  languages: Array<string>,
+  locations: Array<ClaimLocation>,
+};

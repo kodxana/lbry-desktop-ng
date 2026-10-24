@@ -25,6 +25,17 @@ and prevention of unintended navigation or publishing. Native dropped-file tests
 cover duplicate filenames, label and keyboard selection, independent groups,
 empty or shortened file lists, cancellation and invalid paths.
 
+The Flow source gate checks collection form parameters, nullable add/select
+records, preview loading, native keyboard events and their callers. Renderer
+fixtures cover Enter submission with a resolved claim, blank-name rejection,
+unmount cleanup, pending selections, missing built-in lists and scoped Escape
+search clearing. They also exercise multi-tag input, metadata and location
+preservation, publish failure/success/cancellation, ownership-sensitive claim
+menus, one-shot shuffle playback and public/private deletion confirmation.
+The preview connector has a separate regression requiring the loading thunk
+to reach dispatch. Publishing tests inspect SDK request payloads without
+submitting real transactions.
+
 Keep the Windows/Linux renderer, native password-storage, wallet backup and
 encryption, packaging, and hosted Windows installed-upgrade checks required.
 Fixtures use disposable profiles and unfunded wallets. Physical touch and manual

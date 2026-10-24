@@ -13,24 +13,42 @@ import CollectionPage from 'page/collection/view';
 import CollectionEditor from 'component/collectionEdit/view';
 import CollectionButtons from 'component/collectionEditButtons/view';
 import reposts from './reposts';
+import collectionControls from './collectionControls';
 import { render, unmount, waitFor, tick } from './helpers';
-import 'scss/third-party.scss';
-import 'scss/all.scss';
+import '../../ui/scss/third-party.scss';
+import '../../ui/scss/all.scss';
+
+type TestState = { collections: CollectionState, claims: ClaimsState, ... };
+export type TestStore = { getState: () => TestState, dispatch: Dispatch, ... };
+export type TestHistory = { push: (string) => void, location: { pathname: string, ... }, ... };
 
 const noop = () => {};
-const key = (value) => ipcRenderer.invoke('fixture-controls-key', value);
-const handles = () => Array.from(document.querySelectorAll('.collection-preview__edit-group[role="button"]'));
+const key = (value: string) => ipcRenderer.invoke('fixture-controls-key', value);
+const handles = (): Array<HTMLElement> =>
+  Array.from(document.querySelectorAll('.collection-preview__edit-group[role="button"]')).filter(
+    (element) => element instanceof HTMLElement
+  );
 const dragging = () => document.querySelector('.claim-list li[style*="position: fixed"]');
 const button = (label: string): HTMLButtonElement => {
   const element = document.querySelector(`button[aria-label="${label}"]`);
   if (!(element instanceof HTMLButtonElement)) throw new Error('Missing button: ' + label);
   return element;
 };
-const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+const frame = () =>
+  new Promise<void>((resolve) =>
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => resolve());
+    })
+  );
+const click = (selector: string): void => {
+  const element = document.querySelector(selector);
+  if (!(element instanceof HTMLElement)) throw Error('Missing clickable control: ' + selector);
+  element.click();
+};
 
-export default async function collections(store, history) {
+export default async function collections(store: TestStore, history: TestHistory): Promise<string> {
   const preferenceSet = Lbry.preference_set;
-  const preferences = [];
+  const preferences: Array<{ unpublishedCollections: CollectionGroup, ... }> = [];
   Lbry.preference_set = async ({ key, value }) => {
     assert.equal(key, 'local');
     const preference = JSON.parse(value);
@@ -89,8 +107,8 @@ export default async function collections(store, history) {
       },
     });
     await ipcRenderer.invoke('fixture-controls-focus');
-    const edits = [];
-    const edit = (id, params) => {
+    const edits: Array<{ id: string, params: CollectionEditParams }> = [];
+    const edit = (id: string, params: CollectionEditParams) => {
       edits.push({ id, params });
       return store.dispatch(doCollectionEdit(id, params));
     };
@@ -100,14 +118,16 @@ export default async function collections(store, history) {
       return Promise.resolve();
     };
     function Fixture({ id, kind }: { id: string, kind: string }) {
-      const collection = useSelector((state) => state.collections.unpublished[id]);
+      const collection = useSelector((state: TestState) => state.collections.unpublished[id]);
       const common = { collectionId: id, collection, collectionUrls: collection.items };
       if (kind === 'sidebar')
         return (
           <CollectionSidebar
-            {...common}
             id={id}
+            collectionUrls={collection.items}
             collectionName={collection.name}
+            loop={false}
+            shuffle={false}
             isMyCollection
             url={uris[0]}
             doCollectionEdit={edit}
@@ -122,13 +142,36 @@ export default async function collections(store, history) {
             collectionCount={collection.items.length}
             editCollection={edit}
             fetchCollectionItems={noop}
+            uri={undefined}
+            claim={undefined}
+            isResolvingCollection={false}
+            claimIsPending={false}
+            collectionHasEdits={false}
+            deleteCollection={noop}
+            renameCollection={noop}
           />
         );
       return (
         <CollectionEditor
           {...common}
-          collectionClaimIds={collection.items.map((uri) => uri.split('#')[1])}
+          collectionClaimIds={collection.items.filter((uri) => typeof uri === 'string').map((uri) => uri.split('#')[1])}
           balance={0}
+          uri={undefined}
+          claim={undefined}
+          activeChannelClaim={undefined}
+          disabled={false}
+          amount={undefined}
+          title={undefined}
+          thumbnailUrl={undefined}
+          description={undefined}
+          tags={undefined}
+          locations={undefined}
+          languages={undefined}
+          updateError={undefined}
+          createError={undefined}
+          updatingCollection={false}
+          creatingCollection={false}
+          onDone={noop}
           incognito
           doCollectionEdit={(params) => edit(id, params)}
           clearCollectionErrors={noop}
@@ -152,6 +195,7 @@ export default async function collections(store, history) {
         const itemsTab = Array.from(document.querySelectorAll('[role="tab"]')).find(
           (tab) => tab.textContent === 'Items'
         );
+        if (!(itemsTab instanceof HTMLElement)) throw Error('Missing Items tab');
         itemsTab.click();
         await waitFor(() => itemsTab.getAttribute('aria-selected') === 'true', 'Editor items tab must open');
       } else {
@@ -199,7 +243,8 @@ export default async function collections(store, history) {
         const second = currentHandles[1].getBoundingClientRect();
         const x = first.x + first.width / 2;
         const y = first.y + first.height / 2;
-        const mouse = (type, nextY) => ipcRenderer.invoke('fixture-collection-mouse', { type, x, y: nextY });
+        const mouse = (type: string, nextY: number) =>
+          ipcRenderer.invoke('fixture-collection-mouse', { type, x, y: nextY });
         await mouse('mousePressed', y);
         await mouse('mouseMoved', y + 10);
         await waitFor(dragging, 'Mouse movement must lift a collection item');
@@ -215,24 +260,23 @@ export default async function collections(store, history) {
           () => store.getState().collections.unpublished[id].items[2] === uris[0],
           'Move buttons must still reorder through Redux'
         );
-        const remove = document.querySelector('.button-collection-delete');
-        remove.click();
+        click('.button-collection-delete');
         await waitFor(
           () => document.querySelector('.button-collection-delete-cancel'),
           'Removal must offer cancellation'
         );
-        document.querySelector('.button-collection-delete-cancel').click();
+        click('.button-collection-delete-cancel');
         await waitFor(
           () => !document.querySelector('.button-collection-delete-cancel'),
           'Cancellation must close the prompt'
         );
         assert.equal(store.getState().collections.unpublished[id].items.length, 3, 'Cancel removal retains the item');
-        document.querySelector('.button-collection-delete').click();
+        click('.button-collection-delete');
         await waitFor(
           () => document.querySelector('.button-collection-delete-confirm'),
           'Removal must require confirmation'
         );
-        document.querySelector('.button-collection-delete-confirm').click();
+        click('.button-collection-delete-confirm');
         await waitFor(
           () => store.getState().collections.unpublished[id].items.length === 2,
           'Confirmed removal must remove only the chosen item'
@@ -255,10 +299,13 @@ export default async function collections(store, history) {
       'The settled collection order must reach wallet preferences'
     );
     await require('../../ui/store').persistor.flush();
-    const serialized = JSON.parse(await localForage.getItem('persist:v0'));
+    const stored = await localForage.getItem<string>('persist:v0');
+    if (typeof stored !== 'string') throw Error('Collection state was not persisted');
+    const serialized = JSON.parse(stored);
     const saved = createCompressor().out(JSON.parse(serialized.collections), 'collections');
     assert.deepEqual(saved.unpublished, expected, 'Desktop persistence must retain reordered and removed items');
     await reposts(store, history, uris[0]);
+    await collectionControls(store, history, uris[0]);
     return 'collection page, publishing editor and sidebar: keyboard/mouse reordering, focus, cancellation, move/remove controls, persisted order and no automatic publish; repost failure, success and cancellation';
   } finally {
     unmount();

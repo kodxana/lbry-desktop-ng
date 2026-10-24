@@ -117,6 +117,8 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared UI source and valid callers must type-check');
 const invalid = {
+  iconLabel: 'export const value: React.Node = <Icon icon="lock" aria-label={123} />;',
+  fieldKey: 'export const value: React.Node = <FormField name="list" onKeyDown={(event: number): void => {}} />;',
   priceAmount: 'export const value: FormPrice = {amount: "1", currency: "LBC"};',
   priceCurrency: 'export const value: FormPrice = {amount: 1, currency: false};',
   priceStep:

@@ -12,10 +12,10 @@ import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
 type Props = {
   inline?: boolean,
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { collectionId: string }) => void,
   collectionName?: string,
   collectionId: string,
-  playNextUri: string,
+  playNextUri: ?string,
   doToggleShuffleList: (string) => void,
 };
 

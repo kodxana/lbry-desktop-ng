@@ -66,6 +66,7 @@ async function main() {
     blocking: true,
     tags: [{ name: 'test' }],
     languages: ['en'],
+    locations: [{ country: 'PL', city: 'Warsaw' }],
   };
   for (const [method, action, started, completed, failed] of [
     [
@@ -115,6 +116,11 @@ async function main() {
     if (method !== 'stream_repost') {
       assert.deepEqual(plain(calls.at(-1).params.tags), ['test']);
       assert.deepEqual(plain(calls.at(-1).params.claims), ['original']);
+      assert.deepEqual(
+        plain(calls.at(-1).params.locations),
+        options.locations,
+        'Collection edits must preserve locations'
+      );
     }
   }
   await claims.doCollectionPublishUpdate({ claim_id: 'collection' }, true)(dispatch, () => ({}));

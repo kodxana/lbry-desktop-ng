@@ -18,6 +18,8 @@ type Props = {
   size?: number,
   className?: string,
   sectionIcon?: boolean,
+  'aria-hidden'?: boolean,
+  'aria-label'?: string,
 };
 
 class IconComponent extends React.PureComponent<Props> {

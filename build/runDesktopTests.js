@@ -12,6 +12,7 @@ for (const file of [
   'testApiTypes.js',
   'testReduxTypes.js',
   'testPublishTypes.js',
+  'testCollectionUiTypes.js',
   'testPublishing.js',
   'testRpcContracts.js',
   'testSyncContracts.js',

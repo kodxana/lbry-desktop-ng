@@ -8,8 +8,8 @@ import { render, unmount, tick, waitFor } from './helpers';
 const noop = () => {};
 
 export default async function reposts(
-  store: { getState: () => { claims: ClaimsState, ... }, ... },
-  history: { push: (string) => unknown, location: { pathname: string, ... }, ... },
+  store: Readonly<{ getState: () => { claims: ClaimsState, ... }, ... }>,
+  history: Readonly<{ push: (string) => unknown, location: { pathname: string, ... }, ... }>,
   uri: string
 ): Promise<void> {
   const claim = store.getState().claims.byId[uri.split('#')[1]];

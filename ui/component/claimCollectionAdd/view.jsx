@@ -1,18 +1,16 @@
 // @flow
 import React from 'react';
-import type { ElementRef } from 'react';
 import Button from 'component/button';
 import Card from 'component/common/card';
 import { FormField } from 'component/common/form';
 import * as ICONS from 'constants/icons';
-import * as KEYCODES from 'constants/keycodes';
 import CollectionSelectItem from 'component/collectionSelectItem';
 
 type Props = {
-  claim: Claim,
-  builtin: any,
-  published: any,
-  unpublished: any,
+  claim: ?Claim,
+  builtin: CollectionGroup,
+  published: ?CollectionGroup,
+  unpublished: ?CollectionGroup,
   addCollection: (string, Array<string>, string) => void,
   closeModal: () => void,
   uri: string,
@@ -20,7 +18,6 @@ type Props = {
 
 const ClaimCollectionAdd = (props: Props): React.Node => {
   const { builtin, published, unpublished, addCollection, claim, closeModal, uri } = props;
-  const buttonref: ElementRef<any> = React.useRef();
   const permanentUrl = claim && claim.permanent_url;
   const isChannel = claim && claim.value_type === 'channel';
 
@@ -35,30 +32,23 @@ const ClaimCollectionAdd = (props: Props): React.Node => {
   //   claim.value.stream_type &&
   //   (claim.value.stream_type === 'audio' || claim.value.stream_type === 'video');
 
-  function handleNameInput(e) {
+  function handleNameInput(e: { target: { value: string, ... }, ... }): void {
     const { value } = e.target;
     setNewCollectionName(value);
   }
 
   function handleAddCollection() {
+    if (!permanentUrl || !newCollectionName.trim()) return;
     addCollection(newCollectionName, [permanentUrl], isChannel ? 'collection' : 'playlist');
     setNewCollectionName('');
     setAddNewCollection(false);
   }
 
-  function altEnterListener(e: SyntheticKeyboardEvent<*>) {
-    if (e.keyCode === KEYCODES.ENTER) {
+  function altEnterListener(e: { key: string, preventDefault: () => void, ... }): void {
+    if (e.key === 'Enter') {
       e.preventDefault();
-      buttonref.current.click();
+      handleAddCollection();
     }
-  }
-
-  function onTextareaFocus() {
-    window.addEventListener('keydown', altEnterListener);
-  }
-
-  function onTextareaBlur() {
-    window.removeEventListener('keydown', altEnterListener);
   }
 
   function handleClearNew() {
@@ -71,19 +61,17 @@ const ClaimCollectionAdd = (props: Props): React.Node => {
       title={__('Add To...')}
       actions={
         <div className="card__body">
-          {uri && (
+          {uri && permanentUrl && (
             <fieldset-section>
               <div className={'card__body-scrollable'}>
-                {(Object.values(builtin): any)
-                  // $FlowFixMe
+                {Object.values(builtin)
                   .filter((list) => (isChannel ? list.type === 'collection' : list.type === 'playlist'))
                   .map((l) => {
                     const { id } = l;
                     return <CollectionSelectItem collectionId={id} uri={permanentUrl} key={id} category={'builtin'} />;
                   })}
                 {unpublished &&
-                  (Object.values(unpublished): any)
-                    // $FlowFixMe
+                  Object.values(unpublished)
                     .filter((list) => (isChannel ? list.type === 'collection' : list.type === 'playlist'))
                     .map((l) => {
                       const { id } = l;
@@ -92,8 +80,7 @@ const ClaimCollectionAdd = (props: Props): React.Node => {
                       );
                     })}
                 {published &&
-                  (Object.values(published): any).map((l) => {
-                    // $FlowFixMe
+                  Object.values(published).map((l) => {
                     const { id } = l;
                     return (
                       <CollectionSelectItem collectionId={id} uri={permanentUrl} key={id} category={'published'} />
@@ -110,16 +97,14 @@ const ClaimCollectionAdd = (props: Props): React.Node => {
                 name="new_collection"
                 value={newCollectionName}
                 label={__('New List Title')}
-                onFocus={onTextareaFocus}
-                onBlur={onTextareaBlur}
+                onKeyDown={altEnterListener}
                 inputButton={
                   <>
                     <Button
                       icon={ICONS.ADD}
                       className={'button-toggle'}
-                      disabled={!newCollectionName.length}
+                      disabled={!permanentUrl || !newCollectionName.trim()}
                       onClick={() => handleAddCollection()}
-                      ref={buttonref}
                     />
                     <Button className={'button-toggle'} icon={ICONS.REMOVE} onClick={() => handleClearNew()} />
                   </>

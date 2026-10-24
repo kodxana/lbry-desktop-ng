@@ -15,8 +15,8 @@ import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
 type Props = {
   uri: string,
-  claim: StreamClaim,
-  openModal: (id: string, {}) => void,
+  claim: ?CollectionClaim,
+  openModal: (id: string, { uri: string, collectionId?: string, redirect?: string, webShareable?: boolean }) => void,
   claimIsPending: boolean,
   isMyCollection: boolean,
   collectionId: string,
@@ -27,8 +27,8 @@ type Props = {
   collectionHasEdits: boolean,
   isBuiltin: boolean,
   doToggleShuffleList: (string, boolean) => void,
-  playNextUri: string,
-  firstItem: string,
+  playNextUri: ?string,
+  firstItem: ?string,
 };
 
 function CollectionActions(props: Props): React.Node {
@@ -57,7 +57,7 @@ function CollectionActions(props: Props): React.Node {
   const isEmptyCollection = !firstItem;
 
   const doPlay = React.useCallback(
-    (playUri) => {
+    (playUri: ?string): void => {
       if (!playUri) {
         return;
       }
@@ -147,7 +147,8 @@ function CollectionActions(props: Props): React.Node {
             title={__('Report content')}
             className="button--file-action"
             icon={ICONS.REPORT}
-            navigate={`/$/${PAGES.REPORT_CONTENT}?claimId=${claimId}`}
+            disabled={!claimId}
+            navigate={claimId ? `/$/${PAGES.REPORT_CONTENT}?claimId=${claimId}` : undefined}
           />
         ))}
     </>

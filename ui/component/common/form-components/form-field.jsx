@@ -29,6 +29,7 @@ type Props = {
   onClick?: (FieldEvent) => unknown,
   onBlur?: (FieldEvent) => unknown,
   onKeyPress?: ({ ...FieldEvent, key: string, charCode: number }) => unknown,
+  onKeyDown?: ({ ...FieldEvent, key: string, code: string, repeat: boolean }) => unknown,
   error?: string | boolean | { message: string, ... },
   helper?: string | React.Node,
   inputButton?: React.Node,

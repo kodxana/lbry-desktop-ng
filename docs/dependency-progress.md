@@ -33,9 +33,9 @@ that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
 comment-input contracts to 2,586, form-control contracts to 2,521, claim contracts to 2,296,
 renderer return/state contracts to 1,755, and SDK/comment API and async action
 contracts to 1,549, then Redux action/reducer contracts to 1,363 and publishing
-contracts to 1,221,
+contracts to 1,221, then collection form/menu/control contracts to 1,067,
 with no newly introduced diagnostics in these passes.
-Required gates cover twenty-two shared UI/type source modules (37 invalid contracts)
+Required gates cover twenty-two shared UI/type source modules (39 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
 including homepage options, reaction counts, moderation state, stickers, playback and suggestions).
 Search regressions cover filters, links, cache/pagination and request lifecycle.
@@ -50,7 +50,12 @@ lists before reversing them, and ownership checks use the claim-ID array's lengt
 Collection regressions cover ownership, draft precedence, missing entries,
 shuffle membership and repeat navigation. Playback searches stop after one pass
 when no entry can play; missing items cannot trigger reorder controls, and saved
-edits can be changed before the published collection resolves.
+edits can be changed before the published collection resolves. The collection
+control source gate rejects nine invalid contracts. Renderer checks cover
+unresolved records, scoped Enter/Escape shortcuts, pending selections, comma-separated
+tags, metadata preservation, publish failure/success, menu ownership, one-shot
+shuffle playback and public/private list deletion. Preview loading now dispatches
+its thunk, and publish/update requests preserve existing location metadata.
 Comment-input regressions cover mixed/repeated mentions and emoji, caret ranges,
 claim IDs, Unicode, surrounding text and throttled edits. Completing an emoji
 before punctuation now keeps the caret immediately after the inserted token.

@@ -746,18 +746,7 @@ export function doRepost(options: StreamRepostOptions): ThunkAction<Promise<Clai
 }
 
 export function doCollectionPublish(
-  options: {
-    name: string,
-    bid: string,
-    blocking: true,
-    title?: string,
-    channel_id?: string,
-    thumbnail_url?: string,
-    description?: string,
-    tags?: Array<Tag>,
-    languages?: Array<string>,
-    claims: Array<string>,
-  },
+  options: CollectionCreateOptions,
   localId: string
 ): ThunkAction<Promise<Claim | void>> {
   return (dispatch: Dispatch): Promise<Claim | void> => {
@@ -781,7 +770,7 @@ export function doCollectionPublish(
       description: options.description,
       tags: [],
       languages: options.languages || [],
-      locations: [],
+      locations: options.locations || [],
       blocking: true,
       claims: options.claims,
     };
@@ -842,18 +831,7 @@ export function doCollectionPublish(
 }
 
 export function doCollectionPublishUpdate(
-  options: {
-    bid?: string,
-    blocking?: true,
-    title?: string,
-    thumbnail_url?: string,
-    description?: string,
-    claim_id: string,
-    tags?: Array<Tag>,
-    languages?: Array<string>,
-    claims?: Array<string>,
-    channel_id?: string,
-  },
+  options: CollectionUpdateOptions,
   isBackgroundUpdate?: boolean
 ): ThunkAction<Promise<Claim | void>> {
   return (dispatch: Dispatch, getState: GetState): Promise<Claim | void> => {
@@ -886,7 +864,7 @@ export function doCollectionPublishUpdate(
           description: options.description,
           tags: [],
           languages: options.languages || [],
-          locations: [],
+          locations: options.locations || [],
           blocking: true,
           claim_id: options.claim_id,
           clear_claims: true,
