@@ -579,7 +579,7 @@ export const selectHasChannels = (state: State) => {
   return myChannelClaimIds ? myChannelClaimIds.length > 0 : false;
 };
 
-export const selectMyCollectionIds = (state: State) => selectState(state).myCollectionClaims;
+export const selectMyCollectionIds = (state: { ...State, ... }) => selectState(state).myCollectionClaims;
 
 export const selectResolvingUris = createSelector(selectState, (state) => state.resolvingUris || []);
 

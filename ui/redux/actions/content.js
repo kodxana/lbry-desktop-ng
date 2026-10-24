@@ -290,14 +290,13 @@ export function doClearContentHistoryAll() {
   };
 }
 
-export const doRecommendationUpdate = (claimId: string, urls: Array<string>, id: string, parentId: string) => (
-  dispatch: Dispatch
-) => {
-  dispatch({
-    type: ACTIONS.RECOMMENDATION_UPDATED,
-    data: { claimId, urls, id, parentId },
-  });
-};
+export const doRecommendationUpdate =
+  (claimId: string, urls: Array<string>, id: string, parentId: string) => (dispatch: Dispatch) => {
+    dispatch({
+      type: ACTIONS.RECOMMENDATION_UPDATED,
+      data: { claimId, urls, id, parentId },
+    });
+  };
 
 export const doRecommendationClicked = (claimId: string, index: number) => (dispatch: Dispatch) => {
   if (index !== undefined && index !== null) {
@@ -329,6 +328,7 @@ export function doToggleShuffleList(currentUri: string, collectionId: string, sh
     if (shuffle) {
       const state = getState();
       const urls = makeSelectUrlsForCollectionId(collectionId)(state);
+      if (!urls) return;
 
       let newUrls = urls
         .map((item) => ({ item, sort: Math.random() }))
@@ -339,8 +339,11 @@ export function doToggleShuffleList(currentUri: string, collectionId: string, sh
       // can get in strange position where it might be in the middle or last
       // and the shuffled list ends before scrolling through all entries
       if (currentUri && currentUri !== '') {
-        newUrls.splice(newUrls.indexOf(currentUri), 1);
-        newUrls.splice(0, 0, currentUri);
+        const currentIndex = newUrls.indexOf(currentUri);
+        if (currentIndex !== -1) {
+          newUrls.splice(currentIndex, 1);
+          newUrls.splice(0, 0, currentUri);
+        }
       }
 
       dispatch({

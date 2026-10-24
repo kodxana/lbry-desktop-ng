@@ -24,6 +24,7 @@ const sources = [
   'ui/util/startup-progress.js',
   'ui/util/query-params.js',
   'ui/util/comments.js',
+  'ui/util/collection-playback.js',
 ];
 for (const file of [...sources, '.flowconfig']) write(file, fs.readFileSync(path.join(root, file), 'utf8'));
 for (const file of fs.readdirSync(path.join(root, 'flow-typed')).filter((file) => file.endsWith('.js'))) {
@@ -55,6 +56,15 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared utility source and valid callers must type-check');
 const invalid = {
+  collectionDirection: 'export const invalid = findPlayableUrl([], 0, 0, false, () => true);',
+  collectionLoop: 'export const invalid = findPlayableUrl([], 0, 1, "false", () => true);',
+  collectionUrl: 'export const invalid = findPlayableUrl([42], 0, 1, false, () => true);',
+  collectionPlayable: 'export const invalid = findPlayableUrl([], 0, 1, false, () => "yes");',
+  collectionResult: 'export const invalid: string = findPlayableUrl([], 0, 1, false, () => true);',
+  collectionCount: 'export function invalid(collection: Collection): void { collection.itemCount = "2"; }',
+  collectionLastUsed: 'export function invalid(state: CollectionState): void { state.lastUsedCollection = 2; }',
+  collectionShuffle:
+    'export const invalid: CollectionPlaybackState = {shuffleList: {collectionId: "id", newUrls: true}};',
   commentReaction:
     'export const invalid = sortComments({comments: [], reactionsById: {id: {like: "2"}}, sort: "new", isMyComment: () => false});',
   commentOwner:
@@ -125,5 +135,5 @@ for (const name of Object.keys(invalid)) {
 console.log(
   'PASS shared utility source contracts and ' +
     Object.keys(invalid).length +
-    ' invalid formatting, wallet, search, homepage and comment contracts'
+    ' invalid formatting, wallet, search, homepage, comment and collection contracts'
 );

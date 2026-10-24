@@ -6,19 +6,20 @@ import React from 'react';
 
 type Props = {
   collectionIndex?: number,
-  collectionUris: Array<Collection>,
+  collectionUris?: Array<?string>,
   dragHandleProps?: any,
   uri: string,
   editCollection: (CollectionEditParams) => void,
 };
 
-export default function CollectionButtons(props: Props) {
+export default function CollectionButtons(props: Props): React.Node {
   const { collectionIndex: foundIndex, collectionUris, dragHandleProps, uri, editCollection } = props;
 
   const [confirmDelete, setConfirmDelete] = React.useState(false);
 
   const lastCollectionIndex = collectionUris ? collectionUris.length - 1 : 0;
-  const collectionIndex = Number(foundIndex);
+  const collectionIndex = typeof foundIndex === 'number' ? foundIndex : -1;
+  const canMove = collectionIndex >= 0 && collectionIndex <= lastCollectionIndex;
 
   const orderButton = (className: string, title: string, icon: string, disabled: boolean, handleClick?: () => void) => (
     <Button
@@ -40,26 +41,30 @@ export default function CollectionButtons(props: Props) {
     >
       <div className="collection-preview__edit-group" {...dragHandleProps}>
         <div className="button-collection-manage button-collection-drag top-left bottom-left">
-          <Icon icon={ICONS.DRAG} title={__('Drag')} size={20} />
+          <Icon icon={ICONS.DRAG} customTooltipText={__('Drag')} size={20} />
         </div>
       </div>
 
       <div className="collection-preview__edit-group">
-        {orderButton('', __('Move Top'), ICONS.UP_TOP, collectionIndex === 0, () =>
+        {orderButton('', __('Move Top'), ICONS.UP_TOP, !canMove || collectionIndex === 0, () =>
           editCollection({ order: { from: collectionIndex, to: 0 } })
         )}
 
-        {orderButton('', __('Move Bottom'), ICONS.DOWN_BOTTOM, collectionIndex === lastCollectionIndex, () =>
-          editCollection({ order: { from: collectionIndex, to: lastCollectionIndex } })
+        {orderButton(
+          '',
+          __('Move Bottom'),
+          ICONS.DOWN_BOTTOM,
+          !canMove || collectionIndex === lastCollectionIndex,
+          () => editCollection({ order: { from: collectionIndex, to: lastCollectionIndex } })
         )}
       </div>
 
       <div className="collection-preview__edit-group">
-        {orderButton('', __('Move Up'), ICONS.UP, collectionIndex === 0, () =>
+        {orderButton('', __('Move Up'), ICONS.UP, !canMove || collectionIndex === 0, () =>
           editCollection({ order: { from: collectionIndex, to: collectionIndex - 1 } })
         )}
 
-        {orderButton('', __('Move Down'), ICONS.DOWN, collectionIndex === lastCollectionIndex, () =>
+        {orderButton('', __('Move Down'), ICONS.DOWN, !canMove || collectionIndex === lastCollectionIndex, () =>
           editCollection({ order: { from: collectionIndex, to: collectionIndex + 1 } })
         )}
       </div>

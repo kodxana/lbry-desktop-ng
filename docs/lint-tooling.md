@@ -175,9 +175,9 @@ checked rather than treated as an untyped module. SDK amounts remain strings,
 failed status reads remain nullable, and the balance read still waits for status.
 Credit display text is kept separate from its rendered React content.
 
-`node build/testUtilityTypes.js` checks ten real utility source files and the
-search and comment constants with the first-party declarations. It rejects 46 invalid
-formatting, progress, wallet snapshot, search, homepage and comment contracts. The UI gate also
+`node build/testUtilityTypes.js` checks eleven real utility source files and the
+search and comment constants with the first-party declarations. It rejects 54 invalid
+formatting, progress, wallet snapshot, search, homepage, comment and collection contracts. The UI gate also
 checks credit display props and defaults.
 `node build/testUtilityContracts.js` covers formatter caching, locale changes,
 tiny amounts, display rounding versus transaction serialization, bytes and time.
@@ -222,9 +222,18 @@ implementation, which reversed the Redux array in place. Ownership checks now
 read the raw claim-ID array's length rather than a Set's `size`. Missing records
 are skipped without changing stored ID lists or server pagination totals.
 
-**The application is not yet type-clean.** The full check now reports 2,719
+The collection pass types selector results, nullable entries, last-used IDs,
+server counts, shuffle state and repeat navigation. `node build/testCollectionContracts.js`
+checks real selectors, reducers and actions for ownership, collection precedence,
+missing IDs, aliases, counts, shuffle membership, saved edits before resolution
+and bounded navigation. The previous repeat search hangs when no entry can play;
+the new search examines at most one pass through the list. Missing-item indices
+are consistently `-1`, and renderer tests verify that all reorder buttons are
+disabled for them. The existing reorder and persistence tests still run.
+
+**The application is not yet type-clean.** The full check now reports 2,644
 application diagnostics and zero library-definition diagnostics, down from
-2,798 before the comment pass (79 fewer, with no newly introduced diagnostics).
+2,719 before the collection pass (75 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration
