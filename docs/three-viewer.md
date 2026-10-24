@@ -54,8 +54,8 @@ remain required. Actual installed Windows upgrades run only on hosted runners
 with disposable, unfunded wallets.
 
 Hardware-specific graphics drivers are not covered by software rendering.
-The inherited Flow 0.97 parsing stall remains unresolved; focused lint and
-runtime tests do not establish a clean full Flow check.
+The application now passes Flow 0.337.0 in required CI. The Three.js runtime
+remains partly untyped, so renderer regressions are still required.
 
 References: [Three.js migration guide](https://github.com/mrdoob/three.js/wiki/Migration-Guide),
 [STLLoader](https://threejs.org/docs/pages/STLLoader.html),

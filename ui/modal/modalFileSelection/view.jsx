@@ -12,7 +12,7 @@ import { getFilePath } from 'util/file-path';
 type Props = {
   files: Array<File>,
   hideModal: () => void,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: ({ filePath: string | File }) => void,
   history: {
     location: { pathname: string },
     push: (string) => void,
@@ -79,4 +79,6 @@ const ModalFileSelection = (props: Props) => {
   );
 };
 
-export default withDesktopRouter(ModalFileSelection);
+const RoutedModalFileSelection: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ModalFileSelection);
+export default RoutedModalFileSelection;

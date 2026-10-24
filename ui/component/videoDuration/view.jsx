@@ -12,7 +12,6 @@ function VideoDuration(props: Props): React.Node {
   const media = claim && claim.value && (claim.value.video || claim.value.audio);
   let duration;
   if (media && media.duration) {
-    // $FlowFixMe
     duration = formatMediaDuration(media.duration);
   }
 

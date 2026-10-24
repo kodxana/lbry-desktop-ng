@@ -8,7 +8,6 @@ import HomepageSelector from 'component/homepageSelector';
 import SettingLanguage from 'component/settingLanguage';
 import SettingsRow from 'component/settingsRow';
 import ThemeSelector from 'component/themeSelector';
-// $FlowFixMe
 import homepages from 'homepages';
 
 type Props = {

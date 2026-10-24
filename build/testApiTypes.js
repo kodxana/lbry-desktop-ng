@@ -25,6 +25,7 @@ import Lbry from 'lbry';
 import Comments from 'comments';
 export const status: Promise<StatusResponse> = Lbry.connect();
 export const preferences: Promise<unknown> = Lbry.preference_set({key: 'shared', value: '{}'});
+export const objectPreferences: Promise<unknown> = Lbry.preference_set({key: 'shared', value: {type: 'object', version: '0.1', value: {tags: ['fixture']}}});
 export const signed: Promise<ChannelSignResponse> = Lbry.channel_sign({channel_id: 'id', hexdata: 'abcd'});
 export const publication: Promise<PublishResponse> = Lbry.publish({name: 'test', bid: '0.01'});
 export const comments: Promise<CommentListResponse> = Comments.comment_list({page: 1, page_size: 20});
@@ -67,7 +68,7 @@ const invalid = {
   unknownMethod: 'export const invalid = Lbry.wallet_typo();',
   status: 'export const invalid: Promise<string> = Lbry.connect();',
   preferenceKey: 'export const invalid = Lbry.preference_set({value: "{}"});',
-  preferenceValue: 'export const invalid = Lbry.preference_set({key: "shared", value: {}});',
+  preferenceValue: 'export const invalid = Lbry.preference_set({key: "shared", value: undefined});',
   signature: 'export const invalid: Promise<string> = Lbry.channel_sign({channel_id: "id", hexdata: "abcd"});',
   commentPage: 'export const invalid = Comments.comment_list({page: "1", page_size: 20});',
   commentResult: 'export const invalid: Promise<string> = Comments.comment_list({page: 1, page_size: 20});',

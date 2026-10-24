@@ -28,7 +28,7 @@ class DateTime extends React.Component<Props, State> {
   static SHOW_DATE = 'date';
   static SHOW_TIME = 'time';
 
-  static getTimeAgoStr(date: any) {
+  static getTimeAgoStr(date: any): string {
     const suffixList = ['years', 'months', 'days', 'hours', 'minutes', 'seconds', ''];
     var duration = 0;
 

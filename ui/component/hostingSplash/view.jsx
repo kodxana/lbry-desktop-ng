@@ -6,7 +6,6 @@ import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
 import { withDesktopRouter } from 'component/common/desktop-router';
 
-// $FlowFixMe cannot resolve ...
 import image from 'static/img/yrblhappy.svg';
 import * as DAEMON_SETTINGS from 'constants/daemon_settings';
 
@@ -162,4 +161,6 @@ function HostingSplash(props: Props) {
   );
 }
 
-export default withDesktopRouter(HostingSplash);
+const RoutedHostingSplash: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(HostingSplash);
+export default RoutedHostingSplash;

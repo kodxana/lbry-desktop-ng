@@ -12,12 +12,14 @@ type Props = {
 export default function Expandable(props: Props): React.Node {
   const [expanded, setExpanded] = useState(false);
   const { children } = props;
-  const ref = useRef();
+  const ref = useRef<HTMLDivElement | null>(null);
   const [canExpand, setCanExpand] = useState(false);
   useLayoutEffect(() => {
-    const measure = () => setCanExpand(ref.current.getBoundingClientRect().height > COLLAPSED_HEIGHT);
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => setCanExpand(element.getBoundingClientRect().height > COLLAPSED_HEIGHT);
     const observer = new ResizeObserver(measure);
-    observer.observe(ref.current);
+    observer.observe(element);
     measure();
     return () => observer.disconnect();
   }, []);

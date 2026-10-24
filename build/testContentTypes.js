@@ -54,7 +54,7 @@ declare module 'util/desktop' { declare export default {readDocument: (string) =
 declare module 'util/document-html' { declare export default (string) => string; }
 declare module 'component/common/markdown-preview' {
   import type {ComponentType} from 'react';
-  declare export default ComponentType<{content: ?string, isMarkdownPost: boolean, promptLinks: boolean}>;
+  declare export default ComponentType<{content: ?string, isMarkdownPost: boolean}>;
 }
 declare module 'component/spinner' {
   import type {ComponentType, Node} from 'react';

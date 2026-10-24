@@ -27,7 +27,7 @@ function MenuList({
       className={classnames('menu__popup', className)}
       portal={portal}
       // A delayed close must not return focus after the menu has reopened.
-      autoFocusOnHide={() => !menu.getState().open}
+      autoFocusOnHide={() => !menu?.getState().open}
       onClick={(event) => {
         // Menu actions inside claim cards must not activate the card's link.
         event.stopPropagation();

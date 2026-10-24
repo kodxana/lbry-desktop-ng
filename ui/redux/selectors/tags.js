@@ -1,24 +1,30 @@
 // @flow
 import { createSelector } from 'reselect';
 
-type State = { tags: TagState };
+type State = { tags?: TagState, ... };
+const EMPTY_TAGS: TagState = { knownTags: {}, followedTags: [] };
 
-const selectState = (state: State) => state.tags || {};
+const selectState = (state: State): TagState => state.tags || EMPTY_TAGS;
 
-export const selectKnownTagsByName = createSelector(selectState, (state: TagState): KnownTags => state.knownTags);
-
-export const selectFollowedTagsList = (state: State) => selectState(state).followedTags;
-
-export const selectFollowedTags = createSelector(selectFollowedTagsList, (followedTags: Array<string>): Array<Tag> =>
-  followedTags.map((tag) => ({ name: tag.toLowerCase() })).sort((a, b) => a.name.localeCompare(b.name))
+export const selectKnownTagsByName: (State) => KnownTags = createSelector(
+  selectState,
+  (state: TagState): KnownTags => state.knownTags
 );
 
-export const selectUnfollowedTags = createSelector(
+export const selectFollowedTagsList = (state: State): Array<string> => selectState(state).followedTags;
+
+export const selectFollowedTags: (State) => Array<Tag> = createSelector(
+  selectFollowedTagsList,
+  (followedTags: Array<string>): Array<Tag> =>
+    followedTags.map((tag): Tag => ({ name: tag.toLowerCase() })).sort((a, b) => a.name.localeCompare(b.name))
+);
+
+export const selectUnfollowedTags: (State) => Array<Tag> = createSelector(
   selectKnownTagsByName,
   selectFollowedTagsList,
   (tagsByName: KnownTags, followedTags: Array<string>): Array<Tag> => {
     const followedTagsSet = new Set(followedTags);
-    let tagsToReturn = [];
+    let tagsToReturn: Array<Tag> = [];
     Object.keys(tagsByName).forEach((key) => {
       if (!followedTagsSet.has(key)) {
         const { name } = tagsByName[key];
@@ -30,7 +36,7 @@ export const selectUnfollowedTags = createSelector(
   }
 );
 
-export const makeSelectIsFollowingTag = (tag: string) =>
+export const makeSelectIsFollowingTag = (tag: string): ((State) => boolean) =>
   createSelector(selectFollowedTags, (followedTags) => {
     return followedTags.some((followedTag) => followedTag.name === tag.toLowerCase());
   });

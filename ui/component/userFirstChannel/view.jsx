@@ -35,7 +35,7 @@ function UserFirstChannel(props: Props): React.Node {
     });
   }
 
-  function handleChannelChange(e) {
+  function handleChannelChange(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     setChannel(value);
     if (!isNameValid(value)) {

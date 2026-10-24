@@ -19,7 +19,7 @@ type Props = {
 };
 
 class NavigationHistoryItem extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { slim: boolean } = {
     slim: false,
   };
 
@@ -31,7 +31,7 @@ class NavigationHistoryItem extends React.PureComponent<Props> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const { lastViewed, selected, onSelect, claim, uri, slim, history } = this.props;
 
     let title;
@@ -63,4 +63,6 @@ class NavigationHistoryItem extends React.PureComponent<Props> {
   }
 }
 
-export default withDesktopRouter(NavigationHistoryItem);
+const RoutedNavigationHistoryItem: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(NavigationHistoryItem);
+export default RoutedNavigationHistoryItem;

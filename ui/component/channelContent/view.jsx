@@ -24,14 +24,14 @@ type Props = {
   fetchClaims: (string, number) => void,
   channelIsBlackListed: boolean,
   defaultPageSize?: number,
-  defaultInfiniteScroll?: Boolean,
+  defaultInfiniteScroll?: boolean,
   claim: Claim,
   isAuthenticated: boolean,
   showMature: boolean,
   tileLayout: boolean,
   viewHiddenChannels: boolean,
   doResolveUris: (Array<string>, boolean) => void,
-  claimType: string,
+  claimType: string | Array<string>,
   empty?: string,
 };
 
@@ -67,7 +67,7 @@ function ChannelContent(props: Props): React.Node {
       ? claimType.every((ct) => TYPES_TO_ALLOW_FILTER.includes(ct))
       : TYPES_TO_ALLOW_FILTER.includes(claimType));
 
-  function handleInputChange(e) {
+  function handleInputChange(e: { target: HTMLInputElement, ... }) {
     const { value } = e.target;
     setSearchQuery(value);
   }

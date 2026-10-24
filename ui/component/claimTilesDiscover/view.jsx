@@ -13,7 +13,6 @@ function urisEqual(prev: ?Array<string>, next: ?Array<string>) {
     return prev === next;
   }
 
-  // $FlowFixMe - already checked for null above.
   return prev.length === next.length && prev.every((value, index) => value === next[index]);
 }
 
@@ -73,7 +72,7 @@ function ClaimTilesDiscover(props: Props) {
     optionsStringified,
   } = props;
 
-  const prevUris = React.useRef();
+  const prevUris = React.useRef<Array<string> | void>();
   const claimSearchUris = claimSearchResults || [];
 
   const isUnfetchedClaimSearch = claimSearchResults === undefined;
@@ -130,7 +129,7 @@ function ClaimTilesDiscover(props: Props) {
               return <ClaimPreviewTile showNoSourceClaims={hasNoSource || showNoSourceClaims} key={i} placeholder />;
             }
           })
-        : new Array(pageSize)
+        : new Array<number>(pageSize)
             .fill(1)
             .map((x, i) => (
               <ClaimPreviewTile showNoSourceClaims={hasNoSource || showNoSourceClaims} key={i} placeholder />
@@ -139,15 +138,15 @@ function ClaimTilesDiscover(props: Props) {
   );
 }
 
-export default React.memo<Props>(ClaimTilesDiscover, areEqual);
+const MemoizedClaimTiles: React.ComponentType<Props> = React.memo<Props>(ClaimTilesDiscover, areEqual);
+export default MemoizedClaimTiles;
 
 // ****************************************************************************
 // ****************************************************************************
 
-function trace(key, value) {
+function trace(key: string, value: unknown) {
   // @if process.env.DEBUG_TILE_RENDER
-  // $FlowFixMe "cannot coerce certain types".
-  console.log(`[claimTilesDiscover] ${key}: ${value}`); // eslint-disable-line no-console
+  console.log(`[claimTilesDiscover] ${key}: ${String(value)}`); // eslint-disable-line no-console
   // @endif
 }
 
@@ -163,7 +162,7 @@ function areEqual(prev: Props, next: Props) {
     }
   }
 
-  const ARRAY_KEYS = ['prefixUris', 'channelIds'];
+  const ARRAY_KEYS: Array<'prefixUris' | 'channelIds'> = ['prefixUris', 'channelIds'];
   for (let i = 0; i < ARRAY_KEYS.length; ++i) {
     const key = ARRAY_KEYS[i];
     if (!urisEqual(prev[key], next[key])) {

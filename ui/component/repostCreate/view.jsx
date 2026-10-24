@@ -20,7 +20,7 @@ import BidHelpText from 'component/publishBid/bid-help-text';
 import Spinner from 'component/spinner';
 
 type Props = {
-  doToast: ({ message: string }) => void,
+  doToast: ({ message: string, linkText?: string, linkTarget?: string }) => void,
   doClearRepostError: () => void,
   doRepost: (StreamRepostOptions) => Promise<Claim | void>,
   doHideModal: () => void,
@@ -28,7 +28,7 @@ type Props = {
   claim?: StreamClaim,
   enteredContentClaim?: StreamClaim,
   balance: number,
-  doCheckPublishNameAvailability: (string) => Promise<*>,
+  doCheckPublishNameAvailability: (string) => Promise<boolean>,
   error: ?string,
   reposting: boolean,
   uri: string,
@@ -93,7 +93,7 @@ function RepostCreate(props: Props): React.Node {
   const repostUrlName = `lbry://${incognito || !activeChannelClaim ? '' : `${activeChannelClaim.name}/`}`;
 
   const contentFirstRender = React.useRef(true);
-  const setAutoRepostBid = (amount) => {
+  const setAutoRepostBid = (amount: number) => {
     if (balance && balance > 0.02) {
       if (uri) {
         setRepostBid(0.01);
@@ -105,7 +105,7 @@ function RepostCreate(props: Props): React.Node {
     }
   };
 
-  function getSearchUri(value) {
+  function getSearchUri(value: string) {
     const WEB_DEV_PREFIX = `${URL_DEV}/`;
     const WEB_LOCAL_PREFIX = `${URL_LOCAL}/`;
     const WEB_PROD_PREFIX = `${SITE_URL}/`;
@@ -118,7 +118,7 @@ function RepostCreate(props: Props): React.Node {
     const isLbryUrl = value.startsWith('lbry://') && value !== 'lbry://';
     const error = '';
 
-    const addLbryIfNot = (term) => {
+    const addLbryIfNot = (term: string) => {
       return term.startsWith('lbry://') ? term : `lbry://${term}`;
     };
     if (wasCopiedFromWeb) {
@@ -260,7 +260,7 @@ function RepostCreate(props: Props): React.Node {
 
   const repostClaimId = contentClaimId || enteredClaimId;
 
-  const getRedirect = (entered, passed, redirect) => {
+  const getRedirect = (entered: ?string, passed: ?string, redirect: ?string) => {
     if (redirect) {
       return redirect;
     } else if (entered) {

@@ -9,7 +9,7 @@ type Props = {
   emptyMessage: ?string,
   loading: boolean,
   openModal: (id: string, { tx: Txo, cb: (string) => void }) => void,
-  rewards: {},
+  rewards: { [string]: { reward_title: string } },
   txos: Array<Txo>,
 };
 

@@ -18,7 +18,7 @@ export default function LbcMessage(props: Props): React.Node {
   );
 
   return (
-    <I18nMessage tokens={{ lbc: amount ? <CreditAmount badge noFormat amount={amount} /> : undefined }}>
+    <I18nMessage tokens={{ lbc: amount ? <CreditAmount noFormat amount={amount} /> : undefined }}>
       {/* Catch any rogue LBC's left */}
       {tokenizedMessage.replace(/\sLBC/g, ' Credits')}
     </I18nMessage>

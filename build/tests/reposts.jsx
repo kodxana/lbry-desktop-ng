@@ -20,7 +20,7 @@ export default async function reposts(
     logged.push(value);
   };
   const calls: Array<StreamRepostOptions> = [];
-  const toasts: Array<{ message: string }> = [];
+  const toasts: Array<{ message: string, linkText?: string, linkTarget?: string }> = [];
   let pending = 0;
   let closed = 0;
   let cleared = 0;
@@ -38,7 +38,7 @@ export default async function reposts(
       calls.push(options);
       return result;
     },
-    doToast: (toast: { message: string }): void => {
+    doToast: (toast: { message: string, linkText?: string, linkTarget?: string }): void => {
       toasts.push(toast);
     },
     doCheckPublishNameAvailability: async () => true,

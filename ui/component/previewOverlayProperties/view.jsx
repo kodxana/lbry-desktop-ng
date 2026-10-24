@@ -35,7 +35,6 @@ export default function PreviewOverlayProperties(props: Props): React.Node {
     editedCollection,
   } = props;
   const isCollection = claim && claim.value_type === 'collection';
-  // $FlowFixMe
   const claimLength = claim && claim.value_type === 'collection' ? claim.value.claims.length : undefined;
 
   const claimCount = editedCollection ? editedCollection.items.length : claimLength;

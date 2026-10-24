@@ -40,6 +40,7 @@ const content = load('redux/actions/content.js', {
   'redux/selectors/settings': { makeSelectClientSetting: () => (state) => state.persist },
 });
 const calls = [];
+let downloadResponse = { outpoint };
 const reactions = load('redux/actions/reactions.js', {
   'constants/action_types': actions,
   'constants/reactions': load('constants/reactions.js', {}),
@@ -54,7 +55,7 @@ const files = load('redux/actions/file.js', {
   lbry: {
     get: async (args) => {
       calls.push(args);
-      return { outpoint };
+      return downloadResponse;
     },
     file_delete: (args) => calls.push(args),
   },
@@ -161,6 +162,18 @@ async function main() {
   await Promise.resolve();
   assert.deepEqual(plain(calls.at(-1)), { uri: url, save_file: false });
   assert.equal(events.at(-1).type, actions.FETCH_FILE_INFO_COMPLETED);
+  for (const response of [null, undefined, false, 42, 'timeout', { error: 'Timeout' }]) {
+    downloadResponse = response;
+    const start = events.length;
+    files.doFileGet(url, false, () => assert.fail('An invalid response must not complete a download'))(
+      dispatch,
+      getState
+    );
+    await Promise.resolve();
+    const dispatched = events.slice(start);
+    assert(dispatched.some((event) => event.type === actions.FETCH_FILE_INFO_FAILED));
+    assert(!dispatched.some((event) => event.type === actions.FETCH_FILE_INFO_COMPLETED));
+  }
   state = {};
   files.doDeleteFileAndMaybeGoBack(url, false, false, undefined, item)(dispatch, getState);
   assert.deepEqual(

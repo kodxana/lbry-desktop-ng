@@ -19,21 +19,19 @@ type State = {
 };
 
 class ModalRewardCode extends React.PureComponent<Props, State> {
-  constructor() {
-    super();
+  constructor(props: Props) {
+    super(props);
 
     this.state = {
       rewardCode: '',
     };
-
-    (this: any).handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleSubmit() {
+  handleSubmit = () => {
     const { rewardCode } = this.state;
     const { submitRewardCode } = this.props;
     submitRewardCode(rewardCode);
-  }
+  };
 
   render(): React.Node {
     const { closeModal, rewardIsPending, error } = this.props;

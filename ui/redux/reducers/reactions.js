@@ -3,15 +3,21 @@ import { handleActions } from 'util/redux-utils';
 import * as ACTIONS from 'constants/action_types';
 import * as REACTION_TYPES from 'constants/reactions';
 
-const defaultState = {
+type Reactions = {
+  my_reactions?: ?{ [string]: { [string]: number } },
+  others_reactions?: ?{ [string]: { [string]: number } },
+  ...
+};
+type State = { fetchingReactions: boolean, reactionsError: unknown, reactionsById: { [string]: Reactions } };
+const defaultState: State = {
   fetchingReactions: false,
   reactionsError: undefined,
   reactionsById: {},
 };
 
-export default handleActions(
+const reducer: (State | void, { type: string, ... }) => State = handleActions(
   {
-    [ACTIONS.REACTIONS_LIST_STARTED]: state => ({ ...state, fetchingReactions: true }),
+    [ACTIONS.REACTIONS_LIST_STARTED]: (state) => ({ ...state, fetchingReactions: true }),
     [ACTIONS.REACTIONS_LIST_FAILED]: (state, action) => ({
       ...state,
       reactionsError: action.data,
@@ -53,3 +59,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

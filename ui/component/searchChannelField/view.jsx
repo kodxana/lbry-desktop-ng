@@ -17,7 +17,7 @@ type Props = {
   onAdd?: (channelUri: string) => void,
   onRemove?: (channelUri: string) => void,
   // --- perform ---
-  doToast: ({ message: string }) => void,
+  doToast: ({ message: string, isError?: boolean }) => void,
 };
 
 export default function SearchChannelField(props: Props): React.Node {
@@ -69,7 +69,7 @@ export default function SearchChannelField(props: Props): React.Node {
     setSearchUri('');
   }
 
-  function handleKeyPress(e) {
+  function handleKeyPress(e: { key: string, preventDefault: () => void, ... }) {
     // We have to use 'key' instead of 'keyCode' in this event.
     if (e.key === 'Enter' && addTagRef && addTagRef.current && addTagRef.current.click) {
       e.preventDefault();
@@ -78,14 +78,14 @@ export default function SearchChannelField(props: Props): React.Node {
   }
 
   function getFoundChannelRenderActionsFn() {
-    function handleFoundChannelClick(claim) {
+    function handleFoundChannelClick(claim: ChannelClaim) {
       if (claim && claim.name && claim.claim_id) {
         addTag([{ name: claim.name + '#' + claim.claim_id }]);
         clearSearchTerm();
       }
     }
 
-    return (claim) => {
+    return (claim: ChannelClaim) => {
       return (
         <Button
           ref={addTagRef}

@@ -8,7 +8,7 @@ type Props = {
   uri: string,
   // --- select ---
   claim: ?StreamClaim,
-  viewCount: string,
+  viewCount: number,
   lang: ?string,
 };
 

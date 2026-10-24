@@ -6,7 +6,7 @@ type Props = {
 };
 
 class BusyIndicator extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { message: string } = {
     message: '',
   };
 

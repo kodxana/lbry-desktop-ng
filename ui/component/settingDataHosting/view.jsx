@@ -34,7 +34,7 @@ function SettingDataHosting(props: Props): React.Node {
     networkLimitSetting ? String(networkLimitSetting / 1024) : 0
   );
 
-  function handleNetworkLimitChange(gb) {
+  function handleNetworkLimitChange(gb: string) {
     if (gb === '') {
       setNetworkBlobSpaceLimit('');
     } else {
@@ -45,7 +45,7 @@ function SettingDataHosting(props: Props): React.Node {
     }
   }
 
-  function handleKeyDown(e) {
+  function handleKeyDown(e: { keyCode: number, preventDefault: () => void, ... }) {
     if (e.keyCode === KEYCODES.ESCAPE) {
       e.preventDefault();
       setNetworkBlobSpaceLimit(String(networkLimitSetting / 1024));

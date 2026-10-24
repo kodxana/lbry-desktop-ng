@@ -1,7 +1,11 @@
 // @flow
+import type { Player } from './videojs';
 import * as OVERLAY from './overlays';
 import * as KEYCODES from 'constants/keycodes';
 import isUserTyping from 'util/detect-typing';
+type PlayerRef = { current: Player | void };
+type ContainerRef = { current: HTMLDivElement | null };
+type KeyboardControls = { curried_function: (PlayerRef, ContainerRef) => (KeyboardEvent) => void };
 
 const SEEK_STEP_5 = 5;
 const SEEK_STEP = 10; // time to seek in seconds
@@ -12,10 +16,10 @@ const videoPlaybackRates = [0.25, 0.5, 0.75, 1, 1.1, 1.25, 1.5, 1.75, 2];
 function activeElementIsPartOfVideoElement() {
   const videoElementParent = document.getElementsByClassName('video-js-parent')[0];
   const activeElement = document.activeElement;
-  return videoElementParent.contains(activeElement);
+  return Boolean(videoElementParent && videoElementParent.contains(activeElement));
 }
 
-function volumeUp(event, playerRef) {
+function volumeUp(event: KeyboardEvent, playerRef: PlayerRef) {
   // dont run if video element is not active element (otherwise runs when scrolling using keypad)
   const videoElementIsActive = activeElementIsPartOfVideoElement();
   const player = playerRef.current;
@@ -26,7 +30,7 @@ function volumeUp(event, playerRef) {
   player.userActive(true);
 }
 
-function volumeDown(event, playerRef) {
+function volumeDown(event: KeyboardEvent, playerRef: PlayerRef) {
   // dont run if video element is not active element (otherwise runs when scrolling using keypad)
   const videoElementIsActive = activeElementIsPartOfVideoElement();
   const player = playerRef.current;
@@ -37,9 +41,9 @@ function volumeDown(event, playerRef) {
   player.userActive(true);
 }
 
-function seekVideo(stepSize: number, playerRef, containerRef) {
+function seekVideo(stepSize: number, playerRef: PlayerRef, containerRef: ContainerRef) {
   const player = playerRef.current;
-  const videoNode = containerRef.current && containerRef.current.querySelector('video, audio');
+  const videoNode = containerRef.current && containerRef.current.querySelector<HTMLMediaElement>('video, audio');
   if (!videoNode || !player) return;
   const duration = videoNode.duration;
   const currentTime = videoNode.currentTime;
@@ -55,7 +59,7 @@ function seekVideo(stepSize: number, playerRef, containerRef) {
   player.userActive(true);
 }
 
-function toggleFullscreen(playerRef) {
+function toggleFullscreen(playerRef: PlayerRef) {
   const player = playerRef.current;
   if (!player) return;
   if (!player.isFullscreen()) {
@@ -65,19 +69,19 @@ function toggleFullscreen(playerRef) {
   }
 }
 
-function toggleMute(containerRef) {
-  const videoNode = containerRef.current && containerRef.current.querySelector('video, audio');
+function toggleMute(containerRef: ContainerRef) {
+  const videoNode = containerRef.current && containerRef.current.querySelector<HTMLMediaElement>('video, audio');
   if (!videoNode) return;
   videoNode.muted = !videoNode.muted;
 }
 
-function togglePlay(containerRef) {
-  const videoNode = containerRef.current && containerRef.current.querySelector('video, audio');
+function togglePlay(containerRef: ContainerRef) {
+  const videoNode = containerRef.current && containerRef.current.querySelector<HTMLMediaElement>('video, audio');
   if (!videoNode) return;
   videoNode.paused ? videoNode.play() : videoNode.pause();
 }
 
-function changePlaybackSpeed(shouldSpeedUp: boolean, playerRef) {
+function changePlaybackSpeed(shouldSpeedUp: boolean, playerRef: PlayerRef) {
   const player = playerRef.current;
   if (!player) return;
   const isSpeedUp = shouldSpeedUp;
@@ -98,11 +102,11 @@ const VideoJsKeyboardShorcuts = ({
   playPrevious,
   toggleVideoTheaterMode,
 }: {
-  playNext: any, // function
-  playPrevious: any, // function
-  toggleVideoTheaterMode: any, // function
-}) => {
-  function toggleTheaterMode(playerRef) {
+  playNext: () => void,
+  playPrevious: () => void,
+  toggleVideoTheaterMode: () => void,
+}): KeyboardControls => {
+  function toggleTheaterMode(playerRef: PlayerRef) {
     const player = playerRef.current;
     if (!player) return;
     // TODO: have to fix this
@@ -112,15 +116,15 @@ const VideoJsKeyboardShorcuts = ({
     }
   }
 
-  function handleKeyDown(e: KeyboardEvent, playerRef, containerRef) {
+  function handleKeyDown(e: KeyboardEvent, playerRef: PlayerRef, containerRef: ContainerRef) {
     const player = playerRef.current;
-    const videoNode = containerRef.current && containerRef.current.querySelector('video, audio');
+    const videoNode = containerRef.current && containerRef.current.querySelector<HTMLMediaElement>('video, audio');
     if (!videoNode || !player || isUserTyping()) return;
     handleSingleKeyActions(e, playerRef, containerRef);
     handleShiftKeyActions(e, playerRef);
   }
 
-  function handleShiftKeyActions(e: KeyboardEvent, playerRef) {
+  function handleShiftKeyActions(e: KeyboardEvent, playerRef: PlayerRef) {
     if (e.altKey || e.ctrlKey || e.metaKey || !e.shiftKey) return;
     if (e.keyCode === KEYCODES.PERIOD) changePlaybackSpeed(true, playerRef);
     if (e.keyCode === KEYCODES.COMMA) changePlaybackSpeed(false, playerRef);
@@ -128,8 +132,7 @@ const VideoJsKeyboardShorcuts = ({
     if (e.keyCode === KEYCODES.P) playPrevious();
   }
 
-  // eslint-disable-next-line flowtype/no-types-missing-file-annotation
-  function handleSingleKeyActions(e: KeyboardEvent, playerRef, containerRef) {
+  function handleSingleKeyActions(e: KeyboardEvent, playerRef: PlayerRef, containerRef: ContainerRef) {
     if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     if (e.keyCode === KEYCODES.SPACEBAR || e.keyCode === KEYCODES.K) togglePlay(containerRef);
     if (e.keyCode === KEYCODES.F) toggleFullscreen(playerRef);
@@ -143,8 +146,8 @@ const VideoJsKeyboardShorcuts = ({
     if (e.keyCode === KEYCODES.LEFT) seekVideo(-SEEK_STEP_5, playerRef, containerRef);
   }
 
-  var curried_function = function (playerRef: any, containerRef: any) {
-    return function curried_func(e: any) {
+  var curried_function = function (playerRef: PlayerRef, containerRef: ContainerRef) {
+    return function curried_func(e: KeyboardEvent) {
       handleKeyDown(e, playerRef, containerRef);
     };
   };

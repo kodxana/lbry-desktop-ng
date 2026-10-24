@@ -101,7 +101,7 @@ export default function WunderBarSuggestions(props: Props): React.Node {
   const isTyping = debouncedTerm !== term;
   const showPlaceholder = isTyping || loading;
 
-  function handleSelect(value) {
+  function handleSelect(value: string) {
     if (!value) {
       return;
     }
@@ -175,7 +175,7 @@ export default function WunderBarSuggestions(props: Props): React.Node {
   }, [term, debouncedTerm]);
 
   React.useEffect(() => {
-    function handleKeyDown(event) {
+    function handleKeyDown(event: KeyboardEvent) {
       const { ctrlKey, metaKey, keyCode } = event;
 
       if (!inputRef.current) {
@@ -200,7 +200,7 @@ export default function WunderBarSuggestions(props: Props): React.Node {
     window.addEventListener('keydown', handleKeyDown);
 
     // @if TARGET='app'
-    function handleDoubleClick(event) {
+    function handleDoubleClick(event: MouseEvent) {
       if (!inputRef.current) {
         return;
       }

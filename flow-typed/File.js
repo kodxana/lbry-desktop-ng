@@ -14,7 +14,7 @@ declare type FileListItem = {
   content_fee?: { txid: string, ... },
   purchase_receipt?: { txid: string, amount: string, ... },
   download_directory: string,
-  download_path: string,
+  download_path: string | null,
   file_name: string,
   key: string,
   mime_type: string,

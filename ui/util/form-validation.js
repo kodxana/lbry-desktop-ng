@@ -1,7 +1,7 @@
 // @flow
 import { regexAddress } from 'util/lbryURI';
 
-export default function validateSendTx(address: string) {
+export default function validateSendTx(address: string): { address: string } {
   const errors = {
     address: '',
   };

@@ -1,7 +1,6 @@
 // @flow
 import React from 'react';
 // import { resetColors } from 'util/theme';
-// $FlowFixMe cannot resolve ...
 import freeezepeach from 'static/img/freespch.png';
 type Props = {
   // uri: ?string,

@@ -108,7 +108,11 @@ export default function HubSetup({ handleNextPage }: Props): React.Node {
                   <span className="hub-setup__server-label">
                     <span className="hub-setup__endpoint">{server.endpoint}</span>
                     <span className="hub-setup__response">
-                      {server.error ? __(server.error) : `${server.latency} ms`}
+                      {server.error
+                        ? __(server.error)
+                        : server.latency == null
+                          ? __('Not measured')
+                          : `${server.latency} ms`}
                     </span>
                   </span>
                 }

@@ -14,7 +14,10 @@ import ChannelSelector from 'component/channelSelector';
 import ClaimPreview from 'component/claimPreview';
 
 type Props = {
-  openModal: (id: string, { destination: string, amount: string, isAddress: boolean }) => void,
+  openModal: (
+    id: string,
+    { destination: string, amount: string, isAddress: boolean, setConfirmed: (boolean) => void }
+  ) => void,
   draftTransaction: { address: string, amount: string },
   setDraftTransaction: ({ address: string, amount: string }) => void,
   balance: number,
@@ -37,14 +40,7 @@ type Props = {
 };
 
 class WalletSend extends React.PureComponent<Props> {
-  constructor() {
-    super();
-
-    (this: any).handleSubmit = this.handleSubmit.bind(this);
-    (this: any).handleClear = this.handleClear.bind(this);
-  }
-
-  canSubmit() {
+  canSubmit(): boolean {
     const { draftTransaction, balance, sendLabel, isAddress, contentClaim } = this.props;
     const amount = Number(draftTransaction.amount);
     return (
@@ -58,7 +54,7 @@ class WalletSend extends React.PureComponent<Props> {
     );
   }
 
-  handleSubmit(_values: {}, { setSubmitting }: { setSubmitting: (boolean) => void }) {
+  handleSubmit = (_values: {}, { setSubmitting }: { setSubmitting: (boolean) => void }): void => {
     // Submission opens a confirmation dialog; cancelling it must allow another attempt.
     setSubmitting(false);
     if (!this.canSubmit()) return;
@@ -69,16 +65,16 @@ class WalletSend extends React.PureComponent<Props> {
     const modalProps = { destination, amount, isAddress, setConfirmed };
 
     openModal(MODALS.CONFIRM_TRANSACTION, modalProps);
-  }
+  };
 
-  handleClear() {
+  handleClear = (): void => {
     const { setDraftTransaction, setConfirmed } = this.props;
     setDraftTransaction({
       address: '',
       amount: '',
     });
     setConfirmed(false);
-  }
+  };
 
   render(): React.Node {
     const {

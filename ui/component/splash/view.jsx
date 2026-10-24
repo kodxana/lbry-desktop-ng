@@ -47,7 +47,6 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
       launchWithIncompatibleDaemon: false,
       isRunning: false,
     };
-    (this: any).runWithIncompatibleDaemon = this.runWithIncompatibleDaemon.bind(this);
   }
 
   componentDidMount() {
@@ -81,7 +80,7 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
     }, PROGRESS_WAIT);
   }
 
-  async updateStatus() {
+  async updateStatus(): Promise<void> {
     if (!this.active) return;
     const { modal, notifyUnlockWallet } = this.props;
     try {
@@ -144,10 +143,10 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
     this.schedulePoll();
   }
 
-  runWithIncompatibleDaemon() {
+  runWithIncompatibleDaemon = () => {
     this.props.hideModal();
     this.setState({ launchWithIncompatibleDaemon: true }, () => this.continueAppLaunch());
-  }
+  };
 
   continueAppLaunch() {
     const { daemonVersionMatched, onReadyToLaunch } = this.props;
@@ -155,12 +154,12 @@ export default class SplashScreen extends React.PureComponent<Props, State> {
     if (daemonVersionMatched || (launchWithIncompatibleDaemon && isRunning)) onReadyToLaunch();
   }
 
-  timeout: ?TimeoutID;
-  pollTimeout: ?TimeoutID;
+  timeout: ReturnType<typeof setTimeout> | void;
+  pollTimeout: ReturnType<typeof setTimeout> | void;
   active: boolean;
   lastProgress: ?string;
 
-  renderModals() {
+  renderModals(): React.Node {
     const { modal } = this.props;
     switch (modal && modal.id) {
       case MODALS.INCOMPATIBLE_DAEMON:

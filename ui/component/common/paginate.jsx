@@ -96,4 +96,5 @@ function Paginate(props: Props) {
   );
 }
 
-export default withDesktopRouter(Paginate);
+const RoutedPaginate: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(Paginate);
+export default RoutedPaginate;

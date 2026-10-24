@@ -25,7 +25,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
   saving = false;
   pendingRequest = false;
 
-  state = {
+  state: State = {
     password: '',
     rememberPassword: false,
     submittedPassword: null,
@@ -65,11 +65,11 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
     }
   }
 
-  onChangePassword(event: SyntheticInputEvent<*>) {
+  onChangePassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ password: event.target.value });
   }
 
-  onChangeRememberPassword(event: SyntheticInputEvent<>) {
+  onChangeRememberPassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ rememberPassword: event.target.checked });
   }
 

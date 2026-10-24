@@ -70,7 +70,7 @@ function CommentsReplies(props: Props): React.Node {
             className="comment__action"
             label={__('Show Replies')}
             onClick={() => setExpanded(!isExpanded)}
-            icon={isExpanded ? ICONS.UP : ICONS.DOWN}
+            icon={ICONS.DOWN}
           />
         </div>
       ) : (

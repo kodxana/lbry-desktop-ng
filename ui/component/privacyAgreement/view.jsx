@@ -5,7 +5,6 @@ import I18nMessage from 'component/i18nMessage';
 import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
 import { withDesktopRouter } from 'component/common/desktop-router';
-// $FlowFixMe cannot resolve ...
 import image from 'static/img/yrblsec.svg';
 
 const LIMITED = 'limited';
@@ -122,4 +121,6 @@ function PrivacyAgreement(props: Props) {
   );
 }
 
-export default withDesktopRouter(PrivacyAgreement);
+const RoutedPrivacyAgreement: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(PrivacyAgreement);
+export default RoutedPrivacyAgreement;

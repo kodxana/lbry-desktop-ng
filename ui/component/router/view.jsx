@@ -69,10 +69,12 @@ if ('scrollRestoration' in history) {
   history.scrollRestoration = 'manual';
 }
 
+type RouteLocation = { pathname: string, search: string, hash: string, state?: unknown, ... };
+
 type Props = {
   currentScroll: number,
   isAuthenticated: boolean,
-  location: { pathname: string, search: string, hash: string },
+  location: RouteLocation,
   history: {
     action: string,
     entries: { title: string }[],
@@ -188,7 +190,18 @@ function AppRouter(props: Props) {
   return <AppRoutes location={props.location} welcomeVersion={welcomeVersion} dynamicRoutes={dynamicRoutes} />;
 }
 
-export function AppRoutes({ location, welcomeVersion, dynamicRoutes = [] }: any) {
+type DiscoveryProps = { location: RouteLocation, dynamicRouteProps?: RowDataItem };
+export function AppRoutes({
+  location,
+  welcomeVersion,
+  dynamicRoutes = [],
+  discoveryPage: DiscoveryPage = DiscoverPage,
+}: {
+  location: RouteLocation,
+  welcomeVersion: number,
+  dynamicRoutes?: Array<RowDataItem>,
+  discoveryPage?: React.ComponentType<DiscoveryProps>,
+}): React.MixedElement {
   const { pathname } = location;
   let decodedPath = pathname;
   try {
@@ -223,17 +236,18 @@ export function AppRoutes({ location, welcomeVersion, dynamicRoutes = [] }: any)
       <Route path={`/$/${PAGES.DEPRECATED__PUBLISHED}/*`} element={<Navigate replace to={`/$/${PAGES.UPLOADS}`} />} />
 
       <Route path={`/`} element={<HomePage />} />
-      <Route path={`/$/${PAGES.DISCOVER}`} element={<DiscoverPage location={location} />} />
-      {/* $FlowFixMe */}
-      {dynamicRoutes.map((dynamicRouteProps: RowDataItem) => (
-        <Route
-          key={dynamicRouteProps.route}
-          path={`${dynamicRouteProps.route}/*`}
-          element={
-            <DiscoverPage key={dynamicRouteProps.route} location={location} dynamicRouteProps={dynamicRouteProps} />
-          }
-        />
-      ))}
+      <Route path={`/$/${PAGES.DISCOVER}`} element={<DiscoveryPage location={location} />} />
+      {dynamicRoutes
+        .filter((row) => row.route)
+        .map((dynamicRouteProps: RowDataItem) => (
+          <Route
+            key={dynamicRouteProps.route}
+            path={`${dynamicRouteProps.route || ''}/*`}
+            element={
+              <DiscoveryPage key={dynamicRouteProps.route} location={location} dynamicRouteProps={dynamicRouteProps} />
+            }
+          />
+        ))}
 
       {/* Odysee signin */}
       <Route path={`/$/${PAGES.AUTH_SIGNIN}`} element={<SignInPage />} />
@@ -288,4 +302,5 @@ export function AppRoutes({ location, welcomeVersion, dynamicRoutes = [] }: any)
   );
 }
 
-export default withDesktopRouter(AppRouter);
+const RoutedAppRouter: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(AppRouter);
+export default RoutedAppRouter;

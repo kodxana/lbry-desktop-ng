@@ -17,7 +17,7 @@ type Props = {
   metadata: StreamMetadata,
   tags: any,
   pendingAmount: number,
-  doOpenModal: (id: string, {}) => void,
+  doOpenModal: (id: string, { uri: string }) => void,
   claimIsMine: boolean,
   expandOverride: boolean,
 };

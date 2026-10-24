@@ -65,7 +65,7 @@ function ChannelBlockButton(props: Props): React.Node {
     }
   }
 
-  function getButtonText(blockLevel) {
+  function getButtonText(blockLevel: ?string) {
     switch (blockLevel) {
       default:
       case BLOCK_LEVEL.SELF:

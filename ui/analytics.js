@@ -32,11 +32,18 @@ if (isProduction) {
 type Analytics = {
   error: (string) => Promise<any>,
   pageView: (string, ?string) => void,
-  setUser: (Object) => void,
+  setUser: (?string | number) => void,
   toggleInternal: (boolean, ?boolean) => void,
   apiLogView: (string, string, string, ?number, ?() => void) => Promise<any>,
   apiLogPublish: (Claim) => void,
-  apiSyncTags: ({}) => void,
+  apiSyncTags: ({ content_tags: string }) => void,
+  apiLogSearch: () => void,
+  toggleThirdParty: (boolean) => void,
+  adsFetchedEvent: () => void,
+  adsReceivedEvent: (unknown) => void,
+  adsErrorEvent: (unknown) => void,
+  channelBlockEvent: (string, boolean, ?string) => void,
+  trendingAlgorithmEvent: (string) => void,
   tagFollowEvent: (string, boolean, ?string) => void,
   playerLoadedEvent: (?boolean) => void,
   playerStartedEvent: (?boolean) => void,
@@ -121,7 +128,7 @@ const analytics: Analytics = {
     const tracker = getMatomo();
     if (tracker) {
       const params: { href: string, customDimensions?: Array<{ id: number, value: ?string }> } = { href: `${path}` };
-      const dimensions = [];
+      const dimensions: Array<{ id: number, value: ?string }> = [];
       const searchParams = search && new URLSearchParams(search);
 
       if (searchParams && searchParams.get('src')) {
@@ -152,11 +159,11 @@ const analytics: Analytics = {
       if (!enabled) matomo.pushInstruction('resetUserId');
     }
     internalAnalyticsEnabled = enabled;
-    window.localStorage.setItem(SHARE_INTERNAL, enabled);
+    window.localStorage.setItem(SHARE_INTERNAL, String(enabled));
   },
 
   toggleThirdParty: (enabled: boolean): void => {
-    window.localStorage.setItem(SHARE_THIRD_PARTY, enabled);
+    window.localStorage.setItem(SHARE_THIRD_PARTY, String(enabled));
   },
 
   apiLogView: (uri, outpoint, claimId, timeToStart) => {
@@ -258,7 +265,7 @@ const analytics: Analytics = {
   },
 };
 
-function sendMatomoEvent(category, action, name, value) {
+function sendMatomoEvent(category: string, action: string, name?: string, value?: number): void {
   const tracker = getMatomo();
   if (tracker) {
     const event = { category, action, name, value };

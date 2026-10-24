@@ -60,8 +60,8 @@ type Props = {
   fetchComment: (commentId: string) => Promise<any>,
   onCancelReplying?: () => void,
   onDoneReplying?: () => void,
-  sendTip: ({}, (any) => void, (any) => void) => void,
-  setQuickReply: (any) => void,
+  sendTip: ({ amount: number, channel_id: string, claim_id: string }, (any) => void, (any) => void) => void,
+  setQuickReply?: (any) => void,
   toast: (string) => void,
 };
 
@@ -150,18 +150,11 @@ export function CommentCreate(props: Props): React.Node {
     }
   }
 
-  function handleCommentChange(event) {
-    let commentValue;
-    if (isReply) {
-      commentValue = advancedEditor ? event : event.target.value;
-    } else {
-      commentValue = advancedEditor ? event : event.target.value;
-    }
-
-    setCommentValue(commentValue);
+  function handleCommentChange(event: string | { target: { value: string }, ... }) {
+    setCommentValue(typeof event === 'string' ? event : event.target.value);
   }
 
-  function altEnterListener(e: SyntheticKeyboardEvent<*>) {
+  function altEnterListener(e: KeyboardEvent) {
     if ((e.ctrlKey || e.metaKey) && e.keyCode === KEYCODES.ENTER) {
       e.preventDefault();
       buttonRef.current.click();
@@ -277,7 +270,7 @@ export function CommentCreate(props: Props): React.Node {
    * @param {string} [payment_intent_id] Optional payment_intent_id from Stripe payment
    * @param {string} [environment] Optional environment for Stripe (test|live)
    */
-  function handleCreateComment(txid, payment_intent_id, environment) {
+  function handleCreateComment(txid?: ?string, payment_intent_id?: ?string, environment?: ?string) {
     if (isSubmitting) return;
 
     setShowEmotes(false);

@@ -1,6 +1,5 @@
 // @flow
 import React from 'react';
-// $FlowFixMe
 import homepages from 'homepages';
 import LANGUAGES from 'constants/languages';
 import { FormField } from 'component/common/form';
@@ -14,7 +13,7 @@ type Props = {
 function SelectHomepage(props: Props): React.Node {
   const { homepage, setHomepage } = props;
 
-  function handleSetHomepage(e) {
+  function handleSetHomepage(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     setHomepage(value);
   }

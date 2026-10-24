@@ -23,7 +23,7 @@ function SelectChannel(props: Props): React.Node {
     setActiveChannel,
   } = props;
 
-  function handleChannelChange(event: SyntheticInputEvent<*>) {
+  function handleChannelChange(event: { target: HTMLInputElement | HTMLSelectElement, ... }) {
     const channelClaimId = event.target.value;
     setActiveChannel(channelClaimId);
   }

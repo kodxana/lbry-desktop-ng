@@ -109,7 +109,7 @@ export default function Card(props: Props): React.Node {
             </div>
           </div>
         )}
-        {(!expandable || (expandable && expanded)) && (
+        {(!expandable || expanded) && (
           <>
             {body && (
               <div

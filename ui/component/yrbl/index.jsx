@@ -2,15 +2,13 @@
 import type { Node } from 'react';
 import * as React from 'react';
 import classnames from 'classnames';
-// $FlowFixMe cannot resolve ...
 import YrblHappy from 'static/img/yrblhappy.svg';
-// $FlowFixMe cannot resolve ...
 import YrblSad from 'static/img/yrblsad.svg';
 
 type Props = {
   title?: string,
   subtitle?: string | React.Node,
-  type: string,
+  type: 'happy' | 'sad',
   className?: string,
   actions?: Node,
   alwaysShow?: boolean,
@@ -22,7 +20,7 @@ const yrblTypes = {
 };
 
 export default class extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { type: 'happy' } = {
     type: 'happy',
   };
 

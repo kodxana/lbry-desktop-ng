@@ -118,7 +118,7 @@ function SettingWalletServer(props: Props): React.Node {
     updateServers(newServerConfig);
   }
 
-  function updateServers(newConfig) {
+  function updateServers(newConfig: ServerConfig) {
     saveServerConfig(newConfig);
     setCustomWalletServers(stringifyServerParam(newConfig));
   }

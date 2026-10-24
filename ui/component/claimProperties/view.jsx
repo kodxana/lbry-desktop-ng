@@ -17,7 +17,6 @@ type Props = {
 export default function ClaimProperties(props: Props): React.Node {
   const { uri, isSubscribed, small = false, claim, iconOnly } = props;
   const size = small ? COL.ICON_SIZE : undefined;
-  // $FlowFixMe
 
   return (
     <div
@@ -26,7 +25,6 @@ export default function ClaimProperties(props: Props): React.Node {
       {
         <>
           <ClaimType uri={uri} small />
-          {/*   // $FlowFixMe */}
           {claim && claim.value_type === 'collection' && claim.value.claims && !iconOnly && (
             <div>{claim.value.claims.length}</div>
           )}

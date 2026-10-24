@@ -9,7 +9,6 @@ import { FormField } from 'component/common/form';
 import HomepageSelector from 'component/homepageSelector';
 import SettingLanguage from 'component/settingLanguage';
 import SettingsRow from 'component/settingsRow';
-// $FlowFixMe
 import homepages from 'homepages';
 
 type Props = {

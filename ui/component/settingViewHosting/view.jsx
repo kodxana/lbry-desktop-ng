@@ -43,7 +43,7 @@ function SettingViewHosting(props: Props): React.Node {
   // best effort to recommend a hosting amount default for the user
   const totalMB = diskSpace && Math.floor(diskSpace.total / 1024);
   const freeMB = diskSpace && Math.floor(diskSpace.free / 1024);
-  const getGB = (val) => (Number(val) / 1024).toFixed(2);
+  const getGB = (val: ?number) => (Number(val) / 1024).toFixed(2);
   const recommendedSpace =
     freeMB > totalMB * TWENTY_PERCENT // plenty of space?
       ? Math.ceil(Number(getGB(totalMB * TEN_PERCENT))) // 10% of total
@@ -55,7 +55,7 @@ function SettingViewHosting(props: Props): React.Node {
 
   const [unlimited, setUnlimited] = React.useState(viewHostingLimit === 0);
 
-  function handleContentLimitChange(gb) {
+  function handleContentLimitChange(gb: string) {
     if (gb === '') {
       setContentBlobSpaceLimit('');
     } else if (gb === '0') {
@@ -90,7 +90,7 @@ function SettingViewHosting(props: Props): React.Node {
     getDaemonStatus();
   }
 
-  function handleKeyDown(e) {
+  function handleKeyDown(e: { keyCode: number, preventDefault: () => void, ... }) {
     if (e.keyCode === KEYCODES.ESCAPE) {
       e.preventDefault();
       setContentBlobSpaceLimit(String(viewHostingLimit / 1024));

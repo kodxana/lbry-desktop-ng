@@ -23,7 +23,7 @@ type ChannelsFollowingItem = {
   title: string,
   link?: string,
   help?: any,
-  options?: {},
+  options?: HomepageSearchOptions,
 };
 
 function ChannelsFollowingDiscover(props: Props): React.Node {
@@ -64,7 +64,7 @@ function ChannelsFollowingDiscover(props: Props): React.Node {
   });
 
   if (followedTags.length > 0 && followedTags.length < 5) {
-    const followedRows = followedTags.map((tag: Tag) => ({
+    const followedRows = followedTags.map((tag: Tag): ChannelsFollowingItem => ({
       title: `Trending Channels for #${toCapitalCase(tag.name)}`,
       link: `/$/${PAGES.DISCOVER}?t=${tag.name}&claim_type=channel`,
       options: {
@@ -99,7 +99,7 @@ function ChannelsFollowingDiscover(props: Props): React.Node {
 
   return (
     <Page className="discoverPage-wrapper">
-      {rowDataWithGenericOptions.map(({ title, link, help, options = {} }) => (
+      {rowDataWithGenericOptions.map(({ title, link, help, options }) => (
         <div key={title} className="claim-grid__wrapper">
           <h1 className="section__actions">
             {link ? (

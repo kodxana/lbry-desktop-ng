@@ -129,7 +129,7 @@ function ClaimListHeader(props: Props): React.Node {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function handleChange(change) {
+  function handleChange(change: { key: string, value: string }) {
     const url = buildUrl(change);
     setPage(1);
     push(url);
@@ -144,11 +144,11 @@ function ClaimListHeader(props: Props): React.Node {
     push(newSearch);
   }
 
-  function buildUrl(delta) {
+  function buildUrl(delta: { key: string, value: string }) {
     const newUrlParams = new URLSearchParams(location.search);
     CS.KEYS.forEach((k) => {
-      // $FlowFixMe get() can return null
-      if (urlParams.get(k) !== null) newUrlParams.set(k, urlParams.get(k));
+      const value = urlParams.get(k);
+      if (value !== null) newUrlParams.set(k, value);
     });
 
     switch (delta.key) {
@@ -473,9 +473,7 @@ function ClaimListHeader(props: Props): React.Node {
                   >
                     {Object.entries(CS.SORT_BY).map(([key, value]) => {
                       return (
-                        // $FlowFixMe https://github.com/facebook/flow/issues/2221
                         <option key={value.key} value={value.key}>
-                          {/* $FlowFixMe */}
                           {__(value.str)}
                         </option>
                       );

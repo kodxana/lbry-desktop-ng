@@ -55,7 +55,7 @@ type WalletState = {
   pendingConsolidateTxid?: string,
   massClaimingTips: boolean,
   pendingMassClaimTxid?: string,
-  pendingSupportTransactions: {}, // { claimId: {txid: 123, amount 12.3}, }
+  pendingSupportTransactions: { [string]: { txid: string, type: string, effective: string } },
   pendingTxos: Array<string>,
   abandonClaimSupportError?: string,
 };
@@ -112,7 +112,7 @@ const defaultState = {
   abandonClaimSupportError: undefined,
 };
 
-export const walletReducer = handleActions(
+export const walletReducer: (state: WalletState | void, action: { type: string, ... }) => WalletState = handleActions(
   {
     [ACTIONS.FETCH_TRANSACTIONS_STARTED]: (state: WalletState) => ({
       ...state,

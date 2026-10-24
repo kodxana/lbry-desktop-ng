@@ -9,12 +9,18 @@ import { connect } from 'react-redux';
 import { push, goBack } from 'redux-first-history';
 import { Route, Routes, Link } from 'react-router';
 import * as ACTIONS from 'constants/action_types';
+import { element } from './fixture-types';
+import type { FixtureState } from './fixture-types';
 import fixture from './fixtures/persist-v0.json';
 import { render, unmount } from './helpers';
 
-const phase = new URLSearchParams(window.location.search).get('phase');
+const phase = new URLSearchParams(window.location.search).get('phase') || '';
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
-const reportError = (error) => ipcRenderer.send('regression-result', { phase, error: error.stack || String(error) });
+const reportError = (error: unknown) =>
+  ipcRenderer.send('regression-result', {
+    phase,
+    error: error instanceof Error ? error.stack || error.message : String(error),
+  });
 window.addEventListener('error', (event) => reportError(event.error || event.message));
 window.addEventListener('unhandledrejection', (event) => reportError(event.reason));
 
@@ -31,7 +37,7 @@ async function main() {
   const { store, persistor, history } = require('../../ui/store');
   await new Promise((resolve) => {
     if (persistor.getState().bootstrapped) return resolve();
-    const unsubscribe = persistor.subscribe(() => {
+    const unsubscribe: () => void = persistor.subscribe(() => {
       if (persistor.getState().bootstrapped) {
         unsubscribe();
         resolve();
@@ -94,9 +100,12 @@ async function main() {
       passwords: () => require('./passwords'),
       passwordRestart: () => require('./passwordRestart'),
     };
-    const test = tests[phase]().default;
     const { root } = await ipcRenderer.invoke('fixture-desktop-info');
-    const message = await test(store, history, root);
+    const message = await (phase === 'reactState'
+      ? tests.reactState().default(store, history)
+      : phase === 'collections'
+        ? tests.collections().default(store, history)
+        : tests[phase]().default(store, history, root));
     persistor.pause();
     return message;
   }
@@ -138,8 +147,8 @@ async function main() {
   function Position({ positions }: { positions: { [string]: { [string]: number } } }) {
     return <output id="position">{positions['fixture-claim'] && positions['fixture-claim']['fixture-tx:0']}</output>;
   }
-  const ConnectedPosition = connect((value) => ({ positions: value.content.positions }))(Position);
-  const container = document.getElementById('app');
+  const ConnectedPosition = connect((value: FixtureState) => ({ positions: value.content.positions }))(Position);
+  const container = element('#app');
   render(
     <div>
       <Link id="wallet-link" to="/$/wallet?tab=history">
@@ -155,7 +164,7 @@ async function main() {
     history
   );
   await tick();
-  document.getElementById('wallet-link').click();
+  element('#wallet-link').click();
   await tick();
   assert(document.getElementById('wallet-page'), 'Router link must render its destination');
   assert.equal(store.getState().router.location.search, '?tab=history');
@@ -172,7 +181,7 @@ async function main() {
     data: { claimId: 'fixture-claim', outpoint: 'fixture-tx:0', position: 81.25 },
   });
   await tick();
-  assert.equal(document.getElementById('position').textContent, '81.25', 'React subscriptions follow Redux changes');
+  assert.equal(element('#position').textContent, '81.25', 'React subscriptions follow Redux changes');
   store.dispatch({
     type: ACTIONS.UPDATE_BALANCE,
     data: {
@@ -186,7 +195,7 @@ async function main() {
   assert.equal(store.getState().app.daemonReady, true);
   await testPersistedState(store, persistor);
   await persistor.flush();
-  assert.equal(typeof (await localForage.getItem('persist:v0')), 'string');
+  assert.equal(typeof (await localForage.getItem<string>('persist:v0')), 'string');
   persistor.pause();
   unmount();
   assert.equal(container.childElementCount, 0);

@@ -98,7 +98,7 @@ const Header = (props: Props) => {
     ? __('Close sidebar - hide channels you are following.')
     : __('Expand sidebar - view channels you are following.');
 
-  const onBackout = React.useCallback(
+  const onBackout: (e: { type: string, ... }) => void = React.useCallback(
     (e: any) => {
       const { hasNavigated } = props;
       const { replace } = history;
@@ -140,7 +140,7 @@ const Header = (props: Props) => {
             <Button
               navigate={`/$/${PAGES.WALLET}`}
               className="header__navigationItem--icon header__navigationItem--balance"
-              label={!(hideBalance || Number(roundedBalance) === 0) && roundedBalance}
+              label={false}
               icon={ICONS.LBC}
               iconSize={18}
               onDoubleClick={(e) => {
@@ -154,7 +154,7 @@ const Header = (props: Props) => {
               label={
                 walletProgress.pending
                   ? __('Wallet sync')
-                  : hideBalance || Number(roundedBalance) === 0
+                  : Number(roundedBalance) === 0
                     ? __('Your Wallet')
                     : roundedBalance
               }
@@ -224,12 +224,10 @@ const Header = (props: Props) => {
 
               {!authHeader && (
                 <div className="header__center">
-                  {!authHeader && (
-                    <div className="header__buttons">
-                      <NavigationButton isBackward history={history} />
-                      <NavigationButton isBackward={false} history={history} />
-                    </div>
-                  )}
+                  <div className="header__buttons">
+                    <NavigationButton isBackward history={history} />
+                    <NavigationButton isBackward={false} history={history} />
+                  </div>
                   <WunderBar />
                   <HeaderMenuButtons />
                 </div>
@@ -268,4 +266,5 @@ const Header = (props: Props) => {
   );
 };
 
-export default withDesktopRouter(Header);
+const RoutedHeader: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(Header);
+export default RoutedHeader;

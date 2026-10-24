@@ -52,7 +52,7 @@ export default function SettingsSideNavigation(): React.Node {
   const sidebarOpen = true;
   const isMediumScreen = useIsMediumScreen();
   const isAbsolute = isMediumScreen;
-  const microNavigation = !sidebarOpen || isMediumScreen;
+  const microNavigation = isMediumScreen;
   const { location, goBack } = useDesktopHistory();
 
   function scrollToSection(section: string) {
@@ -67,7 +67,7 @@ export default function SettingsSideNavigation(): React.Node {
     }
   }
 
-  function getOnClickHandler(section) {
+  function getOnClickHandler(section: ?string) {
     if (section) {
       if (location.pathname === `/$/${PAGES.SETTINGS}`) {
         return () => scrollToSection(section);
@@ -117,7 +117,6 @@ export default function SettingsSideNavigation(): React.Node {
                     title={__(linkProps.title)}
                     icon={linkProps.icon}
                     className={classnames('navigation-link', {})}
-                    // $FlowFixMe
                     onClick={getOnClickHandler(linkProps.section)}
                   />
                   {linkProps.extra && linkProps.extra}
@@ -140,7 +139,6 @@ export default function SettingsSideNavigation(): React.Node {
             <div>
               <ul className="navigation-links--absolute">
                 {SIDE_LINKS.map((linkProps) => {
-                  // $FlowFixMe
                   const { link, route, ...passedProps } = linkProps;
                   return (
                     <li key={linkProps.title}>

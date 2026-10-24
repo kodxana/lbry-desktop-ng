@@ -64,7 +64,7 @@ import ModalWalletEncrypt from 'modal/modalWalletEncrypt';
 
 import ModalWalletUnlock from 'modal/modalWalletUnlock';
 
-function getModal(id) {
+function getModal(id: string) {
   switch (id) {
     case MODALS.UPGRADE:
       return ModalUpgrade;
@@ -181,4 +181,6 @@ function ModalRouter(props: Props) {
   return <SelectedModal {...modalProps} />;
 }
 
-export default withDesktopRouter(ModalRouter);
+const RoutedModalRouter: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ModalRouter);
+export default RoutedModalRouter;

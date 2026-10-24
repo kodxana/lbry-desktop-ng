@@ -21,7 +21,14 @@ type Props = {
 };
 
 class ClaimLink extends React.Component<Props> {
-  static defaultProps = {
+  static defaultProps: {
+    href: null,
+    link: boolean,
+    thumbnail: null,
+    description: null,
+    isResolvingUri: boolean,
+    allowPreview: boolean,
+  } = {
     href: null,
     link: false,
     thumbnail: null,

@@ -74,7 +74,7 @@ function UserSignUp(props: Props): React.Node {
   const redirect = urlParams.get(REDIRECT_PARAM);
   const step = urlParams.get(STEP_PARAM);
   const shouldRedirectImmediately = urlParams.get(REDIRECT_IMMEDIATELY_PARAM);
-  const [initialSignInStep, setInitialSignInStep] = React.useState();
+  const [initialSignInStep, setInitialSignInStep] = React.useState<number | void>();
   const hasVerifiedEmail = user && user.has_verified_email;
   const passwordSet = user && user.password_set;
   const hasFetchedReward = useFetched(claimingReward);
@@ -98,7 +98,7 @@ function UserSignUp(props: Props): React.Node {
   const showLoadingSpinner =
     canHijackSignInFlowWithSpinner && (isCurrentlyFetchingSomething || isWaitingForSomethingToFinish);
 
-  function setSettingAndSync(setting, value) {
+  function setSettingAndSync(setting: string, value: boolean) {
     setClientSetting(setting, value, true);
   }
 
@@ -187,7 +187,6 @@ function UserSignUp(props: Props): React.Node {
     ),
   ];
 
-  //   $FlowFixMe
   function getSignInStep() {
     for (var i = SIGN_IN_FLOW.length - 1; i > -1; i--) {
       const Component = SIGN_IN_FLOW[i];

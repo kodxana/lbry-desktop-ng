@@ -4,7 +4,7 @@ import Lbry from 'lbry';
 import { parseURI, isNameValid } from 'util/lbryURI';
 import ClaimList from 'component/claimList';
 import Page from 'component/page';
-import SearchOptions from 'component/searchOptions';
+import SearchOptionsView from 'component/searchOptions';
 import SearchTopClaim from 'component/searchTopClaim';
 import { formatLbryUrlForWeb } from 'util/url';
 import { useDesktopHistory } from 'component/common/desktop-router';
@@ -92,7 +92,7 @@ export default function SearchPage(props: Props): React.Node {
               // needs to be unique to indicate when a fetch is needed.
               page={from + 1}
               pageSize={SEARCH_PAGE_SIZE}
-              header={<SearchOptions additionalOptions={searchOptions} onSearchOptionsChanged={resetPage} />}
+              header={<SearchOptionsView additionalOptions={searchOptions} onSearchOptionsChanged={resetPage} />}
             />
 
             <div className="main--empty help">{__('These search results are provided by LBRY, Inc.')}</div>

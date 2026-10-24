@@ -6,15 +6,18 @@ import Card from 'component/common/card';
 import { withDesktopRouter } from 'component/common/desktop-router';
 import Spinner from 'component/spinner';
 import Lbry from 'lbry';
+import mergeSyncPreferences from 'util/merge-sync-preferences';
+import type { SyncPreference } from 'util/merge-sync-preferences';
 import ErrorText from 'component/common/error-text';
 import I18nMessage from 'component/i18nMessage';
+type Preferences = { shared?: SyncPreference, local?: SyncPreference };
 
 type Props = {
   setSyncEnabled: (boolean) => void,
   syncEnabled: boolean,
   getSyncError: ?string,
   getSyncPending: boolean,
-  getSync: (pw: string, cb: () => void) => void,
+  getSync: (pw: ?string, cb: (error?: unknown, hasChanged?: ?boolean) => void) => void,
   checkSync: () => void,
   closeModal: () => void,
   updatePreferences: () => void,
@@ -38,9 +41,9 @@ function SyncEnableFlow(props: Props) {
     props;
 
   const [step, setStep] = React.useState(INITIAL);
-  const [prefDict, setPrefDict]: [any, (any) => void] = React.useState();
+  const [prefDict, setPrefDict] = React.useState<Preferences>({});
   const [error, setError] = React.useState<string | void>();
-  const [password, setPassword] = React.useState('');
+  const [password, setPassword] = React.useState<?string>('');
 
   const handleSyncToggle = async () => {
     const shared = prefDict.shared;
@@ -48,9 +51,9 @@ function SyncEnableFlow(props: Props) {
     let finalPrefs;
     if (shared && local) {
       if (mode === ENABLE_MODE) {
-        finalPrefs = makeMergedPrefs(local, shared);
+        finalPrefs = mergeSyncPreferences(local, shared);
       } else {
-        finalPrefs = makeMergedPrefs(shared, local);
+        finalPrefs = mergeSyncPreferences(shared, local);
       }
     } else {
       finalPrefs = local || shared || null;
@@ -63,39 +66,6 @@ function SyncEnableFlow(props: Props) {
     await setSyncEnabled(mode === ENABLE_MODE);
     await updatePreferences();
     closeModal();
-  };
-
-  const makeMergedPrefs = (alt, base) => {
-    let finalPrefs = base;
-    let baseData = base.value;
-    let altData = alt.value;
-    if (!altData) {
-      return base;
-    }
-
-    let mergedBlockListSet = new Set(baseData.blocked || []);
-    let mergedSubscriptionsSet = new Set(baseData.subscriptions || []);
-    let mergedTagsSet = new Set(baseData.tags || []);
-
-    const altBlocklist = altData.blocked || [];
-    const altSubscriptions = altData.subscriptions || [];
-    const altTags = altData.tags || [];
-
-    if (altBlocklist.length) {
-      altBlocklist.forEach((el) => mergedBlockListSet.add(el));
-    }
-    if (altSubscriptions.length) {
-      altSubscriptions.forEach((el) => mergedSubscriptionsSet.add(el));
-    }
-    if (altTags.length) {
-      altTags.forEach((el) => mergedTagsSet.add(el));
-    }
-
-    baseData.blocked = Array.from(mergedBlockListSet);
-    baseData.subscriptions = Array.from(mergedSubscriptionsSet);
-    baseData.tags = Array.from(mergedTagsSet);
-    finalPrefs.value = baseData;
-    return finalPrefs;
   };
 
   React.useEffect(() => {
@@ -117,10 +87,16 @@ function SyncEnableFlow(props: Props) {
       getSync(password, (e, hasChanged) => {
         if (e) {
           setStep(ERROR);
-          setError(e && e.message ? e.message : e);
+          setError(
+            e instanceof Error
+              ? e.message
+              : typeof e === 'object' && typeof e.message === 'string'
+                ? e.message
+                : String(e)
+          );
         } else {
           Lbry.preference_get().then((result) => {
-            const prefs = {};
+            const prefs: Preferences = {};
             if (result[SHARED_KEY]) prefs[SHARED_KEY] = result[SHARED_KEY];
             if (result[LOCAL_KEY]) prefs[LOCAL_KEY] = result[LOCAL_KEY];
             setPrefDict(prefs);
@@ -131,7 +107,7 @@ function SyncEnableFlow(props: Props) {
     }
     if (step === FETCH_FOR_DISABLE) {
       Lbry.preference_get().then((result) => {
-        const prefs = {};
+        const prefs: Preferences = {};
         if (result[SHARED_KEY]) prefs[SHARED_KEY] = result[SHARED_KEY];
         if (result[LOCAL_KEY]) prefs[LOCAL_KEY] = result[LOCAL_KEY];
         setPrefDict(prefs);
@@ -234,4 +210,6 @@ function SyncEnableFlow(props: Props) {
   );
 }
 
-export default withDesktopRouter(SyncEnableFlow);
+const RoutedSyncEnableFlow: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(SyncEnableFlow);
+export default RoutedSyncEnableFlow;

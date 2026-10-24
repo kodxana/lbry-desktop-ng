@@ -22,7 +22,7 @@ type Props = {
   fetchTxoPage: () => void,
   fetchTransactions: () => void,
   isFetchingTransactions: boolean,
-  transactionsFile: string,
+  transactionsFile: ?string,
   updateTxoPageParams: (any) => void,
   toast: (string, boolean) => void,
 };
@@ -311,4 +311,5 @@ function TxoList(props: Props) {
   );
 }
 
-export default withDesktopRouter(TxoList);
+const RoutedTxoList: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(TxoList);
+export default RoutedTxoList;

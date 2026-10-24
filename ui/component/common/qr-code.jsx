@@ -10,7 +10,7 @@ type Props = {
 };
 
 class QRCode extends React.Component<Props> {
-  static defaultProps = {
+  static defaultProps: { paddingRight: boolean, paddingTop: boolean } = {
     paddingRight: false,
     paddingTop: false,
   };

@@ -78,7 +78,7 @@ function ShowPage(props: Props): React.Node {
 
   useEffect(() => {
     if (
-      (resolveUri && !isResolvingUri && uri && haventFetchedYet) ||
+      (!isResolvingUri && uri && haventFetchedYet) ||
       (claimExists && !claimIsPending && (!canonicalUrl || isMine === undefined))
     ) {
       resolveUri(uri);
@@ -88,7 +88,6 @@ function ShowPage(props: Props): React.Node {
   // Don't navigate directly to repost urls
   // Always redirect to the actual content
   // Also need to add repost_url to the Claim type for flow
-  // $FlowFixMe
   if (claim && claim.repost_url === uri) {
     const newUrl = formatLbryUrlForWeb(claim.canonical_url);
     return <Navigate replace to={newUrl} />;

@@ -5,6 +5,7 @@ import { v4 as uuid } from 'uuid';
 import classnames from 'classnames';
 
 const TabsContext = createContext('');
+const TabPanelContext = createContext('');
 
 type TabsProps = {
   index?: number,
@@ -15,20 +16,21 @@ type TabsProps = {
 
 function Tabs({ index, onChange, children, className, ...props }: TabsProps): React.Node {
   const [id] = useState(() => `tabs-${uuid()}`);
-  const ref = useRef();
-  const [indicator, setIndicator] = useState({});
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [indicator, setIndicator] = useState<{ left?: number, width?: number }>({});
   const store = Ariakit.useTabStore({
     rtl: document.documentElement.dir === 'rtl',
     defaultSelectedId: `${id}-0`,
     selectedId: index === undefined ? undefined : `${id}-${index}`,
     setSelectedId: (selected) => {
-      if (onChange) onChange(Number(selected.slice(id.length + 1)));
+      if (onChange && selected) onChange(Number(selected.slice(id.length + 1)));
     },
   });
   const selectedId = Ariakit.useStoreState(store, 'selectedId');
 
   useLayoutEffect(() => {
     const element = ref.current;
+    if (!element || !selectedId) return;
     const measure = () => {
       const selected = document.getElementById(selectedId);
       if (!selected || !element.contains(selected)) return;
@@ -79,14 +81,17 @@ function TabPanels({ header, children, ...props }: { header?: React.Node, childr
     <>
       {header}
       <div {...props} className="tab__panels">
-        {React.Children.map(children, (child, index) => React.cloneElement(child, { tabId: `${id}-${index}` }))}
+        {React.Children.map(children, (child, index) => (
+          <TabPanelContext.Provider value={`${id}-${index}`}>{child}</TabPanelContext.Provider>
+        ))}
       </div>
     </>
   );
 }
 
-function TabPanel(props: any): React.Node {
-  return <Ariakit.TabPanel {...props} className="tab__panel" />;
+function TabPanel(props: { tabId?: string, children: React.Node }): React.Node {
+  const tabId = useContext(TabPanelContext);
+  return <Ariakit.TabPanel tabId={tabId} {...props} className="tab__panel" />;
 }
 
 export { Tabs, TabList, Tab, TabPanels, TabPanel };

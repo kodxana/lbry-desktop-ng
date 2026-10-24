@@ -25,7 +25,6 @@ import OptimizedImage from 'component/optimizedImage';
 import Yrbl from 'component/yrbl';
 import I18nMessage from 'component/i18nMessage';
 import TruncatedText from 'component/common/truncated-text';
-// $FlowFixMe cannot resolve ...
 import PlaceholderTx from 'static/img/placeholderTx.gif';
 
 export const PAGE_VIEW_QUERY = `view`;
@@ -164,7 +163,7 @@ function ChannelPage(props: Props): React.Node {
       break;
   }
 
-  function onTabChange(newTabIndex) {
+  function onTabChange(newTabIndex: number) {
     let url = formatLbryUrlForWeb(uri);
     let search = '?';
 
@@ -288,7 +287,7 @@ function ChannelPage(props: Props): React.Node {
             <Tab index={1} disabled={editing}>
               {__('Playlists')}
             </Tab>
-            <Tab index={2}>{editing ? __('Editing Your Channel') : __('About --[tab title in Channel Page]--')}</Tab>
+            <Tab index={2}>{__('About --[tab title in Channel Page]--')}</Tab>
             <Tab index={3} disabled={editing}>
               {__('Community')}
             </Tab>

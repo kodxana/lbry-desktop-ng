@@ -62,7 +62,7 @@ class DocumentViewer extends React.PureComponent<Props, State> {
     const { contentType } = source;
 
     return renderMode === RENDER_MODES.MARKDOWN ? (
-      <MarkdownPreview content={content} isMarkdownPost promptLinks />
+      <MarkdownPreview content={content} isMarkdownPost />
     ) : (
       <CodeViewer value={content} contentType={contentType} theme={theme} />
     );

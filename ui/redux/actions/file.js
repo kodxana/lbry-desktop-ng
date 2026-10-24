@@ -23,13 +23,13 @@ import {
 
 type Dispatch = (action: any) => any;
 type GetState = () => { claims: any, file: FileState, content: any };
-export function doOpenFileInFolder(path: string) {
+export function doOpenFileInFolder(path: string): ThunkAction<void> {
   return () => {
     desktop.revealFile(path);
   };
 }
 
-export function doOpenFileInShell(path: string) {
+export function doOpenFileInShell(path: string): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch) => {
     const error = await desktop.openFile(path);
     if (error) {
@@ -44,7 +44,7 @@ export function doDeleteFile(
   abandonClaim?: boolean,
   cb: any,
   claim: Claim
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     if (abandonClaim) {
       dispatch(doAbandonClaim(claim, cb));
@@ -70,9 +70,9 @@ export function doDeleteFileAndMaybeGoBack(
   uri: string,
   deleteFromComputer?: boolean,
   abandonClaim?: boolean,
-  doGoBack: (any) => void,
+  doGoBack: ?() => void,
   claim: Claim
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const playingUri = selectPlayingUri(state);
@@ -114,7 +114,7 @@ export function doDeleteFileAndMaybeGoBack(
   };
 }
 
-export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (GetResponse) => any) {
+export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (GetResponse) => any): ThunkAction<void> {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
     const claim = selectClaimForUri(state, uri);
@@ -134,9 +134,8 @@ export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (Ge
 
     // set save_file argument to True to save the file (old behaviour)
     Lbry.get({ uri, save_file: saveFile })
-      .then((streamInfo: GetResponse) => {
-        const timeout = streamInfo === null || typeof streamInfo !== 'object' || streamInfo.error === 'Timeout';
-        if (timeout) {
+      .then((streamInfo: GetResponse | string | number | boolean | null | void) => {
+        if (streamInfo == null || typeof streamInfo !== 'object' || streamInfo.error === 'Timeout') {
           dispatch({
             type: ACTIONS.FETCH_FILE_INFO_FAILED,
             data: { outpoint },
@@ -189,7 +188,7 @@ export function doPurchaseUri(
   costInfo: { cost: number },
   saveFile: boolean = true,
   onSuccess?: (GetResponse) => any
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.PURCHASE_URI_STARTED,
@@ -231,7 +230,7 @@ export function doPurchaseUri(
   };
 }
 
-export function doClearPurchasedUriSuccess() {
+export function doClearPurchasedUriSuccess(): { type: string } {
   return {
     type: ACTIONS.CLEAR_PURCHASED_URI_SUCCESS,
   };

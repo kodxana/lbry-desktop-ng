@@ -10,7 +10,7 @@ import I18nMessage from 'component/i18nMessage';
 import Card from 'component/common/card';
 type Props = {
   history: { push: (string) => void, location: { search: string } },
-  doToast: ({}) => void,
+  doToast: ({ message: string, isError: boolean }) => void,
 };
 
 function SignInVerifyPage(props: Props) {
@@ -31,7 +31,7 @@ function SignInVerifyPage(props: Props) {
   const needsRecaptcha = urlParams.get('needs_recaptcha') === 'true';
 
   const onAuthError = React.useCallback(
-    (message) => {
+    (message?: string) => {
       if (!active.current) return;
       request.current++;
       pending.current = false;
@@ -42,7 +42,7 @@ function SignInVerifyPage(props: Props) {
   );
 
   const verifyUser = React.useCallback(
-    (captchaValue) => {
+    (captchaValue?: ?string) => {
       if (!active.current || pending.current || !authToken || !userSubmittedEmail || !verificationToken) return;
       if (needsRecaptcha && !captchaValue) return;
       pending.current = true;
@@ -99,11 +99,11 @@ function SignInVerifyPage(props: Props) {
     };
   }, [needsRecaptcha, captchaLoaded]);
 
-  function onCaptchaChange(value) {
+  function onCaptchaChange(value: ?string) {
     verifyUser(value);
   }
 
-  function onCaptchaReady({ loaded, errored }) {
+  function onCaptchaReady({ loaded, errored }: { loaded: boolean, errored: boolean }) {
     setCaptchaLoaded(Boolean(loaded && !errored));
     setShowCaptchaMessage(Boolean(errored));
   }
@@ -142,7 +142,7 @@ function SignInVerifyPage(props: Props) {
             needsRecaptcha && (
               <div className="section__actions">
                 <ReCAPTCHA
-                  key={`${authToken}:${verificationToken}`}
+                  key={`${String(authToken)}:${String(verificationToken)}`}
                   sitekey="6LePsJgUAAAAAFTuWOKRLnyoNKhm0HA4C3elrFMG"
                   onChange={onCaptchaChange}
                   asyncScriptOnLoad={onCaptchaReady}
@@ -158,4 +158,6 @@ function SignInVerifyPage(props: Props) {
   );
 }
 
-export default withDesktopRouter(SignInVerifyPage);
+const RoutedSignInVerifyPage: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(SignInVerifyPage);
+export default RoutedSignInVerifyPage;

@@ -56,6 +56,31 @@ const DEFAULT_INPUT_DATA = {
   remove_now: true,
 };
 
+type InputField =
+  | 'type'
+  | 'category'
+  | 'timestamp'
+  | 'additionalDetails'
+  | 'email'
+  | 'additional_email'
+  | 'phone_number'
+  | 'country'
+  | 'street_address'
+  | 'city'
+  | 'state_or_province'
+  | 'zip_code'
+  | 'signature'
+  | 'reporter_name'
+  | 'acting_on_behalf_of'
+  | 'client_name'
+  | 'specific_law'
+  | 'law_url'
+  | 'clarification'
+  | 'affected_party'
+  | 'copyright_owner_name'
+  | 'relationship_to_copyrighted_content'
+  | 'remove_now';
+
 type Props = {
   claimId: string,
   claim: Claim,
@@ -91,15 +116,16 @@ export default function ReportContent(props: Props): React.Node {
 
   // On mount, pause player and get the timestamp, if applicable.
   React.useEffect(() => {
-    if (window.player) {
-      window.player.pause();
+    const player = window.player;
+    if (player) {
+      player.pause();
 
-      const seconds = window.player.currentTime();
+      const seconds = player.currentTime();
       const h = Math.floor(seconds / 3600);
       const m = Math.floor((seconds % 3600) / 60);
       const s = Math.floor((seconds % 3600) % 60);
 
-      const str = (n) => n.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
+      const str = (n: number) => n.toLocaleString('en-US', { minimumIntegerDigits: 2, useGrouping: false });
       updateInput('timestamp', str(h) + ':' + str(m) + ':' + str(s));
     }
   }, []);
@@ -120,7 +146,7 @@ export default function ReportContent(props: Props): React.Node {
       return;
     }
 
-    const pushParam = (params, label, value, encode = true) => {
+    const pushParam = (params: Array<string>, label: string, value: string, encode: boolean = true) => {
       if (encode) {
         params.push(`${label}=${encodeURIComponent(value)}`);
       } else {
@@ -128,7 +154,7 @@ export default function ReportContent(props: Props): React.Node {
       }
     };
 
-    const params = [];
+    const params: Array<string> = [];
     pushParam(params, 'primary_email', input.email);
     pushParam(params, 'claim_id', claim.claim_id, false);
     pushParam(params, 'transaction_id', claim.txid, false);
@@ -183,9 +209,8 @@ export default function ReportContent(props: Props): React.Node {
     doReportContent(input.category, params.join('&'));
   }
 
-  function updateInput(field: string, value: any) {
-    let newInput = input;
-
+  function updateInput(field: InputField, value: any) {
+    const newInput = { ...input };
     if (isDev && newInput[field] === undefined) {
       throw new Error('Unexpected field: ' + field);
     }

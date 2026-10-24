@@ -17,7 +17,7 @@ export function doToggleSubscription(
   subscription: SubscriptionArgs,
   followToast: boolean,
   isSubscribed: boolean = false
-) {
+): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const {
       settings: { daemonSettings },
@@ -74,13 +74,19 @@ export function doToggleSubscription(
   };
 }
 
-export function doChannelSubscribe(subscription: SubscriptionArgs, followToast: boolean = true) {
+export function doChannelSubscribe(
+  subscription: SubscriptionArgs,
+  followToast: boolean = true
+): ThunkAction<Promise<void>> {
   return (dispatch: Dispatch) => {
     return dispatch(doToggleSubscription(subscription, followToast));
   };
 }
 
-export function doChannelUnsubscribe(subscription: SubscriptionArgs, followToast: boolean = true) {
+export function doChannelUnsubscribe(
+  subscription: SubscriptionArgs,
+  followToast: boolean = true
+): ThunkAction<Promise<void>> {
   return (dispatch: Dispatch) => {
     return dispatch(doToggleSubscription(subscription, followToast, true));
   };

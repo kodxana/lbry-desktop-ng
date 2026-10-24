@@ -17,6 +17,7 @@ for (const file of [
   'testPublishing.js',
   'testRpcContracts.js',
   'testSyncContracts.js',
+  'testFlowCompletion.js',
   'testApiActions.js',
   'testClaimContracts.js',
   'testClaimActions.js',

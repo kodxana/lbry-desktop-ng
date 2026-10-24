@@ -59,7 +59,7 @@ function ChannelSelector(props: Props): React.Node {
   } = useDesktopHistory();
   const activeChannelUrl = activeChannelClaim && activeChannelClaim.permanent_url;
 
-  function handleChannelSelect(channelClaim) {
+  function handleChannelSelect(channelClaim: ChannelClaim) {
     doSetIncognito(false);
     doSetActiveChannel(channelClaim.claim_id);
   }

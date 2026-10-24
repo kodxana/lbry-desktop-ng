@@ -5,7 +5,7 @@ import React from 'react';
 import Button from 'component/button';
 
 type Props = {
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { claim: Claim, cb?: () => void }) => void,
   claim: Claim,
   abandonActionCallback: (any) => void,
   iconSize: number,

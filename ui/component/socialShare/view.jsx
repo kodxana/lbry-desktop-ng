@@ -72,14 +72,13 @@ function SocialShare(props: Props): React.Node {
   const downloadUrl = `${generateDownloadUrl(name, claimId)}`;
 
   // Tweet params
-  let tweetIntentParams = {
+  const tweetIntentParams: { [string]: string } = {
     url: shareUrl,
     text: title || claim.name,
     hashtags: 'LBRY',
   };
 
   if (TWITTER_ACCOUNT) {
-    // $FlowFixMe
     tweetIntentParams.via = TWITTER_ACCOUNT;
   }
 

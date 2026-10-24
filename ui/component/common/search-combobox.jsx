@@ -29,29 +29,32 @@ function Combobox({ children, onSelect, value, setValue, openOnFocus = false, ..
   );
 }
 
-const ComboboxInput = React.forwardRef<any, any>(function ComboboxInput({ selectOnClick, ...props }, ref) {
-  const store = Ariakit.useComboboxContext();
-  const { openOnFocus } = React.useContext(SelectionContext);
-  return (
-    <Ariakit.Combobox
-      {...props}
-      ref={ref}
-      moveOnKeyPress={(event) => !['Home', 'End'].includes(event.key)}
-      onFocus={() => {
-        if (openOnFocus) store.show();
-      }}
-      onClick={(event) => {
-        if (selectOnClick) event.currentTarget.select();
-      }}
-    />
-  );
-});
+type InputProps = { ...React.ComponentProps<'input'>, selectOnClick?: boolean };
+const ComboboxInput: React.ComponentType<InputProps> = React.forwardRef<InputProps, HTMLInputElement>(
+  function ComboboxInput({ selectOnClick, ...props }, ref) {
+    const store = Ariakit.useComboboxContext();
+    const { openOnFocus } = React.useContext(SelectionContext);
+    return (
+      <Ariakit.Combobox
+        {...props}
+        ref={ref}
+        moveOnKeyPress={(event) => !['Home', 'End'].includes(event.key)}
+        onFocus={() => {
+          if (openOnFocus) store?.show();
+        }}
+        onClick={(event) => {
+          if (selectOnClick) event.currentTarget.select();
+        }}
+      />
+    );
+  }
+);
 
-function ComboboxPopover(props: any): React.Node {
+function ComboboxPopover(props: React.ComponentProps<'div'>): React.Node {
   return <Ariakit.ComboboxPopover {...props} portal={false} unmountOnHide sameWidth gutter={8} />;
 }
 
-function ComboboxList(props: any): React.Node {
+function ComboboxList(props: React.ComponentProps<'div'>): React.Node {
   return <div {...props} className="search__list" />;
 }
 

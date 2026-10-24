@@ -2,7 +2,7 @@
 import React from 'react';
 
 type Props = {
-  tokens: Object,
+  tokens: { [string]: React.Node },
   children: string, // e.g. "Read %faq_link% for more detail"
 };
 

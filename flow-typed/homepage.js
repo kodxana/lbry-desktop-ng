@@ -16,6 +16,7 @@ declare type HomepageCat = {
 declare type HomepageData = { [string]: HomepageCat };
 
 declare type HomepageSearchOptions = {
+  feeAmount?: string,
   channelIds?: Array<string>,
   limitClaimsPerChannel?: number,
   pageSize?: number,

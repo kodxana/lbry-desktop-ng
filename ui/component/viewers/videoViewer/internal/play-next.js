@@ -2,8 +2,10 @@
 import type { Player } from './videojs';
 import videojs from 'video.js';
 
-class PlayNextButton extends videojs.getComponent('Button') {
-  constructor(player, options = {}) {
+const VideoButton = videojs.getComponent('Button');
+
+class PlayNextButton extends VideoButton {
+  constructor(player: Player, options: { ... } = {}) {
     super(player, options);
     this.addClass('vjs-button--play-next');
     this.controlText('Play Next');

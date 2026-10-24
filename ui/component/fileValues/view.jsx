@@ -68,7 +68,7 @@ class FileValues extends PureComponent<Props> {
                   />{' '}
                 </>
               )}
-              {(!claimIsMine || (claimIsMine && !pendingAmount && supportsAmount === 0)) && (
+              {(!claimIsMine || (!pendingAmount && supportsAmount === 0)) && (
                 <CreditAmount amount={Number(supportsAmount)} precision={2} />
               )}
 

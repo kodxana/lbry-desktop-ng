@@ -237,7 +237,7 @@ function SideNavigation(props: Props): React.Node {
     displayedFollowedTags = followedTags.slice(0, FOLLOWED_ITEM_INITIAL_LIMIT);
   }
 
-  function getLink(props: SideNavLink) {
+  function getLink(props: Readonly<SideNavLink>) {
     const { hideForUnauth, route, link, ...passedProps } = props;
     const { title, icon, extra } = passedProps;
 
@@ -338,7 +338,7 @@ function SideNavigation(props: Props): React.Node {
   }, [setPulseLibrary, purchaseSuccess, doClearPurchasedUriSuccess]);
 
   React.useEffect(() => {
-    function handleKeydown(e: SyntheticKeyboardEvent<*>) {
+    function handleKeydown(e: KeyboardEvent) {
       if (e.keyCode === KEYCODES.ESCAPE && isAbsolute) {
         setSidebarOpen(false);
       } else if (e.keyCode === KEYCODES.BACKSLASH) {

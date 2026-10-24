@@ -16,20 +16,16 @@ type Props = {
 };
 
 type State = {
-  itemsSelected: {},
+  itemsSelected: { [string]: boolean },
 };
 
 class UserHistoryPage extends React.PureComponent<Props, State> {
-  constructor() {
-    super();
+  constructor(props: Props) {
+    super(props);
 
     this.state = {
       itemsSelected: {},
     };
-
-    (this: any).selectAll = this.selectAll.bind(this);
-    (this: any).unselectAll = this.unselectAll.bind(this);
-    (this: any).removeSelected = this.removeSelected.bind(this);
   }
 
   onSelect(uri: string) {
@@ -47,20 +43,20 @@ class UserHistoryPage extends React.PureComponent<Props, State> {
     });
   }
 
-  selectAll() {
+  selectAll = () => {
     const { historyItems } = this.props;
-    const newSelectedState = {};
+    const newSelectedState: { [string]: boolean } = {};
     historyItems.forEach(({ uri }) => (newSelectedState[uri] = true));
     this.setState({ itemsSelected: newSelectedState });
-  }
+  };
 
-  unselectAll() {
+  unselectAll = () => {
     this.setState({
       itemsSelected: {},
     });
-  }
+  };
 
-  removeSelected() {
+  removeSelected = () => {
     const { clearHistoryUri } = this.props;
     const { itemsSelected } = this.state;
 
@@ -68,7 +64,7 @@ class UserHistoryPage extends React.PureComponent<Props, State> {
     this.setState({
       itemsSelected: {},
     });
-  }
+  };
 
   render(): React.Node {
     const { historyItems = [], pageCount } = this.props;

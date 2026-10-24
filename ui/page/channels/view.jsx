@@ -25,7 +25,9 @@ type Props = {
 export default function ChannelsPage(props: Props): React.Node {
   const { channelUrls, fetchChannelListMine, fetchingChannels, youtubeChannels, doSetActiveChannel, pendingChannels } =
     props;
-  const [rewardData, setRewardData] = React.useState();
+  const [rewardData, setRewardData] = React.useState<{
+    rates?: Array<{ channel_claim_id: string, view_rate: number }>,
+  } | void>();
   const hasYoutubeChannels = youtubeChannels && Boolean(youtubeChannels.length);
 
   const { push } = useDesktopHistory();

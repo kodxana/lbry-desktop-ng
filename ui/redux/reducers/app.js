@@ -2,8 +2,6 @@
 
 import * as ACTIONS from 'constants/action_types';
 
-const reducers = {};
-
 export type SnackBar = {
   message: string,
   linkText: string,
@@ -13,7 +11,7 @@ export type SnackBar = {
 export type AppState = {
   isLoaded: boolean,
   modal: ?string,
-  modalProps: mixed,
+  modalProps: unknown,
   platform: string,
   upgradeSkipped: boolean,
   daemonVersionMatched: ?boolean,
@@ -21,6 +19,12 @@ export type AppState = {
   hasSignature: boolean,
   badgeNumber: number,
   volume: number,
+  muted: boolean,
+  autoUpdateDownloaded: boolean,
+  upgradeInitialized: boolean,
+  upgradeFailedInstallation: boolean,
+  currentScroll: number,
+  scrollHistory: Array<number>,
   autoUpdateDownloading: boolean,
   autoUpdateDeclined: boolean,
   autoUpdateFailed: boolean,
@@ -94,24 +98,26 @@ try {
   defaultState.volume = Number(sessionStorage.getItem('volume') || 1);
 } catch (e) {}
 
-reducers['@@router/LOCATION_CHANGE'] = (state, action) => {
-  const { currentScroll } = state;
-  const scrollHistory = (state.scrollHistory && state.scrollHistory.slice()) || [];
-  const { action: name } = action.payload;
-  let newCurrentScroll = currentScroll;
-  if (name === 'PUSH') {
-    scrollHistory.push(window.scrollY);
-    newCurrentScroll = 0;
-  } else if (name === 'POP') {
-    newCurrentScroll = scrollHistory[scrollHistory.length - 1];
-    scrollHistory.pop();
-  }
+const reducers = {
+  '@@router/LOCATION_CHANGE': (state: AppState, action: { payload: { action: string } }): AppState => {
+    const { currentScroll } = state;
+    const scrollHistory = (state.scrollHistory && state.scrollHistory.slice()) || [];
+    const { action: name } = action.payload;
+    let newCurrentScroll = currentScroll;
+    if (name === 'PUSH') {
+      scrollHistory.push(window.scrollY);
+      newCurrentScroll = 0;
+    } else if (name === 'POP') {
+      newCurrentScroll = scrollHistory[scrollHistory.length - 1];
+      scrollHistory.pop();
+    }
 
-  return {
-    ...state,
-    scrollHistory,
-    currentScroll: newCurrentScroll,
-  };
+    return {
+      ...state,
+      scrollHistory,
+      currentScroll: newCurrentScroll,
+    };
+  },
 };
 
 reducers[ACTIONS.DAEMON_READY] = (state) => ({ ...state, daemonReady: true });
@@ -312,7 +318,7 @@ reducers[ACTIONS.PURCHASE_URI_FAILED] = (state, action) => {
   };
 };
 
-export default function reducer(state: AppState = defaultState, action: any) {
+export default function reducer(state: AppState = defaultState, action: any): AppState {
   const handler = reducers[action.type];
   if (handler) return handler(state, action);
   return state;

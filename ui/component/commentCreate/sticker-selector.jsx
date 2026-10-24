@@ -25,7 +25,6 @@ export default function StickerSelector(props: Props): React.Node {
     const sectionToScroll = document.getElementById(section);
 
     if (listBodyEl && sectionToScroll) {
-      // $FlowFixMe
       listBodyEl.scrollTo({
         top: sectionToScroll.offsetTop - sectionToScroll.getBoundingClientRect().height * 2,
         behavior: 'smooth',

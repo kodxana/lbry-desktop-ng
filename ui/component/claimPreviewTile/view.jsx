@@ -124,8 +124,9 @@ function ClaimPreviewTile(props: Props): React.Node {
     // https://github.com/lbryio/lbry-sdk/issues/2785
     shouldHide = true;
   } else {
-    shouldHide =
-      banState.blacklisted || banState.filtered || (!showHiddenByUser && (banState.muted || banState.blocked));
+    shouldHide = Boolean(
+      banState.blacklisted || banState.filtered || (!showHiddenByUser && (banState.muted || banState.blocked))
+    );
   }
 
   if (shouldHide) {
@@ -161,8 +162,6 @@ function ClaimPreviewTile(props: Props): React.Node {
     );
   }
 
-  let liveProperty = null;
-
   return (
     <li
       onClick={handleClick}
@@ -185,7 +184,7 @@ function ClaimPreviewTile(props: Props): React.Node {
               {/* @endif */}
 
               <div className="claim-preview__file-property-overlay">
-                <PreviewOverlayProperties uri={uri} properties={liveProperty || properties} />
+                <PreviewOverlayProperties uri={uri} properties={properties} />
               </div>
             </React.Fragment>
           )}
@@ -243,4 +242,6 @@ function ClaimPreviewTile(props: Props): React.Node {
   );
 }
 
-export default withDesktopRouter(ClaimPreviewTile);
+const RoutedClaimPreviewTile: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ClaimPreviewTile);
+export default RoutedClaimPreviewTile;

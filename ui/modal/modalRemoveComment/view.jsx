@@ -11,7 +11,7 @@ type Props = {
   closeModal: () => void,
   deleteComment: (string, ?string) => void,
   supportAmount?: any,
-  setQuickReply: (any) => void,
+  setQuickReply?: (any) => void,
 };
 
 function ModalRemoveComment(props: Props): React.Node {

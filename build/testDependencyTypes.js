@@ -70,6 +70,13 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Current dependency APIs and valid application patterns must type-check');
 const invalid = {
+  'tab-selection': "import {useTabStore} from '@ariakit/react'; useTabStore({selectedId: 3});",
+  'menu-context':
+    "import {useMenuContext} from '@ariakit/react'; export function read(): boolean { return useMenuContext().getState().open; }",
+  'lightbox-image':
+    "import * as React from 'react'; import Lightbox from 'react-awesome-lightbox'; export const image: React.Node = <Lightbox image={5} onClose={() => {}} />;",
+  'html-attribute':
+    "import {parse} from 'node-html-parser'; export const value: number = parse('<img>').getAttribute('src');",
   'selector-composed-params':
     "import {createSelector} from 'reselect'; const read = createSelector((s: {balance: string}, index: number): string => s.balance, (v: string): string => v); const composed = createSelector(read, (v: string): string => v); composed({balance: '0'});",
   'selector-optional-type':

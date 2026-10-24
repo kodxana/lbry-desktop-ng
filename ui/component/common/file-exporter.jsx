@@ -17,24 +17,17 @@ type Props = {
 };
 
 class FileExporter extends React.PureComponent<Props> {
-  constructor() {
-    super();
-    (this: any).handleDownload = this.handleDownload.bind(this);
-  }
-
-  handleDownload() {
+  handleDownload = () => {
     const { data, defaultFileName } = this.props;
 
     const element = document.createElement('a');
     const file = new Blob([data], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
     element.download = defaultFileName || 'file.txt';
-    // $FlowFixMe
     document.body.appendChild(element);
     element.click();
-    // $FlowFixMe
     document.body.removeChild(element);
-  }
+  };
 
   render(): React.Node {
     const { data, label, tooltip, disabled, onFetch, progressMsg } = this.props;
