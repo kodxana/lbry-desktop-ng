@@ -503,7 +503,7 @@ export function doUpdateChannel(params: any, cb: any) {
     const channelClaim = myChannels.find((myChannel) => myChannel.claim_id === params.claim_id);
     if (!channelClaim) {
       const message = __('This channel is not available yet. Please try again.');
-      dispatch({ type: ACTIONS.UPDATE_CHANNEL_FAILED, data: message });
+      dispatch({ type: ACTIONS.UPDATE_CHANNEL_FAILED, data: { message } });
       dispatch(doToast({ message, isError: true }));
       return;
     }

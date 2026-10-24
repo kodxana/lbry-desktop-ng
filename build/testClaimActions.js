@@ -3,6 +3,10 @@ const assert = require('assert').strict;
 const { load } = require('./testStartup');
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const actions = load('constants/action_types.js', {});
+const claimsReducer = load('redux/reducers/claims.js', {
+  'constants/action_types': actions,
+  'util/merge-claim': load('util/merge-claim.js', {}).default,
+}).claimsReducer;
 const uri = load('util/lbryURI.js', {}, { URLSearchParams });
 const notifications = { doToast: (data) => ({ type: 'toast', data }) };
 const selectors = {
@@ -180,6 +184,9 @@ async function main() {
     await claims.doUpdateChannel({ claim_id: 'channel', amount: '1' })(dispatch, getState);
     assert.equal(calls.length, 0, 'Unloaded channel metadata must not be overwritten with empty locations');
     assert.equal(events.at(-2).type, actions.UPDATE_CHANNEL_FAILED);
+    const failedState = claimsReducer({ updatingChannel: true }, events.at(-2));
+    assert.equal(failedState.updatingChannel, false);
+    assert.equal(failedState.updateChannelError, events.at(-1).data.message);
   }
   const locations = [{ country: 'PL', city: 'Warsaw' }];
   state = { channels: [{ claim_id: 'channel', value: { locations } }] };
