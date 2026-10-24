@@ -23,7 +23,7 @@ type Props = {
   activeTab: string,
   amount: number,
   balance: number,
-  claim: StreamClaim,
+  claim: ?Claim,
   convertedAmount?: number,
   customTipAmount?: number,
   exchangeRate?: any,
@@ -66,16 +66,16 @@ function WalletTipAmountSelector(props: Props) {
     customTipAmount && fiatConversion && activeTab === TAB_FIAT
       ? [customTipAmount]
       : customTipAmount && exchangeRate
-      ? [convertToTwoDecimalsOrMore(customTipAmount / exchangeRate)]
-      : DEFAULT_TIP_AMOUNTS;
+        ? [convertToTwoDecimalsOrMore(customTipAmount / exchangeRate)]
+        : DEFAULT_TIP_AMOUNTS;
 
   // if it's fiat but there's no card saved OR the creator can't receive fiat tips
   const shouldDisableFiatSelectors = activeTab === TAB_FIAT && (!hasCardSaved || !canReceiveFiatTip);
   if (setDisableSubmitButton) setDisableSubmitButton(shouldDisableFiatSelectors);
 
   // setup variables for tip API
-  const channelClaimId = claim.signing_channel ? claim.signing_channel.claim_id : claim.claim_id;
-  const tipChannelName = claim.signing_channel ? claim.signing_channel.name : claim.name;
+  const channelClaimId = claim?.signing_channel ? claim.signing_channel.claim_id : claim?.claim_id;
+  const tipChannelName = claim?.signing_channel ? claim.signing_channel.name : claim?.name;
 
   /**
    * whether tip amount selection/review functionality should be disabled
@@ -307,8 +307,8 @@ function WalletTipAmountSelector(props: Props) {
               </>
             )
           : !canReceiveFiatTip
-          ? getHelpMessage(__('Only creators that verify cash accounts can receive tips'))
-          : getHelpMessage(__('Send a tip directly from your attached card')))}
+            ? getHelpMessage(__('Only creators that verify cash accounts can receive tips'))
+            : getHelpMessage(__('Send a tip directly from your attached card')))}
     </>
   );
 }

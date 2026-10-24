@@ -226,6 +226,32 @@ const contentActions = load('redux/actions/content.js', {
   'redux/selectors/settings': noRpc,
 });
 async function edits() {
+  const fetchCalls = [];
+  const fetching = load('redux/actions/collections.js', {
+    'constants/action_types': actions,
+    'constants/collections': constants,
+    uuid: {},
+    lbry: {
+      claim_search: async (params) => {
+        fetchCalls.push(params);
+        return { items: [], total_items: 0 };
+      },
+    },
+    'redux/actions/claims': { doClaimSearch: () => ({ type: 'search' }) },
+    'redux/selectors/claims': claims,
+    'redux/selectors/collections': selectors,
+  });
+  const fetchState = fixture();
+  fetchState.claims.byId.list = { claim_id: 'list', name: 'List', value_type: 'collection', value: { claims: [] } };
+  const fetchEvents = [];
+  await fetching.doFetchItemsInCollections({ collectionIds: ['missing', 'a', 'list'] })(
+    (action) => fetchEvents.push(action),
+    () => fetchState
+  );
+  const result = fetchEvents.find((action) => action.type === actions.COLLECTION_ITEMS_RESOLVE_COMPLETED).data;
+  assert.deepEqual(plain(result.failedCollectionIds), ['missing', 'a']);
+  assert.deepEqual(plain(result.resolvedCollections.list.items), []);
+  assert.equal(fetchCalls.length, 0, 'Missing claims and stream claims must not be fetched as collection entries');
   let current = fixture();
   const dispatched = [];
   const dispatch = (action) => {

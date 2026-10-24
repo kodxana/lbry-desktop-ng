@@ -21,7 +21,7 @@ type Props = {
   resolveUri: (string) => void,
   isSubscribed: boolean,
   uri: string,
-  claim: StreamClaim,
+  claim: ?Claim,
   location: UrlLocation,
   title: string,
   claimIsMine: boolean,

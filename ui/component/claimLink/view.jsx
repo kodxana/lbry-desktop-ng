@@ -9,7 +9,7 @@ import UriIndicator from 'component/uriIndicator';
 type Props = {
   uri: string,
   fullUri: string,
-  claim: StreamClaim,
+  claim: Claim,
   children: React.Node,
   description: ?string,
   isResolvingUri: boolean,
@@ -47,17 +47,8 @@ class ClaimLink extends React.Component<Props> {
   };
 
   render() {
-    const {
-      uri,
-      fullUri,
-      claim,
-      children,
-      isResolvingUri,
-      playingUri,
-      parentCommentId,
-      isMarkdownPost,
-      allowPreview,
-    } = this.props;
+    const { uri, fullUri, claim, children, isResolvingUri, playingUri, parentCommentId, isMarkdownPost, allowPreview } =
+      this.props;
     const isUnresolved = (!isResolvingUri && !claim) || !claim;
     const isPlayingInline =
       playingUri &&

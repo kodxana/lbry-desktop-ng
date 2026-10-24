@@ -208,7 +208,7 @@ export const selectLinkedCommentAncestors = (state: State): CommentsState['linke
 export const selectCommentIdsForUri = (state: State, uri: string): Array<string> | void => {
   const claimId = selectClaimIdForUri(state, uri);
   const commentIdsByClaimId = selectCommentIdsByClaimId(state);
-  return commentIdsByClaimId[claimId];
+  return claimId != null ? commentIdsByClaimId[claimId] : undefined;
 };
 
 // deprecated

@@ -18,7 +18,7 @@ export default function CollectionAddButton(props: Props) {
   const { doOpenModal, uri, fileAction, type = 'playlist', claim, isSaved } = props;
 
   // $FlowFixMe
-  const streamType = (claim && claim.value && claim.value.stream_type) || '';
+  const streamType = (claim && claim.value_type === 'stream' && claim.value.stream_type) || '';
   const isPlayable = streamType === 'video' || streamType === 'audio';
 
   if (!isPlayable) return null;

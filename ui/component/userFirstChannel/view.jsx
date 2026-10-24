@@ -20,18 +20,12 @@ type Props = {
 };
 
 function UserFirstChannel(props: Props) {
-  const {
-    createChannel,
-    creatingChannel,
-    claimingReward,
-    user,
-    createChannelError,
-    doToggleInterestedInYoutubeSync,
-  } = props;
+  const { createChannel, creatingChannel, claimingReward, user, createChannelError, doToggleInterestedInYoutubeSync } =
+    props;
   const { primary_email: primaryEmail } = user;
   const initialChannel = primaryEmail ? primaryEmail.split('@')[0] : '';
   const [channel, setChannel] = useState(initialChannel);
-  const [nameError, setNameError] = useState(undefined);
+  const [nameError, setNameError] = useState<string | void>(undefined);
 
   function handleCreateChannel() {
     createChannel(`@${channel}`, DEFAULT_BID_FOR_FIRST_CHANNEL).then((channelClaim) => {

@@ -77,7 +77,7 @@ export function doDeleteFileAndMaybeGoBack(
     const state = getState();
     const playingUri = selectPlayingUri(state);
     const { outpoint } = makeSelectFileInfoForUri(uri)(state) || '';
-    const { nout, txid } = selectClaimForUri(state, uri);
+    const { nout, txid } = selectClaimForUri(state, uri) || claim;
     const claimOutpoint = `${txid}:${nout}`;
     const actions = [];
 
@@ -117,7 +117,12 @@ export function doDeleteFileAndMaybeGoBack(
 export function doFileGet(uri: string, saveFile: boolean = true, onSuccess?: (GetResponse) => any) {
   return (dispatch: Dispatch, getState: () => any) => {
     const state = getState();
-    const { nout, txid } = selectClaimForUri(state, uri);
+    const claim = selectClaimForUri(state, uri);
+    if (!claim) {
+      dispatch(doToast({ message: __('This claim is not available yet. Please try again.'), isError: true }));
+      return;
+    }
+    const { nout, txid } = claim;
     const outpoint = `${txid}:${nout}`;
 
     dispatch({

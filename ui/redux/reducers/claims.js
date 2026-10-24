@@ -11,63 +11,10 @@
 import * as ACTIONS from 'constants/action_types';
 import mergeClaim from 'util/merge-claim';
 
-type State = {
-  createChannelError: ?string,
-  createCollectionError: ?string,
-  channelClaimCounts: { [string]: number },
-  claimsByUri: { [string]: string },
-  blacklistedByUri: { [string]: ClaimErrorCensor },
-  byId: { [string]: Claim },
-  pendingById: { [string]: Claim }, // keep pending claims
-  resolvingUris: Array<string>,
-  reflectingById: { [string]: ReflectingUpdate },
-  myClaims: ?Array<string>,
-  myChannelClaims: ?Array<string>,
-  myCollectionClaims: ?Array<string>,
-  abandoningById: { [string]: boolean },
-  fetchingChannelClaims: { [string]: number },
-  fetchingMyChannels: boolean,
-  fetchingMyCollections: boolean,
-  fetchingClaimSearchByQuery: { [string]: boolean },
-  purchaseUriSuccess: boolean,
-  myPurchases: ?Array<string>,
-  myPurchasesPageNumber: ?number,
-  myPurchasesPageTotalResults: ?number,
-  fetchingMyPurchases: boolean,
-  fetchingMyPurchasesError: ?string,
-  claimSearchByQuery: { [string]: Array<string> },
-  claimSearchByQueryLastPageReached: { [string]: Array<boolean> },
-  creatingChannel: boolean,
-  creatingCollection: boolean,
-  paginatedClaimsByChannel: {
-    [string]: {
-      all: Array<string>,
-      pageCount: number,
-      itemCount: number,
-      [number]: Array<string>,
-    },
-  },
-  updateChannelError: ?string,
-  updateCollectionError: ?string,
-  updatingChannel: boolean,
-  updatingCollection: boolean,
-  pendingChannelImport: string | boolean,
-  repostLoading: boolean,
-  repostError: ?string,
-  fetchingClaimListMinePageError: ?string,
-  myClaimsPageResults: Array<string>,
-  myClaimsPageNumber: ?number,
-  myClaimsPageTotalResults: ?number,
-  isFetchingClaimListMine: boolean,
-  isCheckingNameForPublish: boolean,
-  checkingPending: boolean,
-  checkingReflecting: boolean,
-  isFetchingAllClaimListMine: boolean,
-  allClaimListMine: Array<ChannelClaim | Claim>,
-};
+type State = ClaimsState;
 
 const reducers = {};
-const defaultState = {
+const defaultState: State = {
   blacklistedByUri: {},
   byId: {},
   claimsByUri: {},
@@ -196,7 +143,8 @@ function handleClaimAction(state: State, action: any): State {
     }
 
     newResolvingUrls.delete(url);
-    if (!stream && !channel && !collection && !pendingById[byUri[url]]) {
+    const previousClaimId = byUri[url];
+    if (!stream && !channel && !collection && !(previousClaimId && pendingById[previousClaimId])) {
       byUri[url] = null;
     }
   });
@@ -436,7 +384,8 @@ reducers[ACTIONS.FETCH_CHANNEL_CLAIMS_COMPLETED] = (state: State, action: any): 
   const paginatedClaimsByChannel = { ...state.paginatedClaimsByChannel };
   // check if count has changed - that means cached pagination will be wrong, so clear it
   const previousCount = paginatedClaimsByChannel[uri] && paginatedClaimsByChannel[uri]['itemCount'];
-  const byChannel = claimsInChannel === previousCount ? { ...paginatedClaimsByChannel[uri] } : {};
+  const byChannel: ClaimsState['paginatedClaimsByChannel'][string] =
+    claimsInChannel === previousCount ? { ...paginatedClaimsByChannel[uri] } : {};
   const allClaimIds = new Set(byChannel.all);
   const currentPageClaimIds = [];
   const byId = { ...state.byId };
@@ -524,7 +473,7 @@ reducers[ACTIONS.UPDATE_CONFIRMED_CLAIMS] = (state: State, action: any): State =
   const byId = { ...state.byId };
   const byUri = { ...state.claimsByUri };
   //
-  confirmedClaims.forEach((claim: GenericClaim) => {
+  confirmedClaims.forEach((claim: Claim) => {
     const { claim_id: claimId, type } = claim;
     let newClaim = claim;
     const oldClaim = byId[claimId];

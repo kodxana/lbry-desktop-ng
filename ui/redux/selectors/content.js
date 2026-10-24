@@ -68,7 +68,7 @@ export const makeSelectContentWatchedPercentageForUri = (uri: string) =>
     if (!claim) {
       return 0;
     }
-    const media = claim.value && (claim.value.video || claim.value.audio);
+    const media = claim.value_type === 'stream' && (claim.value.video || claim.value.audio);
     if (!media) {
       return 0;
     }
@@ -134,7 +134,7 @@ export const makeSelectFileRenderModeForUri = (uri: string) =>
     makeSelectContentTypeForUri(uri),
     makeSelectMediaTypeForUri(uri),
     makeSelectFileExtensionForUri(uri),
-    (contentType, mediaType, extension) => {
+    (contentType = '', mediaType, extension) => {
       if (mediaType === 'video' || FORCE_CONTENT_TYPE_PLAYER.includes(contentType)) {
         return RENDER_MODES.VIDEO;
       }

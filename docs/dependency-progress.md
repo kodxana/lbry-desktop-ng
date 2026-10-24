@@ -22,7 +22,7 @@ remaining engineering effort, security or release readiness. The current direct
 dependency set has 149 packages, including 51 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
-The checker runs again. Required checks load all 88 declaration files, reject
+The checker runs again. Required checks load all 89 declaration files, reject
 duplicate modules and exercise nine maintained dependency contracts alongside
 the first-party global types. The declaration check is clean. The first
 application pass replaces fresh-object Redux copies with spreads, reducing full
@@ -30,7 +30,7 @@ application diagnostics from 5,051 to 3,214. Shared UI export and React type
 annotations reduce that to 2,908. Formatting and wallet-progress contracts reduce
 that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
 2,798. Comment contracts reduce that to 2,719, collection contracts to 2,644,
-comment-input contracts to 2,586, and form-control contracts to 2,521,
+comment-input contracts to 2,586, form-control contracts to 2,521, and claim contracts to 2,296,
 with no newly introduced diagnostics in these passes.
 Required gates cover twenty shared UI/type source modules (29 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
@@ -55,6 +55,14 @@ Form-control contracts cover native refs/events, optional price props and the
 Markdown editor's changes/options. Renderer checks cover price precision,
 currency and clearing, checkbox labels, focus, textareas, disabled state and
 submission alongside the existing wallet and Markdown editor tests.
+Claim contracts distinguish streams, channels, collections and reposts, share the
+reducer's state shape and preserve unresolved versus missing lookup results.
+A separate source gate rejects 21 invalid claim/selector contracts. Runtime checks
+cover pending claims, reposts, ownership, purchases, pagination, metadata and
+numeric pending bids. URL sorting no longer mutates a cached claim list.
+Unresolved downloads, reactions and tips fail safely; channel updates wait for
+existing metadata, and support abandonment still works before claims finish loading.
+Renderer tests cover unresolved tip recipients and confirmation/cancel/retry.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change

@@ -58,7 +58,7 @@ const DEFAULT_INPUT_DATA = {
 
 type Props = {
   claimId: string,
-  claim: StreamClaim,
+  claim: Claim,
   isReporting: boolean,
   error: string,
   activeChannelClaim: ?ChannelClaim,
@@ -258,7 +258,7 @@ export default function ReportContent(props: Props) {
     }
   }
 
-  function includeTimestamp(claim: StreamClaim) {
+  function includeTimestamp(claim: Claim) {
     return (
       claim.value_type === 'stream' && (claim.value.stream_type === 'video' || claim.value.stream_type === 'audio')
     );
@@ -710,7 +710,7 @@ export default function ReportContent(props: Props) {
     }
   }
 
-  function getClaimPreview(claim: StreamClaim) {
+  function getClaimPreview(claim: Claim) {
     return (
       <div className="section content__non-clickable">
         <ClaimPreview uri={claim.permanent_url} hideMenu hideActions type="small" />

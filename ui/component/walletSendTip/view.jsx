@@ -26,7 +26,7 @@ type SupportParams = { amount: number, claim_id: string, channel_id?: string };
 type Props = {
   activeChannelClaim: ?ChannelClaim,
   balance: number,
-  claim: StreamClaim,
+  claim: ?Claim,
   claimIsMine: boolean,
   fetchingChannels: boolean,
   incognito: boolean,
@@ -44,7 +44,7 @@ function WalletSendTip(props: Props) {
   const {
     activeChannelClaim,
     balance,
-    claim = {},
+    claim,
     claimIsMine,
     fetchingChannels,
     incognito,
@@ -72,7 +72,7 @@ function WalletSendTip(props: Props) {
   const titleText = claimIsMine
     ? __('Boost Your %claimTypeText%', { claimTypeText })
     : __('Boost This %claimTypeText%', { claimTypeText });
-  const { claim_id: claimId } = claim;
+  const claimId = claim?.claim_id;
   let channelName;
   try {
     ({ channelName } = parseURI(uri));
@@ -109,7 +109,7 @@ function WalletSendTip(props: Props) {
   /** FUNCTIONS **/
 
   function getClaimTypeText() {
-    switch (claim.value_type) {
+    switch (claim?.value_type) {
       case 'stream':
         return __('Content');
       case 'channel':
@@ -125,6 +125,7 @@ function WalletSendTip(props: Props) {
 
   // make call to the backend to send lbc or fiat
   function sendSupportOrConfirm(instantTipMaxAmount = null) {
+    if (!claimId) return;
     if (!isOnConfirmationPage && (!instantTipMaxAmount || !instantTipEnabled || tipAmount > instantTipMaxAmount)) {
       setConfirmationPage(true);
     } else {

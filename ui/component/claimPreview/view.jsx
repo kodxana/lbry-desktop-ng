@@ -7,7 +7,7 @@ import { isEmpty } from 'util/object';
 import classnames from 'classnames';
 import { isURIValid } from 'util/lbryURI';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
-import { isChannelClaim } from 'util/claim';
+import { isChannelClaim, isClaimPlayable } from 'util/claim';
 import { formatLbryUrlForWeb } from 'util/url';
 import { formatClaimPreviewTitle } from 'util/formatAriaLabel';
 import { formatNumber } from 'util/number';
@@ -176,15 +176,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   }, [channelSubCount]);
   const isValid = uri && isURIValid(uri, false);
 
-  // $FlowFixMe
-  const isPlayable =
-    claim &&
-    // $FlowFixMe
-    claim.value &&
-    // $FlowFixMe
-    claim.value.stream_type &&
-    // $FlowFixMe
-    (claim.value.stream_type === 'audio' || claim.value.stream_type === 'video');
+  const isPlayable = isClaimPlayable(claim);
   const isChannelUri = isChannelClaim(claim, uri);
   const signingChannel = claim && claim.signing_channel;
   const repostedChannelUri =
