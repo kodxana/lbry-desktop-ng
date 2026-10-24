@@ -5,6 +5,7 @@ declare type Collection = {
   type: string,
   updatedAt: number,
   totalItems?: number,
+  itemCount?: number,
   sourceId?: string, // if copied, claimId of original collection
   ...
 };
@@ -16,6 +17,7 @@ declare type CollectionState = {
   edited: CollectionGroup,
   builtin: CollectionGroup,
   saved: Array<string>,
+  lastUsedCollection?: string,
   isResolvingCollectionById: { [string]: boolean },
   error?: string | null,
   ...
@@ -23,6 +25,12 @@ declare type CollectionState = {
 
 declare type CollectionGroup = {
   [string]: Collection,
+};
+
+declare type CollectionPlaybackState = {
+  shuffleList?: { collectionId: string, newUrls: Array<?string> | false, ... },
+  loopList?: { collectionId: string, loop: boolean, ... },
+  ...
 };
 
 declare type CollectionEditParams = {

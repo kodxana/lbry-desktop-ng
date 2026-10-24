@@ -11,6 +11,7 @@ import { doCollectionEdit } from 'redux/actions/collections';
 import CollectionSidebar from 'component/collectionContentSidebar/view';
 import CollectionPage from 'page/collection/view';
 import CollectionEditor from 'component/collectionEdit/view';
+import CollectionButtons from 'component/collectionEditButtons/view';
 import { render, unmount, waitFor, tick } from './helpers';
 import 'scss/third-party.scss';
 import 'scss/all.scss';
@@ -19,7 +20,11 @@ const noop = () => {};
 const key = (value) => ipcRenderer.invoke('fixture-controls-key', value);
 const handles = () => Array.from(document.querySelectorAll('.collection-preview__edit-group[role="button"]'));
 const dragging = () => document.querySelector('.claim-list li[style*="position: fixed"]');
-const button = (label) => document.querySelector(`button[aria-label="${label}"]`);
+const button = (label: string): HTMLButtonElement => {
+  const element = document.querySelector(`button[aria-label="${label}"]`);
+  if (!(element instanceof HTMLButtonElement)) throw new Error('Missing button: ' + label);
+  return element;
+};
 const frame = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
 export default async function collections(store, history) {
@@ -33,6 +38,27 @@ export default async function collections(store, history) {
     return true;
   };
   try {
+    for (const index of [undefined, -1, 3]) {
+      const moves = [];
+      render(
+        <CollectionButtons
+          uri="lbry://missing"
+          collectionIndex={index}
+          collectionUris={['one', 'two']}
+          editCollection={(params) => {
+            moves.push(params);
+          }}
+        />,
+        store,
+        history
+      );
+      for (const name of ['Move Top', 'Move Bottom', 'Move Up', 'Move Down']) {
+        assert.equal(button(name).disabled, true, 'A missing item cannot reorder another collection entry');
+        button(name).click();
+      }
+      assert.equal(moves.length, 0);
+      unmount();
+    }
     const uris = [1, 2, 3].map((number) => `lbry://fixture-${number}#${String(number).repeat(40)}`);
     store.dispatch({
       type: ACTIONS.RESOLVE_URIS_COMPLETED,

@@ -12,6 +12,7 @@ for (const file of [
   'testSearchContracts.js',
   'testHomepageContracts.js',
   'testCommentContracts.js',
+  'testCollectionContracts.js',
   'testDependencyContracts.js',
   'testRemainingDependencyContracts.js',
   'testAccountClient.js',

@@ -10,11 +10,23 @@ import { walletSyncProgress, readWalletSnapshot } from 'util/wallet-sync';
 import { startupProgress } from 'util/startup-progress';
 import { sortComments, buildValidSticker, parseSticker, getStickerUrl, getCommentsListTitle } from 'util/comments';
 import type { Sticker } from 'constants/stickers';
+import { findPlayableUrl } from 'util/collection-playback';
 import type { WalletSyncProgress } from 'util/wallet-sync';
 import type { StartupProgress } from 'util/startup-progress';
 
 declare var status: StatusResponse;
 declare var comments: Array<LbryComment>;
+export const nextPlayable: string | null = findPlayableUrl(
+  ['one', null, 'two'],
+  0,
+  1,
+  true,
+  (uri: string) => uri === 'two'
+);
+export const collectionPlayback: CollectionPlaybackState = {
+  shuffleList: { collectionId: 'list', newUrls: false },
+  loopList: { collectionId: 'list', loop: false },
+};
 export const sortedComments: Array<LbryComment> = sortComments({
   comments,
   reactionsById: { id: { like: 2, dislike: 1 } },
