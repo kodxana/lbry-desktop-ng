@@ -7,17 +7,16 @@ import classnames from 'classnames';
 
 type Props = {
   uri: string,
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { uri: string, type: string }) => void,
   fileAction?: boolean,
-  type?: boolean,
-  claim: Claim,
+  type?: string,
+  claim: ?Claim,
   isSaved: boolean,
 };
 
 export default function CollectionAddButton(props: Props): React.Node {
   const { doOpenModal, uri, fileAction, type = 'playlist', claim, isSaved } = props;
 
-  // $FlowFixMe
   const streamType = (claim && claim.value_type === 'stream' && claim.value.stream_type) || '';
   const isPlayable = streamType === 'video' || streamType === 'audio';
 

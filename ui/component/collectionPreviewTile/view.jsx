@@ -20,7 +20,7 @@ type Props = {
   pendingCollection?: Collection,
   claim: ?Claim,
   channelClaim: ?ChannelClaim,
-  collectionItemUrls: Array<string>,
+  collectionItemUrls: ?Array<?string>,
   resolveUri: (string) => void,
   isResolvingUri: boolean,
   thumbnail?: string,
@@ -39,7 +39,7 @@ type Props = {
   showMature: boolean,
   collectionId: string,
   deleteCollection: (string) => void,
-  resolveCollectionItems: (any) => void,
+  resolveCollectionItems: ({ collectionId: string, page_size: number }) => void,
   isResolvingCollectionClaims: boolean,
 };
 
@@ -67,9 +67,10 @@ function CollectionPreviewTile(props: Props): React.Node {
   // const signingChannel = claim && claim.signing_channel;
 
   const navigateUrl =
-    formatLbryUrlForWeb(collectionItemUrls[0] || '/') + (collectionId ? generateListSearchUrlParams(collectionId) : '');
+    formatLbryUrlForWeb(collectionItemUrls?.[0] || '/') +
+    (collectionId ? generateListSearchUrlParams(collectionId) : '');
 
-  function handleClick(e) {
+  function handleClick(): void {
     if (navigateUrl) {
       push(navigateUrl);
     }
@@ -77,7 +78,7 @@ function CollectionPreviewTile(props: Props): React.Node {
 
   const navLinkProps = {
     to: navigateUrl,
-    onClick: (e) => e.stopPropagation(),
+    onClick: (e: { stopPropagation: () => void, ... }): void => e.stopPropagation(),
   };
 
   /* REMOVE IF WORKS

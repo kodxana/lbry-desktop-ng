@@ -24,14 +24,25 @@ type SubscriptionArgs = {
   notificationsDisabled?: boolean,
 };
 
-type Props = {
+export type Props = {
   uri: string,
   claim: ?Claim,
   repostedClaim: ?Claim,
   contentClaim: ?Claim,
-  contentSigningChannel: ?Claim,
-  contentChannelUri: string,
-  openModal: (id: string, {}) => void,
+  contentSigningChannel: ?ChannelClaim,
+  contentChannelUri: ?string,
+  openModal: (
+    id: string,
+    {
+      uri?: string,
+      doGoBack?: boolean,
+      claim?: Claim,
+      cb?: () => void,
+      isSupport?: boolean,
+      collectionId?: string,
+      type?: string,
+    }
+  ) => void,
   inline?: boolean,
   channelIsMuted: boolean,
   channelIsBlocked: boolean,
@@ -43,23 +54,23 @@ type Props = {
   doCommentModUnBlock: (string) => void,
   doCommentModBlockAsAdmin: (string, ?string, ?string) => void,
   doCommentModUnBlockAsAdmin: (string, string) => void,
-  doCollectionEdit: (string, any) => void,
+  doCollectionEdit: (string, CollectionEditParams) => void,
   hasClaimInWatchLater: boolean,
   hasClaimInFavorites: boolean,
   claimInCollection: boolean,
-  collectionId: string,
+  collectionId: ?string,
   isMyCollection: boolean,
   doToast: ({ message: string, isError?: boolean }) => void,
   claimIsMine: boolean,
-  fileInfo: FileListItem,
-  prepareEdit: (Claim, string, ?FileListItem) => void,
+  fileInfo: ?FileListItem,
+  prepareEdit: (StreamClaim, string) => void,
   isSubscribed: boolean,
   doChannelSubscribe: (SubscriptionArgs) => void,
   doChannelUnsubscribe: (SubscriptionArgs) => void,
   isChannelPage: boolean,
-  editedCollection: Collection,
-  playNextUri: string,
-  resolvedList: boolean,
+  editedCollection: ?Collection,
+  playNextUri: ?string,
+  resolvedList: ?Array<?string>,
   fetchCollectionItems: (string) => void,
   doToggleShuffleList: (string) => void,
   lastUsedCollection: ?Collection,
@@ -109,15 +120,13 @@ function ClaimMenuList(props: Props): React.Node {
     hasClaimInLastUsedCollection,
     lastUsedCollectionIsNotBuiltin,
   } = props;
-  const [doShuffle, setDoShuffle] = React.useState(false);
+  const [shuffleAction, setShuffleAction] = React.useState<'idle' | 'shuffle' | 'play'>('idle');
   const incognitoClaim = contentChannelUri && !contentChannelUri.includes('@');
-  const isChannel = !incognitoClaim && !contentSigningChannel;
-  // $FlowFixMe
+  const isChannel = contentClaim?.value_type === 'channel';
   const claimLength = claim && claim.value_type === 'collection' ? claim.value.claims.length : undefined;
-  // $FlowFixMe
   const claimCount = editedCollection ? editedCollection.items.length : claimLength;
   const isEmptyCollection = (Number(claimCount) || 0) <= 0;
-  const { channelName } = parseURI(contentChannelUri);
+  const channelName = contentChannelUri ? parseURI(contentChannelUri).channelName : undefined;
   const showDelete = claimIsMine || (fileInfo && (fileInfo.written_bytes > 0 || fileInfo.blobs_completed > 0));
   const subscriptionLabel = repostedClaim
     ? isSubscribed
@@ -136,17 +145,21 @@ function ClaimMenuList(props: Props): React.Node {
   }, [collectionId, fetchCollectionItems]);
 
   React.useEffect(() => {
-    if (doShuffle && resolvedList) {
+    if (shuffleAction === 'shuffle' && resolvedList && collectionId) {
       doToggleShuffleList(collectionId);
-      if (playNextUri) {
-        const navigateUrl = formatLbryUrlForWeb(playNextUri);
-        push(
-          { pathname: navigateUrl, search: generateListSearchUrlParams(collectionId) },
-          { collectionId, forceAutoplay: true }
-        );
-      }
+      setShuffleAction('play');
     }
-  }, [collectionId, doShuffle, doToggleShuffleList, playNextUri, push, resolvedList]);
+  }, [collectionId, shuffleAction, doToggleShuffleList, resolvedList]);
+
+  React.useEffect(() => {
+    if (shuffleAction === 'play' && playNextUri && collectionId) {
+      setShuffleAction('idle');
+      push(
+        { pathname: formatLbryUrlForWeb(playNextUri), search: generateListSearchUrlParams(collectionId) },
+        { collectionId, forceAutoplay: true }
+      );
+    }
+  }, [collectionId, shuffleAction, playNextUri, push]);
 
   if (!claim) {
     return null;
@@ -157,7 +170,7 @@ function ClaimMenuList(props: Props): React.Node {
   const isCollectionClaim = claim && claim.value_type === 'collection';
   const isPlayable = isClaimPlayable(contentClaim);
 
-  function handleAdd(source, name, collectionId) {
+  function handleAdd(source: boolean, name: string, collectionId: string): void {
     doToast({
       message: source ? __('Item removed from %name%', { name }) : __('Item added to %name%', { name }),
     });
@@ -168,7 +181,7 @@ function ClaimMenuList(props: Props): React.Node {
 
   function handleFollow() {
     const subscriptionHandler = isSubscribed ? doChannelUnsubscribe : doChannelSubscribe;
-    if (channelName) {
+    if (channelName && contentChannelUri) {
       subscriptionHandler({
         channelName: '@' + channelName,
         uri: contentChannelUri,
@@ -178,6 +191,7 @@ function ClaimMenuList(props: Props): React.Node {
   }
 
   function handleToggleMute() {
+    if (!contentChannelUri) return;
     if (channelIsMuted) {
       doChannelUnmute(contentChannelUri);
     } else {
@@ -186,6 +200,7 @@ function ClaimMenuList(props: Props): React.Node {
   }
 
   function handleToggleBlock() {
+    if (!contentChannelUri) return;
     if (channelIsBlocked) {
       doCommentModUnBlock(contentChannelUri);
     } else {
@@ -195,7 +210,7 @@ function ClaimMenuList(props: Props): React.Node {
 
   function handleEdit() {
     if (!claim) return;
-    if (!isChannel) {
+    if (claim.value_type === 'stream') {
       const signingChannelName = contentSigningChannel && contentSigningChannel.name;
 
       const uriObject: LbryUrlObj = {
@@ -208,18 +223,22 @@ function ClaimMenuList(props: Props): React.Node {
       const editUri = buildURI(uriObject);
 
       push(`/$/${PAGES.UPLOAD}`);
-      prepareEdit(claim, editUri, fileInfo);
-    } else {
+      prepareEdit(claim, editUri);
+    } else if (claim.value_type === 'channel') {
       const channelUrl = claim.name + ':' + claim.claim_id;
       push(`/${channelUrl}?${PAGE_VIEW_QUERY}=${EDIT_PAGE}`);
     }
   }
 
   function handleDelete() {
+    if (!claim) return;
     if (!repostedClaim && !isChannel) {
       openModal(MODALS.CONFIRM_FILE_REMOVE, { uri, doGoBack: false });
     } else {
-      openModal(MODALS.CONFIRM_CLAIM_REVOKE, { claim, cb: isChannel && (() => replace(`/$/${PAGES.CHANNELS}`)) });
+      openModal(MODALS.CONFIRM_CLAIM_REVOKE, {
+        claim,
+        cb: isChannel ? () => replace(`/$/${PAGES.CHANNELS}`) : undefined,
+      });
     }
   }
 
@@ -228,6 +247,7 @@ function ClaimMenuList(props: Props): React.Node {
   }
 
   function handleToggleAdminBlock() {
+    if (!contentChannelUri) return;
     if (channelIsAdminBlocked) {
       doCommentModUnBlockAsAdmin(contentChannelUri, '');
     } else {
@@ -235,7 +255,7 @@ function ClaimMenuList(props: Props): React.Node {
     }
   }
 
-  function copyToClipboard(textToCopy, successMsg, failureMsg) {
+  function copyToClipboard(textToCopy: string, successMsg: string, failureMsg: string): void {
     navigator.clipboard
       .writeText(textToCopy)
       .then(() => {
@@ -251,8 +271,7 @@ function ClaimMenuList(props: Props): React.Node {
   }
 
   function handleReportContent() {
-    // $FlowFixMe
-    push(`/$/${PAGES.REPORT_CONTENT}?claimId=${contentClaim && contentClaim.claim_id}`);
+    if (contentClaim) push(`/$/${PAGES.REPORT_CONTENT}?claimId=${contentClaim.claim_id}`);
   }
 
   return (
@@ -281,7 +300,7 @@ function ClaimMenuList(props: Props): React.Node {
                   className="comment__menu-option"
                   onClick={() => {
                     if (!resolvedList) fetchItems();
-                    setDoShuffle(true);
+                    setShuffleAction('shuffle');
                   }}
                 >
                   <div className="menu__link">
@@ -422,14 +441,17 @@ function ClaimMenuList(props: Props): React.Node {
               )
             ) : (
               <>
-                {!isChannelPage && !repostedClaim && (
-                  <MenuItem className="comment__menu-option" onClick={handleEdit}>
-                    <div className="menu__link">
-                      <Icon aria-hidden icon={ICONS.EDIT} />
-                      {__('Edit')}
-                    </div>
-                  </MenuItem>
-                )}
+                {claimIsMine &&
+                  !isChannelPage &&
+                  !repostedClaim &&
+                  (claim.value_type === 'stream' || claim.value_type === 'channel') && (
+                    <MenuItem className="comment__menu-option" onClick={handleEdit}>
+                      <div className="menu__link">
+                        <Icon aria-hidden icon={ICONS.EDIT} />
+                        {__('Edit')}
+                      </div>
+                    </MenuItem>
+                  )}
               </>
             )}
 

@@ -21,8 +21,11 @@ import ClaimRepostButton from 'component/claimRepostButton';
 type Props = {
   uri: string,
   claim: StreamClaim,
-  openModal: (id: string, { uri: string, claimIsMine?: boolean, isSupport?: boolean }) => void,
-  prepareEdit: (Claim, string, ?FileListItem) => void,
+  openModal: (
+    id: string,
+    { uri: string, claimIsMine?: boolean, isSupport?: boolean, collectionId?: ?string, webShareable?: ?boolean }
+  ) => void,
+  prepareEdit: (StreamClaim, string) => void,
   claimIsMine: boolean,
   fileInfo: FileListItem,
   costInfo: ?{ cost: number },
@@ -92,7 +95,7 @@ function FileActions(props: Props): React.Node {
           label={__('Edit')}
           navigate={`/$/${PAGES.UPLOAD}`}
           onClick={() => {
-            prepareEdit(claim, editUri, fileInfo);
+            if (editUri) prepareEdit(claim, editUri);
           }}
         />
       )}

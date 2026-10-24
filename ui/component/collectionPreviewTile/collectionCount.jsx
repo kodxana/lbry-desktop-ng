@@ -7,7 +7,7 @@ type Props = {
   count: number,
 };
 
-export default function collectionCount(props: Props) {
+export default function collectionCount(props: Props): React.Node {
   const { count = 0 } = props;
 
   return (

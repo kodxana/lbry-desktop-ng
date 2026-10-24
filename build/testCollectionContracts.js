@@ -3,6 +3,36 @@ const assert = require('assert').strict;
 const { load } = require('./testStartup');
 const reselect = require('reselect');
 const plain = (value) => JSON.parse(JSON.stringify(value));
+// The connected tile must dispatch the item-loading thunk, not just return it.
+const requested = [];
+const dispatched = [];
+const thunk = () => {};
+const tile = load('component/collectionPreviewTile/index.js', {
+  'react-redux': {
+    connect: (_select, perform) => () =>
+      perform((action) => {
+        dispatched.push(action);
+        return action;
+      }),
+  },
+  'redux/selectors/claims': {},
+  'redux/selectors/collections': {},
+  'redux/selectors/blocked': {},
+  'redux/selectors/settings': {},
+  lbryinc: {},
+  './view': {},
+  'redux/actions/claims': {},
+  'redux/actions/collections': {
+    doFetchItemsInCollection: (options) => {
+      requested.push(options);
+      return thunk;
+    },
+  },
+}).default;
+const request = { collectionId: 'list', page_size: 2 };
+assert.equal(tile.resolveCollectionItems(request), thunk);
+assert.deepEqual(requested, [request]);
+assert.deepEqual(dispatched, [thunk]);
 const actions = load('constants/action_types.js', {});
 const constants = load('constants/collections.js', {});
 const uri = load('util/lbryURI.js', {}, { URLSearchParams });

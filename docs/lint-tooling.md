@@ -268,7 +268,8 @@ ID in a local constant. Production Babel output is unchanged for 311 of the 312
 modified UI modules; only that small backup lifecycle adjustment emits different
 JavaScript. The shared source gate now also checks the actual backup and modal
 components, including missing settings, request IDs and accessible modal options,
-against narrow presentation and IPC fixtures (37 invalid contracts in total).
+against narrow presentation and IPC fixtures (39 invalid contracts in total,
+including icon accessibility labels and keyboard events).
 Existing renderer tests cover cancellation, retry, profile changes and unmounting.
 
 The API pass checks the actual SDK and comment clients in an isolated source
@@ -309,9 +310,17 @@ Renderer tests cover price conversion, confirmation/cancellation and full file
 paths, custom license events, Markdown MIME fallback and real local-video PNG
 capture. Publish selectors and the general dispatch boundary remain untyped.
 
-**The application is not yet type-clean.** The full check now reports 1,221
+The collection-control pass types collection metadata, nullable records, item
+URLs, menu payloads and drag events. A source gate checks the actual editor,
+add/select controls and preview overlay, rejecting nine invalid contracts.
+Collection previews dispatch their loading thunk; shuffle playback navigates
+once; form updates retain all submitted tags and preserve location metadata.
+The unused legacy reorder component is removed. Renderer regressions cover
+these controls alongside the existing reorder and persistence cases.
+
+**The application is not yet type-clean.** The full check now reports 1,067
 application diagnostics and zero library-definition diagnostics, down from
-1,363 before the publishing pass (142 fewer, with no newly introduced diagnostics).
+1,221 before the collection-control pass (154 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

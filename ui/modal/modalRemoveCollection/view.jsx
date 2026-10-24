@@ -18,8 +18,7 @@ type Props = {
 };
 
 function ModalRemoveCollection(props: Props): React.Node {
-  const { closeModal, claim, collectionDelete, collectionId, collectionName, uri, redirect } = props;
-  const title = claim && claim.value && claim.value.title;
+  const { closeModal, collectionDelete, collectionId, collectionName, uri, redirect } = props;
   const { replace } = useDesktopHistory();
   const [confirmName, setConfirmName] = useState('');
 
@@ -35,7 +34,7 @@ function ModalRemoveCollection(props: Props): React.Node {
               <FormField value={confirmName} type={'text'} onChange={(e) => setConfirmName(e.target.value)} />
             </React.Fragment>
           ) : (
-            <I18nMessage tokens={{ title: <cite>{uri && title ? `"${title}"` : `"${collectionName}"`}</cite> }}>
+            <I18nMessage tokens={{ title: <cite>{`"${collectionName}"`}</cite> }}>
               Are you sure you'd like to remove %title%?
             </I18nMessage>
           )

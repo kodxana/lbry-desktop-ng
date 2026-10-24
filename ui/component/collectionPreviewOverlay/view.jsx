@@ -1,25 +1,24 @@
 // @flow
 import React from 'react';
-import { withDesktopRouter } from 'component/common/desktop-router';
 import FileThumbnail from 'component/fileThumbnail';
 
 type Props = {
   uri: string,
-  collectionId: string,
+  collectionId: ?string,
   collectionName: string,
   collectionCount: number,
   editedCollection?: Collection,
   pendingCollection?: Collection,
   claim: ?Claim,
-  collectionItemUrls: Array<string>,
+  collectionItemUrls: ?Array<?string>,
   fetchCollectionItems: (string) => void,
 };
 
-function CollectionPreviewOverlay(props: Props) {
+function CollectionPreviewOverlay(props: Props): React.Node {
   const { collectionId, collectionItemUrls, fetchCollectionItems } = props;
 
   React.useEffect(() => {
-    if (!collectionItemUrls) {
+    if (collectionId && !collectionItemUrls) {
       fetchCollectionItems(collectionId);
     }
   }, [collectionId, collectionItemUrls, fetchCollectionItems]);
@@ -31,7 +30,7 @@ function CollectionPreviewOverlay(props: Props) {
         <div className="collection-preview__overlay-grid">
           {collectionItemUrls &&
             collectionItemUrls.map((item, index) => {
-              if (index < 2) {
+              if (item && index < 2) {
                 return (
                   <div key={item} className="collection-preview__overlay-grid-items">
                     <FileThumbnail uri={item} key={item} />
@@ -46,4 +45,4 @@ function CollectionPreviewOverlay(props: Props) {
   return null;
 }
 
-export default withDesktopRouter(CollectionPreviewOverlay);
+export default CollectionPreviewOverlay;

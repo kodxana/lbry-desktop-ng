@@ -7,7 +7,6 @@ import * as COLLECTIONS_CONSTS from 'constants/collections';
 import Icon from 'component/common/icon';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
-import * as KEYCODES from 'constants/keycodes';
 
 import Yrbl from 'component/yrbl';
 import classnames from 'classnames';
@@ -36,15 +35,15 @@ export default function CollectionsListMine(props: Props): React.Node {
     fetchingCollections,
   } = props;
 
-  const builtinCollectionsList = (Object.values(builtinCollections || {}): any);
-  const unpublishedCollectionsList = (Object.keys(unpublishedCollections || {}): any);
-  const publishedList = (Object.keys(publishedCollections || {}): any);
+  const builtinCollectionsList = Object.values(builtinCollections || {});
+  const unpublishedCollectionsList = Object.keys(unpublishedCollections || {});
+  const publishedList = Object.keys(publishedCollections || {});
   const hasCollections = unpublishedCollectionsList.length || publishedList.length;
   const [filterType, setFilterType] = React.useState(ALL);
   const [searchText, setSearchText] = React.useState('');
 
   const playlistPageUrl = `/$/${PAGES.PLAYLISTS}?type=${filterType}`;
-  let collectionsToShow = [];
+  let collectionsToShow: Array<string> = [];
   if (filterType === ALL) {
     collectionsToShow = unpublishedCollectionsList.concat(publishedList);
   } else if (filterType === PRIVATE) {
@@ -75,21 +74,14 @@ export default function CollectionsListMine(props: Props): React.Node {
 
   const watchLater = builtinCollectionsList.find((list) => list.id === COLLECTIONS_CONSTS.WATCH_LATER_ID);
   const favorites = builtinCollectionsList.find((list) => list.id === COLLECTIONS_CONSTS.FAVORITES_ID);
-  const builtin = [watchLater, favorites];
-  function escapeListener(e: SyntheticKeyboardEvent<*>) {
-    if (e.keyCode === KEYCODES.ESCAPE) {
+  const builtin = [watchLater, favorites].filter((list) => list != null);
+  function escapeListener(e: { key: string, preventDefault: () => void, ... }): void {
+    if (e.key === 'Escape') {
       e.preventDefault();
       setSearchText('');
     }
   }
 
-  function onTextareaFocus() {
-    window.addEventListener('keydown', escapeListener);
-  }
-
-  function onTextareaBlur() {
-    window.removeEventListener('keydown', escapeListener);
-  }
   return (
     <>
       {builtin.map((list: Collection) => {
@@ -171,8 +163,7 @@ export default function CollectionsListMine(props: Props): React.Node {
             <Form onSubmit={() => {}} className="wunderbar--inline">
               <Icon icon={ICONS.SEARCH} />
               <FormField
-                onFocus={onTextareaFocus}
-                onBlur={onTextareaBlur}
+                onKeyDown={escapeListener}
                 className="wunderbar__input--inline"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}

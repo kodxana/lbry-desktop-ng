@@ -52,7 +52,7 @@ const select = (state, props) => {
 
 const perform = (dispatch) => ({
   resolveUri: (uri) => dispatch(doResolveUri(uri)),
-  resolveCollectionItems: (options) => doFetchItemsInCollection(options),
+  resolveCollectionItems: (options) => dispatch(doFetchItemsInCollection(options)),
   deleteCollection: (id) => dispatch(doCollectionDelete(id)),
 });
 

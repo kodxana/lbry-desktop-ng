@@ -36,6 +36,16 @@ export function backupLifecycle(backup: WalletBackup): void {
   backup.backupWalletDir('fixture-wallet');
 }
 export const accessibleModal: React.Node = <Modal isOpen contentLabel="Backup" ariaHideApp={false} />;
+export const accessibleIcon: React.Node = <Icon icon="lock" aria-hidden={false} aria-label="Locked" />;
+export const keyboardField: React.Node = (
+  <FormField
+    name="list"
+    onKeyDown={(event) => {
+      event.preventDefault();
+      event.key.toUpperCase();
+    }}
+  />
+);
 export const expandableModal: React.Node = <ExpandableModal isOpen extraContent={<p>Details</p>} />;
 
 export const price: FormPrice = { amount: 0.00000001, currency: 'LBC' };
