@@ -4,16 +4,18 @@ import React from 'react';
 
 type Props = {
   claim?: Claim,
-  emote?: any,
+  emote?: { name: string, url: string } | { name: string, unicode: string },
   uri?: string,
   dispatch?: (action: any) => any,
 };
 
-export default function TextareaSuggestionsItem(props: Props) {
+export default function TextareaSuggestionsItem(props: Props): React.Node {
   const { claim, emote, uri, dispatch, ...autocompleteProps } = props;
 
   if (emote) {
-    const { name: value, url, unicode } = emote;
+    const { name: value } = emote;
+    const unicode = 'unicode' in emote ? emote.unicode : undefined;
+    const url = 'url' in emote ? emote.url : undefined;
 
     return (
       <div {...autocompleteProps}>

@@ -16,6 +16,7 @@ import Tooltip from 'component/common/tooltip';
 import { lighthouse } from 'redux/actions/search';
 import SearchOptionsView from 'component/searchOptions/view';
 import useLighthouse from 'effects/use-lighthouse';
+import useThrottle from 'effects/use-throttle';
 import * as ACTIONS from 'constants/action_types';
 import { render, unmount, tick, waitFor, submit } from './helpers';
 import 'scss/third-party.scss';
@@ -732,6 +733,18 @@ async function suggestions(store, history) {
   key(field, 'Enter', 13);
   await waitFor(() => field.value === 'before :slightly_smiling_face: after', 'Enter preserves text after the cursor');
   assert.equal(field.selectionStart, 'before :slightly_smiling_face: '.length);
+  type(field, '@fixture:abc\n:slightly_smiling_face! after', '@fixture:abc\n:slightly_smiling_face'.length);
+  await waitFor(highlighted, 'A later token must be selected independently of earlier mentions');
+  key(field, 'Enter', 13);
+  await waitFor(
+    () => field.value === '@fixture:abc\n:slightly_smiling_face:! after',
+    'Completing a later token must preserve earlier mentions, newlines and punctuation'
+  );
+  assert.equal(
+    field.selectionStart,
+    '@fixture:abc\n:slightly_smiling_face:'.length,
+    'The caret must not skip punctuation'
+  );
   type(field, ':slightly_smiling_face');
   await waitFor(highlighted, 'Tab suggestions must highlight a current match');
   field.dispatchEvent(
@@ -780,6 +793,33 @@ async function suggestions(store, history) {
   await waitFor(() => field.disabled, 'Disabled suggestions must stop accepting input');
   unmount();
   assert(!document.querySelector('[role="listbox"]'), 'Suggestion portals must be cleaned up');
+}
+
+async function throttledInput(store, history) {
+  let update;
+  const seen = [];
+  function Search() {
+    const [value, setValue] = React.useState('first');
+    update = setValue;
+    const result = useThrottle(value, 100);
+    React.useEffect(() => {
+      seen.push(result);
+    }, [result]);
+    return <output id="throttle-fixture">{result}</output>;
+  }
+  render(<Search />, store, history);
+  assert.equal(document.getElementById('throttle-fixture').textContent, 'first');
+  flushSync(() => update('intermediate'));
+  flushSync(() => update('latest'));
+  await waitFor(() => seen.includes('latest'), 'Throttling must eventually emit the most recent input');
+  assert.deepEqual(seen, ['first', 'latest'], 'Rapid edits must not emit a stale intermediate value');
+  flushSync(() => update(''));
+  await waitFor(() => seen.includes(''), 'Clearing a query must propagate an empty string');
+  flushSync(() => update('pending'));
+  const before = seen.slice();
+  unmount();
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert.deepEqual(seen, before, 'An unmounted input must not receive a pending update');
 }
 
 async function tooltips(store, history) {
@@ -851,6 +891,7 @@ export default async function accessibleControls(store, history) {
   await searchBar(store, history);
   await searchContracts(store, history);
   await suggestions(store, history);
+  await throttledInput(store, history);
   await tooltips(store, history);
   await measurement(store, history);
   return 'accessible controls: tabs, menus, search filters/loading/stale responses, LBRY links, emoji mouse/Enter/Tab/Escape, input refs/props, multiline/free text, tooltip hover/focus/dismissal and measured descriptions';

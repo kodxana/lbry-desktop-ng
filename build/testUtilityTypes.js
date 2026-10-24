@@ -25,6 +25,8 @@ const sources = [
   'ui/util/query-params.js',
   'ui/util/comments.js',
   'ui/util/collection-playback.js',
+  'ui/util/comment-suggestions.js',
+  'ui/effects/use-throttle.js',
 ];
 for (const file of [...sources, '.flowconfig']) write(file, fs.readFileSync(path.join(root, file), 'utf8'));
 for (const file of fs.readdirSync(path.join(root, 'flow-typed')).filter((file) => file.endsWith('.js'))) {
@@ -56,6 +58,13 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared utility source and valid callers must type-check');
 const invalid = {
+  suggestionText: 'export const invalid = findSuggestion(123, 0);',
+  suggestionCursor: 'export const invalid = findSuggestion("@channel", "3");',
+  suggestionResult: 'export const invalid: Suggestion = findSuggestion("plain text", 5);',
+  suggestionSelection: 'export const invalid = completeSuggestion("@channel", suggestion, 1);',
+  suggestionSpan: 'export const invalid: Suggestion = {...suggestion, lastIndex: "8"};',
+  throttleValue: 'export function useInvalid(): string { return useThrottle(null); }',
+  throttleDelay: 'export function useInvalid(): string { return useThrottle("@channel", "200"); }',
   collectionDirection: 'export const invalid = findPlayableUrl([], 0, 0, false, () => true);',
   collectionLoop: 'export const invalid = findPlayableUrl([], 0, 1, "false", () => true);',
   collectionUrl: 'export const invalid = findPlayableUrl([42], 0, 1, false, () => true);',
