@@ -175,8 +175,8 @@ checked rather than treated as an untyped module. SDK amounts remain strings,
 failed status reads remain nullable, and the balance read still waits for status.
 Credit display text is kept separate from its rendered React content.
 
-`node build/testUtilityTypes.js` checks eleven real utility source files and the
-search and comment constants with the first-party declarations. It rejects 54 invalid
+`node build/testUtilityTypes.js` checks twelve real utility source files, the
+throttle hook and the search and comment constants with the first-party declarations. It rejects 61 invalid
 formatting, progress, wallet snapshot, search, homepage, comment and collection contracts. The UI gate also
 checks credit display props and defaults.
 `node build/testUtilityContracts.js` covers formatter caching, locale changes,
@@ -231,9 +231,16 @@ the new search examines at most one pass through the list. Missing-item indices
 are consistently `-1`, and renderer tests verify that all reorder buttons are
 disabled for them. The existing reorder and persistence tests still run.
 
-**The application is not yet type-clean.** The full check now reports 2,644
+The comment-input pass types suggestion state, textarea refs, completion events,
+emote results and the throttle hook. `node build/testCommentSuggestions.js` checks
+caret ranges, repeated and mixed tokens, Unicode, channel IDs and text preservation.
+Electron tests cover keyboard/mouse completion, IME, dismissal, multiple tokens,
+punctuation and throttled input cleanup. Completion no longer skips punctuation
+after an inserted emoji. The suggestion grammar and search delay are unchanged.
+
+**The application is not yet type-clean.** The full check now reports 2,586
 application diagnostics and zero library-definition diagnostics, down from
-2,719 before the collection pass (75 fewer, with no newly introduced diagnostics).
+2,644 before the comment-input pass (58 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

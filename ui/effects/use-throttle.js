@@ -1,11 +1,11 @@
 // @flow
 import React from 'react';
 
-const useEffectOnce = (effect) => {
+const useEffectOnce = (effect: () => void | (() => void)): void => {
   React.useEffect(effect, []);
 };
 
-function useUnmount(fn: () => any): void {
+function useUnmount(fn: () => void): void {
   const fnRef = React.useRef(fn);
 
   // update the ref each render so if it change the newest callback will be invoked
@@ -14,11 +14,11 @@ function useUnmount(fn: () => any): void {
   useEffectOnce(() => () => fnRef.current());
 }
 
-export default function useThrottle(value: string, ms: number = 200) {
+export default function useThrottle(value: string, ms: number = 200): string {
   const [state, setState] = React.useState(value);
-  const timeout = React.useRef();
-  const nextValue = React.useRef(null);
-  const hasNextValue = React.useRef(0);
+  const timeout = React.useRef<ReturnType<typeof setTimeout> | void>();
+  const nextValue = React.useRef(value);
+  const hasNextValue = React.useRef(false);
 
   React.useEffect(() => {
     if (!timeout.current) {

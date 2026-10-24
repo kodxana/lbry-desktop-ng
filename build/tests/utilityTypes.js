@@ -13,6 +13,16 @@ import type { Sticker } from 'constants/stickers';
 import { findPlayableUrl } from 'util/collection-playback';
 import type { WalletSyncProgress } from 'util/wallet-sync';
 import type { StartupProgress } from 'util/startup-progress';
+import { findSuggestion, completeSuggestion } from 'util/comment-suggestions';
+import type { Suggestion } from 'util/comment-suggestions';
+import useThrottle from 'effects/use-throttle';
+
+declare var suggestion: Suggestion;
+export const completion: { value: string, cursor: number } = completeSuggestion('@ch', suggestion, '@channel:abc');
+export const token: Suggestion | null = findSuggestion('@channel', 8);
+export function useThrottledFixture(): string {
+  return useThrottle('@channel', 200);
+}
 
 declare var status: StatusResponse;
 declare var comments: Array<LbryComment>;

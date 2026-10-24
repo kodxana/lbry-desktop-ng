@@ -29,11 +29,11 @@ application pass replaces fresh-object Redux copies with spreads, reducing full
 application diagnostics from 5,051 to 3,214. Shared UI export and React type
 annotations reduce that to 2,908. Formatting and wallet-progress contracts reduce
 that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
-2,798. Comment contracts reduce that to 2,719, and collection contracts to 2,644,
-with no newly introduced diagnostics in either pass.
+2,798. Comment contracts reduce that to 2,719, collection contracts to 2,644,
+and comment-input contracts to 2,586, with no newly introduced diagnostics in these passes.
 Required gates cover fourteen shared UI source modules (18 invalid contracts)
-and eleven utility modules plus search and comment constants (54 invalid contracts,
-including homepage options, reaction counts, moderation state, stickers and playback).
+and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
+including homepage options, reaction counts, moderation state, stickers, playback and suggestions).
 Search regressions cover filters, links, cache/pagination and request lifecycle.
 Simplified filters now retain the full media options for later views, and unmatched
 custom selections return the existing empty-selection value.
@@ -47,6 +47,9 @@ Collection regressions cover ownership, draft precedence, missing entries,
 shuffle membership and repeat navigation. Playback searches stop after one pass
 when no entry can play; missing items cannot trigger reorder controls, and saved
 edits can be changed before the published collection resolves.
+Comment-input regressions cover mixed/repeated mentions and emoji, caret ranges,
+claim IDs, Unicode, surrounding text and throttled edits. Completing an emoji
+before punctuation now keeps the caret immediately after the inserted token.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change
