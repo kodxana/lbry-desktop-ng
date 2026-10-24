@@ -18,12 +18,21 @@ import { selectUserVerifiedEmail } from 'redux/selectors/user';
 import Comments from 'comments';
 import { getSubsetFromKeysArray } from 'util/sync-settings';
 
-let syncTimer = null;
+type SyncCallback = (error?: unknown, hasNewData?: ?boolean) => void;
+type SyncAttempt = {
+  unlockFailed?: boolean,
+  syncHash?: string,
+  syncData?: string,
+  changed?: boolean,
+  hasSyncedWallet?: boolean,
+};
+
+let syncTimer: ReturnType<typeof setInterval> | null = null;
 const SYNC_INTERVAL = 1000 * 60 * 5; // 5 minutes
 const NO_WALLET_ERROR = 'no wallet found for this user';
 const BAD_PASSWORD_ERROR_NAME = 'InvalidPasswordError';
 const { CLIENT_SYNC_KEYS } = SHARED_PREFERENCES;
-export function doSetDefaultAccount(success: () => void, failure: (string) => void) {
+export function doSetDefaultAccount(success?: () => void, failure?: (unknown) => void): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.SET_DEFAULT_ACCOUNT,
@@ -72,7 +81,7 @@ export function doSetDefaultAccount(success: () => void, failure: (string) => vo
   };
 }
 
-export function doSetSync(oldHash: string, newHash: string, data: any) {
+export function doSetSync(oldHash: string, newHash: string, data: string): ThunkAction<Promise<unknown>> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.SET_SYNC_STARTED,
@@ -99,7 +108,8 @@ export function doSetSync(oldHash: string, newHash: string, data: any) {
 }
 
 export const doGetSyncDesktop =
-  (cb?: (any, any) => void, password?: string) => (dispatch: Dispatch, getState: GetState) => {
+  (cb?: SyncCallback, password?: string): ThunkAction<Promise<unknown>> =>
+  (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const syncEnabled = makeSelectClientSetting(SETTINGS.ENABLE_SYNC)(state);
     const getSyncPending = selectGetSyncIsPending(state);
@@ -115,7 +125,7 @@ export const doGetSyncDesktop =
     });
   };
 
-export function doSyncLoop(noInterval?: boolean) {
+export function doSyncLoop(noInterval?: boolean): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     if (!noInterval && syncTimer) clearInterval(syncTimer);
     const state = getState();
@@ -139,7 +149,7 @@ export function doSyncLoop(noInterval?: boolean) {
   };
 }
 
-export function doSyncUnsubscribe() {
+export function doSyncUnsubscribe(): ThunkAction<void> {
   return () => {
     if (syncTimer) {
       clearInterval(syncTimer);
@@ -147,10 +157,10 @@ export function doSyncUnsubscribe() {
   };
 }
 
-export function doGetSync(passedPassword?: string, callback?: (any, ?boolean) => void) {
+export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): ThunkAction<void> {
   const password = passedPassword === null || passedPassword === undefined ? '' : passedPassword;
 
-  function handleCallback(error, hasNewData) {
+  function handleCallback(error?: unknown, hasNewData?: ?boolean): void {
     if (callback) {
       if (typeof callback !== 'function') {
         throw new Error('Second argument passed to "doGetSync" must be a function');
@@ -167,7 +177,7 @@ export function doGetSync(passedPassword?: string, callback?: (any, ?boolean) =>
       type: ACTIONS.GET_SYNC_STARTED,
     });
 
-    const data = {};
+    const data: SyncAttempt = {};
 
     Lbry.wallet_status()
       .then((status) => {
@@ -186,7 +196,8 @@ export function doGetSync(passedPassword?: string, callback?: (any, ?boolean) =>
         throw new Error();
       })
       .then((hash?: string) => Lbryio.call('sync', 'get', { hash }, 'post'))
-      .then((response: any) => {
+      .then((response: { hash: string, data?: string, changed?: boolean, ... }) => {
+        if (typeof response.hash !== 'string') throw new Error('No hash returned for sync/get.');
         const syncHash = response.hash;
         data.syncHash = syncHash;
         data.syncData = response.data;
@@ -205,10 +216,12 @@ export function doGetSync(passedPassword?: string, callback?: (any, ?boolean) =>
         }
 
         const { hash: walletHash, data: walletData } = response;
+        const syncHash = data.syncHash;
+        if (syncHash === undefined) throw new Error('No hash returned for sync/get.');
 
-        if (walletHash !== data.syncHash) {
+        if (walletHash !== syncHash) {
           // different local hash, need to synchronise
-          dispatch(doSetSync(data.syncHash, walletHash, walletData));
+          dispatch(doSetSync(syncHash, walletHash, walletData));
         }
 
         dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data });
@@ -271,7 +284,7 @@ export function doGetSync(passedPassword?: string, callback?: (any, ?boolean) =>
   };
 }
 
-export function doSyncApply(syncHash: string, syncData: any, password: string) {
+export function doSyncApply(syncHash: string, syncData: string, password: string): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.SYNC_APPLY_STARTED,
@@ -299,7 +312,7 @@ export function doSyncApply(syncHash: string, syncData: any, password: string) {
   };
 }
 
-export function doCheckSync() {
+export function doCheckSync(): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.GET_SYNC_STARTED,
@@ -327,49 +340,52 @@ export function doCheckSync() {
   };
 }
 
-export function doResetSync() {
-  return (dispatch: Dispatch): Promise<any> =>
-    new Promise((resolve) => {
+export function doResetSync(): ThunkAction<Promise<void>> {
+  return (dispatch: Dispatch): Promise<void> =>
+    new Promise<void>((resolve) => {
       dispatch({ type: ACTIONS.SYNC_RESET });
       resolve();
     });
 }
 
-export function doSyncEncryptAndDecrypt(oldPassword: string, newPassword: string, encrypt: boolean) {
+export function doSyncEncryptAndDecrypt(
+  oldPassword: string,
+  newPassword: string,
+  encrypt: boolean
+): ThunkAction<Promise<unknown>> {
   return (dispatch: Dispatch) => {
-    const data = {};
+    let oldHash: string | void;
     return Lbry.sync_hash()
       .then((hash) => Lbryio.call('sync', 'get', { hash }, 'post'))
       .then((syncGetResponse) => {
-        data.oldHash = syncGetResponse.hash;
+        if (typeof syncGetResponse.hash !== 'string') throw new Error('No hash returned for sync/get.');
+        oldHash = syncGetResponse.hash;
 
         return Lbry.sync_apply({ password: oldPassword, data: syncGetResponse.data });
       })
-      .then(() => {
-        if (encrypt) {
-          dispatch(doWalletEncrypt(newPassword));
-        } else {
-          dispatch(doWalletDecrypt());
-        }
+      .then(async () => {
+        const succeeded = await dispatch(encrypt ? doWalletEncrypt(newPassword) : doWalletDecrypt());
+        if (!succeeded) throw new Error('Wallet encryption state could not be changed.');
       })
       .then(() => Lbry.sync_apply({ password: newPassword }))
       .then((syncApplyResponse) => {
-        if (syncApplyResponse.hash !== data.oldHash) {
-          return dispatch(doSetSync(data.oldHash, syncApplyResponse.hash, syncApplyResponse.data));
+        if (oldHash === undefined) throw new Error('No hash returned for sync/get.');
+        if (syncApplyResponse.hash !== oldHash) {
+          return dispatch(doSetSync(oldHash, syncApplyResponse.hash, syncApplyResponse.data));
         }
       })
-      .catch(console.error); // eslint-disable-line
+      .catch((error) => console.error(error)); // eslint-disable-line
   };
 }
 
-export function doSetSyncLock(lock: boolean) {
+export function doSetSyncLock(lock: boolean): { type: string, data: boolean } {
   return {
     type: ACTIONS.SET_SYNC_LOCK,
     data: lock,
   };
 }
 
-export function doSetPrefsReady() {
+export function doSetPrefsReady(): { type: string, data: boolean } {
   return {
     type: ACTIONS.SET_PREFS_READY,
     data: true,
@@ -377,7 +393,7 @@ export function doSetPrefsReady() {
 }
 
 type SharedData = {
-  version: '0.1',
+  version: string,
   value: {
     subscriptions?: Array<string>,
     following?: Array<{ uri: string, notificationsDisabled: boolean }>,
@@ -386,14 +402,14 @@ type SharedData = {
     settings?: any,
     app_welcome_version?: number,
     sharing_3P?: boolean,
-    unpublishedCollections: CollectionGroup,
-    editedCollections: CollectionGroup,
-    builtinCollections: CollectionGroup,
-    savedCollections: Array<string>,
+    unpublishedCollections?: CollectionGroup,
+    editedCollections?: CollectionGroup,
+    builtinCollections?: CollectionGroup,
+    savedCollections?: Array<string>,
   },
 };
 
-function extractUserState(rawObj: SharedData) {
+function extractUserState(rawObj: ?SharedData): SharedData['value'] {
   if (rawObj && rawObj.version === '0.1' && rawObj.value) {
     const {
       subscriptions,
@@ -409,26 +425,26 @@ function extractUserState(rawObj: SharedData) {
       savedCollections,
     } = rawObj.value;
 
-    return {
-      ...(subscriptions ? { subscriptions } : {}),
-      ...(following ? { following } : {}),
-      ...(tags ? { tags } : {}),
-      ...(blocked ? { blocked } : {}),
-      ...(settings ? { settings } : {}),
-      ...(app_welcome_version ? { app_welcome_version } : {}),
-      ...(sharing_3P ? { sharing_3P } : {}),
-      ...(unpublishedCollections ? { unpublishedCollections } : {}),
-      ...(editedCollections ? { editedCollections } : {}),
-      ...(builtinCollections ? { builtinCollections } : {}),
-      ...(savedCollections ? { savedCollections } : {}),
-    };
+    const result: SharedData['value'] = {};
+    if (subscriptions) result.subscriptions = subscriptions;
+    if (following) result.following = following;
+    if (tags) result.tags = tags;
+    if (blocked) result.blocked = blocked;
+    if (settings) result.settings = settings;
+    if (app_welcome_version) result.app_welcome_version = app_welcome_version;
+    if (sharing_3P) result.sharing_3P = sharing_3P;
+    if (unpublishedCollections) result.unpublishedCollections = unpublishedCollections;
+    if (editedCollections) result.editedCollections = editedCollections;
+    if (builtinCollections) result.builtinCollections = builtinCollections;
+    if (savedCollections) result.savedCollections = savedCollections;
+    return result;
   }
 
   return {};
 }
 
 /* This action function should anything SYNC_STATE_POPULATE needs to trigger */
-export function doPopulateSharedUserState(sharedSettings: any) {
+export function doPopulateSharedUserState(sharedSettings: ?SharedData): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const {
@@ -477,7 +493,15 @@ export function doPopulateSharedUserState(sharedSettings: any) {
   };
 }
 
-export function doPreferenceSet(key: string, value: any, version: string, success: Function, fail: Function) {
+type Preference<T> = { type: string, version: string, value: T };
+
+export function doPreferenceSet<T>(
+  key: string,
+  value: T,
+  version: string,
+  success?: (Preference<T>) => void,
+  fail?: () => void
+): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     const preference = {
       type: typeof value,
@@ -509,7 +533,11 @@ export function doPreferenceSet(key: string, value: any, version: string, succes
   };
 }
 
-export function doPreferenceGet(key: string, success: Function, fail?: Function) {
+export function doPreferenceGet<T>(
+  key: string,
+  success: (?T) => unknown,
+  fail?: (unknown) => void
+): ThunkAction<Promise<unknown>> {
   return (dispatch: Dispatch) => {
     const options = {
       key,

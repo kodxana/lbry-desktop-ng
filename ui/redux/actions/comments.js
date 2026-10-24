@@ -67,14 +67,14 @@ const ERR_MAP: CommentronErrorMap = {
   },
 };
 
-function devToast(dispatch, msg) {
+function devToast(dispatch: Dispatch, msg: string): void {
   if (isDev) {
     console.error(msg); // eslint-disable-line
     dispatch(doToast({ isError: true, message: `DEV: ${msg}` }));
   }
 }
 
-function resolveCommentronError(commentronMsg: string) {
+function resolveCommentronError(commentronMsg: string): ToastParams {
   for (const key in ERR_MAP) {
     // noinspection JSUnfilteredForInLoop
     const data = ERR_MAP[key];
@@ -90,7 +90,7 @@ function resolveCommentronError(commentronMsg: string) {
     } else {
       const match = commentronMsg.match(data.commentron);
       if (match) {
-        const subs = {};
+        const subs: { [string]: string } = {};
         for (let i = 1; i < match.length; ++i) {
           subs[`${i}`] = match[i];
         }
@@ -601,7 +601,7 @@ export function doCommentCreate(
 
     // Comments is a function which helps make calls to the backend
     // these params passed in POST call.
-    return Comments.comment_create({
+    const params: CommentCreateParams = {
       comment: comment,
       claim_id: claim_id,
       channel_id: activeChannelClaim.claim_id,
@@ -610,10 +610,11 @@ export function doCommentCreate(
       signature: signatureData.signature,
       signing_ts: signatureData.signing_ts,
       sticker: sticker,
-      ...(txid ? { support_tx_id: txid } : {}), // add transaction id if it exists
-      ...(payment_intent_id ? { payment_intent_id } : {}), // add payment_intent_id if it exists
-      ...(environment ? { environment } : {}), // add environment for stripe if it exists
-    })
+    };
+    if (txid) params.support_tx_id = txid;
+    if (payment_intent_id) params.payment_intent_id = payment_intent_id;
+    if (environment) params.environment = environment;
+    return Comments.comment_create(params)
       .then((result: CommentCreateResponse) => {
         dispatch({
           type: ACTIONS.COMMENT_CREATE_COMPLETED,
@@ -709,12 +710,16 @@ export function doCommentAbandon(commentId: string, creatorChannelUri?: string) 
       } catch (e) {}
     }
 
-    return Comments.comment_abandon({
+    const params: CommentAbandonParams = {
       comment_id: commentId,
-      ...(creatorChannelId ? { creator_channel_id: creatorChannelId } : {}),
-      ...(creatorChannelName ? { creator_channel_name: creatorChannelName } : {}),
-      ...(commentIdSignature || {}),
-    })
+    };
+    if (commentIdSignature) {
+      params.signature = commentIdSignature.signature;
+      params.signing_ts = commentIdSignature.signing_ts;
+    }
+    if (creatorChannelId) params.creator_channel_id = creatorChannelId;
+    if (creatorChannelName) params.creator_channel_name = creatorChannelName;
+    return Comments.comment_abandon(params)
       .then((result: CommentAbandonResponse) => {
         // Comment may not be deleted if the signing channel can't be signed.
         // This will happen if the channel was recently created or abandoned.
@@ -818,7 +823,7 @@ export function doCommentUpdate(comment_id: string, comment: string) {
   }
 }
 
-type ChannelNameSignature = { ...ChannelSignResponse, claim_id: string, name: string };
+type ChannelNameSignature = { ...ChannelSignResponse, claim_id: string, name: string, ... };
 
 async function channelSignName(channelClaimId: string, channelName: string): Promise<ChannelNameSignature | void> {
   try {
@@ -830,7 +835,7 @@ async function channelSignName(channelClaimId: string, channelName: string): Pro
   } catch (e) {}
 }
 
-async function channelSignData(channelClaimId: string, data: string) {
+async function channelSignData(channelClaimId: string, data: string): Promise<ChannelSignResponse | void> {
   let signedObject;
 
   try {
@@ -843,7 +848,7 @@ async function channelSignData(channelClaimId: string, data: string) {
   return signedObject;
 }
 
-function safeParseURI(uri) {
+function safeParseURI(uri: string): LbryUrlObj | {} {
   try {
     return parseURI(uri);
   } catch {
@@ -891,7 +896,9 @@ function doCommentModToggleBlock(
             const delegatorsById = selectModerationDelegatorsById(state);
             const moderator = blockerChannelClaims.find((x) => {
               const delegatorDataForId = delegatorsById[x.claim_id];
-              return delegatorDataForId && Object.values(delegatorDataForId.delegators).includes(creatorId);
+              return (
+                creatorId && delegatorDataForId && Object.values(delegatorDataForId.delegators).includes(creatorId)
+              );
             });
             blockerChannelClaims = moderator ? [moderator] : [];
           }
@@ -922,7 +929,7 @@ function doCommentModToggleBlock(
       },
     });
 
-    if (!blockerChannelClaims.length) {
+    if (!blockerChannelClaims.length || !channelClaimId || !channelName) {
       dispatch({
         type: unblock ? ACTIONS.COMMENT_MODERATION_UN_BLOCK_FAILED : ACTIONS.COMMENT_MODERATION_BLOCK_FAILED,
         data: { blockedUri: commenterUri, creatorUri: creatorUri || undefined, blockLevel },
@@ -936,41 +943,34 @@ function doCommentModToggleBlock(
 
     let channelSignatures: Array<ChannelNameSignature> = [];
 
-    const sharedModBlockParams = unblock
-      ? {
-          un_blocked_channel_id: commenterIdForAction,
-          un_blocked_channel_name: commenterNameForAction,
-        }
-      : {
-          blocked_channel_id: commenterIdForAction,
-          blocked_channel_name: commenterNameForAction,
-        };
-
-    const commentAction = unblock ? Comments.moderation_unblock : Comments.moderation_block;
-
     return Promise.all(blockerChannelClaims.map((x) => channelSignName(x.claim_id, x.name)))
       .then((response) => {
         channelSignatures = response.filter((signature) => signature !== undefined);
-        // $FlowFixMe
         return Promise.allSettled(
-          channelSignatures.map((signatureData) =>
-            commentAction({
-              // $FlowFixMe
+          channelSignatures.map((signatureData) => {
+            const common = {
               mod_channel_id: signatureData.claim_id,
-              // $FlowFixMe
               mod_channel_name: signatureData.name,
-              // $FlowFixMe
               signature: signatureData.signature,
-              // $FlowFixMe
               signing_ts: signatureData.signing_ts,
               creator_channel_id: creatorUri ? creatorId : undefined,
               creator_channel_name: creatorUri ? creatorName : undefined,
-              block_all: unblock ? undefined : blockLevel === BLOCK_LEVEL.ADMIN,
-              global_un_block: unblock ? blockLevel === BLOCK_LEVEL.ADMIN : undefined,
-              ...sharedModBlockParams,
-              time_out: unblock ? undefined : timeoutSec,
-            })
-          )
+            };
+            return unblock
+              ? Comments.moderation_unblock({
+                  ...common,
+                  un_blocked_channel_id: commenterIdForAction,
+                  un_blocked_channel_name: commenterNameForAction,
+                  global_un_block: blockLevel === BLOCK_LEVEL.ADMIN,
+                })
+              : Comments.moderation_block({
+                  ...common,
+                  blocked_channel_id: commenterIdForAction,
+                  blocked_channel_name: commenterNameForAction,
+                  block_all: blockLevel === BLOCK_LEVEL.ADMIN,
+                  time_out: timeoutSec,
+                });
+          })
         )
           .then((response) => {
             const failures = [];
@@ -979,7 +979,6 @@ function doCommentModToggleBlock(
               if (res.status === 'rejected') {
                 // TODO: This should be error codes
                 if (res.reason.message !== 'validation is disallowed for non controlling channels') {
-                  // $FlowFixMe
                   failures.push(channelSignatures[index].name + ': ' + res.reason.message);
                 }
               }
@@ -1165,7 +1164,6 @@ export function doFetchModBlockedList() {
     return Promise.all(myChannels.map((channel) => channelSignName(channel.claim_id, channel.name)))
       .then((response) => {
         channelSignatures = response.filter((signature) => signature !== undefined);
-        // $FlowFixMe
         return Promise.allSettled(
           channelSignatures.map((signatureData) =>
             Comments.moderation_block_list({
@@ -1177,27 +1175,35 @@ export function doFetchModBlockedList() {
           )
         )
           .then(async (res) => {
-            let personalBlockList = [];
-            let adminBlockList = [];
-            let moderatorBlockList = [];
-            let moderatorBlockListDelegatorsMap = {};
+            type BlockList = Array<{ channelUri: string, blockedAt: string }>;
+            type TimeoutMap = { [string]: { blockedAt: string, bannedFor: number, banRemaining: number | void } };
+            let personalBlockList: BlockList = [];
+            let adminBlockList: BlockList = [];
+            let moderatorBlockList: BlockList = [];
+            let moderatorBlockListDelegatorsMap: { [string]: Array<string> } = {};
 
             // These should just be part of the block list above, but it is
             // separated for now because there are too many clients that we need
             // to update.
-            const personalTimeoutMap = {};
-            const adminTimeoutMap = {};
-            const moderatorTimeoutMap = {};
+            const personalTimeoutMap: TimeoutMap = {};
+            const adminTimeoutMap: TimeoutMap = {};
+            const moderatorTimeoutMap: TimeoutMap = {};
 
             const blockListsPerChannel = [];
             for (let i = 0; i < res.length; ++i) {
-              blockListsPerChannel.push(res[i].value);
+              const result = res[i];
+              blockListsPerChannel.push(result.status === 'fulfilled' ? result.value : undefined);
               if (i % 2 === 0) {
                 await yieldThread();
               }
             }
             for (let i = 0; i < blockListsPerChannel.length; ++i) {
-              const storeList = async (fetchedList, blockedList, timeoutMap, blockedByMap) => {
+              const storeList = async (
+                fetchedList: ?Array<BlockedChannel>,
+                blockedList: BlockList,
+                timeoutMap: TimeoutMap,
+                blockedByMap?: { [string]: Array<string> }
+              ): Promise<void> => {
                 if (fetchedList) {
                   for (let j = 0; j < fetchedList.length; ++j) {
                     const blockedChannel = fetchedList[j];
@@ -1222,7 +1228,11 @@ export function doFetchModBlockedList() {
                         }
                       }
 
-                      if (blockedByMap !== undefined) {
+                      if (
+                        blockedByMap !== undefined &&
+                        blockedChannel.blocked_by_channel_name &&
+                        blockedChannel.blocked_by_channel_id
+                      ) {
                         const blockedByChannelUri = buildURI({
                           channelName: blockedChannel.blocked_by_channel_name,
                           channelClaimId: blockedChannel.blocked_by_channel_id,
@@ -1265,19 +1275,19 @@ export function doFetchModBlockedList() {
                 personalBlockList:
                   personalBlockList.length > 0
                     ? personalBlockList
-                        .sort((a, b) => new Date(a.blockedAt) - new Date(b.blockedAt))
+                        .sort((a, b) => new Date(a.blockedAt).getTime() - new Date(b.blockedAt).getTime())
                         .map((blockedChannel) => blockedChannel.channelUri)
                     : null,
                 adminBlockList:
                   adminBlockList.length > 0
                     ? adminBlockList
-                        .sort((a, b) => new Date(a.blockedAt) - new Date(b.blockedAt))
+                        .sort((a, b) => new Date(a.blockedAt).getTime() - new Date(b.blockedAt).getTime())
                         .map((blockedChannel) => blockedChannel.channelUri)
                     : null,
                 moderatorBlockList:
                   moderatorBlockList.length > 0
                     ? moderatorBlockList
-                        .sort((a, b) => new Date(a.blockedAt) - new Date(b.blockedAt))
+                        .sort((a, b) => new Date(a.blockedAt).getTime() - new Date(b.blockedAt).getTime())
                         .map((blockedChannel) => blockedChannel.channelUri)
                     : null,
                 moderatorBlockListDelegatorsMap: moderatorBlockListDelegatorsMap,
@@ -1306,10 +1316,7 @@ export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim)
     const state = getState();
     const blockedUris = selectModerationBlockList(state);
 
-    let channelSignature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let channelSignature: ?ChannelSignResponse;
     try {
       channelSignature = await Lbry.channel_sign({
         channel_id: channelClaim.claim_id,
@@ -1321,6 +1328,7 @@ export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim)
       return;
     }
 
+    const { signature, signing_ts } = channelSignature;
     return Promise.all(
       blockedUris.map((uri) => {
         const { channelName, channelClaimId } = parseURI(uri);
@@ -1328,10 +1336,8 @@ export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim)
           return Comments.moderation_block({
             mod_channel_id: channelClaim.claim_id,
             mod_channel_name: channelClaim.name,
-            // $FlowFixMe
-            signature: channelSignature.signature,
-            // $FlowFixMe
-            signing_ts: channelSignature.signing_ts,
+            signature,
+            signing_ts,
             blocked_channel_id: channelClaimId,
             blocked_channel_name: channelName,
           });
@@ -1348,10 +1354,7 @@ export function doCommentModAddDelegate(
   showToast: boolean = false
 ) {
   return async (dispatch: Dispatch, getState: GetState) => {
-    let signature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let signature: ?ChannelSignResponse;
     try {
       signature = await Lbry.channel_sign({
         channel_id: creatorChannelClaim.claim_id,
@@ -1402,10 +1405,7 @@ export function doCommentModRemoveDelegate(
   creatorChannelClaim: ChannelClaim
 ) {
   return async (dispatch: Dispatch, getState: GetState) => {
-    let signature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let signature: ?ChannelSignResponse;
     try {
       signature = await Lbry.channel_sign({
         channel_id: creatorChannelClaim.claim_id,
@@ -1441,10 +1441,7 @@ export function doCommentModListDelegates(channelClaim: ChannelClaim) {
       type: ACTIONS.COMMENT_FETCH_MODERATION_DELEGATES_STARTED,
     });
 
-    let signature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let signature: ?ChannelSignResponse;
     try {
       signature = await Lbry.channel_sign({
         channel_id: channelClaim.claim_id,
@@ -1498,7 +1495,6 @@ export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
     return Promise.all(myChannels.map((channel) => channelSignName(channel.claim_id, channel.name)))
       .then((response) => {
         channelSignatures = response.filter((signature) => signature !== undefined);
-        // $FlowFixMe
         return Promise.allSettled(
           channelSignatures.map((signatureData) =>
             Comments.moderation_am_i({
@@ -1510,7 +1506,7 @@ export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
           )
         )
           .then((results) => {
-            const delegatorsById = {};
+            const delegatorsById: CommentsState['moderationDelegatorsById'] = {};
 
             results.forEach((result, index) => {
               if (result.status === PROMISE_FULFILLED) {
@@ -1611,11 +1607,11 @@ export const doUpdateCreatorSettings = (channelClaim: ChannelClaim, settings: Pe
     }
 
     return Comments.setting_update({
+      ...settings,
       channel_name: channelClaim.name,
       channel_id: channelClaim.claim_id,
       signature: channelSignature.signature,
       signing_ts: channelSignature.signing_ts,
-      ...settings,
     }).catch((err) => {
       dispatch(doToast({ message: err.message, isError: true }));
     });
@@ -1624,10 +1620,7 @@ export const doUpdateCreatorSettings = (channelClaim: ChannelClaim, settings: Pe
 
 export const doCommentWords = (channelClaim: ChannelClaim, words: Array<string>, isUnblock: boolean) => {
   return async (dispatch: Dispatch, getState: GetState) => {
-    let channelSignature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let channelSignature: ?ChannelSignResponse;
     try {
       channelSignature = await Lbry.channel_sign({
         channel_id: channelClaim.claim_id,

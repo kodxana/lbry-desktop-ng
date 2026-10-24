@@ -271,9 +271,20 @@ components, including missing settings, request IDs and accessible modal options
 against narrow presentation and IPC fixtures (37 invalid contracts in total).
 Existing renderer tests cover cancellation, retry, profile changes and unmounting.
 
-**The application is not yet type-clean.** The full check now reports 1,755
+The API pass checks the actual SDK and comment clients in an isolated source
+gate and rejects ten invalid caller contracts. SDK methods expose their declared
+return types, claim resolution distinguishes claims from error responses, and
+moderation block/unblock requests have separate parameter types. Runtime tests
+cover JSON-RPC payloads and failures, startup retries, signed requests, partial
+moderation results, preferences and saved-password selection. Encryption/decryption
+sync waits for a successful wallet operation before exporting or uploading;
+delayed operations and failures are covered using the actual wallet action code.
+The transport still trusts method-specific payloads after parsing the RPC envelope;
+these types do not provide runtime validation of every server response.
+
+**The application is not yet type-clean.** The full check now reports 1,549
 application diagnostics and zero library-definition diagnostics, down from
-2,296 before the renderer pass (541 fewer, with no newly introduced diagnostics).
+1,755 before the API pass (206 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

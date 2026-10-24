@@ -216,15 +216,17 @@ declare type ClaimErrorCensor = {
   ...
 };
 
+declare type ClaimResolveResult = {
+  stream?: ?(StreamClaim | RepostClaim),
+  channel?: ?ChannelClaim,
+  claimsInChannel?: ?number,
+  collection?: ?CollectionClaim,
+  errorCensor?: ?ClaimErrorCensor,
+  ...
+};
+
 declare type ClaimActionResolveInfo = {
-  [string]: {
-    stream: ?StreamClaim,
-    channel: ?ChannelClaim,
-    claimsInChannel: ?number,
-    collection: ?CollectionClaim,
-    errorCensor: ?ClaimErrorCensor,
-    ...
-  },
+  resolveInfo: { [string]: ClaimResolveResult },
 };
 
 declare type ChannelUpdateParams = {

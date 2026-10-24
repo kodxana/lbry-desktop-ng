@@ -60,7 +60,7 @@ declare type CommentsState = {
   fetchingModerationBlockList: boolean,
   moderationDelegatesById: { [string]: Array<{ channelId: string, channelName: string, ... }> },
   fetchingModerationDelegates: boolean,
-  moderationDelegatorsById: { [string]: { global: boolean, delegators: { name: string, claimId: string, ... }, ... } },
+  moderationDelegatorsById: { [string]: { global: boolean, delegators: { [string]: string }, ... } },
   fetchingModerationDelegators: boolean,
   blockingByUri: { [string]: boolean },
   unBlockingByUri: { [string]: boolean },
@@ -182,6 +182,8 @@ declare type CommentEditResponse = LbryComment;
 
 declare type CommentAbandonParams = {
   comment_id: string,
+  signature?: string,
+  signing_ts?: string,
   creator_channel_id?: string,
   creator_channel_name?: string,
   channel_id?: string,
@@ -196,6 +198,8 @@ declare type CommentCreateParams = {
   signature: string,
   signing_ts: string,
   support_tx_id?: string,
+  payment_intent_id?: string,
+  environment?: string,
   ...
 };
 
@@ -238,6 +242,49 @@ declare type ModerationBlockResponse = {
   banned_channel_id: string,
   all_blocked: boolean,
   banned_from: string,
+  ...
+};
+
+declare type ModerationUnblockParams = {
+  mod_channel_id: string,
+  mod_channel_name: string,
+  un_blocked_channel_id: string,
+  un_blocked_channel_name: string,
+  creator_channel_id?: string,
+  creator_channel_name?: string,
+  global_un_block?: boolean,
+  signature: string,
+  signing_ts: string,
+  ...
+};
+
+declare type BlockedChannel = {
+  blocked_channel_name: string,
+  blocked_channel_id: string,
+  blocked_at: string,
+  banned_for?: number,
+  ban_remaining?: number,
+  blocked_by_channel_name?: string,
+  blocked_by_channel_id?: string,
+  ...
+};
+
+declare type ModerationBlockListResponse = {
+  blocked_channels?: Array<BlockedChannel>,
+  globally_blocked_channels?: Array<BlockedChannel>,
+  delegated_blocked_channels?: Array<BlockedChannel>,
+  ...
+};
+
+declare type ModerationDelegatesResponse = {
+  Delegates?: Array<{ channel_id: string, channel_name: string, ... }>,
+  ...
+};
+
+declare type ModerationAmIResponse = {
+  channel_id: string,
+  type: string,
+  authorized_channels?: { [string]: string },
   ...
 };
 

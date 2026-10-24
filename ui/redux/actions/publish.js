@@ -312,7 +312,8 @@ export const doPrepareEdit =
   };
 
 export const doPublish =
-  (success: Function, fail: Function, preview: Function) => (dispatch: Dispatch, getState: GetState) => {
+  (success: (PublishResponse) => unknown, fail: (unknown) => unknown, preview?: (PublishResponse) => unknown) =>
+  (dispatch: Dispatch, getState: GetState) => {
     if (!preview) {
       dispatch({ type: ACTIONS.PUBLISH_START });
     }
@@ -471,7 +472,7 @@ export const doCheckReflectingFiles = () => (dispatch: Dispatch, getState: GetSt
     const reflectingById = selectReflectingById(state);
     const ids = Object.keys(reflectingById);
 
-    const newReflectingById = {};
+    const newReflectingById: { [string]: ReflectingUpdate } = {};
     const promises = [];
     // TODO: just use file_list({claim_id: Array<claimId>})
     if (Object.keys(reflectingById).length) {

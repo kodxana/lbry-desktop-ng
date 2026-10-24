@@ -7,7 +7,7 @@ const CHECK_DAEMON_STARTED_TRY_NUMBER = 200;
 // Offers a proxy to call LBRY sdk methods
 
 //
-const Lbry = {
+const Lbry: LbryTypes = {
   isConnected: false,
   connectPromise: null,
   daemonConnectionString: 'http://127.0.0.1:' + desktopSettings.apiPort,
@@ -21,7 +21,7 @@ const Lbry = {
   },
 
   setApiHeader: (key: string, value: string) => {
-    Lbry.apiRequestHeaders = Object.assign(Lbry.apiRequestHeaders, { [key]: value });
+    Lbry.apiRequestHeaders[key] = value;
   },
 
   unsetApiHeader: (key) => {
@@ -37,7 +37,7 @@ const Lbry = {
   // Returns a human readable media type based on the content type or extension of a file that is returned by the sdk
   getMediaType: (contentType: ?string, fileName: ?string) => {
     if (fileName && fileName.split('.').length > 1) {
-      const formats = [
+      const formats: Array<[RegExp, string]> = [
         [/\.(mp4|m4v|webm|flv|f4v|ogv)$/i, 'video'],
         [/\.(mp3|m4a|aac|wav|flac|ogg|opus)$/i, 'audio'],
         [/\.(jpeg|jpg|png|gif|svg|webp)$/i, 'image'],
@@ -59,8 +59,8 @@ const Lbry = {
       }, fileName);
       return res === fileName ? 'unknown' : res;
     } else if (contentType) {
-      // $FlowFixMe
-      return /^[^/]+/.exec(contentType)[0];
+      const match = /^[^/]+/.exec(contentType);
+      return match ? match[0] : 'unknown';
     }
 
     return 'unknown';
@@ -106,6 +106,8 @@ const Lbry = {
   // Wallet utilities
   wallet_balance: (params = {}) => daemonCallWithResult('wallet_balance', params),
   wallet_decrypt: () => daemonCallWithResult('wallet_decrypt', {}),
+  wallet_lock: () => daemonCallWithResult('wallet_lock', {}),
+  wallet_reconnect: () => daemonCallWithResult('wallet_reconnect', {}),
   wallet_encrypt: (params = {}) => daemonCallWithResult('wallet_encrypt', params),
   wallet_unlock: (params = {}) => daemonCallWithResult('wallet_unlock', params),
   wallet_list: (params = {}) => daemonCallWithResult('wallet_list', params),
@@ -115,6 +117,8 @@ const Lbry = {
   address_unused: (params = {}) => daemonCallWithResult('address_unused', params),
   address_list: (params = {}) => daemonCallWithResult('address_list', params),
   transaction_list: (params = {}) => daemonCallWithResult('transaction_list', params),
+  transaction_show: (params) => daemonCallWithResult('transaction_show', params),
+  txo_spend: (params) => daemonCallWithResult('txo_spend', params),
   utxo_release: (params = {}) => daemonCallWithResult('utxo_release', params),
   support_abandon: (params = {}) => daemonCallWithResult('support_abandon', params),
   purchase_list: (params = {}) => daemonCallWithResult('purchase_list', params),
@@ -127,7 +131,12 @@ const Lbry = {
 
   // Preferences
   preference_get: (params = {}) => daemonCallWithResult('preference_get', params),
-  preference_set: (params = {}) => daemonCallWithResult('preference_set', params),
+  preference_set: (params) => daemonCallWithResult('preference_set', params),
+  settings_get: () => daemonCallWithResult('settings_get', {}),
+  settings_set: (params) => daemonCallWithResult('settings_set', params),
+  settings_clear: (params) => daemonCallWithResult('settings_clear', params),
+  blob_clean: () => daemonCallWithResult('blob_clean', {}),
+  ffmpeg_find: () => daemonCallWithResult('ffmpeg_find', {}),
 
   // Comments
   comment_list: (params = {}) => daemonCallWithResult('comment_list', params),
@@ -139,8 +148,7 @@ const Lbry = {
   // Connect to the sdk
   connect: () => {
     if (Lbry.connectPromise === null) {
-      // $FlowFixMe
-      Lbry.connectPromise = new Promise((resolve, reject) => {
+      Lbry.connectPromise = new Promise<StatusResponse>((resolve, reject) => {
         let tryNum = 0;
         // Check every half second to see if the daemon is accepting connections
         function checkDaemonStarted() {
@@ -160,8 +168,6 @@ const Lbry = {
       });
     }
 
-    // Flow thinks this could be empty, but it will always reuturn a promise
-    // $FlowFixMe
     return Lbry.connectPromise;
   },
 
@@ -170,28 +176,34 @@ const Lbry = {
       if (Lbry.overrides.publish) {
         Lbry.overrides.publish(params).then(resolve, reject);
       } else {
-        apiCall('publish', params, resolve, reject);
+        daemonCallWithResult('publish', params).then(resolve, reject);
       }
     }),
 };
 
-function checkAndParse(response) {
-  if (response.status >= 200 && response.status < 300) {
-    return response.json();
-  }
+type RpcResponse = { result: unknown, error: unknown };
+
+function checkAndParse(response: Response): Promise<RpcResponse> {
   return response.json().then((json) => {
-    let error;
-    if (json.error) {
-      const errorMessage = typeof json.error === 'object' ? json.error.message : json.error;
-      error = new Error(errorMessage);
-    } else {
-      error = new Error('Protocol error with unknown response signature');
+    const protocolError = 'Protocol error with unknown response signature';
+    if (!json || typeof json !== 'object' || Array.isArray(json)) throw new Error(protocolError);
+    const error: unknown = 'error' in json ? json.error : undefined;
+    const result = 'result' in json ? json.result : undefined;
+    if (response.status >= 200 && response.status < 300) return { result, error };
+    if (typeof error === 'string') throw new Error(error);
+    if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+      throw new Error(error.message);
     }
-    return Promise.reject(error);
+    throw new Error(protocolError);
   });
 }
 
-export function apiCall(method: string, params: ?{}, resolve: Function, reject: Function) {
+export function apiCall(
+  method: string,
+  params: ?{ ... },
+  resolve: (unknown) => unknown,
+  reject: (unknown) => unknown
+): Promise<unknown> {
   const counter = new Date().getTime();
   const options = {
     method: 'POST',
@@ -210,7 +222,9 @@ export function apiCall(method: string, params: ?{}, resolve: Function, reject: 
   return fetch(connectionString + '?m=' + method, options)
     .then(checkAndParse)
     .then((response) => {
-      const error = response.error || (response.result && response.result.error);
+      const { result } = response;
+      const nestedError = result && typeof result === 'object' && 'error' in result ? result.error : undefined;
+      const error = response.error || nestedError;
 
       if (error) {
         return reject(error);
@@ -220,7 +234,7 @@ export function apiCall(method: string, params: ?{}, resolve: Function, reject: 
     .catch(reject);
 }
 
-function daemonCallWithResult(name: string, params: ?{} = {}): Promise<any> {
+function daemonCallWithResult(name: string, params: ?{ ... } = {}): Promise<any> {
   return new Promise((resolve, reject) => {
     apiCall(
       name,
@@ -235,13 +249,14 @@ function daemonCallWithResult(name: string, params: ?{} = {}): Promise<any> {
 
 // This is only for a fallback
 // If there is a Lbry method that is being called by an app, it should be added to /flow-typed/Lbry.js
-const lbryProxy = new Proxy(Lbry, {
-  get(target: LbryTypes, name: string) {
+const lbryProxy: LbryTypes = new Proxy(Lbry, {
+  get(target, name) {
     if (name in target) {
-      return target[name];
+      return Reflect.get(target, name);
     }
+    if (typeof name !== 'string') return undefined;
 
-    return (params = {}) =>
+    return (params: { ... } = {}) =>
       new Promise((resolve, reject) => {
         apiCall(name, params, resolve, reject);
       });
