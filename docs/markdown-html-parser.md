@@ -1,6 +1,6 @@
 # Markdown HTML parser dependency
 
-The desktop pins node-html-parser 9.0.4, upgraded from 5.3.3. Its only application
+The desktop pins node-html-parser 9.0.5, upgraded from 5.3.3. Its only application
 call site extracts the source from legacy LBRY iframe markup in Markdown. A
 `lbry://` source is passed to the existing Markdown link pipeline. Parsed HTML is
 never inserted into the page; the remark sanitizer still handles rendered output.

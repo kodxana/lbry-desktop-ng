@@ -16,7 +16,7 @@ const versions = {
   chalk: '6.0.1',
   classnames: '2.5.1',
   reselect: '5.3.0',
-  webpack: '5.111.1',
+  webpack: '5.112.2',
   'react-modal': '3.16.3',
 };
 const manifest = require('../package.json');

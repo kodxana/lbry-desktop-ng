@@ -108,7 +108,7 @@ affect annotations only, not application behavior.
 `node build/testDependencyTypes.js` loads all checked-in declaration files,
 rejects duplicate module declarations and checks contracts for nine packages:
 React Redux 9.3.0, Express 5.3.0, localForage 1.10.0, Prettier 3.9.10,
-classnames 2.5.1, Chalk 6.0.1, Reselect 5.3.0, webpack 5.111.1 and
+classnames 2.5.1, Chalk 6.0.1, Reselect 5.3.0, webpack 5.112.2 and
 react-modal 3.16.3. These package versions require a contract review on upgrade.
 Valid application patterns must pass and 53 incorrect contracts must fail,
 including removed APIs, nullable storage results, wrong selector arguments,

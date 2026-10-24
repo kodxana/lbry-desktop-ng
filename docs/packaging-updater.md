@@ -1,6 +1,6 @@
 # Packaging and updater migration
 
-The build now pins electron-builder 26.17.0, electron-updater 6.8.10 and the
+The build now pins electron-builder 26.18.0, electron-updater 6.8.11 and the
 host-side archive reader @electron/asar 4.3.1. These use the stable v26 release
 line; the v27/updater v7 prereleases are a separate migration. React, the SDK
 candidate and the application version are unchanged. The subsequent
@@ -9,8 +9,14 @@ Published RC3 packages still contain the old dependencies.
 
 Upstream changes reviewed:
 
-- [Builder 26.17.0 changelog](https://github.com/electron-userland/electron-builder/blob/v26.17.0/packages/app-builder-lib/CHANGELOG.md)
-- [Updater 6.8.10 changelog](https://github.com/electron-userland/electron-builder/blob/electron-updater%406.8.10/packages/electron-updater/CHANGELOG.md)
+- [Builder 26.18.0 changelog](https://github.com/electron-userland/electron-builder/releases/tag/electron-builder%4026.18.0)
+- [Updater 6.8.11 changelog](https://github.com/electron-userland/electron-builder/releases/tag/electron-updater%406.8.11)
+
+The 26.18.0/6.8.11 refresh includes installer extraction/blockmap fixes and
+validation of cached installer filenames. Download regressions exercise missing,
+non-string, empty and path-valued cache names through the real updater: each
+case must download verified bytes again, repair its metadata and preserve a
+sibling file outside the pending cache. The legacy updater remains a test fixture.
 
 ## Compatibility changes
 
@@ -81,7 +87,7 @@ to range parsing and coercion do not affect these callers. See the
 Dependencies retain their own compatible semver versions; there is no global
 resolution override.
 
-`node build/testDesktopUpdates.js` runs genuine NSIS updaters 6.8.10 and 4.6.5
+`node build/testDesktopUpdates.js` runs genuine NSIS updaters 6.8.11 and 4.6.5
 against a local HTTP fixture. It covers RC/stable selection, prerelease opt-out,
 newer stable releases, RC-only repositories, missing releases, corrupt and
 interrupted downloads, retry, cache reuse across updater instances and recovery
