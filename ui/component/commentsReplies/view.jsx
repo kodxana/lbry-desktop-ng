@@ -22,7 +22,7 @@ type Props = {
   onShowMore?: () => void,
 };
 
-function CommentsReplies(props: Props) {
+function CommentsReplies(props: Props): React.Node {
   const {
     uri,
     parentId,

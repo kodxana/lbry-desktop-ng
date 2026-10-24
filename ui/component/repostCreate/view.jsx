@@ -49,7 +49,7 @@ type Props = {
   redirectUri?: string,
 };
 
-function RepostCreate(props: Props) {
+function RepostCreate(props: Props): React.Node {
   const {
     doToast,
     doClearRepostError,
@@ -82,10 +82,10 @@ function RepostCreate(props: Props) {
   const enteredClaimId = enteredContentClaim && enteredContentClaim.claim_id;
 
   const [repostBid, setRepostBid] = React.useState(0.01);
-  const [repostBidError, setRepostBidError] = React.useState(undefined);
+  const [repostBidError, setRepostBidError] = React.useState<string | void>(undefined);
   const [enteredRepostName, setEnteredRepostName] = React.useState(defaultName);
   const [available, setAvailable] = React.useState(true);
-  const [enteredContent, setEnteredContentUri] = React.useState(undefined);
+  const [enteredContent, setEnteredContentUri] = React.useState<string | void>(undefined);
   const [contentError, setContentError] = React.useState('');
   const { replace, goBack } = useDesktopHistory();
 

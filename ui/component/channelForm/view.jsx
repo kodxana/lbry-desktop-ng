@@ -63,7 +63,7 @@ type Props = {
   hasClaimedInitialRewards: boolean,
 };
 
-function ChannelForm(props: Props) {
+function ChannelForm(props: Props): React.Node {
   const {
     uri,
     claim,

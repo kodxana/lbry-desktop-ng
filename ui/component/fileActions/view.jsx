@@ -33,7 +33,7 @@ type Props = {
   streamingUrl: ?string,
 };
 
-function FileActions(props: Props) {
+function FileActions(props: Props): React.Node {
   const { fileInfo, uri, openModal, claimIsMine, claim, costInfo, renderMode, prepareEdit, hasChannels, hideRepost } =
     props;
   const {

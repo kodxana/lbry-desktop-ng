@@ -35,7 +35,7 @@ type Props = {
   setQuickReply: (any) => void,
 };
 
-function CommentMenuList(props: Props) {
+function CommentMenuList(props: Props): React.Node {
   const {
     uri,
     claim,

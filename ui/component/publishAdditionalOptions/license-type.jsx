@@ -30,14 +30,9 @@ class LicenseType extends React.PureComponent<Props> {
     handleLicenseChange(licenseType, licenseUrl);
   }
 
-  render() {
-    const {
-      licenseType,
-      otherLicenseDescription,
-      licenseUrl,
-      handleLicenseDescriptionChange,
-      handleLicenseUrlChange,
-    } = this.props;
+  render(): React.Node {
+    const { licenseType, otherLicenseDescription, licenseUrl, handleLicenseDescriptionChange, handleLicenseUrlChange } =
+      this.props;
 
     return (
       <React.Fragment>

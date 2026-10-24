@@ -46,7 +46,7 @@ class ClaimLink extends React.Component<Props> {
     }
   };
 
-  render() {
+  render(): React.Node {
     const { uri, fullUri, claim, children, isResolvingUri, playingUri, parentCommentId, isMarkdownPost, allowPreview } =
       this.props;
     const isUnresolved = (!isResolvingUri && !claim) || !claim;

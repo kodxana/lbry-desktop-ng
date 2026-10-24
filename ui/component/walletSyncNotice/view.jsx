@@ -4,7 +4,7 @@ import { walletSyncProgress } from 'util/wallet-sync';
 
 type Props = { status: ?StatusResponse };
 
-export default function WalletSyncNotice({ status }: Props) {
+export default function WalletSyncNotice({ status }: Props): React.Node {
   const progress = walletSyncProgress(status);
   if (!progress.pending) return null;
   return (

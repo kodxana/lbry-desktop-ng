@@ -7,7 +7,7 @@ import YrblHappy from 'static/img/yrblhappy.svg';
 type Props = { children: Node };
 
 // Use the same columns and illustration as Welcome, Privacy and Hosting.
-export default function SetupLayout({ children }: Props) {
+export default function SetupLayout({ children }: Props): React.Node {
   return (
     <main className="setup-layout" theme="dark">
       <section className="main--contained">

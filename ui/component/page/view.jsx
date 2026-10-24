@@ -36,7 +36,7 @@ type Props = {
   videoTheaterMode: boolean,
 };
 
-function Page(props: Props) {
+function Page(props: Props): React.Node {
   const {
     authPage = false,
     backout,

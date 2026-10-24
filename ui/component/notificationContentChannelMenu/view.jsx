@@ -12,7 +12,7 @@ type Props = {
   doChannelSubscribe: (Subscription) => void,
 };
 
-export default function NotificationContentChannelMenu(props: Props) {
+export default function NotificationContentChannelMenu(props: Props): React.Node {
   const { uri, notificationsDisabled, doToast, doChannelSubscribe } = props;
   let claimName;
   const { claimName: name } = parseURI(uri);

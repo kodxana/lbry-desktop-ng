@@ -37,7 +37,7 @@ type Props = {
   errorCensor: ?ClaimErrorCensor,
 };
 
-function ShowPage(props: Props) {
+function ShowPage(props: Props): React.Node {
   const {
     isResolvingUri,
     resolveUri,

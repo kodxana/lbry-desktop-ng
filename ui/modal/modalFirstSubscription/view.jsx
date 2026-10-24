@@ -15,7 +15,7 @@ type Props = {
   location: UrlLocation,
 };
 
-const ModalFirstSubscription = (props: Props) => {
+const ModalFirstSubscription = (props: Props): React.Node => {
   const {
     closeModal,
     accessToken,

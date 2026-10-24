@@ -17,7 +17,7 @@ type Props = {
   doSeeAllNotifications: () => void,
 };
 
-export default function NotificationHeaderButton(props: Props) {
+export default function NotificationHeaderButton(props: Props): React.Node {
   const { unseenCount, user, doSeeAllNotifications } = props;
 
   const { push } = useDesktopHistory();

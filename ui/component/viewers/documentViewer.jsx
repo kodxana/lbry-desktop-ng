@@ -36,7 +36,8 @@ class DocumentViewer extends React.PureComponent<Props, State> {
     this.mounted = true;
     const { source } = this.props;
     if (source && source.file) {
-      source.file()
+      source
+        .file()
         .then((bytes) => {
           if (this.mounted) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
         })
@@ -62,7 +63,7 @@ class DocumentViewer extends React.PureComponent<Props, State> {
     );
   }
 
-  render() {
+  render(): React.Node {
     const { error, content } = this.state;
     const isReady = content !== null && !error;
     const errorMessage = __("Sorry, looks like we can't load the document.");

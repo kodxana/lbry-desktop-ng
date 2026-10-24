@@ -33,7 +33,7 @@ type Props = {
   initialSearchTerm: string,
 };
 
-function FileListPublished(props: Props) {
+function FileListPublished(props: Props): React.Node {
   const {
     checkPendingPublishes,
     clearPublish,

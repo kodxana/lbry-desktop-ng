@@ -53,7 +53,7 @@ type Props = {
   customSelectAction?: (string) => void,
 };
 
-export default function WunderBarSuggestions(props: Props) {
+export default function WunderBarSuggestions(props: Props): React.Node {
   const {
     navigateToSearchPage,
     doShowSnackBar,

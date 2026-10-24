@@ -27,7 +27,7 @@ type Props = {
   doCollectionEdit: (string, CollectionEditParams) => void,
 };
 
-export default function CollectionContent(props: Props) {
+export default function CollectionContent(props: Props): React.Node {
   const {
     isMyCollection,
     collectionUrls,

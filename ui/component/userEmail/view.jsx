@@ -19,7 +19,7 @@ type Props = {
   accessToken: string,
 };
 
-function UserEmail(props: Props) {
+function UserEmail(props: Props): React.Node {
   const { email, user, accessToken, fetchAccessToken } = props;
 
   let isVerified = false;

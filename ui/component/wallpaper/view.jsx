@@ -11,7 +11,7 @@ type Props = {
   disableBackground: ?boolean,
 };
 
-const Wallpaper = (props: Props) => {
+const Wallpaper = (props: Props): React.Node => {
   const { disableBackground } = props;
 
   /*

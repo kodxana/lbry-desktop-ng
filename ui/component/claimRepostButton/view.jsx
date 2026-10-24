@@ -13,7 +13,7 @@ type Props = {
   doToast: ({ message: string }) => void,
 };
 
-export default function ClaimRepostButton(props: Props) {
+export default function ClaimRepostButton(props: Props): React.Node {
   const { uri, claim, hasChannels, doOpenModal, doToast } = props;
   const [contentUri, setContentUri] = React.useState('');
   const [repostUri, setRepostUri] = React.useState('');

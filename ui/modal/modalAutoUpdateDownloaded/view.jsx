@@ -15,7 +15,7 @@ type Props = {
   isInstalling: boolean,
 };
 
-const ModalAutoUpdateDownloaded = (props: Props) => {
+const ModalAutoUpdateDownloaded = (props: Props): React.Node => {
   const { closeModal, declineAutoUpdate, errorWhileUpdating, isDownloading, isUpdateAvailable, isInstalling } = props;
   const [waitingForAutoUpdateResponse, setWaitingForAutoUpdateResponse] = useState(false);
   const [declining, setDeclining] = useState(false);

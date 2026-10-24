@@ -34,10 +34,67 @@ const sources = [
   'ui/component/common/form-components/form-field-price.jsx',
   'ui/component/common/form-components/form-row.jsx',
   'ui/component/common/form-components/form.jsx',
+  'ui/component/walletBackup/view.jsx',
+  'ui/modal/modal.jsx',
 ];
-for (const file of [...sources, '.flowconfig', 'flow-typed/i18n.js', 'flow-typed/npm/classnames_v2.x.x.js']) {
+for (const file of [
+  ...sources,
+  '.flowconfig',
+  'flow-typed/i18n.js',
+  'flow-typed/npm/classnames_v2.x.x.js',
+  'flow-typed/npm/react-modal_v3.x.x.js',
+]) {
   write(file, fs.readFileSync(path.join(root, file), 'utf8'));
 }
+// Isolate presentation and IPC dependencies while checking the real backup and modal sources.
+write(
+  'ui/component/button.js',
+  `// @flow
+import type {Node} from 'react';
+type Props = {button?: string, label?: Node, children?: Node, href?: string,
+  disabled?: boolean, onClick?: () => unknown, icon?: string, iconSize?: number, 'aria-label'?: string};
+export default function Button(props: Props): Node { return null; }
+`
+);
+write(
+  'ui/component/common/card.jsx',
+  `// @flow
+import type {Node} from 'react';
+export default function Card(props: {title?: Node, subtitle?: Node, actions?: Node}): Node { return null; }
+`
+);
+write(
+  'ui/component/copyableText.js',
+  `// @flow
+import type {Node} from 'react';
+export default function CopyableText(props: {copyable?: ?string, snackMessage?: string}): Node { return null; }
+`
+);
+write(
+  'ui/component/i18nMessage.js',
+  `// @flow
+import type {Node} from 'react';
+export default function I18nMessage(props: {tokens: {[string]: Node}, children: string}): Node { return null; }
+`
+);
+write(
+  'ui/effects/use-screensize.js',
+  `// @flow
+export function useIsMobile(): boolean { return false; }
+`
+);
+write(
+  'ui/util/desktop.js',
+  `// @flow
+type BackupResult = {ok: true, path: string} | {ok: false, error: string};
+declare const desktop: {
+  backupWallet: ({id: string, directory: string}) => Promise<BackupResult>,
+  cancelBackup: (string) => void,
+  openWalletFolder: () => void,
+};
+export default desktop;
+`
+);
 fs.cpSync(path.join(root, 'node_modules/uuid'), path.join(cwd, 'node_modules/uuid'), { recursive: true });
 write(
   'node_modules/easymde/dist/easymde.min.css',
@@ -92,6 +149,14 @@ const invalid = {
   files: 'export const value: React.Node = <FileList files={[123]} onChange={() => {}} />;',
   fileChange: 'export const value: React.Node = <FileList files={[]} onChange={(file: string): void => {}} />;',
   settings: 'export const value: React.Node = <SettingsRow title={123} />;',
+  walletDirectory: 'export const value: React.Node = <WalletBackup daemonSettings={{wallet_dir: 123}} />;',
+  walletPending: 'export function invalid(backup: WalletBackup): void { backup.backupPending = true; }',
+  walletMounted: 'export function invalid(backup: WalletBackup): void { backup.mounted = "yes"; }',
+  walletBackup: 'export function invalid(backup: WalletBackup): void { backup.backupWalletDir(123); }',
+  modalOpen: 'export const value: React.Node = <Modal isOpen="yes" />;',
+  modalLabel: 'export const value: React.Node = <Modal contentLabel={42} />;',
+  modalAria: 'export const value: React.Node = <Modal ariaHideApp="false" />;',
+  modalConfirm: 'export const value: React.Node = <Modal confirmButtonDisabled="yes" />;',
 };
 for (const [name, source] of Object.entries(invalid)) write('invalid-' + name + '.jsx', fixture + '\n' + source);
 const failed = check();
@@ -105,5 +170,5 @@ for (const name of Object.keys(invalid)) {
   );
 }
 console.log(
-  'PASS shared UI source contracts and ' + Object.keys(invalid).length + ' invalid icon, sticker and component props'
+  'PASS shared UI source contracts and ' + Object.keys(invalid).length + ' invalid component and backup contracts'
 );

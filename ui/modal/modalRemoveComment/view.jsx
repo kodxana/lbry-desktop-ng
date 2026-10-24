@@ -14,7 +14,7 @@ type Props = {
   setQuickReply: (any) => void,
 };
 
-function ModalRemoveComment(props: Props) {
+function ModalRemoveComment(props: Props): React.Node {
   const {
     commentId,
     commentIsMine,

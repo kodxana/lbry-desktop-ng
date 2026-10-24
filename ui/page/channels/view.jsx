@@ -22,7 +22,7 @@ type Props = {
   pendingChannels: Array<string>,
 };
 
-export default function ChannelsPage(props: Props) {
+export default function ChannelsPage(props: Props): React.Node {
   const { channelUrls, fetchChannelListMine, fetchingChannels, youtubeChannels, doSetActiveChannel, pendingChannels } =
     props;
   const [rewardData, setRewardData] = React.useState();

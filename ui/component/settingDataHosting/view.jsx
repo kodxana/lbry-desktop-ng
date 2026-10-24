@@ -26,7 +26,7 @@ type Props = {
   isSetting: boolean,
 };
 
-function SettingDataHosting(props: Props) {
+function SettingDataHosting(props: Props): React.Node {
   const { daemonSettings, setDaemonSetting, cleanBlobs, getDaemonStatus, isSetting } = props;
 
   const networkLimitSetting = daemonSettings[DAEMON_SETTINGS.NETWORK_STORAGE_LIMIT_MB] || 0;

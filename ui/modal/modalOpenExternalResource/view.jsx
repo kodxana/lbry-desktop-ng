@@ -14,7 +14,7 @@ type Props = {
   closeModal: () => void,
 };
 
-function ModalOpenExternalResource(props: Props) {
+function ModalOpenExternalResource(props: Props): React.Node {
   const { uri, isTrusted, path, isMine, closeModal } = props;
 
   if ((uri && isTrusted) || (path && isMine)) {

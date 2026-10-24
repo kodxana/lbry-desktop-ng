@@ -26,7 +26,7 @@ type ChannelsFollowingItem = {
   options?: {},
 };
 
-function ChannelsFollowingDiscover(props: Props) {
+function ChannelsFollowingDiscover(props: Props): React.Node {
   const { followedTags, subscribedChannels, blockedChannels, homepageData } = props;
   const { PRIMARY_CONTENT, LATEST } = homepageData;
   let channelIds;

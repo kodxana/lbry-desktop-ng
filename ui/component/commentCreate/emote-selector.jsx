@@ -11,7 +11,7 @@ const QUICK_EMOJIS = ['rocket', 'jeans', 'fire', 'heart', 'open_mouth'];
 
 type Props = { commentValue: string, setCommentValue: (string) => void, closeSelector: () => void };
 
-export default function EmoteSelector(props: Props) {
+export default function EmoteSelector(props: Props): React.Node {
   const { commentValue, setCommentValue, closeSelector } = props;
 
   function addEmoteToComment(emote: string) {

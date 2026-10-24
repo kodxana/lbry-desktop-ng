@@ -8,11 +8,11 @@ import { parseURI, isNameValid, isURIValid, normalizeURI } from 'util/lbryURI';
 
 type Props = {};
 
-export default function SendPage(props: Props) {
+export default function SendPage(props: Props): React.Node {
   const [isAddress, setIsAddress] = React.useState(true);
   const [contentUri, setContentUri] = React.useState('');
   const [draftTransaction, setDraftTransaction] = React.useState({ address: '', amount: '' });
-  const [enteredContent, setEnteredContentUri] = React.useState(undefined);
+  const [enteredContent, setEnteredContentUri] = React.useState<string | void>(undefined);
   const contentFirstRender = React.useRef(true);
   const [contentError, setContentError] = React.useState('');
   const [confirmed, setConfirmed] = React.useState(false);

@@ -5,7 +5,7 @@ import Page from 'component/page';
 import CollectionsListMine from 'component/collectionsListMine';
 import Icon from 'component/common/icon';
 
-function ListsPage() {
+function ListsPage(): React.Node {
   return (
     <Page className="playlistPage-wrapper">
       <label className="claim-list__header-label">

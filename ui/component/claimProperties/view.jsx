@@ -14,7 +14,7 @@ type Props = {
   claim: Claim | CollectionClaim,
   iconOnly: boolean,
 };
-export default function ClaimProperties(props: Props) {
+export default function ClaimProperties(props: Props): React.Node {
   const { uri, isSubscribed, small = false, claim, iconOnly } = props;
   const size = small ? COL.ICON_SIZE : undefined;
   // $FlowFixMe

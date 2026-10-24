@@ -10,7 +10,7 @@ type Props = {
   doClearPasswordEntry: () => void,
 };
 
-function UserSignOutButton(props: Props) {
+function UserSignOutButton(props: Props): React.Node {
   const { button = 'link', doSignOut, doClearEmailEntry, doClearPasswordEntry, label } = props;
 
   return (

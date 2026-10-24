@@ -15,7 +15,7 @@ interface Props {
   onChange: (newValue: string) => any;
 }
 
-export default function DebouncedInput(props: Props) {
+export default function DebouncedInput(props: Props): React.Node {
   const { defaultValue = '', icon, placeholder = '', inline, onChange } = props;
   const [rawValue, setRawValue] = useState(defaultValue);
   const debouncedValue: string = useDebounce(rawValue, FILTER_DEBOUNCE_MS);

@@ -26,7 +26,7 @@ export default class extends React.PureComponent<Props> {
     type: 'happy',
   };
 
-  render() {
+  render(): React.Node {
     const { title, subtitle, type, className, actions, alwaysShow = false } = this.props;
 
     const image = yrblTypes[type];

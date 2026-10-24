@@ -10,7 +10,7 @@ class BusyIndicator extends React.PureComponent<Props> {
     message: '',
   };
 
-  render() {
+  render(): React.Node {
     const { message } = this.props;
 
     return (

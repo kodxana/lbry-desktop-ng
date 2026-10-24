@@ -13,7 +13,7 @@ type Props = {
   claim: GenericClaim,
 };
 
-export default function ClaimSupportButton(props: Props) {
+export default function ClaimSupportButton(props: Props): React.Node {
   const { doOpenModal, uri, fileAction, disableSupport, claim } = props;
   const isRepost = claim && claim.repost_url;
 

@@ -17,7 +17,7 @@ type Props = {
   doWalletStatus: () => void,
 };
 
-export default function SettingAccount(props: Props) {
+export default function SettingAccount(props: Props): React.Node {
   const { isAuthenticated, walletEncrypted, hasChannels, doWalletStatus } = props;
   const [storedPassword, setStoredPassword] = React.useState(false);
 

@@ -6,7 +6,7 @@ import { Router, useLocation } from 'react-router';
 const DesktopHistory = React.createContext(null);
 
 // Keep Redux navigation, form blockers and the desktop history menu on one history.
-export default function DesktopRouter({ history, children }: { history: any, children: React.Node }) {
+export default function DesktopRouter({ history, children }: { history: any, children: React.Node }): React.Node {
   const { location, action } = useSelector((state) => state.router);
   return (
     <DesktopHistory.Provider value={history}>

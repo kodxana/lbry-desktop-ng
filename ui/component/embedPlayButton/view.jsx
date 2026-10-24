@@ -24,7 +24,7 @@ type Props = {
   renderMode: string,
 };
 
-export default function EmbedPlayButton(props: Props) {
+export default function EmbedPlayButton(props: Props): React.Node {
   const {
     uri,
     thumbnail = '',

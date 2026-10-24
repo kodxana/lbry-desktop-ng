@@ -67,7 +67,7 @@ type Props = {
   lastUsedCollectionIsNotBuiltin: boolean,
 };
 
-function ClaimMenuList(props: Props) {
+function ClaimMenuList(props: Props): React.Node {
   const {
     uri,
     claim,

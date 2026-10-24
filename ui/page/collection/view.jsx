@@ -46,7 +46,7 @@ type Props = {
   renameCollection: (string, string) => void,
 };
 
-export default function CollectionPage(props: Props) {
+export default function CollectionPage(props: Props): React.Node {
   const {
     collectionId,
     uri,

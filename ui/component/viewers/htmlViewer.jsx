@@ -26,7 +26,7 @@ class HtmlViewer extends React.PureComponent<Props, State> {
     };
   }
 
-  render() {
+  render(): React.Node {
     const { source } = this.props;
     const { loading } = this.state;
     return (

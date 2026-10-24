@@ -22,7 +22,7 @@ type Props = {
   emailToVerify: ?string,
 };
 
-function UserPasswordReset(props: Props) {
+function UserPasswordReset(props: Props): React.Node {
   const {
     doUserPasswordReset,
     passwordResetPending,

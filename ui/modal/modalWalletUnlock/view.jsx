@@ -73,7 +73,7 @@ class ModalWalletUnlock extends React.PureComponent<Props, State> {
     this.setState({ rememberPassword: event.target.checked });
   }
 
-  render() {
+  render(): React.Node {
     const { quit, walletUnlockSucceded } = this.props;
 
     const { password, rememberPassword } = this.state;

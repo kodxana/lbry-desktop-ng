@@ -14,7 +14,7 @@ type Props = {
 };
 
 class FileDetails extends PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { claim, contentType, fileInfo, metadata, openFolder } = this.props;
 
     if (!claim || !metadata) {

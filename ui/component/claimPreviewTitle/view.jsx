@@ -8,7 +8,7 @@ type Props = {
   title: string,
 };
 
-function ClaimPreviewTitle(props: Props) {
+function ClaimPreviewTitle(props: Props): React.Node {
   const { title, claim } = props;
 
   return (

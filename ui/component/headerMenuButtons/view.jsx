@@ -18,7 +18,7 @@ type HeaderMenuButtonProps = {
   handleThemeToggle: (boolean, string) => void,
 };
 
-export default function HeaderMenuButtons(props: HeaderMenuButtonProps) {
+export default function HeaderMenuButtons(props: HeaderMenuButtonProps): React.Node {
   const { automaticDarkModeEnabled, currentTheme, user, handleThemeToggle } = props;
 
   const notificationsEnabled = ENABLE_UI_NOTIFICATIONS || (user && user.experimental_ui);

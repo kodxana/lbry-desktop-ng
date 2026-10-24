@@ -73,7 +73,7 @@ class TransactionListTableItem extends React.PureComponent<Props, State> {
     this.props.revokeClaim(this.props.txo, (abandonState) => this.setState({ abandonState }));
   }
 
-  render() {
+  render(): React.Node {
     const { reward, txo, isRevokeable, signingChannel } = this.props;
 
     const {

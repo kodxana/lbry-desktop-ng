@@ -80,7 +80,7 @@ class WalletSend extends React.PureComponent<Props> {
     setConfirmed(false);
   }
 
-  render() {
+  render(): React.Node {
     const {
       draftTransaction,
       setDraftTransaction,

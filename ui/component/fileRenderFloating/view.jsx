@@ -18,6 +18,17 @@ import { useDesktopHistory } from 'component/common/desktop-router';
 import { isURIEqual } from 'util/lbryURI';
 import AutoplayCountdown from 'component/autoplayCountdown';
 
+type ViewerRect = {
+  top: number,
+  right: number,
+  bottom: number,
+  left: number,
+  width: number,
+  height: number,
+  x: number,
+  windowOffset: number,
+};
+
 // scss/init/vars.scss
 // --header-height
 const HEADER_HEIGHT = 60;
@@ -104,7 +115,7 @@ type Props = {
   previousListUri: string,
 };
 
-export default function FileRenderFloating(props: Props) {
+export default function FileRenderFloating(props: Props): React.Node {
   const {
     fileInfo,
     mature,
@@ -135,8 +146,8 @@ export default function FileRenderFloating(props: Props) {
   const isMediumScreen = useIsMediumScreen();
   const mainFilePlaying = !isFloating && primaryUri && isURIEqual(uri, primaryUri);
 
-  const [fileViewerRect, setFileViewerRect] = useState();
-  const [desktopPlayStartTime, setDesktopPlayStartTime] = useState();
+  const [fileViewerRect, setFileViewerRect] = useState<ViewerRect | void>();
+  const [desktopPlayStartTime, setDesktopPlayStartTime] = useState<number | void>();
   const [wasDragging, setWasDragging] = useState(false);
   const [doNavigate, setDoNavigate] = useState(false);
   const [playNextUrl, setPlayNextUrl] = useState(true);

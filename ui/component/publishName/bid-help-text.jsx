@@ -1,11 +1,12 @@
 // @flow
+import type { Node as ReactNode } from 'react';
 type Props = {
   uri: ?string,
   isResolvingUri: boolean,
   amountNeededForTakeover: number,
 };
 
-function BidHelpText(props: Props) {
+function BidHelpText(props: Props): ReactNode {
   const { uri, isResolvingUri, amountNeededForTakeover } = props;
 
   let bidHelpText;

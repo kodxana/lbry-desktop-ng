@@ -42,7 +42,7 @@ type Props = {
   doUserSetCountry: (string) => void,
 };
 
-export default function BuyPage(props: Props) {
+export default function BuyPage(props: Props): React.Node {
   const { receiveAddress, gettingNewAddress, doGetNewAddress, email, user, doUserSetCountry } = props;
   const initialCountry = (user && user.country) || '';
   const [signedPurchase, setSignedPurchase] = React.useState();

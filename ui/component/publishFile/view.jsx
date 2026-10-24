@@ -43,7 +43,7 @@ type Props = {
   setWaitForFile: (boolean) => void,
 };
 
-function PublishFile(props: Props) {
+function PublishFile(props: Props): React.Node {
   const {
     uri,
     mode,
@@ -79,7 +79,7 @@ function PublishFile(props: Props) {
   const secondsToProcess = sizeInMB / PROCESSING_MB_PER_SECOND;
   const ffmpegAvail = ffmpegStatus.available;
   const currentFile = filePath;
-  const [currentFileType, setCurrentFileType] = useState(null);
+  const [currentFileType, setCurrentFileType] = useState<string | null>(null);
   const [fileReadError, setFileReadError] = useState(false);
   const [optimizeAvail, setOptimizeAvail] = useState(false);
   const [userOptimize, setUserOptimize] = usePersistedState('publish-file-user-optimize', false);

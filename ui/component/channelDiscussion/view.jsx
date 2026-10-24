@@ -9,7 +9,7 @@ type Props = {
   commentsDisabled: boolean,
 };
 
-function ChannelDiscussion(props: Props) {
+function ChannelDiscussion(props: Props): React.Node {
   const { uri, linkedCommentId, commentsDisabled } = props;
 
   if (commentsDisabled) {

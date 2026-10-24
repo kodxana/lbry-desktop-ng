@@ -15,7 +15,7 @@ type Props = {
   customCommentServers: Array<CommentServerDetails>,
 };
 const defaultServer = { name: COMMENT_SERVER_NAME, url: COMMENT_SERVER_API };
-function SettingCommentsServer(props: Props) {
+function SettingCommentsServer(props: Props): React.Node {
   const {
     customServerEnabled,
     customServerUrl,

@@ -10,7 +10,7 @@ type Props = {
   showToast: ({}) => void,
 };
 
-function ModalAutoGenerateThumbnail(props: Props) {
+function ModalAutoGenerateThumbnail(props: Props): React.Node {
   const { closeModal, filePath, upload, showToast } = props;
   const playerRef = useRef();
   let videoSrc;

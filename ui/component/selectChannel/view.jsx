@@ -8,11 +8,11 @@ type Props = {
   myChannelClaims: ?Array<ChannelClaim>,
   injected: ?Array<string>,
   activeChannelClaim: ?ChannelClaim,
-  setActiveChannel: string => void,
+  setActiveChannel: (string) => void,
   fetchingChannels: boolean,
 };
 
-function SelectChannel(props: Props) {
+function SelectChannel(props: Props): React.Node {
   const {
     fetchingChannels,
     myChannelClaims = [],
@@ -50,7 +50,7 @@ function SelectChannel(props: Props) {
                 </option>
               ))}
             {injected &&
-              injected.map(item => (
+              injected.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>

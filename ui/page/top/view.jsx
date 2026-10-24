@@ -15,7 +15,7 @@ type Props = {
   beginPublish: (string) => void,
 };
 
-function TopPage(props: Props) {
+function TopPage(props: Props): React.Node {
   const { name, beginPublish } = props;
   const [channelActive, setChannelActive] = React.useState(false);
   // if the query was actually '@name', still offer repost for 'name'

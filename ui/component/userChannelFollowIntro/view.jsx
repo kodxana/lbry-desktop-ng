@@ -20,7 +20,7 @@ const channelsToSubscribe = AUTO_FOLLOW_CHANNELS.trim()
   .split(' ')
   .filter((x) => x !== '');
 
-function UserChannelFollowIntro(props: Props) {
+function UserChannelFollowIntro(props: Props): React.Node {
   const { subscribedChannels, channelSubscribe, onContinue, homepageData, prefsReady } = props;
   const { PRIMARY_CONTENT, LATEST } = homepageData;
   let channelIds;

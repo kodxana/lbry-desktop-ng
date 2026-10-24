@@ -17,7 +17,7 @@ type Props = {
   simpleLinks?: boolean,
 };
 
-function MarkdownLink(props: Props) {
+function MarkdownLink(props: Props): React.Node {
   const {
     children,
     href,

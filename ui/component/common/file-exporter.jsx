@@ -36,7 +36,7 @@ class FileExporter extends React.PureComponent<Props> {
     document.body.removeChild(element);
   }
 
-  render() {
+  render(): React.Node {
     const { data, label, tooltip, disabled, onFetch, progressMsg } = this.props;
 
     if (onFetch) {

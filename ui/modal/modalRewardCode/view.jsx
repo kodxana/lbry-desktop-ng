@@ -11,7 +11,7 @@ type Props = {
   closeModal: () => void,
   error: ?string,
   rewardIsPending: boolean,
-  submitRewardCode: string => void,
+  submitRewardCode: (string) => void,
 };
 
 type State = {
@@ -35,7 +35,7 @@ class ModalRewardCode extends React.PureComponent<Props, State> {
     submitRewardCode(rewardCode);
   }
 
-  render() {
+  render(): React.Node {
     const { closeModal, rewardIsPending, error } = this.props;
     const { rewardCode } = this.state;
 
@@ -74,7 +74,7 @@ class ModalRewardCode extends React.PureComponent<Props, State> {
                   placeholder="0123abc"
                   error={error}
                   value={rewardCode}
-                  onChange={e => this.setState({ rewardCode: e.target.value })}
+                  onChange={(e) => this.setState({ rewardCode: e.target.value })}
                 />
               </Form>
               <div className="card__actions">

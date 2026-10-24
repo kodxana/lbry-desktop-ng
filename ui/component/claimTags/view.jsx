@@ -13,7 +13,7 @@ type Props = {
   type: string,
 };
 
-export default function ClaimTags(props: Props) {
+export default function ClaimTags(props: Props): React.Node {
   const { tags, followedTags, type } = props;
   const numberOfTags = type === 'small' ? SLIM_TAGS : type === 'large' ? LARGE_TAGS : NORMAL_TAGS;
 

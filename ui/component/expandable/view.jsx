@@ -9,7 +9,7 @@ type Props = {
   children: React.Node | Array<React.Node>,
 };
 
-export default function Expandable(props: Props) {
+export default function Expandable(props: Props): React.Node {
   const [expanded, setExpanded] = useState(false);
   const { children } = props;
   const ref = useRef();

@@ -31,7 +31,7 @@ type Props = {
   firstItem: string,
 };
 
-function CollectionActions(props: Props) {
+function CollectionActions(props: Props): React.Node {
   const {
     uri,
     openModal,

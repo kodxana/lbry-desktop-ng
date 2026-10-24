@@ -21,7 +21,7 @@ type Props = {
 };
 
 class FileValues extends PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { uri, claim, metadata, openModal, pendingAmount, claimIsMine } = this.props;
     if (!claim || !metadata) {
       return <span className="empty">{__('Empty claim or metadata info.')}</span>;

@@ -248,7 +248,7 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
   );
 }
 
-export default function ComicBookViewer({ source, theme }: Props) {
+export default function ComicBookViewer({ source, theme }: Props): React.Node {
   const [state, setState] = React.useState({ readFile: null, urls: null, error: null });
   const readFile = source.file;
   React.useEffect(() => {

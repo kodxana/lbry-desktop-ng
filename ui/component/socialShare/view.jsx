@@ -28,7 +28,7 @@ type Props = {
   customShareUrl: string,
 };
 
-function SocialShare(props: Props) {
+function SocialShare(props: Props): React.Node {
   const { claim, title, webShareable, position, collectionId, customShareUrlEnabled, customShareUrl } = props;
   const [showEmbed, setShowEmbed] = React.useState(false);
   const [includeCollectionId, setIncludeCollectionId] = React.useState(Boolean(collectionId)); // unless it *is* a collection?

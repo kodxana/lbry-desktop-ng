@@ -11,7 +11,7 @@ type Props = {
   className?: string,
 };
 
-const Thumb = (props: Props) => {
+const Thumb = (props: Props): React.Node => {
   const { thumb, fallback, children, className } = props;
   const thumbnailRef = React.useRef(null);
 

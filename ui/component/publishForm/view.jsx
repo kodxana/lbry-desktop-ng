@@ -90,7 +90,7 @@ type Props = {
   hasClaimedInitialRewards: boolean,
 };
 
-function PublishForm(props: Props) {
+function PublishForm(props: Props): React.Node {
   // Detect upload type from query in URL
   const {
     thumbnail,

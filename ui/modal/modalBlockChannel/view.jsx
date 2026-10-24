@@ -43,7 +43,7 @@ type Props = {
   ) => void,
 };
 
-export default function ModalBlockChannel(props: Props) {
+export default function ModalBlockChannel(props: Props): React.Node {
   const {
     commenterUri,
     activeChannelClaim,

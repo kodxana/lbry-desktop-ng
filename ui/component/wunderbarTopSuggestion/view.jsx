@@ -11,7 +11,7 @@ type Props = {
   preferEmbed: boolean,
 };
 
-export default function WunderbarTopSuggestion(props: Props) {
+export default function WunderbarTopSuggestion(props: Props): React.Node {
   const { uris, resolvingUris, winningUri, doResolveUris, preferEmbed } = props;
 
   const stringifiedUris = JSON.stringify(uris);

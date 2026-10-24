@@ -3,7 +3,7 @@ import React from 'react';
 import Button from 'component/button';
 // Allow screen reader users ( or keyboard navigation )
 // to jump to main content
-export default function SkipNavigationButton() {
+export default function SkipNavigationButton(): React.Node {
   const skipNavigation = (e) => {
     // Match any focusable element
     const focusableElementQuery = `

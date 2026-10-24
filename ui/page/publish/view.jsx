@@ -10,7 +10,7 @@ type Props = {
   fetchingChannels: boolean,
 };
 
-function PublishPage(props: Props) {
+function PublishPage(props: Props): React.Node {
   const { balance, fetchingChannels } = props;
 
   function scrollToTop() {

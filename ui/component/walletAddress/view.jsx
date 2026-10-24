@@ -42,7 +42,7 @@ class WalletAddress extends React.PureComponent<Props, State> {
     });
   }
 
-  render() {
+  render(): React.Node {
     const { receiveAddress, getNewAddress, gettingNewAddress } = this.props;
     const { showQR } = this.state;
 

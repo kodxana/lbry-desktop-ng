@@ -17,7 +17,7 @@ type Props = {
   myReaction: ?string,
 };
 
-function FileReactions(props: Props) {
+function FileReactions(props: Props): React.Node {
   const { claim, uri, doFetchReactions, doReactionLike, doReactionDislike, myReaction, likeCount, dislikeCount } =
     props;
 

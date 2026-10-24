@@ -27,7 +27,7 @@ class SnackBar extends React.PureComponent<Props> {
   hideTimeout: ?TimeoutID;
   displayTime: number;
 
-  render() {
+  render(): React.Node {
     const { snack, removeSnack } = this.props;
 
     if (!snack) {

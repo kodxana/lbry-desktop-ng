@@ -56,7 +56,7 @@ type Props = {
   unavailableUris?: Array<string>,
 };
 
-export default function ClaimList(props: Props) {
+export default function ClaimList(props: Props): React.Node {
   const {
     activeUri,
     uris,

@@ -9,7 +9,7 @@ type Props = {
 };
 
 class ModalPasswordUnsave extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     return (
       <Modal
         isOpen

@@ -18,7 +18,7 @@ type Props = {
   setClientSetting: (string, boolean) => void,
 };
 
-export default function NotificationSettingsPage(props: Props) {
+export default function NotificationSettingsPage(props: Props): React.Node {
   const { osNotificationsEnabled, setClientSetting, isAuthenticated } = props;
   const [error, setError] = React.useState();
   const [tagMap, setTagMap] = React.useState({});

@@ -105,7 +105,7 @@ the notifications page uses the web notification format; search options use
 their actual keys, with a separate action for mention results. These changes
 affect annotations only, not application behavior.
 
-`node build/testDependencyTypes.js` loads all 88 checked-in declaration files,
+`node build/testDependencyTypes.js` loads all checked-in declaration files,
 rejects duplicate module declarations and checks contracts for nine packages:
 React Redux 9.3.0, Express 5.3.0, localForage 1.10.0, Prettier 3.9.10,
 classnames 2.5.1, Chalk 6.0.1, Reselect 5.3.0, webpack 5.111.1 and
@@ -160,9 +160,9 @@ The shared UI pass replaces internal `React$Node` references with the public
 Icon props preserve optional size/color defaults, nullable titles and SVG refs.
 The icon builder's separate ref parameter is excluded from its ordinary props.
 
-`node build/testUiTypes.js` checks twenty actual UI/constants/formatter/editor-type source
+`node build/testUiTypes.js` checks twenty-two actual UI/constants/formatter/editor-type source
 modules in an isolated project with the real classnames/i18n declarations and installed UUID
-package. Valid callers must pass; 29 invalid icon, sticker, component and editor
+package. Valid callers must pass; 37 invalid icon, sticker, component, backup and editor
 contracts must fail. The renderer also mounts every registered icon and checks
 ref forwarding, default/explicit size and color, title removal, unknown-icon
 fallback and free/paid sticker data. The original shared UI pass changed
@@ -259,9 +259,21 @@ signing failure. Support abandonment tests use a mock SDK; renderer tip tests
 use callbacks that never submit transactions. Channel updates require the saved
 metadata before replacing it, preserving location fields not exposed in the form.
 
-**The application is not yet type-clean.** The full check now reports 2,296
+The renderer pass adds explicit return types across components, modals and pages,
+and local state types for wallet, setup, publishing and media controls. Empty
+values remain distinct from loaded values; initialization and UI behavior are
+preserved. Modal props include the forwarded react-modal options. Backup fields
+track mounting and the pending request ID, and the IPC call retains the generated
+ID in a local constant. Production Babel output is unchanged for 311 of the 312
+modified UI modules; only that small backup lifecycle adjustment emits different
+JavaScript. The shared source gate now also checks the actual backup and modal
+components, including missing settings, request IDs and accessible modal options,
+against narrow presentation and IPC fixtures (37 invalid contracts in total).
+Existing renderer tests cover cancellation, retry, profile changes and unmounting.
+
+**The application is not yet type-clean.** The full check now reports 1,755
 application diagnostics and zero library-definition diagnostics, down from
-2,521 before the claim pass (225 fewer, with no newly introduced diagnostics).
+2,296 before the renderer pass (541 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

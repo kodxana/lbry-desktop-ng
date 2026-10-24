@@ -16,7 +16,7 @@ type Props = {
   referralCode: ?string,
 };
 
-export default function EmbedTextArea(props: Props) {
+export default function EmbedTextArea(props: Props): React.Node {
   const { doToast, snackMessage, label, claim, includeStartTime, startTime, referralCode } = props;
   const { claim_id: claimId, name } = claim;
   const input = useRef();

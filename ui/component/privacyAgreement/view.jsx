@@ -22,7 +22,7 @@ type Props = {
 
 function PrivacyAgreement(props: Props) {
   const { setShareDataInternal, authenticated, signOut, authenticateIfSharingData, handleNextPage } = props;
-  const [share, setShare] = useState(undefined); // preload
+  const [share, setShare] = useState<string | void>(undefined); // preload
 
   if (isolatedTestBuild) {
     return (

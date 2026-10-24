@@ -7,7 +7,7 @@ type Props = {
   title: string,
 };
 
-export default function I18nMessage(props: Props) {
+export default function I18nMessage(props: Props): React.Node {
   const { src, title } = props;
 
   // const iframeRef = useRef();

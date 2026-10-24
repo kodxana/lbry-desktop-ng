@@ -59,7 +59,7 @@ type Props = {
   commentServer: string,
 };
 
-export default function CommentList(props: Props) {
+export default function CommentList(props: Props): React.Node {
   const {
     allCommentIds,
     uri,

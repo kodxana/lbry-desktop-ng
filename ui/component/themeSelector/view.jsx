@@ -25,16 +25,9 @@ type Props = {
   setDarkTime: (string, {}) => void,
 };
 
-export default function ThemeSelector(props: Props) {
-  const {
-    currentTheme,
-    themes,
-    automaticDarkModeEnabled,
-    darkModeTimes,
-    clock24h,
-    setClientSetting,
-    setDarkTime,
-  } = props;
+export default function ThemeSelector(props: Props): React.Node {
+  const { currentTheme, themes, automaticDarkModeEnabled, darkModeTimes, clock24h, setClientSetting, setDarkTime } =
+    props;
 
   const startHours = ['18', '19', '20', '21'];
   const endHours = ['5', '6', '7', '8'];

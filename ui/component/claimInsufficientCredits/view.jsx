@@ -11,7 +11,7 @@ type Props = {
   claimWasPurchased: boolean,
 };
 
-function ClaimInsufficientCredits(props: Props) {
+function ClaimInsufficientCredits(props: Props): React.Node {
   const { isInsufficientCredits, fileInfo, claimWasPurchased } = props;
 
   if (fileInfo || !isInsufficientCredits || claimWasPurchased) {

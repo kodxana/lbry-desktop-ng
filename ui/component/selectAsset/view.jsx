@@ -50,7 +50,7 @@ function filePreview(file) {
   });
 }
 
-function SelectAsset(props: Props) {
+function SelectAsset(props: Props): React.Node {
   const { onUpdate, onDone, assetName, currentValue, recommended, title, inline, buildImagePreview, filters, type } =
     props;
   const [pathSelected, setPathSelected] = React.useState('');
@@ -58,7 +58,7 @@ function SelectAsset(props: Props) {
   const [uploadStatus, setUploadStatus] = React.useState(SPEECH_READY);
   const [useUrl, setUseUrl] = usePersistedState('thumbnail-upload:mode', false);
   const [url, setUrl] = React.useState(currentValue);
-  const [error, setError] = React.useState();
+  const [error, setError] = React.useState<string | void>();
 
   function doUploadAsset() {
     const uploadError = (error = '') => {

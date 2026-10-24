@@ -20,7 +20,7 @@ type Props = {
 const UNAUTHENTICATED_ERROR = 'unauthenticated';
 const GENERIC_ERROR = 'error';
 
-export default function CreatorAnalytics(props: Props) {
+export default function CreatorAnalytics(props: Props): React.Node {
   const { claim } = props;
   const history = useDesktopHistory();
   const [stats, setStats] = React.useState();

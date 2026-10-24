@@ -30,9 +30,10 @@ application diagnostics from 5,051 to 3,214. Shared UI export and React type
 annotations reduce that to 2,908. Formatting and wallet-progress contracts reduce
 that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
 2,798. Comment contracts reduce that to 2,719, collection contracts to 2,644,
-comment-input contracts to 2,586, form-control contracts to 2,521, and claim contracts to 2,296,
+comment-input contracts to 2,586, form-control contracts to 2,521, claim contracts to 2,296,
+and renderer return/state contracts to 1,755,
 with no newly introduced diagnostics in these passes.
-Required gates cover twenty shared UI/type source modules (29 invalid contracts)
+Required gates cover twenty-two shared UI/type source modules (37 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
 including homepage options, reaction counts, moderation state, stickers, playback and suggestions).
 Search regressions cover filters, links, cache/pagination and request lifecycle.
@@ -63,6 +64,13 @@ numeric pending bids. URL sorting no longer mutates a cached claim list.
 Unresolved downloads, reactions and tips fail safely; channel updates wait for
 existing metadata, and support abandonment still works before claims finish loading.
 Renderer tests cover unresolved tip recipients and confirmation/cancel/retry.
+The larger renderer pass adds return annotations across components, modals and
+pages, along with explicit empty-state types for wallet, setup, publishing and
+media controls. It also types backup request tracking and forwarded modal props.
+Production Babel output is identical for 311 of the 312 changed UI modules;
+the backup component additionally declares its lifecycle fields and keeps the
+generated request ID in a local constant. Source gates check the actual backup
+and modal components against narrow presentation/IPC fixtures.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change

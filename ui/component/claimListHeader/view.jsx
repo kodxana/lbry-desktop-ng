@@ -36,7 +36,7 @@ type Props = {
   scrollAnchor?: string,
 };
 
-function ClaimListHeader(props: Props) {
+function ClaimListHeader(props: Props): React.Node {
   const {
     defaultTags,
     freshness,

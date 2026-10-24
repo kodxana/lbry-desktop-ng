@@ -29,7 +29,7 @@ type Props = {
   usePublishFormMode: boolean,
 };
 
-function SelectThumbnail(props: Props) {
+function SelectThumbnail(props: Props): React.Node {
   const {
     filePath,
     fileInfos,

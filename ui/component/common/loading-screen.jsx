@@ -15,7 +15,7 @@ class LoadingScreen extends React.PureComponent<Props> {
     isDocument: false,
   };
 
-  render() {
+  render(): React.Node {
     const { status, spinner, isDocument } = this.props;
     return (
       <div className={classnames('content__loading', { 'content__loading--document': isDocument })}>

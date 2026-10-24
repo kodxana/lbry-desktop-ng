@@ -22,7 +22,7 @@ type Props = {
   expandOverride: boolean,
 };
 
-function FileDescription(props: Props) {
+function FileDescription(props: Props): React.Node {
   const { uri, claim, metadata, pendingAmount, doOpenModal, claimIsMine, expandOverride } = props;
   const [expanded, setExpanded] = React.useState(false);
   const [showCreditDetails, setShowCreditDetails] = React.useState(false);

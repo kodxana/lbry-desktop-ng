@@ -38,7 +38,7 @@ type Props = {
   position: number,
 };
 
-function FilePage(props: Props) {
+function FilePage(props: Props): React.Node {
   const {
     uri,
     renderMode,

@@ -12,17 +12,28 @@ type Props = {
   setContentUri: () => void,
   repostUri: string,
   setRepostUri: () => void,
-}
+};
 
 class ModalRepost extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { closeModal, uri, name, contentUri, setContentUri, repostUri, setRepostUri } = this.props;
 
     return (
       <Modal onAborted={closeModal} isOpen type="card">
         <Card
           title={__('Repost')}
-          actions={<RepostCreate isModal uri={uri} name={name} onCancel={closeModal} contentUri={contentUri} setContentUri={setContentUri} repostUri={repostUri} setRepostUri={setRepostUri} />}
+          actions={
+            <RepostCreate
+              isModal
+              uri={uri}
+              name={name}
+              onCancel={closeModal}
+              contentUri={contentUri}
+              setContentUri={setContentUri}
+              repostUri={repostUri}
+              setRepostUri={setRepostUri}
+            />
+          }
         />
       </Modal>
     );

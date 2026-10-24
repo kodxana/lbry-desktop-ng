@@ -19,7 +19,7 @@ type Props = {
   doToggleShuffleList: (string) => void,
 };
 
-function CollectionMenuList(props: Props) {
+function CollectionMenuList(props: Props): React.Node {
   const { inline = false, collectionId, collectionName, doOpenModal, playNextUri, doToggleShuffleList } = props;
   const [doShuffle, setDoShuffle] = React.useState(false);
 

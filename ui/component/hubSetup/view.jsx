@@ -12,9 +12,9 @@ function errorMessage(error: Error) {
   return error.message.replace(/^Error invoking remote method '[^']+': (Error: )?/, '');
 }
 
-export default function HubSetup({ handleNextPage }: Props) {
+export default function HubSetup({ handleNextPage }: Props): React.Node {
   const [servers, setServers] = React.useState<Array<Server>>([]);
-  const [selected, setSelected] = React.useState(null);
+  const [selected, setSelected] = React.useState<string | null>(null);
   const [scanning, setScanning] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState('');

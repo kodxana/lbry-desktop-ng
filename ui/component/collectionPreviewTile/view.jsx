@@ -43,7 +43,7 @@ type Props = {
   isResolvingCollectionClaims: boolean,
 };
 
-function CollectionPreviewTile(props: Props) {
+function CollectionPreviewTile(props: Props): React.Node {
   const {
     uri,
     collectionId,

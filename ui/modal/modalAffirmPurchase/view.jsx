@@ -22,7 +22,7 @@ type Props = {
   setPlayingUri: (?string) => void,
 };
 
-function ModalAffirmPurchase(props: Props) {
+function ModalAffirmPurchase(props: Props): React.Node {
   const {
     closeModal,
     loadVideo,

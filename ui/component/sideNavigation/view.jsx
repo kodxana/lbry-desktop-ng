@@ -47,7 +47,7 @@ type Props = {
   activeChannelStakedLevel: number,
 };
 
-function SideNavigation(props: Props) {
+function SideNavigation(props: Props): React.Node {
   const {
     subscriptions,
     doSignOut,

@@ -100,7 +100,7 @@ class FileSelector extends React.PureComponent<Props, State> {
 
   input: ?HTMLInputElement;
 
-  render() {
+  render(): React.Node {
     const { type, currentPath, label, placeholder, accept, error, disabled, autoFocus = false } = this.props;
     const placeHolder = currentPath || placeholder;
 

@@ -26,7 +26,7 @@ const isValidServerString = (serverString) => {
   ); // NaN !== NaN
 };
 
-function ServerInputRow(props: Props) {
+function ServerInputRow(props: Props): React.Node {
   const { update, onCancel } = props;
   const [nameString, setNameString] = useState('');
   const [hostString, setHostString] = useState('');

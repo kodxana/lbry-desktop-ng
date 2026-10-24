@@ -16,7 +16,7 @@ type Props = {
   utxoCounts: { [string]: number },
 };
 
-export default function ModalSupportsLiquidate(props: Props) {
+export default function ModalSupportsLiquidate(props: Props): React.Node {
   const { doHideModal, doTipClaimMass, massClaimingTips, utxoCounts, tipsBalance } = props;
   const { support: supportCount = 0 } = utxoCounts || {};
 

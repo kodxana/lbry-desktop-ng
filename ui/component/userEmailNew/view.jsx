@@ -28,7 +28,7 @@ type Props = {
   doToggleInterestedInYoutubeSync: () => void,
 };
 
-function UserEmailNew(props: Props) {
+function UserEmailNew(props: Props): React.Node {
   const {
     errorMessage,
     isPending,

@@ -10,7 +10,7 @@ type Props = {
   children?: React.Node,
 };
 
-const FreezeframeWrapper = (props: Props) => {
+const FreezeframeWrapper = (props: Props): React.Node => {
   const imgRef = React.useRef();
   const freezeframe = React.useRef();
   const { src, className, children } = props;

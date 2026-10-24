@@ -6,7 +6,7 @@ type Props = {
   id: string,
 };
 
-const TransactionLink = (props: Props) => {
+const TransactionLink = (props: Props): React.Node => {
   const { id } = props;
 
   const href = `https://explorer.lbry.com/tx/${id}`;

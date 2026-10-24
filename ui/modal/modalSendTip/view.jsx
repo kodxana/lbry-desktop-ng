@@ -11,7 +11,7 @@ type Props = {
 };
 
 class ModalSendTip extends React.PureComponent<Props> {
-  render() {
+  render(): React.Node {
     const { closeModal, uri, claimIsMine } = this.props;
 
     return (

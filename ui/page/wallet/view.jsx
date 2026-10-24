@@ -16,7 +16,7 @@ type Props = {
   syncStatus: ?StatusResponse,
 };
 
-const WalletPage = (props: Props) => {
+const WalletPage = (props: Props): React.Node => {
   const {
     location: { search },
   } = useDesktopHistory();

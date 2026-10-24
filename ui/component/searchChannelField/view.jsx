@@ -20,7 +20,7 @@ type Props = {
   doToast: ({ message: string }) => void,
 };
 
-export default function SearchChannelField(props: Props) {
+export default function SearchChannelField(props: Props): React.Node {
   const { label, labelAddNew, labelFoundAction, values, onAdd, onRemove, doToast } = props;
 
   const [searchTerm, setSearchTerm] = React.useState('');

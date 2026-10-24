@@ -43,7 +43,7 @@ type Props = {
   prefsReady: boolean,
 };
 
-function UserSignUp(props: Props) {
+function UserSignUp(props: Props): React.Node {
   const {
     emailToVerify,
     user,

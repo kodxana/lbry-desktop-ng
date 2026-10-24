@@ -61,7 +61,7 @@ type Props = {
   resetThumbnailStatus: () => void,
 };
 
-function CollectionForm(props: Props) {
+function CollectionForm(props: Props): React.Node {
   const {
     uri, // collection uri
     claim,

@@ -39,7 +39,7 @@ function SyncEnableFlow(props: Props) {
 
   const [step, setStep] = React.useState(INITIAL);
   const [prefDict, setPrefDict]: [any, (any) => void] = React.useState();
-  const [error, setError] = React.useState();
+  const [error, setError] = React.useState<string | void>();
   const [password, setPassword] = React.useState('');
 
   const handleSyncToggle = async () => {

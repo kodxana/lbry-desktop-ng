@@ -32,7 +32,7 @@ type Props = {
   doCommentListOwn: (channelId: string, page: number, pageSize: number) => void,
 };
 
-export default function OwnComments(props: Props) {
+export default function OwnComments(props: Props): React.Node {
   const {
     activeChannelClaim,
     allComments,

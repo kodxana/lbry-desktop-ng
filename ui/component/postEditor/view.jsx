@@ -17,7 +17,7 @@ type Props = {
   setCurrentFileType: (string) => void,
 };
 
-function PostEditor(props: Props) {
+function PostEditor(props: Props): React.Node {
   const {
     uri,
     label,

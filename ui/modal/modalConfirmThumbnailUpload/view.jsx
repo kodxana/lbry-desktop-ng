@@ -21,7 +21,7 @@ class ModalConfirmThumbnailUpload extends React.PureComponent<Props> {
     }
   }
 
-  render() {
+  render(): React.Node {
     const { closeModal, file } = this.props;
     const filePath = file && file.path;
 

@@ -31,7 +31,7 @@ type Props = {
   accessToken: string,
 };
 
-function PublishAdditionalOptions(props: Props) {
+function PublishAdditionalOptions(props: Props): React.Node {
   const {
     language,
     name,

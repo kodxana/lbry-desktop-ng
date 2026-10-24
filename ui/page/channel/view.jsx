@@ -62,7 +62,7 @@ type Props = {
   unpublishedCollections: CollectionGroup,
 };
 
-function ChannelPage(props: Props) {
+function ChannelPage(props: Props): React.Node {
   const {
     uri,
     claim,

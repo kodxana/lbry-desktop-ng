@@ -28,7 +28,7 @@ function getChannelIcon(level: number): string {
   return icons[level] || ICONS.CHANNEL_LEVEL_1;
 }
 
-function ChannelStakedIndicator(props: Props) {
+function ChannelStakedIndicator(props: Props): React.Node {
   const { channelClaim, amount, level, large = false, inline = false, hideTooltip } = props;
 
   if (!channelClaim || !channelClaim.meta) {
