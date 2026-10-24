@@ -14,7 +14,6 @@ import { addAutoplayNextButton } from './internal/autoplay-next';
 import { addPlayNextButton } from './internal/play-next';
 import { addPlayPreviousButton } from './internal/play-previous';
 import { useDesktopHistory } from 'component/common/desktop-router';
-import type { HomepageCat } from 'util/buildHomepage';
 import debounce from 'util/debounce';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
@@ -44,7 +43,7 @@ type Props = {
   toggleAutoplayNext: () => void,
   setVideoPlaybackRate: (number) => void,
   userId: number,
-  homepageData?: { [string]: HomepageCat },
+  homepageData?: HomepageData,
   shareTelemetry: boolean,
   isFloating: boolean,
   doPlayUri: (string, string) => void,

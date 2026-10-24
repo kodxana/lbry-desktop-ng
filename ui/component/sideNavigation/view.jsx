@@ -43,7 +43,7 @@ type Props = {
   purchaseSuccess: boolean,
   doClearPurchasedUriSuccess: () => void,
   user: ?User,
-  homepageData: any,
+  homepageData: HomepageData,
   activeChannelStakedLevel: number,
 };
 

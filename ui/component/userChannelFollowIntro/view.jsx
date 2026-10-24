@@ -12,7 +12,7 @@ type Props = {
   subscribedChannels: Array<Subscription>,
   onContinue: () => void,
   channelSubscribe: (sub: Subscription) => void,
-  homepageData: any,
+  homepageData: HomepageData,
   prefsReady: boolean,
 };
 

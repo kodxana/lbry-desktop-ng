@@ -51,6 +51,15 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared utility source and valid callers must type-check');
 const invalid = {
+  homepageChannel: 'export const invalid: HomepageSearchOptions = {channelIds: [undefined]};',
+  homepageSize: 'export const invalid: HomepageSearchOptions = {pageSize: "8"};',
+  homepageOrder: 'export const invalid: HomepageSearchOptions = {orderBy: "release_time"};',
+  homepagePin: 'export const invalid: RowDataItem = {title: "Science", pinnedUrls: [42]};',
+  homepageTitle: 'export const invalid: RowDataItem = {title: null};',
+  homepageCategory: 'export const invalid: HomepageData = {SCIENCE: {name: "science"}};',
+  homepageLimit: 'export const invalid: HomepageCat = {...homepageCategory, channelLimit: 3};',
+  homepageTypes: 'export const invalid: HomepageSearchOptions = {claimType: false};',
+
   searchSize: 'export const invalid: string = getSearchQueryString("test", {size: "20"});',
   searchMature: 'export const invalid: string = getSearchQueryString("test", {nsfw: "false"});',
   searchMedia: 'export const invalid: string = getSearchQueryString("test", {video: "true"});',
@@ -100,5 +109,5 @@ for (const name of Object.keys(invalid)) {
 console.log(
   'PASS shared utility source contracts and ' +
     Object.keys(invalid).length +
-    ' invalid formatting, wallet and search contracts'
+    ' invalid formatting, wallet, search and homepage contracts'
 );
