@@ -175,9 +175,9 @@ checked rather than treated as an untyped module. SDK amounts remain strings,
 failed status reads remain nullable, and the balance read still waits for status.
 Credit display text is kept separate from its rendered React content.
 
-`node build/testUtilityTypes.js` checks nine real utility source files and the
-search option constants with the first-party declarations. It rejects 36 invalid
-formatting, progress, wallet snapshot, search and homepage contracts. The UI gate also
+`node build/testUtilityTypes.js` checks ten real utility source files and the
+search and comment constants with the first-party declarations. It rejects 46 invalid
+formatting, progress, wallet snapshot, search, homepage and comment contracts. The UI gate also
 checks credit display props and defaults.
 `node build/testUtilityContracts.js` covers formatter caching, locale changes,
 tiny amounts, display rounding versus transaction serialization, bytes and time.
@@ -213,9 +213,18 @@ skipped; if no valid channel IDs remain, the Following row is omitted so its
 empty filter cannot fetch unrelated content. The new regression fails against
 the previous builder. The URI parser itself is unchanged.
 
-**The application is not yet type-clean.** The full check now reports 2,798
+The comment pass types selector results, reaction counts, moderation maps,
+mentions and sticker helpers. `node build/testCommentContracts.js` uses the real
+reducers, selectors and helpers to check immutable moderation lists, missing
+records, pagination, visibility rules, ownership exceptions, mentions, sorting
+and sticker parsing. The moderation regression fails against the previous
+implementation, which reversed the Redux array in place. Ownership checks now
+read the raw claim-ID array's length rather than a Set's `size`. Missing records
+are skipped without changing stored ID lists or server pagination totals.
+
+**The application is not yet type-clean.** The full check now reports 2,719
 application diagnostics and zero library-definition diagnostics, down from
-2,836 before the homepage pass (38 fewer, with no newly introduced diagnostics).
+2,798 before the comment pass (79 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

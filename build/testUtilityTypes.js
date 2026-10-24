@@ -23,6 +23,7 @@ const sources = [
   'ui/util/wallet-sync.js',
   'ui/util/startup-progress.js',
   'ui/util/query-params.js',
+  'ui/util/comments.js',
 ];
 for (const file of [...sources, '.flowconfig']) write(file, fs.readFileSync(path.join(root, file), 'utf8'));
 for (const file of fs.readdirSync(path.join(root, 'flow-typed')).filter((file) => file.endsWith('.js'))) {
@@ -34,6 +35,9 @@ write(
   '// @flow\n' + fs.readFileSync(path.join(root, 'ui/constants/action_types.js'), 'utf8')
 );
 write('ui/constants/search.js', fs.readFileSync(path.join(root, 'ui/constants/search.js'), 'utf8'));
+for (const name of ['comment', 'reactions', 'stickers']) {
+  write('ui/constants/' + name + '.js', fs.readFileSync(path.join(root, 'ui/constants', name + '.js'), 'utf8'));
+}
 const fixture = fs.readFileSync(path.join(__dirname, 'tests/utilityTypes.js'), 'utf8');
 write('valid.js', fixture);
 const check = () => {
@@ -51,6 +55,18 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared utility source and valid callers must type-check');
 const invalid = {
+  commentReaction:
+    'export const invalid = sortComments({comments: [], reactionsById: {id: {like: "2"}}, sort: "new", isMyComment: () => false});',
+  commentOwner:
+    'export const invalid = sortComments({comments: [], reactionsById: {}, sort: "new", isMyComment: (id: number) => true});',
+  commentSticker: 'export const invalid: string = getStickerUrl("ordinary comment");',
+  commentParsedSticker: 'export const invalid: Sticker = parseSticker("ordinary comment");',
+  commentTitle: 'export const invalid: string = getCommentsListTitle("10");',
+  commentTotal: 'export function invalid(state: CommentsState): void { state.totalCommentsById.id = "10"; }',
+  commentPages: 'export function invalid(state: CommentsState): void { state.repliesTotalPagesByParentId.id = "2"; }',
+  commentPin: 'export function invalid(state: CommentsState): void { state.pinnedCommentsById.id = [42]; }',
+  commentBlocking: 'export function invalid(state: CommentsState): void { state.blockingByUri.uri = "true"; }',
+  commentUnblocking: 'export function invalid(state: CommentsState): void { state.unBlockingByUri.uri = "false"; }',
   homepageChannel: 'export const invalid: HomepageSearchOptions = {channelIds: [undefined]};',
   homepageSize: 'export const invalid: HomepageSearchOptions = {pageSize: "8"};',
   homepageOrder: 'export const invalid: HomepageSearchOptions = {orderBy: "release_time"};',
@@ -109,5 +125,5 @@ for (const name of Object.keys(invalid)) {
 console.log(
   'PASS shared utility source contracts and ' +
     Object.keys(invalid).length +
-    ' invalid formatting, wallet, search and homepage contracts'
+    ' invalid formatting, wallet, search, homepage and comment contracts'
 );
