@@ -34,6 +34,7 @@ comment-input contracts to 2,586, form-control contracts to 2,521, claim contrac
 renderer return/state contracts to 1,755, and SDK/comment API and async action
 contracts to 1,549, then Redux action/reducer contracts to 1,363 and publishing
 contracts to 1,221, then collection form/menu/control contracts to 1,067,
+and content selectors/viewers to 926,
 with no newly introduced diagnostics in these passes.
 Required gates cover twenty-two shared UI/type source modules (39 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
@@ -105,6 +106,11 @@ file paths, and Markdown selection works without a MIME registration. Thumbnail
 failures preserve maturity metadata, and video snapshots use browser byte arrays.
 Regression tests cover publish/preview payloads, metadata-only edits, exact decimal
 fees, failures, license selection and thumbnail capture without submitting transactions.
+The content-rendering pass adds typed playback/history state and viewer inputs,
+with ten invalid source contracts. It fixes cleared floating playback, missing
+watch progress, stale document reads and image observer cleanup. Real renderer
+tests cover changing document sources, editor updates/disposal and late image
+callbacks, alongside the document, comic and 3D viewer regressions.
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change
 the package-version percentages above; see

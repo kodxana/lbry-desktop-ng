@@ -17,6 +17,7 @@ type State = {
 };
 
 class DocxViewer extends React.PureComponent<Props, State> {
+  loadId: number = 0;
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -26,7 +27,16 @@ class DocxViewer extends React.PureComponent<Props, State> {
     };
   }
   componentDidMount() {
-    this.mounted = true;
+    this.loadSource();
+  }
+
+  componentDidUpdate(previous: Props) {
+    if (previous.source !== this.props.source) this.loadSource();
+  }
+
+  loadSource(): void {
+    const request = ++this.loadId;
+    this.setState({ content: null, error: false, loading: true });
     const { source } = this.props;
 
     // Overwrite element and styles
@@ -47,22 +57,21 @@ class DocxViewer extends React.PureComponent<Props, State> {
     // Parse docx to html
     desktop
       .readDocument(source)
-      .then((bytes) =>
-        mammoth.convertToHtml(
-          { arrayBuffer: bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) },
-          options
-        )
-      )
+      .then((bytes) => {
+        const arrayBuffer = new ArrayBuffer(bytes.byteLength);
+        new Uint8Array(arrayBuffer).set(bytes);
+        return mammoth.convertToHtml({ arrayBuffer }, options);
+      })
       .then((result) => {
-        if (this.mounted) this.setState({ content: sanitizeDocumentHtml(result.value), loading: false });
+        if (request === this.loadId) this.setState({ content: sanitizeDocumentHtml(result.value), loading: false });
       })
       .catch(() => {
-        if (this.mounted) this.setState({ error: true, loading: false });
+        if (request === this.loadId) this.setState({ error: true, loading: false });
       });
   }
 
   componentWillUnmount() {
-    this.mounted = false;
+    this.loadId++;
   }
 
   render(): React.Node {

@@ -20,7 +20,6 @@ import FileWatchLaterLink from 'component/fileWatchLaterLink';
 import ClaimRepostAuthor from 'component/claimRepostAuthor';
 import ClaimMenuList from 'component/claimMenuList';
 import CollectionPreviewOverlay from 'component/collectionPreviewOverlay';
-// $FlowFixMe cannot resolve ...
 import PlaceholderTx from 'static/img/placeholderTx.gif';
 
 type Props = {
@@ -47,7 +46,7 @@ type Props = {
 };
 
 // preview image cards used in related video functionality, channel overview page and homepage
-function ClaimPreviewTile(props: Props) {
+function ClaimPreviewTile(props: Props): React.Node {
   const {
     history,
     uri,
@@ -84,7 +83,7 @@ function ClaimPreviewTile(props: Props) {
     formatLbryUrlForWeb(canonicalUrl || uri || '/') + (listId ? generateListSearchUrlParams(listId) : '');
   const navLinkProps = {
     to: navigateUrl,
-    onClick: (e) => e.stopPropagation(),
+    onClick: (e: { stopPropagation: () => void, ... }): void => e.stopPropagation(),
   };
   const { location } = history;
 
@@ -106,7 +105,7 @@ function ClaimPreviewTile(props: Props) {
   // Aria-label value for claim preview
   let ariaLabelData = isChannel ? title : formatClaimPreviewTitle(title, channelTitle, date, mediaDuration);
 
-  function handleClick(e) {
+  function handleClick(): void {
     if (navigateUrl) {
       history.push(navigateUrl);
     }

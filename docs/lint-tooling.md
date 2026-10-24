@@ -318,9 +318,19 @@ once; form updates retain all submitted tags and preserve location metadata.
 The unused legacy reorder component is removed. Renderer regressions cover
 these controls alongside the existing reorder and persistence cases.
 
-**The application is not yet type-clean.** The full check now reports 1,067
+The content-rendering pass types playback state, saved positions, history and
+render-mode selectors, plus document, comic, 3D and image viewer boundaries.
+Its source gate checks the actual content selectors, document viewers and lazy
+image hook and rejects ten invalid contracts. Cleared playback no longer leaves
+the floating player active, and missing positions or durations return zero
+watched progress. Document path changes reload the viewer; old reads and errors
+cannot replace a newer document. Image observers disconnect when the source
+changes or the component unmounts, and CodeMirror disposes its editor. Runtime
+and renderer regressions cover these lifecycle paths and existing content behavior.
+
+**The application is not yet type-clean.** The full check now reports 926
 application diagnostics and zero library-definition diagnostics, down from
-1,221 before the collection-control pass (154 fewer, with no newly introduced diagnostics).
+1,067 before the content-rendering pass (141 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

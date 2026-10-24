@@ -50,7 +50,7 @@ function ModalAffirmPurchase(props: Props): React.Node {
   }
 
   function cancelPurchase() {
-    if (playingUri && isURIEqual(uri, playingUri.uri)) {
+    if (playingUri?.uri && isURIEqual(uri, playingUri.uri)) {
       setPlayingUri(null);
     }
 

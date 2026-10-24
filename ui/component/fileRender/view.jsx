@@ -5,7 +5,6 @@ import classnames from 'classnames';
 import * as RENDER_MODES from 'constants/file_render_modes';
 import * as KEYCODES from 'constants/keycodes';
 import VideoViewer from 'component/viewers/videoViewer';
-import { withDesktopRouter } from 'component/common/desktop-router';
 import desktop from 'util/desktop';
 import analytics from 'analytics';
 
@@ -38,11 +37,7 @@ type Props = {
 };
 
 class FileRender extends React.PureComponent<Props> {
-  constructor(props: Props) {
-    super(props);
-
-    (this: any).escapeListener = this.escapeListener.bind(this);
-  }
+  readDocument = (): Promise<Uint8Array> => desktop.readDocument(this.props.downloadPath);
 
   componentDidMount() {
     const { embedded } = this.props;
@@ -54,21 +49,19 @@ class FileRender extends React.PureComponent<Props> {
     window.removeEventListener('keydown', this.escapeListener, true);
   }
 
-  escapeListener(e: SyntheticKeyboardEvent<*>) {
+  escapeListener = (e: KeyboardEvent): void => {
     if (e.keyCode === KEYCODES.ESCAPE) {
       e.preventDefault();
 
       this.exitFullscreen();
-
-      return false;
     }
-  }
+  };
 
   exitFullscreen() {
     leaveWindowFullscreen();
   }
 
-  renderViewer() {
+  renderViewer(): React.Node {
     const {
       currentTheme,
       contentType,
@@ -93,19 +86,18 @@ class FileRender extends React.PureComponent<Props> {
           />
         );
       case RENDER_MODES.IMAGE:
-        return <ImageViewer uri={uri} source={source} />;
+        return <ImageViewer source={source} />;
       case RENDER_MODES.HTML:
         return <HtmlViewer source={downloadPath || source} />;
       case RENDER_MODES.DOCUMENT:
       case RENDER_MODES.MARKDOWN:
         return (
           <DocumentViewer
+            key={downloadPath}
             source={{
               // @if TARGET='app'
-              file: () => desktop.readDocument(downloadPath),
+              file: this.readDocument,
               // @endif
-              stream: source,
-              fileExtension,
               contentType,
             }}
             renderMode={renderMode}
@@ -123,17 +115,16 @@ class FileRender extends React.PureComponent<Props> {
               fileType: fileExtension,
               downloadPath,
             }}
-            theme={currentTheme}
           />
         );
       case RENDER_MODES.COMIC:
         return (
           <ComicBookViewer
+            key={downloadPath}
             source={{
               // @if TARGET='app'
-              file: () => desktop.readDocument(downloadPath),
+              file: this.readDocument,
               // @endif
-              stream: source,
             }}
             theme={currentTheme}
           />
@@ -145,7 +136,7 @@ class FileRender extends React.PureComponent<Props> {
     return null;
   }
 
-  render() {
+  render(): React.Node {
     const { embedded, renderMode, className } = this.props;
 
     return (
@@ -162,4 +153,4 @@ class FileRender extends React.PureComponent<Props> {
   }
 }
 
-export default withDesktopRouter(FileRender);
+export default FileRender;

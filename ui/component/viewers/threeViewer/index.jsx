@@ -17,9 +17,14 @@ type Props = { source: { fileType: string, downloadPath: string } };
 type State = { error: ?string, isReady: boolean, isLoading: boolean };
 
 class ThreeViewer extends React.PureComponent<Props, State> {
-  state = { error: null, isReady: false, isLoading: false };
+  state: State = { error: null, isReady: false, isLoading: false };
   materialColor = 0xffffff;
-  theme = { showFog: true, gridColor: 0x414e5c, centerLineColor: 0x7f8c8d, backgroundColor: 0x0b0c0d };
+  theme: { showFog: boolean, gridColor: number, centerLineColor: number, backgroundColor: number } = {
+    showFog: true,
+    gridColor: 0x414e5c,
+    centerLineColor: 0x7f8c8d,
+    backgroundColor: 0x0b0c0d,
+  };
   loadId = 0;
   viewer: ?HTMLElement;
   guiContainer: ?HTMLElement;
@@ -57,8 +62,8 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     cancelAnimationFrame(this.frameID);
     if (this.gui) this.gui.destroy();
     if (this.controls) this.controls.dispose();
-    const geometries = new Set();
-    const materials = new Set();
+    const geometries = new Set<{ dispose: () => void }>();
+    const materials = new Set<{ dispose: () => void }>();
     if (this.material) materials.add(this.material);
     if (this.scene) {
       this.scene.traverse((child) => {
@@ -79,7 +84,7 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     this.frameID = this.targetCenter = null;
   }
 
-  async loadSource() {
+  async loadSource(): Promise<void> {
     const request = ++this.loadId;
     this.clearScene();
     this.setState({ isLoading: true, isReady: false, error: null });
@@ -142,7 +147,7 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     }
   }
 
-  static fitMeshToCamera(group: any) {
+  static fitMeshToCamera(group: any): void {
     const box = new Box3().setFromObject(group);
     const size = box.getSize(new Vector3());
     const extent = Math.max(size.x, size.y, size.z);
@@ -158,7 +163,7 @@ class ThreeViewer extends React.PureComponent<Props, State> {
     if (this.guiContainer && this.mesh) {
       this.gui = new GUI({ container: this.guiContainer, title: 'Controls', closeFolders: true });
 
-      const config = {
+      const config: { color: number, reset: () => void } = {
         color: this.materialColor,
         reset: () => {
           // Reset material color
@@ -206,9 +211,10 @@ class ThreeViewer extends React.PureComponent<Props, State> {
   }
 
   handleResize = () => {
-    if (!this.viewer || !this.renderer) return;
-    const width = Math.max(1, this.viewer.clientWidth);
-    const height = Math.max(1, this.viewer.clientHeight);
+    const viewer = this.viewer;
+    if (!viewer || !this.renderer) return;
+    const width = Math.max(1, viewer.clientWidth);
+    const height = Math.max(1, viewer.clientHeight);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);

@@ -8,7 +8,7 @@ export default function useGetThumbnail(
   streamingUrl: ?string,
   getFile: (string) => void,
   shouldHide: boolean
-) {
+): ?string {
   let thumbnailToUse;
 
   const isImage = claim && claim.value_type === 'stream' && claim.value.stream_type === 'image';

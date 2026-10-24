@@ -11,15 +11,14 @@ type Props = {
 };
 
 const FreezeframeWrapper = (props: Props): React.Node => {
-  const imgRef = React.useRef();
-  const freezeframe = React.useRef();
+  const imgRef = React.useRef<HTMLImageElement | null>(null);
   const { src, className, children } = props;
 
   const srcLoaded = useLazyLoading(imgRef);
 
   useEffect(() => {
-    if (srcLoaded) {
-      freezeframe.current = new Freezeframe(imgRef.current);
+    if (srcLoaded && imgRef.current) {
+      void new Freezeframe(imgRef.current);
     }
   }, [srcLoaded]);
 

@@ -7,12 +7,36 @@ import Button from 'component/button';
 import LoadingScreen from 'component/common/loading-screen';
 import { readComic } from 'util/comic-archive';
 
-type Props = { source: { file: () => Promise<any> }, theme: string };
+type ReadFile = () => Promise<Uint8Array>;
+type Props = { source: { file: ReadFile }, theme: string };
+type ComicViewer = {
+  world: {
+    getItemCount: () => number,
+    getItemAt: (number) => {
+      setHeight: (number, boolean) => void,
+      setPosition: ({ x: number, y: number, ... }, boolean) => void,
+      getBounds: () => { width: number, ... },
+    },
+  },
+  viewport: {
+    goHome: (boolean) => void,
+    getZoom: () => number,
+    getHomeZoom: () => number,
+    getMinZoom: () => number,
+    getMaxZoom: () => number,
+    zoomTo: (number, null, boolean) => void,
+    zoomBy: (number) => void,
+    applyConstraints: (?boolean) => void,
+  },
+  addHandler: (string, () => void) => void,
+  removeHandler: (string, () => void) => void,
+  open: (Array<{ type: string, url: string }>) => void,
+};
 
-function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
-  const root = React.useRef(null);
-  const canvas = React.useRef(null);
-  const viewer = React.useRef(null);
+function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }): React.Node {
+  const root = React.useRef<HTMLDivElement | null>(null);
+  const canvas = React.useRef<HTMLDivElement | null>(null);
+  const viewer = React.useRef<ComicViewer | null>(null);
   const [page, setPage] = React.useState(0);
   const [pageInput, setPageInput] = React.useState('1');
   const [zoom, setZoom] = React.useState('100');
@@ -54,6 +78,7 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
 
   React.useEffect(() => {
     const instance = viewer.current;
+    if (!instance) return;
     setError(false);
     const visible = book && page > 0 ? urls.slice(page, page + 2) : urls.slice(page, page + 1);
     if (manga) visible.reverse();
@@ -74,7 +99,7 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
   }, [urls, page, book, manga]);
 
   const navigate = React.useCallback(
-    (index) => {
+    (index: number): void => {
       if (Number.isInteger(index) && index >= 0 && index < urls.length) setPage(index);
     },
     [urls.length]
@@ -83,7 +108,7 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
     setFullscreenError(false);
     try {
       if (document.fullscreenElement === root.current) await document.exitFullscreen();
-      else await root.current.requestFullscreen();
+      else if (root.current) await root.current.requestFullscreen();
     } catch (e) {
       setFullscreenError(true);
     }
@@ -94,14 +119,15 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
     return () => document.removeEventListener('fullscreenchange', changed);
   }, []);
   React.useEffect(() => {
-    const keydown = (event) => {
+    const keydown = (event: KeyboardEvent): void => {
       if (
         event.defaultPrevented ||
         event.altKey ||
         event.ctrlKey ||
         event.metaKey ||
         event.shiftKey ||
-        event.target.closest('input, textarea, select, button, [contenteditable="true"], [role="menu"]')
+        (event.target instanceof Element &&
+          event.target.closest('input, textarea, select, button, [contenteditable="true"], [role="menu"]'))
       )
         return;
       if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
@@ -120,7 +146,8 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
     setPageInput(String(page + 1));
   };
   const changeZoom = () => {
-    const viewport = viewer.current.viewport;
+    const viewport = viewer.current?.viewport;
+    if (!viewport) return;
     const value = Number(zoom);
     if (Number.isFinite(value) && value > 0) {
       viewport.zoomTo(
@@ -191,8 +218,11 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
           aria-label={__('Zoom out')}
           label="−"
           onClick={() => {
-            viewer.current.viewport.zoomBy(1 / 1.3);
-            viewer.current.viewport.applyConstraints();
+            const viewport = viewer.current?.viewport;
+            if (viewport) {
+              viewport.zoomBy(1 / 1.3);
+              viewport.applyConstraints();
+            }
           }}
         />
         <input
@@ -212,11 +242,14 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
           aria-label={__('Zoom in')}
           label="+"
           onClick={() => {
-            viewer.current.viewport.zoomBy(1.3);
-            viewer.current.viewport.applyConstraints();
+            const viewport = viewer.current?.viewport;
+            if (viewport) {
+              viewport.zoomBy(1.3);
+              viewport.applyConstraints();
+            }
           }}
         />
-        <Button title={__('Fit pages')} icon="RefreshCw" onClick={() => viewer.current.viewport.goHome(true)} />
+        <Button title={__('Fit pages')} icon="RefreshCw" onClick={() => viewer.current?.viewport.goHome(true)} />
         <Button
           title={book ? __('Page view') : __('Book view')}
           icon="Layout"
@@ -249,11 +282,15 @@ function ComicPages({ urls, theme }: { urls: Array<string>, theme: string }) {
 }
 
 export default function ComicBookViewer({ source, theme }: Props): React.Node {
-  const [state, setState] = React.useState({ readFile: null, urls: null, error: null });
+  const [state, setState] = React.useState<{ readFile: ?ReadFile, urls: ?Array<string>, error: ?string }>({
+    readFile: null,
+    urls: null,
+    error: null,
+  });
   const readFile = source.file;
   React.useEffect(() => {
     const abort = new AbortController();
-    let urls = [];
+    let urls: Array<string> = [];
     (async () => {
       try {
         const bytes = await readFile();
@@ -274,7 +311,7 @@ export default function ComicBookViewer({ source, theme }: Props): React.Node {
     <div className="file-render__viewer file-render__viewer--comic">
       {current && state.error ? (
         <LoadingScreen
-          status={__("Sorry, looks like we can't load the archive.") + ' ' + state.error}
+          status={__("Sorry, looks like we can't load the archive.") + ' ' + (state.error || '')}
           spinner={false}
         />
       ) : current && state.urls ? (

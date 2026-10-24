@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import React from 'react';
 import sharedUi from './sharedUi';
+import imageLifecycle from './imageLifecycle';
 import ReactModal from 'react-modal';
 import jsQR from 'jsqr';
 import imagesLoaded from 'imagesloaded';
@@ -351,5 +352,6 @@ export default async function uiComponents(store, history) {
   await progress(store, history);
   await dragging(store, history);
   await imageLoading();
+  await imageLifecycle(store, history);
   return 'shared icons/ref forwarding and sticker data, wallet QR pixel decoding/address changes, pagination, modal focus/dismissal, update progress, floating drag persistence and thumbnail success/failure';
 }

@@ -10,8 +10,7 @@ type Props = {
   theme: string,
   renderMode: string,
   source: {
-    file: (?string) => any,
-    stream: string,
+    file: () => Promise<Uint8Array>,
     contentType: string,
   },
 };
@@ -23,6 +22,7 @@ type State = {
 };
 
 class DocumentViewer extends React.PureComponent<Props, State> {
+  loadId: number = 0;
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -33,25 +33,30 @@ class DocumentViewer extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    this.mounted = true;
-    const { source } = this.props;
-    if (source && source.file) {
-      source
-        .file()
-        .then((bytes) => {
-          if (this.mounted) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
-        })
-        .catch(() => {
-          if (this.mounted) this.setState({ error: true, loading: false });
-        });
+    this.loadSource();
+  }
+
+  componentDidUpdate(previous: Props) {
+    if (previous.source.file !== this.props.source.file) this.loadSource();
+  }
+
+  async loadSource(): Promise<void> {
+    const request = ++this.loadId;
+    const { file } = this.props.source;
+    this.setState({ content: null, error: false, loading: true });
+    try {
+      const bytes = await file();
+      if (request === this.loadId) this.setState({ content: new TextDecoder().decode(bytes), loading: false });
+    } catch (_) {
+      if (request === this.loadId) this.setState({ error: true, loading: false });
     }
   }
 
   componentWillUnmount() {
-    this.mounted = false;
+    this.loadId++;
   }
 
-  renderDocument() {
+  renderDocument(): React.Node {
     const { content } = this.state;
     const { source, theme, renderMode } = this.props;
     const { contentType } = source;
