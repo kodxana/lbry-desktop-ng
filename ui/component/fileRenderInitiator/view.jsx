@@ -13,13 +13,12 @@ import { useIsMediumScreen } from 'effects/use-screensize';
 import isUserTyping from 'util/detect-typing';
 import { getThumbnailCdnUrl } from 'util/thumbnail';
 import Nag from 'component/common/nag';
-// $FlowFixMe cannot resolve ...
 import FileRenderPlaceholder from 'static/img/fileRenderPlaceholder.png';
 
 type Props = {
   play: (string, string, boolean) => void,
   isPlaying: boolean,
-  fileInfo: FileListItem,
+  fileInfo: ?FileListItem,
   uri: string,
   history: { push: (string) => void },
   location: { search: ?string, pathname: string, href: string, state: { forceAutoplay: boolean } },
@@ -27,7 +26,7 @@ type Props = {
   insufficientCredits: boolean,
   claimThumbnail?: string,
   autoplay: boolean,
-  costInfo: any,
+  costInfo: ?{ cost: number, ... },
   inline: boolean,
   renderMode: string,
   claim: StreamClaim,
@@ -66,11 +65,11 @@ export default function FileRenderInitiator(props: Props): React.Node {
   const isText = RENDER_MODES.TEXT_MODES.includes(renderMode);
   const isMediumScreen = useIsMediumScreen();
   const [thumbnail, setThumbnail] = React.useState(FileRenderPlaceholder);
-  const containerRef = React.useRef<any>();
+  const containerRef = React.useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (claimThumbnail) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         let newThumbnail = claimThumbnail;
 
         // @if TARGET='web'
@@ -88,13 +87,14 @@ export default function FileRenderInitiator(props: Props): React.Node {
           setThumbnail(newThumbnail);
         }
       }, 200);
+      return () => clearTimeout(timer);
     }
   }, [claimThumbnail, thumbnail]);
 
   // Wrap this in useCallback because we need to use it to the keyboard effect
   // If we don't a new instance will be created for every render and react will think the dependencies have changed, which will add/remove the listener for every render
   const viewFile = useCallback(
-    (e?: SyntheticInputEvent<*> | KeyboardEvent) => {
+    (e?: KeyboardEvent | { stopPropagation: () => void, ... }): void => {
       if (e) {
         e.stopPropagation();
       }

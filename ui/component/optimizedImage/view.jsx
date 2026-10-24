@@ -2,7 +2,7 @@
 import React from 'react';
 import { getThumbnailCdnUrl } from 'util/thumbnail';
 
-function scaleToDevicePixelRatio(value: number, window: any) {
+function scaleToDevicePixelRatio(value: number, window: { devicePixelRatio?: number, ... }): number {
   const devicePixelRatio = window.devicePixelRatio || 1.0;
   return Math.ceil(value * devicePixelRatio);
 }
@@ -17,9 +17,9 @@ type Props = {
 function OptimizedImage(props: Props): React.Node {
   const { objectFit, src, waitLoad, ...imgProps } = props;
   const [optimizedSrc, setOptimizedSrc] = React.useState('');
-  const ref = React.useRef<any>();
+  const ref = React.useRef<HTMLImageElement | null>(null);
 
-  function getOptimizedImgUrl(url, width, height) {
+  function getOptimizedImgUrl(url: string, width: number, height: number): string {
     let optimizedUrl = url;
     if (url && !url.startsWith('/public/')) {
       optimizedUrl = url.trim().replace(/^http:\/\//i, 'https://');
@@ -33,7 +33,7 @@ function OptimizedImage(props: Props): React.Node {
     return optimizedUrl;
   }
 
-  function getOptimumSize(elem) {
+  function getOptimumSize(elem: ?HTMLImageElement): ?{ width: number, height: number } {
     if (!elem || !elem.parentElement || !elem.parentElement.clientWidth || !elem.parentElement.clientHeight) {
       return null;
     }
@@ -52,11 +52,10 @@ function OptimizedImage(props: Props): React.Node {
     return { width, height };
   }
 
-  function adjustOptimizationIfNeeded(elem, objectFit, origSrc) {
+  function adjustOptimizationIfNeeded(elem: ?HTMLImageElement, objectFit: ?string, origSrc: string): void {
     if (objectFit === 'cover' && elem) {
       const containerSize = getOptimumSize(elem);
       if (containerSize) {
-        // $FlowFixMe
         if (elem.naturalWidth < containerSize.width) {
           // For 'cover', we don't want to stretch the image. We started off by
           // filling up the container height, but the width still has a gap for
@@ -106,7 +105,7 @@ function OptimizedImage(props: Props): React.Node {
       style={{ visibility: waitLoad ? 'hidden' : 'visible' }}
       src={optimizedSrc}
       onLoad={() => {
-        if (waitLoad) ref.current.style.visibility = 'visible';
+        if (waitLoad && ref.current) ref.current.style.visibility = 'visible';
         adjustOptimizationIfNeeded(ref.current, objectFit, src);
         if (imgProps.onLoad) imgProps.onLoad();
       }}

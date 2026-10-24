@@ -3,7 +3,7 @@ import * as React from 'react';
 import { stopContextMenu } from 'util/context-menu';
 import IframeReact from 'component/IframeReact';
 import desktop from 'util/desktop';
-const pathToFileURL = (value) => new URL(desktop.fileUrl(value));
+const pathToFileURL = (value: string): URL => new URL(desktop.fileUrl(value));
 
 type Props = {
   source: string,

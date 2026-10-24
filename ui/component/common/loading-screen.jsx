@@ -10,7 +10,7 @@ type Props = {
 };
 
 class LoadingScreen extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { spinner: boolean, isDocument: boolean } = {
     spinner: true,
     isDocument: false,
   };

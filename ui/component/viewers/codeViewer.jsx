@@ -25,30 +25,41 @@ type Props = {
   contentType: string,
 };
 
+type CodeEditor = {
+  setOption: (string, string | boolean) => void,
+  setValue: (string) => void,
+  on: (string, (...Array<unknown>) => void) => void,
+  toTextArea: () => void,
+};
+
 class CodeViewer extends React.PureComponent<Props> {
+  mounted: boolean = false;
   constructor(props: Props) {
     super(props);
     this.codeMirror = null;
   }
 
-  componentDidUpdate(prevProps: Props): * {
-    if (prevProps.theme === this.props.theme) return;
-
-    // This code is duplicated with componentDidMount
-    const theme = this.props.theme === 'dark' ? 'monokai' : 'ttcn';
-    this.codeMirror.setOption('theme', theme);
+  componentDidUpdate(prevProps: Props): void {
+    const editor = this.codeMirror;
+    if (!editor) return;
+    if (prevProps.theme !== this.props.theme)
+      editor.setOption('theme', this.props.theme === 'dark' ? 'monokai' : 'ttcn');
+    if (prevProps.contentType !== this.props.contentType) editor.setOption('mode', this.props.contentType);
+    if (prevProps.value !== this.props.value) editor.setValue(this.props.value || '');
   }
 
   componentDidMount() {
-    const me = this;
-    const { theme, contentType } = me.props;
+    this.mounted = true;
 
     // Init CodeMirror
     import(
       /* webpackChunkName: "codemirror" */
       'codemirror/lib/codemirror'
     ).then((CodeMirror) => {
-      me.codeMirror = CodeMirror.fromTextArea(me.textarea, {
+      const textarea = this.textarea;
+      if (!this.mounted || !textarea) return;
+      const { theme, contentType, value } = this.props;
+      const editor: CodeEditor = CodeMirror.fromTextArea(textarea, {
         // Auto detect syntax with file contentType
         mode: contentType,
         // Adaptive theme
@@ -63,12 +74,20 @@ class CodeViewer extends React.PureComponent<Props> {
         lineWrapping: true,
       });
       // Add events
-      me.codeMirror.on('contextmenu', openSnippetMenu);
+      editor.setValue(value || '');
+      editor.on('contextmenu', openSnippetMenu);
+      this.codeMirror = editor;
     });
   }
 
+  componentWillUnmount(): void {
+    this.mounted = false;
+    if (this.codeMirror) this.codeMirror.toTextArea();
+    this.codeMirror = null;
+  }
+
   textarea: ?HTMLTextAreaElement;
-  codeMirror: any;
+  codeMirror: ?CodeEditor;
 
   render(): React.Node {
     const { value } = this.props;
