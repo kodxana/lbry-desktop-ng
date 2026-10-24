@@ -7,19 +7,19 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After the legacy media dependency replacements (based on merged PR #76):
+After the persistence/build batch (based on merged PR #77):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
 | Upgraded to a newer resolved version   |    92 |
-| Removed or replaced                    |    74 |
-| Still at the original resolved version |     3 |
+| Removed or replaced                    |    76 |
+| Still at the original resolved version |     1 |
 | Total                                  |   169 |
 
-That is **98.2% upgraded, removed or replaced** (166/169). Strict version upgrades
+That is **99.4% upgraded, removed or replaced** (168/169). Strict version upgrades
 alone account for 54.4% (92/169). This is package-count progress, not a measure of
 remaining engineering effort, security or release readiness. The current direct
-dependency set has 147 packages, including 52 additions/replacements.
+dependency set has 147 packages, including 54 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
 The checker runs again. Required checks load all 89 declaration files, reject
@@ -119,12 +119,14 @@ not mean every dependency API is fully described. These type migrations do not c
 the package-version percentages above; see
 [Flow tooling](lint-tooling.md#flow-is-separate).
 
-The three unchanged packages are localforage, preprocess-loader and
-redux-persist-transform-compress. On 2026-10-24, none has a newer stable release on npm.
-The [legacy media batch](legacy-media-adapters.md) replaces country-data,
-ffmpeg-probe and videojs-event-tracking. An unchanged latest release
-does not establish that a package is maintained; these need maintenance and
-replacement decisions rather than version bumps just to reach 100%.
+The one unchanged original package is localforage 1.10.0, still the latest stable
+release on 2026-10-24. It is deliberately retained: replacing the storage engine
+requires a separate migration and failure recovery design. The
+[persistence/build batch](persistence-build-dependencies.md) replaces the two
+remaining wrappers and updates their compression codec while preserving saved
+bytes and storage locations. The [earlier media batch](legacy-media-adapters.md)
+replaced country-data, ffmpeg-probe and videojs-event-tracking. These are
+maintenance decisions, not version bumps made solely to reach 100%.
 
 auto-launch 5.0.6 adds FreeBSD platform recognition; its Windows and Linux
 registration implementations are unchanged. The desktop's scoped IPC regression

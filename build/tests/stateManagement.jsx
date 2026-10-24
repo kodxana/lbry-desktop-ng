@@ -3,7 +3,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider, connect } from 'react-redux';
 import localForage from 'localforage';
-import createCompressor from 'redux-persist-transform-compress';
+import createCompressor from 'util/persist-compressor';
 import * as ACTIONS from 'constants/action_types';
 import { selectClaimsById, selectClaimForUri } from 'redux/selectors/claims';
 import { selectSubscriptions } from 'redux/selectors/subscriptions';

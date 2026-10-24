@@ -1,7 +1,7 @@
 import * as ACTIONS from 'constants/action_types';
 import { persistStore, persistReducer } from 'redux-persist';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
-import createCompressor from 'redux-persist-transform-compress';
+import createCompressor from 'util/persist-compressor';
 import { createFilter, createBlacklistFilter } from 'redux-persist-transform-filter';
 import localForage from 'localforage';
 import { createStore, applyMiddleware, compose } from 'redux';

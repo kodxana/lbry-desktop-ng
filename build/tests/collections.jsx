@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { ipcRenderer } from 'electron';
 import Lbry from 'lbry';
 import localForage from 'localforage';
-import createCompressor from 'redux-persist-transform-compress';
+import createCompressor from 'util/persist-compressor';
 import * as ACTIONS from 'constants/action_types';
 import { doCollectionEdit } from 'redux/actions/collections';
 import CollectionSidebar from 'component/collectionContentSidebar/view';
@@ -305,6 +305,9 @@ export default async function collections(store: TestStore, history: TestHistory
     if (typeof stored !== 'string') throw Error('Collection state was not persisted');
     const serialized = JSON.parse(stored);
     const saved = createCompressor().out(JSON.parse(serialized.collections), 'collections');
+    if (!saved || typeof saved !== 'object' || !('unpublished' in saved)) {
+      throw new Error('Persisted collections must contain unpublished items');
+    }
     assert.deepEqual(saved.unpublished, expected, 'Desktop persistence must retain reordered and removed items');
     await reposts(store, history, uris[0]);
     await collectionControls(store, history, uris[0]);
