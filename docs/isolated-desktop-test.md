@@ -32,13 +32,13 @@ operation is not needed; the SDK uses a light wallet and public wallet servers.
 
 ## Rebuild
 
-Use Node 24.21.0 and the checked-in Yarn 3.2.0. The original desktop runtime is
-Electron 17.2.0. Current source builds use Electron 44.7.0;
+Use Node 24.21.0 and the checked-in Yarn 4.18.1. The original desktop runtime is
+Electron 17.2.0. Current source builds use Electron 44.9.3;
 see [runtime migration notes](electron-runtime.md).
 These source builds require Windows 10 or later, including the portable test ZIP.
 
 1. Install the checked-in lock without postinstall scripts:
-   `node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build`.
+   `node .yarn/releases/yarn-4.18.1.cjs install --immutable --mode=skip-build`.
 2. Download the `lbrynet-windows` artifact from
    [CI run 38237985200](https://github.com/kodxana/lbry-sdk-ng/actions/runs/38237985200)
    and extract `lbrynet.exe`. Compare the ZIP's SHA-256 with `archiveSha256`
@@ -48,7 +48,7 @@ These source builds require Windows 10 or later, including the portable test ZIP
 3. Run `node build/downloadDaemon.js "path\to\lbrynet.exe"`.
    This verifies SHA-256 before replacing the cached executable. A failed import
    preserves the existing cached file.
-4. Run `node .yarn/releases/yarn-3.2.0.cjs exec install-electron`, then `node build/buildSdkTest.js`.
+4. Run `node .yarn/releases/yarn-4.18.1.cjs exec install-electron`, then `node build/buildSdkTest.js`.
    It runs update and isolation/restart tests, compiles both bundles and creates a ZIP under
    `dist/sdk-test`. It does not publish or sign the build.
 

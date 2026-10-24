@@ -64,7 +64,7 @@ function buildCandidate(version) {
       'webpack.electron.config.js',
     ]);
     runNode([
-      '.yarn/releases/yarn-3.2.0.cjs',
+      '.yarn/releases/yarn-4.18.1.cjs',
       'exec',
       'electron-builder',
       '--win',
@@ -240,9 +240,8 @@ async function main() {
       };
     };
   })`);
-  const indexedDBState = (write = false) => indexedDBValue(
-    'installed-upgrade-fixture', 'state', 'fixture', write ? indexedState : undefined
-  );
+  const indexedDBState = (write = false) =>
+    indexedDBValue('installed-upgrade-fixture', 'state', 'fixture', write ? indexedState : undefined);
   const persistedState = (value) => indexedDBValue('localforage', 'keyvaluepairs', 'persist:v0', value);
   const flushPreferences = async () => {
     await until(
@@ -377,10 +376,7 @@ async function main() {
       await command('decline');
       if (!legacy) {
         await until(
-          () =>
-            client.evaluate(
-              "window.lbryDesktop.updater('state').then(r => r.state.declined)"
-            ),
+          () => client.evaluate("window.lbryDesktop.updater('state').then(r => r.state.declined)"),
           'Decline was not recorded'
         );
       } else {
@@ -438,15 +434,21 @@ async function main() {
       );
       await assertPortsAvailable(settings);
       await launch();
-      assert.deepEqual(await mainClient.evaluate(nativeWindow + '.getBounds()'), originalBounds,
-        'The installed upgrade must preserve window geometry written by the previous version');
+      assert.deepEqual(
+        await mainClient.evaluate(nativeWindow + '.getBounds()'),
+        originalBounds,
+        'The installed upgrade must preserve window geometry written by the previous version'
+      );
       const savedWindow = JSON.parse(fs.readFileSync(path.join(profile.desktop, 'window-state.json')));
       for (const [key, value] of Object.entries(originalBounds)) assert.equal(savedWindow[key], value);
       console.log('PASS: installed upgrade preserves the previous window bounds in the existing profile');
       assert.equal(await mainClient.evaluate('process.versions.electron'), targetElectron);
       assert.equal(await mainClient.evaluate("process.mainModule.require('electron').app.isPackaged"), true);
-      assert.equal(await mainClient.evaluate(nativeWindow + '.webContents.getLastWebPreferences().webSecurity'), true,
-        'Installed applications must retain production web security');
+      assert.equal(
+        await mainClient.evaluate(nativeWindow + '.webContents.getLastWebPreferences().webSecurity'),
+        true,
+        'Installed applications must retain production web security'
+      );
       assert.equal(await client.evaluate('location.protocol'), 'file:');
       assert.equal(await client.evaluate('window.lbryDesktop.electron'), targetElectron);
       assert.equal(await client.evaluate('typeof window.__electronLog'), 'undefined');
@@ -458,11 +460,18 @@ async function main() {
       await mainClient.evaluate(logger + ".info('Upgraded app log fixture'); true");
       const logContent = fs.readFileSync(updaterLog, 'utf8');
       assert(logContent.includes('Published RC3 log fixture') && logContent.includes('Upgraded app log fixture'));
-      console.log('PASS: installed upgrade retains the existing updater log and appends without a renderer logging bridge');
-      assert.deepEqual(await client.evaluate(`({ node: typeof require, process: typeof process,
-        sandboxed: window.lbryDesktop.sandboxed })`), {
-        node: 'undefined', process: 'undefined', sandboxed: true,
-      });
+      console.log(
+        'PASS: installed upgrade retains the existing updater log and appends without a renderer logging bridge'
+      );
+      assert.deepEqual(
+        await client.evaluate(`({ node: typeof require, process: typeof process,
+        sandboxed: window.lbryDesktop.sandboxed })`),
+        {
+          node: 'undefined',
+          process: 'undefined',
+          sandboxed: true,
+        }
+      );
       assert.equal(
         await mainClient.evaluate("process.mainModule.require('electron').app.getVersion()"),
         candidate.version
@@ -475,8 +484,11 @@ async function main() {
       await flushPreferences();
       const upgradedPreferences = JSON.parse(await persistedState());
       const playback = JSON.parse(require('lz-string').decompressFromUTF16(JSON.parse(upgradedPreferences.content)));
-      assert.deepEqual(playback, preferenceFixture.expected.content,
-        'Legacy playback positions and history must survive rehydration and writes by the upgraded application');
+      assert.deepEqual(
+        playback,
+        preferenceFixture.expected.content,
+        'Legacy playback positions and history must survive rehydration and writes by the upgraded application'
+      );
       console.log('PASS: installed upgrade preserves compressed Redux playback positions and history');
       assert(await client.evaluate("document.cookie.includes('upgrade_root_cookie=preserve-root')"));
       assert(

@@ -55,6 +55,19 @@ const packagedUpdater = JSON.parse(
   asar.extractFile(archive, path.join('node_modules', 'electron-updater', 'package.json'))
 );
 assert.equal(packagedUpdater.version, pkg.dependencies['electron-updater']);
+// The legacy updater is a test fixture; none of its runtime copies may ship.
+for (const entry of entries) {
+  if (/\/node_modules\/(electron-updater|builder-util-runtime)\/package\.json$/.test(entry)) {
+    const dependency = JSON.parse(asar.extractFile(archive, path.normalize(entry.slice(1))));
+    assert.equal(
+      dependency.version,
+      dependency.name === 'electron-updater'
+        ? pkg.dependencies['electron-updater']
+        : require('electron-updater/package.json').dependencies['builder-util-runtime'],
+      'Legacy updater dependency shipped: ' + entry
+    );
+  }
+}
 assert(entries.has('/node_modules/electron-updater/out/providers/GitHubProvider.js'));
 for (const entry of ['main.js', 'preload.js', 'ui.js', 'index.html']) {
   assert(asar.extractFile(archive, entry).length > 0, 'Missing packaged entry: ' + entry);

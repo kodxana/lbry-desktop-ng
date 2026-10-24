@@ -39,9 +39,9 @@ jobs:
           node-version-file: .node-version
           package-manager-cache: false
       - name: Install locked dependencies without lifecycle scripts
-        run: node .yarn/releases/yarn-3.2.0.cjs install --immutable --mode=skip-build
+        run: node .yarn/releases/yarn-4.18.1.cjs install --immutable --mode=skip-build --check-resolutions --refresh-lockfile
       - name: Install Electron
-        run: node .yarn/releases/yarn-3.2.0.cjs exec install-electron
+        run: node .yarn/releases/yarn-4.18.1.cjs exec install-electron
       - name: Fetch and verify the pinned SDK
         env:
           GITHUB_TOKEN: ${{ github.token }}
