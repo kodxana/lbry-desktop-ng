@@ -272,7 +272,7 @@ against narrow presentation and IPC fixtures (37 invalid contracts in total).
 Existing renderer tests cover cancellation, retry, profile changes and unmounting.
 
 The API pass checks the actual SDK and comment clients in an isolated source
-gate and rejects ten invalid caller contracts. SDK methods expose their declared
+gate and rejects thirteen invalid caller contracts. SDK methods expose their declared
 return types, claim resolution distinguishes claims from error responses, and
 moderation block/unblock requests have separate parameter types. Runtime tests
 cover JSON-RPC payloads and failures, startup retries, signed requests, partial
@@ -282,9 +282,23 @@ delayed operations and failures are covered using the actual wallet action code.
 The transport still trusts method-specific payloads after parsing the RPC envelope;
 these types do not provide runtime validation of every server response.
 
-**The application is not yet type-clean.** The full check now reports 1,549
+The Redux pass adds explicit return contracts to claims, collections, comments,
+content and notification actions, and checks the claim/comment/notification
+reducer state. The additional source gate uses the actual collection/notification
+actions and three reducers with narrow dependency interfaces, rejecting eight
+invalid contracts. Transaction outputs retain a typed first claim followed by
+generic change outputs; comment parent IDs are strings and notification IDs are
+numbers. Existing broad dispatch and untyped dependency boundaries remain.
+
+Runtime regressions cover collection cache insertion, ordering, batching, mixed
+claim types, partial failures and pending local edits; publish failure settlement,
+eight-decimal bids and background edit parameters; notification failure loading
+state and IDs; and comment reply/reaction/unblock state. Renderer tests cover
+repost success, failure and cancellation without submitting transactions.
+
+**The application is not yet type-clean.** The full check now reports 1,363
 application diagnostics and zero library-definition diagnostics, down from
-1,755 before the API pass (206 fewer, with no newly introduced diagnostics).
+1,549 before the Redux pass (186 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

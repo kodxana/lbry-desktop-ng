@@ -35,7 +35,7 @@ type Analytics = {
   setUser: (Object) => void,
   toggleInternal: (boolean, ?boolean) => void,
   apiLogView: (string, string, string, ?number, ?() => void) => Promise<any>,
-  apiLogPublish: (ChannelClaim | StreamClaim) => void,
+  apiLogPublish: (Claim) => void,
   apiSyncTags: ({}) => void,
   tagFollowEvent: (string, boolean, ?string) => void,
   playerLoadedEvent: (?boolean) => void,
@@ -188,7 +188,7 @@ const analytics: Analytics = {
       Lbryio.call('event', 'search');
     }
   },
-  apiLogPublish: (claimResult: ChannelClaim | StreamClaim) => {
+  apiLogPublish: (claimResult: Claim) => {
     // Don't check if this is production so channels created on localhost are still linked to user
     if (internalAnalyticsEnabled) {
       const { permanent_url: uri, claim_id: claimId, txid, nout, signing_channel: signingChannel } = claimResult;

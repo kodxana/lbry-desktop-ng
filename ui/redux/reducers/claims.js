@@ -1,13 +1,5 @@
 // @flow
 
-// This file has a lot of FlowFixMe comments
-// It's due to Flow's support of Object.{values,entries}
-// https://github.com/facebook/flow/issues/2221
-// We could move to es6 Sets/Maps, but those are not recommended for redux
-// https://github.com/reduxjs/redux/issues/1499
-// Unsure of the best solution at the momentf
-// - Sean
-
 import * as ACTIONS from 'constants/action_types';
 import mergeClaim from 'util/merge-claim';
 
@@ -247,16 +239,16 @@ reducers[ACTIONS.FETCH_CHANNEL_LIST_COMPLETED] = (state: State, action: any): St
   const { claims }: { claims: Array<ChannelClaim> } = action.data;
   let myClaimIds = new Set(state.myClaims);
   const pendingById = { ...state.pendingById };
-  let myChannelClaims;
+  let myChannelClaims: Set<string> | null = null;
   const byId = { ...state.byId };
   const byUri = { ...state.claimsByUri };
   const channelClaimCounts = { ...state.channelClaimCounts };
 
   if (!claims.length) {
-    // $FlowFixMe
     myChannelClaims = null;
   } else {
     myChannelClaims = new Set(state.myChannelClaims);
+    const channelIds = myChannelClaims;
     claims.forEach((claim) => {
       const { meta } = claim;
       const { claims_in_channel: claimsInChannel } = meta;
@@ -264,11 +256,12 @@ reducers[ACTIONS.FETCH_CHANNEL_LIST_COMPLETED] = (state: State, action: any): St
 
       byUri[canonicalUrl] = claimId;
       byUri[permanentUrl] = claimId;
-      channelClaimCounts[canonicalUrl] = claimsInChannel;
-      channelClaimCounts[permanentUrl] = claimsInChannel;
+      if (claimsInChannel !== undefined) {
+        channelClaimCounts[canonicalUrl] = claimsInChannel;
+        channelClaimCounts[permanentUrl] = claimsInChannel;
+      }
 
-      // $FlowFixMe
-      myChannelClaims.add(claimId);
+      channelIds.add(claimId);
       if (confirmations < 1) {
         pendingById[claimId] = claim;
         if (byId[claimId]) {
@@ -309,7 +302,7 @@ reducers[ACTIONS.FETCH_COLLECTION_LIST_COMPLETED] = (state: State, action: any):
   const myClaims = state.myClaims || [];
   let myClaimIds = new Set(myClaims);
   const pendingById = { ...state.pendingById };
-  let myCollectionClaimsSet = new Set([]);
+  let myCollectionClaimsSet = new Set<string>();
   const byId = { ...state.byId };
   const byUri = { ...state.claimsByUri };
 
@@ -321,7 +314,6 @@ reducers[ACTIONS.FETCH_COLLECTION_LIST_COMPLETED] = (state: State, action: any):
       byUri[canonicalUrl] = claimId;
       byUri[permanentUrl] = claimId;
 
-      // $FlowFixMe
       myCollectionClaimsSet.add(claimId);
       // we don't want to overwrite a pending result with a resolve
       if (confirmations < 1) {
@@ -435,7 +427,6 @@ reducers[ACTIONS.UPDATE_PENDING_CLAIMS] = (state: State, action: any): State => 
   let myClaimIds = new Set(state.myClaims);
   const myChannelClaims = new Set(state.myChannelClaims);
 
-  // $FlowFixMe
   pendingClaims.forEach((claim: Claim) => {
     let newClaim;
     const { permanent_url: uri, claim_id: claimId, type, value_type: valueType } = claim;
@@ -819,7 +810,7 @@ reducers[ACTIONS.CLEAR_PURCHASED_URI_SUCCESS] = (state: State): State => {
   };
 };
 
-export function claimsReducer(state: State = defaultState, action: any) {
+export function claimsReducer(state: State = defaultState, action: any): State {
   const handler = reducers[action.type];
   if (handler) return handler(state, action);
   return state;

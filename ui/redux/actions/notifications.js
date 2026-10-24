@@ -10,7 +10,7 @@ import {
 } from 'redux/selectors/notifications';
 import { doResolveUris } from 'redux/actions/claims';
 
-export function doToast(params: ToastParams) {
+export function doToast(params: ToastParams): DoToast {
   if (!params) {
     throw Error("'params' object is required to create a toast notification");
   }
@@ -24,13 +24,13 @@ export function doToast(params: ToastParams) {
   };
 }
 
-export function doDismissToast() {
+export function doDismissToast(): { type: string } {
   return {
     type: ACTIONS.DISMISS_TOAST,
   };
 }
 
-export function doError(error: string | {}) {
+export function doError(error: string | { ... }): DoError {
   return {
     type: ACTIONS.CREATE_ERROR,
     data: {
@@ -39,20 +39,20 @@ export function doError(error: string | {}) {
   };
 }
 
-export function doDismissError() {
+export function doDismissError(): { type: string } {
   return {
     type: ACTIONS.DISMISS_ERROR,
   };
 }
 
-export function doNotificationList(types?: Array<string>) {
+export function doNotificationList(types?: Array<string>): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const notificationTypes = selectNotificationCategories(state);
 
     dispatch({ type: ACTIONS.NOTIFICATION_LIST_STARTED });
 
-    let params: any = { is_app_readable: true };
+    let params: { is_app_readable: boolean, type?: string } = { is_app_readable: true };
     if (types) {
       params.type = types.join(',');
     }
@@ -70,7 +70,7 @@ export function doNotificationList(types?: Array<string>) {
         }
       }
 
-      return Lbryio.call('notification', 'list', params).then((response) => {
+      return await Lbryio.call('notification', 'list', params).then((response) => {
         const notifications = response || [];
         const channelsToResolve = notifications
           .filter((notification: WebNotification) => {
@@ -107,7 +107,7 @@ export function doNotificationList(types?: Array<string>) {
   };
 }
 
-export function doReadNotifications(notificationsIds: Array<number>) {
+export function doReadNotifications(notificationsIds: Array<number>): ThunkAction<Promise<void> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const notifications = selectNotifications(state);
@@ -123,7 +123,8 @@ export function doReadNotifications(notificationsIds: Array<number>) {
       ids = notificationsIds;
     } else {
       // A null or invalid argument will wipe all unread notifications.
-      const getUnreadIds = (list) => list.filter((n) => !n.is_read).map((n) => n.id);
+      const getUnreadIds = (list: Array<WebNotification>): Array<number> =>
+        list.filter((n) => !n.is_read).map((n) => n.id);
       ids = Array.from(new Set([...getUnreadIds(notifications), ...getUnreadIds(notificationsFiltered)]));
     }
 
@@ -138,7 +139,7 @@ export function doReadNotifications(notificationsIds: Array<number>) {
   };
 }
 
-export function doSeeNotifications(notificationIds: Array<string>) {
+export function doSeeNotifications(notificationIds: Array<number>): ThunkAction<Promise<void>> {
   return (dispatch: Dispatch) => {
     dispatch({ type: ACTIONS.NOTIFICATION_SEEN_STARTED });
     return Lbryio.call('notification', 'edit', { notification_ids: notificationIds.join(','), is_seen: true })
@@ -156,7 +157,7 @@ export function doSeeNotifications(notificationIds: Array<string>) {
   };
 }
 
-export function doSeeAllNotifications() {
+export function doSeeAllNotifications(): ThunkAction<void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const notifications = selectNotifications(state);
@@ -166,14 +167,15 @@ export function doSeeAllNotifications() {
       return;
     }
 
-    const getUnseenIds = (list) => list.filter((n) => !n.is_seen).map((n) => n.id);
+    const getUnseenIds = (list: Array<WebNotification>): Array<number> =>
+      list.filter((n) => !n.is_seen).map((n) => n.id);
     const unseenIds = Array.from(new Set([...getUnseenIds(notifications), ...getUnseenIds(notificationsFiltered)]));
 
     dispatch(doSeeNotifications(unseenIds));
   };
 }
 
-export function doDeleteNotification(notificationId: number) {
+export function doDeleteNotification(notificationId: number): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     Lbryio.call('notification', 'delete', { notification_ids: notificationId })
       .then(() => {

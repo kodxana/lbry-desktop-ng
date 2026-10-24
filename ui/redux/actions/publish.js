@@ -76,7 +76,7 @@ export const doPublishDesktop = (filePath: ?File, preview?: boolean) => (dispatc
   };
 
   const publishFail = (error) => {
-    const actions = [];
+    const actions: Array<{ type: string, ... } | DoError> = [];
     actions.push({
       type: ACTIONS.PUBLISH_FAIL,
     });

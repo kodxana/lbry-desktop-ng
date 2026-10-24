@@ -22,14 +22,15 @@ import { PAGE_SIZE } from 'constants/claim';
 import { makeSelectClaimIdsForCollectionId } from 'redux/selectors/collections';
 import { doFetchItemsInCollections } from 'redux/actions/collections';
 
-let onChannelConfirmCallback;
-let checkPendingInterval;
+type ChannelConfirmationCallback = (ChannelClaim) => void;
+let onChannelConfirmCallback: ChannelConfirmationCallback | void;
+let checkPendingInterval: ReturnType<typeof setInterval> | void;
 
 export function doResolveUris(
   uris: Array<string>,
   returnCachedClaims: boolean = false,
   resolveReposts: boolean = true
-) {
+): ThunkAction<Promise<ResolveResponse> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const normalizedUris = uris.map(normalizeURI);
     const state = getState();
@@ -140,7 +141,7 @@ export function doResolveUris(
   };
 }
 
-export function doResolveUri(uri: string) {
+export function doResolveUri(uri: string): ThunkAction<Promise<ResolveResponse> | void> {
   return doResolveUris([uri]);
 }
 
@@ -149,7 +150,7 @@ export function doFetchClaimListMine(
   pageSize: number = 99999,
   resolve: boolean = true,
   filterBy: Array<string> = []
-) {
+): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.FETCH_CLAIM_LIST_MINE_STARTED,
@@ -177,7 +178,7 @@ export function doFetchClaimListMine(
   };
 }
 
-export function doFetchAllClaimListMine() {
+export function doFetchAllClaimListMine(): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.FETCH_ALL_CLAIM_LIST_MINE_STARTED,
@@ -199,7 +200,7 @@ export function doFetchAllClaimListMine() {
   };
 }
 
-export function doAbandonTxo(txo: Txo, cb: (string) => void) {
+export function doAbandonTxo(txo: Txo, cb?: (string) => void): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     if (cb) cb(ABANDON_STATES.PENDING);
     const isClaim = txo.type === 'claim';
@@ -281,7 +282,7 @@ export function doAbandonTxo(txo: Txo, cb: (string) => void) {
   };
 }
 
-export function doAbandonClaim(claim: Claim, cb: (string) => void) {
+export function doAbandonClaim(claim: Claim, cb?: (string) => void): ThunkAction<void> {
   const { txid, nout } = claim;
   const outpoint = `${txid}:${nout}`;
 
@@ -370,7 +371,7 @@ export function doAbandonClaim(claim: Claim, cb: (string) => void) {
   };
 }
 
-export function doFetchClaimsByChannel(uri: string, page: number = 1) {
+export function doFetchClaimsByChannel(uri: string, page: number = 1): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.FETCH_CHANNEL_CLAIMS_STARTED,
@@ -400,13 +401,18 @@ export function doFetchClaimsByChannel(uri: string, page: number = 1) {
   };
 }
 
-export function doClearChannelErrors() {
+export function doClearChannelErrors(): { type: string } {
   return {
     type: ACTIONS.CLEAR_CHANNEL_ERRORS,
   };
 }
 
-export function doCreateChannel(name: string, amount: number, optionalParams: any, onConfirm: any) {
+export function doCreateChannel(
+  name: string,
+  amount: number,
+  optionalParams: any,
+  onConfirm: any
+): ThunkAction<Promise<ChannelClaim | void>> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.CREATE_CHANNEL_STARTED,
@@ -486,7 +492,7 @@ export function doCreateChannel(name: string, amount: number, optionalParams: an
   };
 }
 
-export function doUpdateChannel(params: any, cb: any) {
+export function doUpdateChannel(params: any, cb: any): ThunkAction<Promise<boolean | void> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.UPDATE_CHANNEL_STARTED,
@@ -553,7 +559,7 @@ export function doUpdateChannel(params: any, cb: any) {
   };
 }
 
-export function doImportChannel(certificate: string) {
+export function doImportChannel(certificate: string): ThunkAction<Promise<void>> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.IMPORT_CHANNEL_STARTED,
@@ -574,7 +580,11 @@ export function doImportChannel(certificate: string) {
   };
 }
 
-export function doFetchChannelListMine(page: number = 1, pageSize: number = 99999, resolve: boolean = true) {
+export function doFetchChannelListMine(
+  page: number = 1,
+  pageSize: number = 99999,
+  resolve: boolean = true
+): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.FETCH_CHANNEL_LIST_STARTED,
@@ -587,7 +597,7 @@ export function doFetchChannelListMine(page: number = 1, pageSize: number = 9999
       });
     };
 
-    const failure = (error) => {
+    const failure = (error: unknown) => {
       dispatch({
         type: ACTIONS.FETCH_CHANNEL_LIST_FAILED,
         data: error,
@@ -598,7 +608,7 @@ export function doFetchChannelListMine(page: number = 1, pageSize: number = 9999
   };
 }
 
-export function doFetchCollectionListMine(page: number = 1, pageSize: number = 99999) {
+export function doFetchCollectionListMine(page: number = 1, pageSize: number = 99999): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.FETCH_COLLECTION_LIST_STARTED,
@@ -613,12 +623,12 @@ export function doFetchCollectionListMine(page: number = 1, pageSize: number = 9
       dispatch(
         doFetchItemsInCollections({
           collectionIds: items.map((claim) => claim.claim_id),
-          page_size: 5,
+          pageSize: 5,
         })
       );
     };
 
-    const failure = (error) => {
+    const failure = (error: unknown) => {
       dispatch({
         type: ACTIONS.FETCH_COLLECTION_LIST_FAILED,
         data: error,
@@ -648,7 +658,7 @@ export function doClaimSearch(
     page_size: 10,
     page: 1,
   }
-) {
+): ThunkAction<Promise<{ [string]: { stream: Claim } } | false>> {
   const query = createNormalizedClaimSearchKey(options);
   return async (dispatch: Dispatch) => {
     dispatch({
@@ -657,7 +667,7 @@ export function doClaimSearch(
     });
 
     const success = (data: ClaimSearchResponse) => {
-      const resolveInfo = {};
+      const resolveInfo: { [string]: { stream: Claim } } = {};
       const urls = [];
       data.items.forEach((stream: Claim) => {
         resolveInfo[stream.canonical_url] = { stream };
@@ -677,7 +687,7 @@ export function doClaimSearch(
       return resolveInfo;
     };
 
-    const failure = (err) => {
+    const failure = (err: unknown): false => {
       dispatch({
         type: ACTIONS.CLAIM_SEARCH_FAILED,
         data: { query },
@@ -693,14 +703,14 @@ export function doClaimSearch(
   };
 }
 
-export function doRepost(options: StreamRepostOptions) {
-  return (dispatch: Dispatch): Promise<any> => {
-    return new Promise((resolve) => {
+export function doRepost(options: StreamRepostOptions): ThunkAction<Promise<Claim | void>> {
+  return (dispatch: Dispatch): Promise<Claim | void> => {
+    return new Promise<Claim | void>((resolve) => {
       dispatch({
         type: ACTIONS.CLAIM_REPOST_STARTED,
       });
 
-      function success(response) {
+      function success(response: StreamRepostResponse): void {
         const repostClaim = response.outputs[0];
         dispatch({
           type: ACTIONS.CLAIM_REPOST_COMPLETED,
@@ -720,13 +730,14 @@ export function doRepost(options: StreamRepostOptions) {
         resolve(repostClaim);
       }
 
-      function failure(error) {
+      function failure(error: { message: string, ... }): void {
         dispatch({
           type: ACTIONS.CLAIM_REPOST_FAILED,
           data: {
             error: error.message,
           },
         });
+        resolve();
       }
 
       Lbry.stream_repost(options).then(success, failure);
@@ -748,10 +759,8 @@ export function doCollectionPublish(
     claims: Array<string>,
   },
   localId: string
-) {
-  return (dispatch: Dispatch): Promise<any> => {
-    // $FlowFixMe
-
+): ThunkAction<Promise<Claim | void>> {
+  return (dispatch: Dispatch): Promise<Claim | void> => {
     const params: {
       name: string,
       bid: string,
@@ -762,6 +771,7 @@ export function doCollectionPublish(
       description?: string,
       tags?: Array<string>,
       languages?: Array<string>,
+      locations: Array<ClaimLocation>,
       claims: Array<string>,
     } = {
       name: options.name,
@@ -784,12 +794,12 @@ export function doCollectionPublish(
       params['channel_id'] = options.channel_id;
     }
 
-    return new Promise((resolve) => {
+    return new Promise<Claim | void>((resolve) => {
       dispatch({
         type: ACTIONS.COLLECTION_PUBLISH_STARTED,
       });
 
-      function success(response) {
+      function success(response: CollectionCreateResponse): void {
         const collectionClaim = response.outputs[0];
         dispatch(
           batchActions(
@@ -816,13 +826,14 @@ export function doCollectionPublish(
         return resolve(collectionClaim);
       }
 
-      function failure(error) {
+      function failure(error: { message: string, ... }): void {
         dispatch({
           type: ACTIONS.COLLECTION_PUBLISH_FAILED,
           data: {
             error: error.message,
           },
         });
+        resolve();
       }
 
       return Lbry.collection_create(params).then(success, failure);
@@ -844,8 +855,8 @@ export function doCollectionPublishUpdate(
     channel_id?: string,
   },
   isBackgroundUpdate?: boolean
-) {
-  return (dispatch: Dispatch, getState: GetState): Promise<any> => {
+): ThunkAction<Promise<Claim | void>> {
+  return (dispatch: Dispatch, getState: GetState): Promise<Claim | void> => {
     // TODO: implement one click update
 
     const updateParams: {
@@ -858,6 +869,7 @@ export function doCollectionPublishUpdate(
       claim_id: string,
       tags?: Array<string>,
       languages?: Array<string>,
+      locations?: Array<ClaimLocation>,
       claims?: Array<string>,
       clear_claims: boolean,
       replace?: boolean,
@@ -896,12 +908,12 @@ export function doCollectionPublishUpdate(
       updateParams['channel_id'] = options.channel_id;
     }
 
-    return new Promise((resolve) => {
+    return new Promise<Claim | void>((resolve) => {
       dispatch({
         type: ACTIONS.COLLECTION_PUBLISH_UPDATE_STARTED,
       });
 
-      function success(response) {
+      function success(response: CollectionCreateResponse): void {
         const collectionClaim = response.outputs[0];
         dispatch({
           type: ACTIONS.COLLECTION_PUBLISH_UPDATE_COMPLETED,
@@ -923,13 +935,14 @@ export function doCollectionPublishUpdate(
         return resolve(collectionClaim);
       }
 
-      function failure(error) {
+      function failure(error: { message: string, ... }): void {
         dispatch({
           type: ACTIONS.COLLECTION_PUBLISH_UPDATE_FAILED,
           data: {
             error: error.message,
           },
         });
+        resolve();
       }
 
       return Lbry.collection_update(updateParams).then(success, failure);
@@ -937,7 +950,7 @@ export function doCollectionPublishUpdate(
   };
 }
 
-export function doCheckPublishNameAvailability(name: string) {
+export function doCheckPublishNameAvailability(name: string): ThunkAction<Promise<boolean>> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.CHECK_PUBLISH_NAME_STARTED,
@@ -961,13 +974,13 @@ export function doCheckPublishNameAvailability(name: string) {
   };
 }
 
-export function doClearRepostError() {
+export function doClearRepostError(): { type: string } {
   return {
     type: ACTIONS.CLEAR_REPOST_ERROR,
   };
 }
 
-export function doPurchaseList(page: number = 1, pageSize: number = PAGE_SIZE) {
+export function doPurchaseList(page: number = 1, pageSize: number = PAGE_SIZE): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.PURCHASE_LIST_STARTED,
@@ -982,7 +995,7 @@ export function doPurchaseList(page: number = 1, pageSize: number = PAGE_SIZE) {
       });
     };
 
-    const failure = (error) => {
+    const failure = (error: { message: string, ... }) => {
       dispatch({
         type: ACTIONS.PURCHASE_LIST_FAILED,
         data: {
@@ -999,65 +1012,68 @@ export function doPurchaseList(page: number = 1, pageSize: number = PAGE_SIZE) {
   };
 }
 
-export const doCheckPendingClaims = (onChannelConfirmed: Function) => (dispatch: Dispatch, getState: GetState) => {
-  if (onChannelConfirmed) {
-    onChannelConfirmCallback = onChannelConfirmed;
-  }
-  clearInterval(checkPendingInterval);
-  const checkTxoList = () => {
-    const state = getState();
-    const pendingById = { ...selectPendingClaimsById(state) };
-    const pendingTxos = (Object.values(pendingById): any).map((p) => p.txid);
-    // use collections
-    if (pendingTxos.length) {
-      Lbry.txo_list({ txid: pendingTxos })
-        .then((result) => {
-          const txos = result.items;
-          const idsToConfirm = [];
-          txos.forEach((txo) => {
-            if (txo.claim_id && txo.confirmations > 0) {
-              idsToConfirm.push(txo.claim_id);
-              delete pendingById[txo.claim_id];
-            }
-          });
-          return { idsToConfirm, pendingById };
-        })
-        .then((results) => {
-          const { idsToConfirm, pendingById } = results;
-          if (idsToConfirm.length) {
-            return Lbry.claim_list({ claim_id: idsToConfirm, resolve: true }).then((results) => {
-              const claims = results.items;
-              const collectionIds = claims.filter((c) => c.value_type === 'collection').map((c) => c.claim_id);
-              dispatch({
-                type: ACTIONS.UPDATE_CONFIRMED_CLAIMS,
-                data: {
-                  claims: claims,
-                  pending: pendingById,
-                },
-              });
-              if (collectionIds.length) {
-                dispatch(
-                  doFetchItemsInCollections({
-                    collectionIds,
-                  })
-                );
-              }
-              const channelClaims = claims.filter((claim) => claim.value_type === 'channel');
-              if (channelClaims.length && onChannelConfirmCallback) {
-                channelClaims.forEach((claim) => onChannelConfirmCallback(claim));
-              }
-              if (Object.keys(pendingById).length === 0) {
-                clearInterval(checkPendingInterval);
+export const doCheckPendingClaims =
+  (onChannelConfirmed?: ChannelConfirmationCallback): ThunkAction<void> =>
+  (dispatch: Dispatch, getState: GetState) => {
+    if (onChannelConfirmed) {
+      onChannelConfirmCallback = onChannelConfirmed;
+    }
+    clearInterval(checkPendingInterval);
+    const checkTxoList = () => {
+      const state = getState();
+      const pendingById = { ...selectPendingClaimsById(state) };
+      const pendingTxos = Object.values(pendingById).map((p) => p.txid);
+      // use collections
+      if (pendingTxos.length) {
+        Lbry.txo_list({ txid: pendingTxos })
+          .then((result) => {
+            const txos = result.items;
+            const idsToConfirm = [];
+            txos.forEach((txo) => {
+              if (txo.claim_id && txo.confirmations > 0) {
+                idsToConfirm.push(txo.claim_id);
+                delete pendingById[txo.claim_id];
               }
             });
-          }
-        });
-    } else {
-      clearInterval(checkPendingInterval);
-    }
+            return { idsToConfirm, pendingById };
+          })
+          .then((results) => {
+            const { idsToConfirm, pendingById } = results;
+            if (idsToConfirm.length) {
+              return Lbry.claim_list({ claim_id: idsToConfirm, resolve: true }).then((results) => {
+                const claims = results.items;
+                const collectionIds = claims.filter((c) => c.value_type === 'collection').map((c) => c.claim_id);
+                dispatch({
+                  type: ACTIONS.UPDATE_CONFIRMED_CLAIMS,
+                  data: {
+                    claims: claims,
+                    pending: pendingById,
+                  },
+                });
+                if (collectionIds.length) {
+                  dispatch(
+                    doFetchItemsInCollections({
+                      collectionIds,
+                    })
+                  );
+                }
+                const channelClaims = claims.filter((claim) => claim.value_type === 'channel');
+                const onConfirmed = onChannelConfirmCallback;
+                if (channelClaims.length && onConfirmed) {
+                  channelClaims.forEach((claim) => onConfirmed(claim));
+                }
+                if (Object.keys(pendingById).length === 0) {
+                  clearInterval(checkPendingInterval);
+                }
+              });
+            }
+          });
+      } else {
+        clearInterval(checkPendingInterval);
+      }
+    };
+    // do something with onConfirmed (typically get blocklist for channel)
+    checkPendingInterval = setInterval(() => {
+      checkTxoList();
+    }, 30000);
   };
-  // do something with onConfirmed (typically get blocklist for channel)
-  checkPendingInterval = setInterval(() => {
-    checkTxoList();
-  }, 30000);
-};

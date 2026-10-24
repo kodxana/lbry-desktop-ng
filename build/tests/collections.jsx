@@ -12,6 +12,7 @@ import CollectionSidebar from 'component/collectionContentSidebar/view';
 import CollectionPage from 'page/collection/view';
 import CollectionEditor from 'component/collectionEdit/view';
 import CollectionButtons from 'component/collectionEditButtons/view';
+import reposts from './reposts';
 import { render, unmount, waitFor, tick } from './helpers';
 import 'scss/third-party.scss';
 import 'scss/all.scss';
@@ -257,7 +258,8 @@ export default async function collections(store, history) {
     const serialized = JSON.parse(await localForage.getItem('persist:v0'));
     const saved = createCompressor().out(JSON.parse(serialized.collections), 'collections');
     assert.deepEqual(saved.unpublished, expected, 'Desktop persistence must retain reordered and removed items');
-    return 'collection page, publishing editor and sidebar: keyboard/mouse reordering, focus, cancellation, move/remove controls, persisted order and no automatic publish';
+    await reposts(store, history, uris[0]);
+    return 'collection page, publishing editor and sidebar: keyboard/mouse reordering, focus, cancellation, move/remove controls, persisted order and no automatic publish; repost failure, success and cancellation';
   } finally {
     unmount();
     Lbry.preference_set = preferenceSet;

@@ -78,8 +78,7 @@ declare type DoDeleteNotification = {
     - For errors that can be shown without interrupting a user, use Toast with the isError flag
 */
 declare type ErrorNotification = {
-  title: string,
-  text: string,
+  error: string | { ... },
   ...
 };
 

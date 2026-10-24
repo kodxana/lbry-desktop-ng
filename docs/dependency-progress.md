@@ -32,7 +32,7 @@ that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
 2,798. Comment contracts reduce that to 2,719, collection contracts to 2,644,
 comment-input contracts to 2,586, form-control contracts to 2,521, claim contracts to 2,296,
 renderer return/state contracts to 1,755, and SDK/comment API and async action
-contracts to 1,549,
+contracts to 1,549, then Redux action/reducer contracts to 1,363,
 with no newly introduced diagnostics in these passes.
 Required gates cover twenty-two shared UI/type source modules (37 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
@@ -74,12 +74,23 @@ generated request ID in a local constant. Source gates check the actual backup
 and modal components against narrow presentation/IPC fixtures.
 The API pass exposes the SDK client's declared interface, types comment RPC
 responses and corrects claim resolution, moderation and sync callers. Its source
-gate checks both actual clients and rejects ten invalid API contracts. Runtime
+gate checks both actual clients and rejects thirteen invalid API contracts. Runtime
 tests cover request payloads, errors, startup retries, signed comments, partial
 moderation results and shared preferences. Encryption/decryption sync now waits
 for the wallet operation to succeed before exporting and uploading changed data;
 failed operations cannot upload a wallet with the wrong encryption state.
 Saved-password precedence and first-time sync have dedicated regression cases.
+The Redux pass types five action modules and three reducers, including async
+failure results, numeric notification IDs, string comment parent IDs and claim
+search state. A new source gate checks the collection/notification actions and
+three reducers, rejecting eight invalid contracts. Transaction response types
+distinguish the first claim output from later change outputs.
+Collection fetches now populate the claim cache while retaining item order,
+partial failures and newer local edits. Repost and collection publish failures
+settle their promises; failed reposts do not show success or navigate away.
+Notification list failures clear loading, and unblocking a commenter copies the
+pending-unblock map. Regression tests cover these paths with synthetic requests,
+alongside the existing wallet, password, updater and packaged SDK checks.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change

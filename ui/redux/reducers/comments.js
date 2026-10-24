@@ -50,7 +50,7 @@ const defaultState: CommentsState = {
   fetchingBlockedWords: false,
 };
 
-function pushToArrayInObject(obj, key, valueToPush) {
+function pushToArrayInObject(obj: { [string]: Array<string> }, key: string, valueToPush: string): void {
   if (!obj[key]) {
     obj[key] = [valueToPush];
   } else if (!obj[key].includes(valueToPush)) {
@@ -58,7 +58,7 @@ function pushToArrayInObject(obj, key, valueToPush) {
   }
 }
 
-export default handleActions(
+const commentsReducer: (state: CommentsState | void, action: { type: string, ... }) => CommentsState = handleActions(
   {
     [ACTIONS.COMMENT_CREATE_STARTED]: (state: CommentsState, action: any): CommentsState => ({
       ...state,
@@ -93,16 +93,17 @@ export default handleActions(
         totalCommentsById[claimId] += 1;
       }
 
-      if (comment['parent_id']) {
-        if (!repliesByParentId[comment.parent_id]) {
-          repliesByParentId[comment.parent_id] = [comment.comment_id];
+      const parentId = comment.parent_id;
+      if (parentId) {
+        if (!repliesByParentId[parentId]) {
+          repliesByParentId[parentId] = [comment.comment_id];
         } else {
-          repliesByParentId[comment.parent_id].unshift(comment.comment_id);
+          repliesByParentId[parentId].unshift(comment.comment_id);
         }
 
         // Update the parent's "replies" value
-        if (commentById[comment.parent_id]) {
-          commentById[comment.parent_id].replies = (commentById[comment.parent_id].replies || 0) + 1;
+        if (commentById[parentId]) {
+          commentById[parentId].replies = (commentById[parentId].replies || 0) + 1;
         }
       } else {
         if (!topLevelCommentsById[claimId]) {
@@ -171,8 +172,8 @@ export default handleActions(
 
     [ACTIONS.COMMENT_REACTION_LIST_COMPLETED]: (state: CommentsState, action: any): CommentsState => {
       const { myReactions, othersReactions, channelId, commentIds } = action.data;
-      const myReacts = { ...state.myReactsByCommentId };
-      const othersReacts = { ...state.othersReactsByCommentId };
+      const myReacts: { [string]: Array<string> } = { ...state.myReactsByCommentId };
+      const othersReacts: { [string]: { [string]: number } } = { ...state.othersReactsByCommentId };
 
       const myReactionsEntries = myReactions ? Object.entries(myReactions) : [];
       const othersReactionsEntries = othersReactions ? Object.entries(othersReactions) : [];
@@ -180,7 +181,7 @@ export default handleActions(
       if (myReactionsEntries.length > 0) {
         myReactionsEntries.forEach(([commentId, reactions]) => {
           const key = channelId ? `${commentId}:${channelId}` : commentId;
-          myReacts[key] = Object.entries(reactions).reduce((acc, [name, count]) => {
+          myReacts[key] = Object.entries(reactions).reduce<Array<string>>((acc, [name, count]) => {
             if (count === 1) {
               acc.push(name);
             }
@@ -263,7 +264,12 @@ export default handleActions(
           topLevelTotalPagesById[claimId] = totalPages;
         }
 
-        const commonUpdateAction = (comment, commentById, commentIds, index) => {
+        const commonUpdateAction = (
+          comment: LbryComment,
+          commentById: CommentsState['commentById'],
+          commentIds: Array<string>,
+          index: number
+        ): void => {
           // map the comment_ids to the new comments
           commentById[comment.comment_id] = comment;
           commentIds[index] = comment.comment_id;
@@ -334,12 +340,18 @@ export default handleActions(
       const repliesByParentId = { ...state.repliesByParentId };
       const linkedCommentAncestors = { ...state.linkedCommentAncestors };
 
-      const updateStore = (comment, commentById, byId, repliesByParentId, topLevelCommentsById) => {
+      const updateStore = (
+        comment: LbryComment,
+        commentById: CommentsState['commentById'],
+        byId: CommentsState['byId'],
+        repliesByParentId: CommentsState['repliesByParentId'],
+        topLevelCommentsById: CommentsState['topLevelCommentsById']
+      ): void => {
         commentById[comment.comment_id] = comment;
         byId[claimId] ? byId[claimId].unshift(comment.comment_id) : (byId[claimId] = [comment.comment_id]);
 
         const parentId = comment.parent_id;
-        if (comment.parent_id) {
+        if (parentId) {
           pushToArrayInObject(repliesByParentId, parentId, comment.comment_id);
         } else {
           if (comment.is_pinned) {
@@ -412,7 +424,7 @@ export default handleActions(
       const myReacts = { ...state.myReactsByCommentId };
       const othersReacts = { ...state.othersReactsByCommentId };
 
-      function deleteReacts(reactObj, commentIdsToRemove) {
+      function deleteReacts<T>(reactObj: { [string]: T }, commentIdsToRemove: ?Array<string>): void {
         if (commentIdsToRemove && commentIdsToRemove.length > 0) {
           let reactionKeys = Object.keys(reactObj);
           reactionKeys.forEach((rk) => {
@@ -542,13 +554,14 @@ export default handleActions(
       }
 
       // Update replies
-      if (comment['parent_id'] && repliesByParentId[comment.parent_id]) {
-        const index = repliesByParentId[comment.parent_id].indexOf(comment.comment_id);
+      const parentId = comment.parent_id;
+      if (parentId && repliesByParentId[parentId]) {
+        const index = repliesByParentId[parentId].indexOf(comment.comment_id);
         if (index > -1) {
-          repliesByParentId[comment.parent_id].splice(index, 1);
+          repliesByParentId[parentId].splice(index, 1);
 
-          if (commentById[comment.parent_id]) {
-            commentById[comment.parent_id].replies = Math.max(0, (commentById[comment.parent_id].replies || 0) - 1);
+          if (commentById[parentId]) {
+            commentById[parentId].replies = Math.max(0, (commentById[parentId].replies || 0) - 1);
           }
         }
       }
@@ -818,7 +831,7 @@ export default handleActions(
       for (const commentId in commentById) {
         const comment = commentById[commentId];
 
-        if (isURIEqual(blockedUri, comment.channel_url)) {
+        if (comment.channel_url && isURIEqual(blockedUri, comment.channel_url)) {
           delete commentById[comment.comment_id];
         }
       }
@@ -890,7 +903,7 @@ export default handleActions(
     },
     [ACTIONS.COMMENT_MODERATION_UN_BLOCK_COMPLETE]: (state: CommentsState, action: any) => {
       const { blockedUri, creatorUri, blockLevel } = action.data;
-      const unBlockingByUri = Object.assign(state.unBlockingByUri, {});
+      const unBlockingByUri = { ...state.unBlockingByUri };
 
       switch (blockLevel) {
         case BLOCK_LEVEL.SELF: {
@@ -1058,3 +1071,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default commentsReducer;
