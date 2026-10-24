@@ -114,7 +114,7 @@ app
       );
     });
     ipcMain.handle('fixture-controls-focus', async (event) => {
-      assert(['accessibleControls', 'collections', 'reactState'].includes(activePhase));
+      assert(['accessibleControls', 'collections', 'reactState', 'formsAndDates'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
       activeWindow.webContents.debugger.attach('1.3');
       await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });

@@ -30,8 +30,9 @@ application diagnostics from 5,051 to 3,214. Shared UI export and React type
 annotations reduce that to 2,908. Formatting and wallet-progress contracts reduce
 that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
 2,798. Comment contracts reduce that to 2,719, collection contracts to 2,644,
-and comment-input contracts to 2,586, with no newly introduced diagnostics in these passes.
-Required gates cover fourteen shared UI source modules (18 invalid contracts)
+comment-input contracts to 2,586, and form-control contracts to 2,521,
+with no newly introduced diagnostics in these passes.
+Required gates cover twenty shared UI/type source modules (29 invalid contracts)
 and twelve utility modules, the throttle hook and search/comment constants (61 invalid contracts,
 including homepage options, reaction counts, moderation state, stickers, playback and suggestions).
 Search regressions cover filters, links, cache/pagination and request lifecycle.
@@ -50,6 +51,10 @@ edits can be changed before the published collection resolves.
 Comment-input regressions cover mixed/repeated mentions and emoji, caret ranges,
 claim IDs, Unicode, surrounding text and throttled edits. Completing an emoji
 before punctuation now keeps the caret immediately after the inserted token.
+Form-control contracts cover native refs/events, optional price props and the
+Markdown editor's changes/options. Renderer checks cover price precision,
+currency and clearing, checkbox labels, focus, textareas, disabled state and
+submission alongside the existing wallet and Markdown editor tests.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change

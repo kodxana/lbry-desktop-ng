@@ -11,7 +11,8 @@ import ReactDOMServer from 'react-dom/server';
 import SimpleMDE from 'react-simplemde-editor';
 import editorSpellcheck from 'util/editor-spellcheck';
 import TextareaWithSuggestions from 'component/textareaWithSuggestions';
-import type { ElementRef, Node } from 'react';
+import type { Node } from 'react';
+import type { EditorBeforeChange, EditorChange, MarkdownCodeMirror, MarkdownEditor } from 'types/markdown-editor';
 
 type Props = {
   autoFocus?: boolean,
@@ -26,7 +27,7 @@ type Props = {
   labelOnLeft: boolean,
   name: string,
   noEmojis?: boolean,
-  placeholder?: string | number,
+  placeholder?: string,
   quickActionLabel?: string,
   textAreaMaxLength?: number,
   type?: string,
@@ -39,24 +40,30 @@ type Props = {
 };
 
 export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
-  static defaultProps = { labelOnLeft: false, blockWrap: true };
+  static defaultProps: { labelOnLeft: boolean, blockWrap: boolean } = { labelOnLeft: false, blockWrap: true };
 
-  input: { current: ElementRef<any> };
-  editor: any;
-  linkSelectionTimer: any;
+  input: { current: HTMLTextAreaElement | null };
+  editor: MarkdownEditor | null = null;
+  linkSelectionTimer: ReturnType<typeof setTimeout> | void;
 
   // v5 recreates the editor whenever options change, losing focus and undo history.
-  markdownOptions = {
+  markdownOptions: {
+    autofocus?: boolean,
+    autoDownloadFontAwesome: boolean,
+    spellChecker: typeof editorSpellcheck,
+    hideIcons: Array<string>,
+    previewRender: (string) => string,
+  } = {
     autofocus: this.props.autoFocus,
     autoDownloadFontAwesome: false,
     spellChecker: editorSpellcheck,
     hideIcons: ['heading', 'image', 'fullscreen', 'side-by-side'],
-    previewRender(plainText) {
+    previewRender(plainText: string): string {
       return ReactDOMServer.renderToString(<MarkdownPreview content={plainText} noDataStore />);
     },
   };
 
-  handleBeforeChange = (instance, changes) => {
+  handleBeforeChange = (instance: MarkdownCodeMirror, changes: EditorBeforeChange): void => {
     // Restored drafts and externally loaded posts must keep their original contents.
     if (changes.origin === 'setValue') return;
     if (this.props.disabled) {
@@ -64,18 +71,19 @@ export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
       return;
     }
     const limit = this.props.textAreaMaxLength;
-    if (limit && changes.update) {
+    const update = changes.update;
+    if (limit && update) {
       const text = changes.text.join('\n');
       const replacedLength = instance.indexFromPos(changes.to) - instance.indexFromPos(changes.from);
       if (text.length <= replacedLength) return;
       const available = Math.max(0, limit - instance.getValue().length + replacedLength);
       if (text.length > available) {
-        changes.update(changes.from, changes.to, text.slice(0, available).split('\n'));
+        update(changes.from, changes.to, text.slice(0, available).split('\n'));
       }
     }
   };
 
-  handleEditorChanges = (instance, changes) => {
+  handleEditorChanges = (instance: MarkdownCodeMirror, changes: Array<EditorChange>): void => {
     clearTimeout(this.linkSelectionTimer);
     const last = changes[changes.length - 1];
     if (!last || last.origin !== '+input') return;
@@ -94,25 +102,30 @@ export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
     }, 25);
   };
 
-  editorEvents = {
+  editorEvents: {
+    contextmenu: typeof openEditorMenu,
+    beforeChange: (MarkdownCodeMirror, EditorBeforeChange) => void,
+    changes: (MarkdownCodeMirror, Array<EditorChange>) => void,
+  } = {
     contextmenu: openEditorMenu,
     beforeChange: this.handleBeforeChange,
     changes: this.handleEditorChanges,
   };
 
-  syncEditorProps = () => {
-    if (!this.editor) return;
-    this.editor.codemirror.setOption('readOnly', !!this.props.disabled);
-    this.editor.codemirror.setOption('placeholder', this.props.placeholder || '');
-    this.editor.codemirror
+  syncEditorProps = (): void => {
+    const editor = this.editor;
+    if (!editor) return;
+    editor.codemirror.setOption('readOnly', !!this.props.disabled);
+    editor.codemirror.setOption('placeholder', this.props.placeholder || '');
+    editor.codemirror
       .getInputField()
       .setAttribute('aria-label', typeof this.props.label === 'string' ? this.props.label : this.props.name);
-    this.editor.gui.toolbar.querySelectorAll('button').forEach((button) => {
+    editor.gui.toolbar.querySelectorAll('button').forEach((button) => {
       button.disabled = !!this.props.disabled;
     });
   };
 
-  getEditorInstance = (editor) => {
+  getEditorInstance = (editor: MarkdownEditor): void => {
     this.editor = editor;
     this.syncEditorProps();
   };
@@ -143,7 +156,7 @@ export class FormFieldAreaAdvanced extends React.PureComponent<Props> {
     clearTimeout(this.linkSelectionTimer);
   }
 
-  render() {
+  render(): React.Node {
     const {
       autoFocus,
       blockWrap,
