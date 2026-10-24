@@ -28,12 +28,17 @@ the first-party global types. The declaration check is clean. The first
 application pass replaces fresh-object Redux copies with spreads, reducing full
 application diagnostics from 5,051 to 3,214. Shared UI export and React type
 annotations reduce that to 2,908. Formatting and wallet-progress contracts reduce
-that to 2,891. Search contracts reduce that to 2,836, with no new diagnostics.
+that to 2,891. Search contracts reduce that to 2,836, and homepage contracts to
+2,798, with no new diagnostics in either pass.
 Required gates cover fourteen shared UI source modules (18 invalid contracts)
-and nine utility modules plus search constants (28 invalid contracts).
+and nine utility modules plus search constants (36 invalid contracts, including
+homepage configuration and feed options).
 Search regressions cover filters, links, cache/pagination and request lifecycle.
 Simplified filters now retain the full media options for later views, and unmatched
 custom selections return the existing empty-selection value.
+Homepage regressions cover category routes, language and tag filters, channel
+limits, followed feeds and rendering. Stale subscription URIs no longer break
+the homepage or leave missing channel IDs in a Following query.
 The utility pass also fixes omitted collection bids being serialized as "NaN".
 Remaining application errors and untyped
 dependency stubs still need work. These type migrations do not change

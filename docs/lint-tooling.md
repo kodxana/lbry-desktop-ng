@@ -176,8 +176,8 @@ failed status reads remain nullable, and the balance read still waits for status
 Credit display text is kept separate from its rendered React content.
 
 `node build/testUtilityTypes.js` checks nine real utility source files and the
-search option constants with the first-party declarations. It rejects 28 invalid
-formatting, progress, wallet snapshot and search contracts. The UI gate also
+search option constants with the first-party declarations. It rejects 36 invalid
+formatting, progress, wallet snapshot, search and homepage contracts. The UI gate also
 checks credit display props and defaults.
 `node build/testUtilityContracts.js` covers formatter caching, locale changes,
 tiny amounts, display rounding versus transaction serialization, bytes and time.
@@ -204,9 +204,18 @@ controls. Simplified filters no longer delete shared Image/Other options, and
 custom selection callbacks receive an empty string when no suggestion matches.
 The legacy URI parser and broader claim-selector state types are unchanged.
 
-**The application is not yet type-clean.** The full check now reports 2,836
+The homepage pass replaces duplicate row definitions with shared category, feed
+option and row contracts, used by the homepage and navigation consumers.
+`node build/testHomepageContracts.js` checks the actual builders and homepage:
+category routes, channel limits, release windows, localization, personalized
+tags and channels, and unchanged configuration. Stale subscription URIs are
+skipped; if no valid channel IDs remain, the Following row is omitted so its
+empty filter cannot fetch unrelated content. The new regression fails against
+the previous builder. The URI parser itself is unchanged.
+
+**The application is not yet type-clean.** The full check now reports 2,798
 application diagnostics and zero library-definition diagnostics, down from
-2,891 before the search pass (55 fewer, with no newly introduced diagnostics).
+2,836 before the homepage pass (38 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

@@ -93,7 +93,7 @@ type Props = {
   setHasNavigated: () => void,
   setReferrer: (?string) => void,
   hasUnclaimedRefereeReward: boolean,
-  homepageData: any,
+  homepageData: HomepageData,
 };
 
 function AppRouter(props: Props) {
@@ -118,7 +118,7 @@ function AppRouter(props: Props) {
   const hasLinkedCommentInUrl = urlParams.get(LINKED_COMMENT_QUERY_PARAM);
   const isLargeScreen = useIsLargeScreen();
   const dynamicRoutes = GetLinksData(homepageData, isLargeScreen).filter(
-    (potentialRoute: any) => potentialRoute && potentialRoute.route
+    (potentialRoute) => potentialRoute && potentialRoute.route
   );
 
   // For people arriving at settings page from deeplinks, know whether they can "go back"

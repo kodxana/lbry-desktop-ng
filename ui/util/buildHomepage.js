@@ -8,44 +8,7 @@ import moment from 'moment';
 import { toCapitalCase } from 'util/string';
 import { CUSTOM_HOMEPAGE } from 'config';
 
-export type RowDataItem = {
-  title: any,
-  link?: string,
-  help?: any,
-  icon?: string,
-  extra?: any,
-  options?: {
-    channelIds?: Array<string>,
-    pageSize?: number,
-    limitClaimsPerChannel?: number,
-    languages?: Array<string>,
-  },
-  route?: string,
-  hideForUnauth?: boolean,
-};
-
-export type HomepageCat = {
-  name: string,
-  icon: string,
-  label: string,
-  channelIds?: Array<string>,
-  daysOfContent?: number,
-  channelLimit?: string,
-  pageSize?: number,
-  claimType?: string,
-  order?: string,
-  tags?: Array<string>,
-  pinnedUrls?: Array<string>,
-  mixIn?: Array<string>,
-};
-
-// type HomepageData = {
-//   [string]: {
-//     [string]: HomepageCat,
-//   },
-// };
-
-function getLimitPerChannel(size, isChannel) {
+function getLimitPerChannel(size: number, isChannel: boolean): number {
   if (isChannel) {
     return 1;
   } else {
@@ -53,18 +16,17 @@ function getLimitPerChannel(size, isChannel) {
   }
 }
 
-export function getAllIds(all: any) {
+export function getAllIds(all: HomepageData): Array<string> {
   const idsSet: Set<string> = new Set();
-  (Object.values(all): any).forEach((cat) => {
+  Object.values(all).forEach((cat) => {
     if (cat.channelIds) {
       cat.channelIds.forEach((id) => idsSet.add(id));
     }
   });
-  // $FlowFixMe
   return Array.from(idsSet);
 }
 
-export const getHomepageRowForCat = (cat: HomepageCat) => {
+export const getHomepageRowForCat = (cat: HomepageCat): RowDataItem => {
   let orderValue;
   switch (cat.order) {
     case 'trending':
@@ -85,7 +47,7 @@ export const getHomepageRowForCat = (cat: HomepageCat) => {
     urlParams.set(CS.CHANNEL_IDS_KEY, cat.channelIds.join(','));
   }
 
-  const isChannelType = cat.claimType && cat.claimType === 'channel';
+  const isChannelType = cat.claimType === 'channel';
 
   // can intend no limit, numerica auto limit, specific limit.
   let limitClaims;
@@ -125,7 +87,7 @@ export const getHomepageRowForCat = (cat: HomepageCat) => {
 };
 
 export function GetLinksData(
-  all: any, // HomepageData type?
+  all: HomepageData,
   isLargeScreen: boolean,
   isHomepage?: boolean = false,
   showPersonalizedChannels?: boolean,
@@ -134,17 +96,25 @@ export function GetLinksData(
   followedTags?: Array<Tag>,
   showIndividualTags?: boolean,
   showNsfw?: boolean
-) {
-  function getPageSize(originalSize) {
+): Array<RowDataItem> {
+  function getPageSize(originalSize: number): number {
     return isLargeScreen ? originalSize * (3 / 2) : originalSize;
   }
 
-  // $FlowFixMe
-  let rowData: Array<RowDataItem> = [];
+  const rowData: Array<RowDataItem> = [];
   const individualTagDataItems: Array<RowDataItem> = [];
 
   if (isHomepage && showPersonalizedChannels && subscribedChannels) {
-    const RECENT_FROM_FOLLOWING = {
+    const channelIds: Array<string> = [];
+    subscribedChannels.forEach((subscription) => {
+      try {
+        const { channelClaimId } = parseURI(subscription.uri);
+        if (channelClaimId) channelIds.push(channelClaimId);
+      } catch (error) {
+        // Ignore stale subscription URIs that cannot identify a channel.
+      }
+    });
+    const RECENT_FROM_FOLLOWING: RowDataItem = {
       title: __('Recent From Following'),
       link: `/$/${PAGES.CHANNELS_FOLLOWING}`,
       icon: ICONS.SUBSCRIBE,
@@ -156,14 +126,11 @@ export function GetLinksData(
             : `>${Math.floor(moment().subtract(1, 'year').startOf('week').unix())}`,
         pageSize: getPageSize(subscribedChannels.length > 3 ? (subscribedChannels.length > 6 ? 16 : 8) : 4),
         streamTypes: null,
-        channelIds: subscribedChannels.map((subscription: Subscription) => {
-          const { channelClaimId } = parseURI(subscription.uri);
-          if (channelClaimId) return channelClaimId;
-        }),
+        channelIds,
       },
     };
-    // $FlowFixMe flow thinks this might not be Array<string>
-    rowData.push(RECENT_FROM_FOLLOWING);
+    // An empty channel filter would fetch unrelated content.
+    if (channelIds.length) rowData.push(RECENT_FROM_FOLLOWING);
   }
 
   // **************************************************************************
@@ -255,7 +222,7 @@ export function GetLinksData(
   ];
   */
 
-  const TOP_CONTENT_TODAY = {
+  const TOP_CONTENT_TODAY: RowDataItem = {
     title: __('Top Content from Today'),
     link: `/$/${PAGES.DISCOVER}?${CS.ORDER_BY_KEY}=${CS.ORDER_BY_TOP}&${CS.FRESH_KEY}=${CS.FRESH_DAY}`,
     options: {
@@ -269,7 +236,7 @@ export function GetLinksData(
 
   const language = localStorage.getItem('language') || 'en';
   const languageName = SUPPORTED_LANGUAGES[language];
-  const LANGUAGE_CATEGORY = {
+  const LANGUAGE_CATEGORY: RowDataItem = {
     title: __('Top content in %language%', { language: languageName }),
     link: `/$/${PAGES.DISCOVER}?${CS.ORDER_BY_KEY}=${CS.ORDER_BY_TOP}&${CS.FRESH_KEY}=${CS.FRESH_DAY}&${CS.LANGUAGE_KEY}=${language}`,
     options: {
@@ -282,7 +249,7 @@ export function GetLinksData(
     },
   };
 
-  const TOP_CHANNELS = {
+  const TOP_CHANNELS: RowDataItem = {
     title: __('Top Channels On LBRY'),
     link: `/$/${PAGES.DISCOVER}?claim_type=channel&${CS.ORDER_BY_KEY}=${CS.ORDER_BY_TOP}&${CS.FRESH_KEY}=${CS.FRESH_ALL}`,
     options: {
@@ -291,7 +258,7 @@ export function GetLinksData(
     },
   };
 
-  const LATEST_FROM_LBRY = {
+  const LATEST_FROM_LBRY: RowDataItem = {
     title: __('Latest From @lbry'),
     link: `/@lbry:3f`,
     options: {
@@ -303,7 +270,7 @@ export function GetLinksData(
 
   if (isHomepage && !CUSTOM_HOMEPAGE) {
     if (followedTags) {
-      const TRENDING_FOR_TAGS = {
+      const TRENDING_FOR_TAGS: RowDataItem = {
         title: __('Trending For Your Tags'),
         link: `/$/${PAGES.TAGS_FOLLOWING}`,
         icon: ICONS.TAG,
@@ -349,7 +316,7 @@ export function GetLinksData(
   // **************************************************************************
 
   // TODO: provide better method for exempting from homepage
-  (Object.values(all): any)
+  Object.values(all)
     .filter((row) => !(isHomepage && row.name === 'news'))
     .map((row) => rowData.push(getHomepageRowForCat(row)));
   return rowData;

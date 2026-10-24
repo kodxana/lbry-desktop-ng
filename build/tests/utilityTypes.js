@@ -60,3 +60,26 @@ export function searchResult(state: SearchState): [Array<string>, string | null,
   const result = state.resultsByQuery['query'];
   return [result.uris, result.recsys, state.hasReachedMaxResultsLength['query']];
 }
+
+export const homepageCategory: HomepageCat = {
+  name: 'science',
+  label: 'Science',
+  channelLimit: 'auto',
+  channelIds: ['abc'],
+  pageSize: 8,
+};
+export const homepageData: HomepageData = { SCIENCE: homepageCategory };
+export const homepageRow: RowDataItem = {
+  title: 'Science',
+  pinnedUrls: ['lbry://video#abc'],
+  options: {
+    claimType: ['stream'],
+    channelIds: ['abc'],
+    orderBy: ['release_time'],
+    releaseTime: '>1',
+    streamTypes: null,
+    tags: ['science'],
+    languages: ['en'],
+    pageSize: 8,
+  },
+};
