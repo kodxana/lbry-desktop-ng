@@ -2,7 +2,7 @@
 import * as React from 'react';
 import { FormField } from './form-field';
 
-type FormPrice = {
+export type FormPrice = {
   amount: number,
   currency: string,
 };
@@ -10,39 +10,32 @@ type FormPrice = {
 type Props = {
   price: FormPrice,
   onChange: (FormPrice) => void,
-  placeholder: number,
+  placeholder?: number,
   min: number,
-  disabled: boolean,
+  disabled?: boolean,
   name: string,
-  step: ?number,
+  step?: ?number,
 };
 
 export class FormFieldPrice extends React.PureComponent<Props> {
-  constructor(props: Props) {
-    super(props);
-
-    (this: any).handleAmountChange = this.handleAmountChange.bind(this);
-    (this: any).handleCurrencyChange = this.handleCurrencyChange.bind(this);
-  }
-
-  handleAmountChange(event: SyntheticInputEvent<*>) {
+  handleAmountChange = (event: { target: { value: string, ... }, ... }): void => {
     const { price, onChange } = this.props;
     const amount = event.target.value ? parseFloat(event.target.value) : 0;
     onChange({
       currency: price.currency,
       amount,
     });
-  }
+  };
 
-  handleCurrencyChange(event: SyntheticInputEvent<*>) {
+  handleCurrencyChange = (event: { target: { value: string, ... }, ... }): void => {
     const { price, onChange } = this.props;
     onChange({
       currency: event.target.value,
       amount: price.amount,
     });
-  }
+  };
 
-  render() {
+  render(): React.Node {
     const { price, placeholder, min, disabled, name, step } = this.props;
 
     return (

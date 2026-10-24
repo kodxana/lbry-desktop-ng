@@ -2,7 +2,15 @@
 import 'easymde/dist/easymde.min.css';
 import { FF_MAX_CHARS_DEFAULT } from 'constants/form-field';
 import React from 'react';
-import type { ElementRef, Node } from 'react';
+import type { Node } from 'react';
+
+type FieldEvent = {
+  target: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  currentTarget: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  preventDefault: () => void,
+  stopPropagation: () => void,
+  ...
+};
 
 type Props = {
   affixClass?: string, // class applied to prefix/postfix label
@@ -12,7 +20,16 @@ type Props = {
   children?: React.Node,
   defaultValue?: string | number,
   disabled?: boolean,
-  error?: string | boolean,
+  checked?: boolean,
+  className?: string,
+  id?: string,
+  step?: number | 'any',
+  maxLength?: number,
+  onWheel?: ({ preventDefault: () => void, ... }) => void,
+  onClick?: (FieldEvent) => unknown,
+  onBlur?: (FieldEvent) => unknown,
+  onKeyPress?: ({ ...FieldEvent, key: string, charCode: number }) => unknown,
+  error?: string | boolean | { message: string, ... },
   helper?: string | React.Node,
   inputButton?: React.Node,
   inputName?: string,
@@ -35,9 +52,9 @@ type Props = {
 };
 
 export class FormField extends React.PureComponent<Props> {
-  static defaultProps = { labelOnLeft: false, blockWrap: true };
+  static defaultProps: { labelOnLeft: boolean, blockWrap: boolean } = { labelOnLeft: false, blockWrap: true };
 
-  input: { current: ElementRef<any> };
+  input: { current: HTMLInputElement | HTMLTextAreaElement | null };
 
   constructor(props: Props) {
     super(props);
@@ -51,7 +68,7 @@ export class FormField extends React.PureComponent<Props> {
     if (input && autoFocus) input.focus();
   }
 
-  render() {
+  render(): React.Node {
     const {
       affixClass,
       autoFocus,
@@ -84,18 +101,18 @@ export class FormField extends React.PureComponent<Props> {
     const countInfo = hasCharCount && textAreaMaxLength !== undefined && (
       <span className="comment__char-count-mde">{`${charCount || '0'}/${textAreaMaxLength}`}</span>
     );
-    const Wrapper = blockWrap
+    const Wrapper: ({ children: React.Node }) => React.Node = blockWrap
       ? ({ children: innerChildren }) => <fieldset-section class="radio">{innerChildren}</fieldset-section>
       : ({ children: innerChildren }) => <span className="radio">{innerChildren}</span>;
 
-    const inputSimple = (type: string) => (
+    const inputSimple = (type: string): React.Node => (
       <>
         <input id={name} name={inputName} type={type} {...inputProps} />
         <label htmlFor={name}>{label}</label>
       </>
     );
 
-    const inputSelect = (selectClass: string) => (
+    const inputSelect = (selectClass: string): React.Node => (
       <fieldset-section class={selectClass}>
         {(label || errorMessage) && (
           <label htmlFor={name}>{errorMessage ? <span className="error__text">{errorMessage}</span> : label}</label>
@@ -106,7 +123,7 @@ export class FormField extends React.PureComponent<Props> {
       </fieldset-section>
     );
 
-    const input = () => {
+    const input = (): React.Node => {
       switch (type) {
         case 'radio':
           return <Wrapper>{inputSimple('radio')}</Wrapper>;

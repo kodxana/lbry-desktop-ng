@@ -13,11 +13,11 @@ type Props = {
 };
 
 export class FormRow extends React.PureComponent<Props> {
-  static defaultProps = {
+  static defaultProps: { padded: boolean } = {
     padded: false,
   };
 
-  render() {
+  render(): React.Node {
     const { children, padded, verticallyCentered, stretch, alignRight, centered } = this.props;
     return (
       <div

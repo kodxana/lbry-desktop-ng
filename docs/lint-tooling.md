@@ -160,9 +160,9 @@ The shared UI pass replaces internal `React$Node` references with the public
 Icon props preserve optional size/color defaults, nullable titles and SVG refs.
 The icon builder's separate ref parameter is excluded from its ordinary props.
 
-`node build/testUiTypes.js` checks fourteen actual UI/constants/formatter source
+`node build/testUiTypes.js` checks twenty actual UI/constants/formatter/editor-type source
 modules in an isolated project with the real classnames/i18n declarations and installed UUID
-package. Valid callers must pass; 18 invalid icon, sticker and component prop
+package. Valid callers must pass; 29 invalid icon, sticker, component and editor
 contracts must fail. The renderer also mounts every registered icon and checks
 ref forwarding, default/explicit size and color, title removal, unknown-icon
 fallback and free/paid sticker data. The original shared UI pass changed
@@ -238,9 +238,19 @@ Electron tests cover keyboard/mouse completion, IME, dismissal, multiple tokens,
 punctuation and throttled input cleanup. Completion no longer skips punctuation
 after an inserted emoji. The suggestion grammar and search delay are unchanged.
 
-**The application is not yet type-clean.** The full check now reports 2,586
+The form-control pass types render results, defaults, native element refs,
+forwarded input props, price callbacks and the CodeMirror/EasyMDE surface used
+by the Markdown field. Price callbacks use arrow fields instead of casts and
+manual binding. Source checks cover optional/default props, price values,
+change objects and editor positions/options. Renderer regressions exercise
+focus, checkbox labels, textareas, validation messages, submission, disabled
+controls, amount clearing, eight-decimal amounts and currency changes. Existing
+Markdown tests retain draft, undo, live-limit, preview and cleanup coverage.
+The field, row, form and submit changes produce unchanged runtime JavaScript.
+
+**The application is not yet type-clean.** The full check now reports 2,521
 application diagnostics and zero library-definition diagnostics, down from
-2,644 before the comment-input pass (58 fewer, with no newly introduced diagnostics).
+2,586 before the form-control pass (65 fewer, with no newly introduced diagnostics).
 Missing export annotations, mismatched state shapes, nullable results,
 exact-object rules, old utility types
 and casts still need work. Inherited `any` stubs remain, so a clean declaration

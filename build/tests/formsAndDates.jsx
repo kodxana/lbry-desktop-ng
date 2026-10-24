@@ -9,6 +9,7 @@ import DateTime from 'component/dateTime/view';
 import BlockChannel from 'modal/modalBlockChannel/view';
 import ListBlocked from 'page/listBlocked/view';
 import formatMediaDuration from 'util/formatMediaDuration';
+import formControls from './formControls';
 import * as ACTIONS from 'constants/action_types';
 import * as MODALS from 'constants/modal_types';
 import { render, unmount, tick, waitFor, input, submit } from './helpers';
@@ -314,11 +315,12 @@ export default async function formsAndDates(store, history) {
   document.documentElement.setAttribute('theme', 'dark');
   document.documentElement.setAttribute('dir', 'ltr');
   try {
+    await formControls(store, history);
     await walletSend(store, history, uri);
     await publishDate(store, history);
     await durations(store, history, uri);
     await dateFormatting(store, history);
-    return 'wallet send validation/confirmation/retry, publish dates, timed blocks, localized dates and media duration';
+    return 'shared form focus/checkboxes/textarea/submit/disabled state, price precision/currency/clearing, wallet send validation/confirmation/retry, publish dates, timed blocks, localized dates and media duration';
   } finally {
     moment.locale('en');
     unmount();

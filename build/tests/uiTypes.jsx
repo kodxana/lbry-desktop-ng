@@ -13,6 +13,21 @@ import Thumbnail from 'component/common/thumbnail';
 import TruncatedText from 'component/common/truncated-text';
 import FileList from 'component/common/file-list';
 import SettingsRow from 'component/settingsRow/view';
+import FormField from 'component/common/form-components/form-field';
+import FormFieldPrice from 'component/common/form-components/form-field-price';
+import type { FormPrice } from 'component/common/form-components/form-field-price';
+import FormRow from 'component/common/form-components/form-row';
+import Form from 'component/common/form-components/form';
+import type { EditorPosition, EditorChange, EditorBeforeChange, MarkdownCodeMirror } from 'types/markdown-editor';
+
+export const price: FormPrice = { amount: 0.00000001, currency: 'LBC' };
+export const position: EditorPosition = { line: 0, ch: 1 };
+export const change: EditorChange = { from: position, to: position, text: ['first', 'second'], origin: 'setValue' };
+export const beforeChange: EditorBeforeChange = { ...change, cancel() {}, update(from, to, text) {} };
+export function editorOptions(editor: MarkdownCodeMirror): void {
+  editor.setOption('readOnly', false);
+  editor.setOption('placeholder', 'Post text');
+}
 export const creditDisplay: React.Node = <CreditAmount amount={0.00000001} />;
 export const fiatDisplay: React.Node = <CreditAmount customAmounts={{ amountFiat: 1.25, amountLBC: 100 }} />;
 const Lock = icons[ICONS.LOCK];
@@ -29,6 +44,21 @@ export function stickerPrice(sticker: Sticker): number | void {
 export const stickers: Array<Sticker> = [...FREE_GLOBAL_STICKERS, ...PAID_GLOBAL_STICKERS];
 export const content: React.Node = (
   <>
+    <Form className="fixture-form" onSubmit={() => {}}>
+      <FormRow padded>
+        <FormField name="password" type="password" autoFocus />
+        <FormField name="remember" type="checkbox" checked={false} />
+        <FormField name="amount" type="number" step="any" value={0.00000001} />
+        <FormField
+          name="message"
+          type="text"
+          error={{ message: 'Fixture' }}
+          maxLength={10}
+          onBlur={(event) => event.target.value.toUpperCase()}
+        />
+        <FormFieldPrice name="price" min={0} price={price} step={null} onChange={(value: FormPrice): void => {}} />
+      </FormRow>
+    </Form>
     <Lock />
     <Lock {...iconProps} ref={ref} aria-hidden />
     <Icon icon={ICONS.LOCK} tooltip customTooltipText="Wallet" sectionIcon />

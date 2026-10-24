@@ -28,11 +28,21 @@ const sources = [
   'ui/component/common/lbc-symbol.jsx',
   'ui/util/format-credits.js',
   'ui/util/intlNumberFormat.js',
+  'ui/constants/form-field.js',
+  'ui/types/markdown-editor.js',
+  'ui/component/common/form-components/form-field.jsx',
+  'ui/component/common/form-components/form-field-price.jsx',
+  'ui/component/common/form-components/form-row.jsx',
+  'ui/component/common/form-components/form.jsx',
 ];
 for (const file of [...sources, '.flowconfig', 'flow-typed/i18n.js', 'flow-typed/npm/classnames_v2.x.x.js']) {
   write(file, fs.readFileSync(path.join(root, file), 'utf8'));
 }
 fs.cpSync(path.join(root, 'node_modules/uuid'), path.join(cwd, 'node_modules/uuid'), { recursive: true });
+write(
+  'node_modules/easymde/dist/easymde.min.css',
+  fs.readFileSync(path.join(root, 'node_modules/easymde/dist/easymde.min.css'), 'utf8')
+);
 const fixture = fs.readFileSync(path.join(__dirname, 'tests/uiTypes.jsx'), 'utf8');
 write('valid.jsx', fixture);
 const check = () => {
@@ -50,6 +60,20 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Shared UI source and valid callers must type-check');
 const invalid = {
+  priceAmount: 'export const value: FormPrice = {amount: "1", currency: "LBC"};',
+  priceCurrency: 'export const value: FormPrice = {amount: 1, currency: false};',
+  priceStep:
+    'export const value: React.Node = <FormFieldPrice name="price" min={0} price={price} step="any" onChange={() => {}} />;',
+  priceChange:
+    'export const value: React.Node = <FormFieldPrice name="price" min={0} price={price} onChange={(value: string): void => {}} />;',
+  fieldChecked: 'export const value: React.Node = <FormField name="enabled" type="checkbox" checked="yes" />;',
+  fieldMaxLength: 'export const value: React.Node = <FormField name="text" type="text" maxLength="10" />;',
+  fieldError: 'export const value: React.Node = <FormField name="text" type="text" error={{message: 42}} />;',
+  editorPosition: 'export const value: EditorPosition = {line: 0, ch: "1"};',
+  editorChange: 'export const value: EditorChange = {...change, text: "line"};',
+  editorUpdate: 'export const value: EditorBeforeChange = {...change, cancel() {}, update(from, to, text: string) {}};',
+  editorReadOnly:
+    'export function invalid(editor: MarkdownCodeMirror): void { editor.setOption("readOnly", "false"); }',
   creditAmount: 'export const value: React.Node = <CreditAmount amount="1" />;',
   creditPrecision: 'export const value: React.Node = <CreditAmount amount={1} precision="8" />;',
   fiatAmount: 'export const value: React.Node = <CreditAmount customAmounts={{amountFiat: "1", amountLBC: 100}} />;',
