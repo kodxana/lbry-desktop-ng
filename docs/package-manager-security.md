@@ -55,6 +55,15 @@ does not establish that every reachable code path is secure.
 
 ## Validation
 
+The SDK candidate also needs a separate dependency check; the npm audit does
+not cover its frozen Python packages. The security candidate in
+`build/sdk-candidate.json` uses certifi 2026.10.19 and removes the unused
+standalone ecdsa requirement. Archive inspection confirmed that the Windows
+binary no longer includes the affected emSign ECC Root CA - G3 certificate;
+the remaining CA bundle validated public GitHub and PyPI HTTPS connections.
+The candidate's 44 recorded Windows Python package versions returned no PyPI
+advisories on 2026-10-25. This is not an audit of every embedded native library.
+
 The package-manager regression checks the actual pinned CLI, bundled version
 plugin, local dependency installation, lifecycle suppression, unchanged
 immutable installs and refusal to rewrite an out-of-date lockfile. Existing
