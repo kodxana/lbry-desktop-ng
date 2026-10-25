@@ -3,6 +3,7 @@
 }
 
 .markdown-editor {
+  @include font-sans;
   .cm-editor,
   .editor-preview-active {
     border: 1px solid var(--color-input-border);

@@ -237,6 +237,7 @@ export default async function markdownEditor(store, history) {
         'The editor must use the active application theme'
       );
       swatch.remove();
+      assert(getComputedStyle(editor.contentDOM).fontFamily.includes('Inter'), 'Editor text must retain the app font');
       await new Promise((resolve) => setTimeout(resolve, 150));
       await ipcRenderer.invoke('fixture-editor-capture', theme);
     }
