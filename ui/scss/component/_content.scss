@@ -19,7 +19,7 @@
 }
 
 .content__viewer--secondary {
-  .vjs-button--theater-mode {
+  .player-buttons .player-theater {
     display: none;
   }
 }
@@ -39,7 +39,7 @@
   }
 
   &:hover {
-    .video-js--tap-to-unmute {
+    .player-unmute {
       max-width: calc(var(--floating-viewer-width) - (var(--spacing-xs) * 3) - 42px);
     }
     .content__floating-close {
@@ -73,11 +73,11 @@
   height: var(--floating-viewer-height);
   width: var(--floating-viewer-width);
 
-  .vjs-button--theater-mode {
+  .player-theater {
     display: none;
   }
 
-  .video-js--tap-to-unmute {
+  .player-unmute {
     max-width: calc(var(--floating-viewer-width) - (var(--spacing-xs) * 2));
 
     .icon {

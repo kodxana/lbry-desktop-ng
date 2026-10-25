@@ -9,15 +9,10 @@ import { FORCE_CONTENT_TYPE_PLAYER } from 'constants/claim';
 import AutoplayCountdown from 'component/autoplayCountdown';
 import usePrevious from 'effects/use-previous';
 import LoadingScreen from 'component/common/loading-screen';
-import { addTheaterModeButton } from './internal/theater-mode';
-import { addAutoplayNextButton } from './internal/autoplay-next';
-import { addPlayNextButton } from './internal/play-next';
-import { addPlayPreviousButton } from './internal/play-previous';
 import { useDesktopHistory } from 'component/common/desktop-router';
 import debounce from 'util/debounce';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
-const PLAY_TIMEOUT_ERROR = 'play_timeout_error';
 const PLAY_TIMEOUT_LIMIT = 2000;
 
 type Props = {
@@ -53,11 +48,6 @@ type Props = {
   videoTheaterMode: boolean,
   isMarkdownOrComment: boolean,
 };
-
-/*
-codesandbox of idealized/clean videojs and react 16+
-https://codesandbox.io/s/71z2lm4ko6
- */
 
 function VideoViewer(props: Props): React.Node {
   const {
@@ -102,13 +92,13 @@ function VideoViewer(props: Props): React.Node {
   const [isPlaying, setIsPlaying] = useState(false);
   const [ended, setEnded] = useState(false);
   const [showAutoplayCountdown, setShowAutoplayCountdown] = useState(false);
-  const vjsCallbackDataRef: any = React.useRef();
+  const playbackRateRef = React.useRef(videoPlaybackRate);
   const previousUri = usePrevious(uri);
   /* isLoading was designed to show loading screen on first play press, rather than completely black screen, but
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
   const [isLoading, setIsLoading] = useState(false);
   const [replay, setReplay] = useState(false);
-  const [activePlayer, setActivePlayer] = useState<?Player>();
+  const activePlayerRef = React.useRef<?Player>(null);
 
   const updateVolumeState = React.useCallback(
     debounce((volume, muted) => {
@@ -126,21 +116,22 @@ function VideoViewer(props: Props): React.Node {
     }
   }, [uri, previousUri]);
 
-  // Update vjsCallbackDataRef (ensures videojs callbacks are not using stale values):
   useEffect(() => {
-    vjsCallbackDataRef.current = {
-      videoPlaybackRate: videoPlaybackRate,
-    };
+    playbackRateRef.current = videoPlaybackRate;
   }, [videoPlaybackRate]);
 
-  function doTrackingBuffered(e: Event, data: any) {
+  function doTrackingBuffered(e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    const data = e.detail;
     fetch(source, { method: 'HEAD', cache: 'no-store' }).then((response) => {
       data.playerPoweredBy = response.headers.get('x-powered-by');
       doAnalyticsBuffer(uri, data);
     });
   }
 
-  function doTrackingFirstPlay(this: Player, e: Event, data: any) {
+  function doTrackingFirstPlay(player: Player, e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    const data = e.detail;
     let timeToStart = data.secondsToLoad;
 
     if (desktopPlayStartTime !== undefined) {
@@ -165,7 +156,7 @@ function VideoViewer(props: Props): React.Node {
         playerPoweredBy,
         userId,
         claim.canonical_url,
-        this,
+        player,
         bitrateAsBitsPerSecond
       );
     });
@@ -204,13 +195,14 @@ function VideoViewer(props: Props): React.Node {
         setReplay(true);
       }
     } else {
+      const activePlayer = activePlayerRef.current;
       if (activePlayer) {
-        const currentTime = activePlayer.currentTime();
+        const currentTime = activePlayer.currentTime;
 
         if (currentTime <= 5) {
           if (previousListUri && permanentUrl !== previousListUri) doPlay(previousListUri);
         } else {
-          activePlayer.currentTime(0);
+          activePlayer.currentTime = 0;
         }
         setDoNavigate(false);
       }
@@ -228,7 +220,6 @@ function VideoViewer(props: Props): React.Node {
     permanentUrl,
     playNextUrl,
     previousListUri,
-    activePlayer,
   ]);
 
   React.useEffect(() => {
@@ -267,17 +258,14 @@ function VideoViewer(props: Props): React.Node {
   }
 
   function handlePosition(player: Player) {
-    const currTime = player.currentTime();
-    const durationInSeconds = claim.value.video && claim.value.video.duration;
-    if (Number(durationInSeconds) > Number(currTime)) {
-      savePosition(uri, player.currentTime());
+    const currTime = player.currentTime;
+    if (player.duration > currTime) {
+      savePosition(uri, player.currentTime);
     }
   }
 
   function restorePlaybackRate(player: Player) {
-    if (!vjsCallbackDataRef.current.embedded) {
-      player.playbackRate(vjsCallbackDataRef.current.videoPlaybackRate);
-    }
+    player.playbackRate = playbackRateRef.current;
   }
 
   const playerReadyDependencyList = [uri, desktopPlayStartTime];
@@ -293,74 +281,44 @@ function VideoViewer(props: Props): React.Node {
   };
 
   const onPlayerReady = useCallback((player: Player) => {
-    setActivePlayer(player);
-    player.muted(muted);
-    player.volume(volume);
-    player.playbackRate(videoPlaybackRate);
-    if (!isMarkdownOrComment) {
-      addTheaterModeButton(player, toggleVideoTheaterMode);
-      if (collectionId) {
-        addPlayNextButton(player, doPlayNext);
-        addPlayPreviousButton(player, doPlayPrevious);
-      } else {
-        addAutoplayNextButton(player, toggleAutoplayNext, autoplayNext);
+    activePlayerRef.current = player;
+    player.muted = muted;
+    player.volume = Math.max(0, Math.min(1, volume));
+    player.playbackRate = videoPlaybackRate;
+    let active = true;
+    let restored = false;
+    const restore = () => {
+      restorePlaybackRate(player);
+      if (!restored) {
+        restored = true;
+        if (position && Number.isFinite(player.duration)) player.currentTime = Math.min(position, player.duration);
       }
-    }
-
-    // https://blog.videojs.com/autoplay-best-practices-with-video-js/#Programmatic-Autoplay-and-Success-Failure-Detection
-    const playPromise = player.play();
-    const timeoutPromise = new Promise((resolve, reject) =>
-      setTimeout(() => reject(PLAY_TIMEOUT_ERROR), PLAY_TIMEOUT_LIMIT)
-    );
-
-    Promise.race([playPromise, timeoutPromise]).catch((error) => {
-      if (typeof error === 'object' && error.name && error.name === 'NotAllowedError') {
-        if (player.autoplay() && !player.muted()) {
-          // player.muted(true);
-          // another version had player.play()
-        }
-      }
-      setIsLoading(false);
-      setIsPlaying(false);
-    });
-
-    setIsLoading(true); // if we are here outside of an embed, we're playing
-
-    // PR: #5535
-    // Move the restoration to a later `loadedmetadata` phase to counter the
-    // delay from the header-fetch. This is a temp change until the next
-    // re-factoring.
-    player.on('loadedmetadata', () => restorePlaybackRate(player));
-
-    // used for tracking buffering for watchman
-    player.on('tracking:buffered', doTrackingBuffered);
-
-    // first play tracking, used for initializing the watchman api
-    player.on('tracking:firstplay', doTrackingFirstPlay);
-    player.on('ended', () => setEnded(true));
-    player.on('play', () => onPlay(player));
-    player.on('pause', (event) => onPause(event, player));
-    player.on('dispose', (event) => onDispose(event, player));
-
-    player.on('volumechange', () => {
-      if (player) {
-        updateVolumeState(player.volume(), player.muted());
-      }
-    });
-    player.on('ratechange', () => {
-      const HAVE_NOTHING = 0; // https://docs.videojs.com/player#readyState
-      if (player && player.readyState() !== HAVE_NOTHING) {
-        // The playbackRate occasionally resets to 1, typically when loading a fresh video or when 'src' changes.
-        // Videojs says it's a browser quirk (https://github.com/videojs/video.js/issues/2516).
-        // [x] Don't update 'videoPlaybackRate' in this scenario.
-        // [ ] Ideally, the controlBar should be hidden to prevent users from changing the rate while loading.
-        setVideoPlaybackRate(player.playbackRate());
-      }
-    });
-
-    if (position) {
-      player.currentTime(position);
-    }
+    };
+    const listeners = {
+      loadedmetadata: restore,
+      'tracking:buffered': doTrackingBuffered,
+      'tracking:firstplay': (event: Event) => doTrackingFirstPlay(player, event),
+      ended: () => setEnded(true),
+      play: () => onPlay(player),
+      pause: (event: Event) => onPause(event, player),
+      volumechange: () => updateVolumeState(player.volume, player.muted),
+      ratechange: () => {
+        if (player.readyState !== 0) setVideoPlaybackRate(player.playbackRate);
+      },
+    };
+    Object.keys(listeners).forEach((event) => player.addEventListener(event, listeners[event]));
+    if (player.readyState >= 1) restore();
+    setIsLoading(true);
+    const timeout = setTimeout(() => {
+      if (active) setIsLoading(false);
+    }, PLAY_TIMEOUT_LIMIT);
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      onDispose(new Event('dispose'), player);
+      Object.keys(listeners).forEach((event) => player.removeEventListener(event, listeners[event]));
+      if (activePlayerRef.current === player) activePlayerRef.current = null;
+    };
   }, playerReadyDependencyList); // eslint-disable-line
 
   return (
@@ -388,6 +346,9 @@ function VideoViewer(props: Props): React.Node {
         toggleVideoTheaterMode={toggleVideoTheaterMode}
         autoplay
         autoplaySetting={autoplayNext}
+        toggleAutoplayNext={toggleAutoplayNext}
+        collectionId={collectionId}
+        isMarkdownOrComment={isMarkdownOrComment}
         claimId={claimId}
         userId={userId}
         shareTelemetry={shareTelemetry}

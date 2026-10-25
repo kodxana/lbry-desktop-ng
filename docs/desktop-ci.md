@@ -73,11 +73,11 @@ Additional renderer phases mount the production document viewers, file selector,
 update prompt, wallet backup card and encryption/unlock forms with the real store
 and router:
 
-- Media checks mount the production Video.js player against generated MP4, HLS
+- Media checks mount the production Video.js player against generated MP4, HLS, DASH
   and audio fixtures. They verify decoding, HTTP ranges, redirect/type detection,
   MediaSource, pause, seek, playback completion and disposal. The
-  [Video.js 8 checks](media-player.md) also cover custom controls, keyboard speed
-  overlays, tracking events, manual/Auto HLS quality selection, source changes
+  [Video.js 10 checks](media-player.md) also cover custom controls, keyboard speed
+  overlays, tracking events, manual/Auto HLS quality selection and decoded resolution, captions, fullscreen, source changes
   and unmounting during type detection. Only the fixture's
   loopback origin is allowed during that phase; no network media is downloaded.
 

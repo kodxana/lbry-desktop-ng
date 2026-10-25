@@ -15,10 +15,20 @@ module.exports = async () => {
     'segment-0.ts': 'video/mp2t',
     'segment-1.ts': 'video/mp2t',
     'segment-2.ts': 'video/mp2t',
+    'manifest.mpd': 'application/dash+xml',
+    'init-stream0.m4s': 'video/mp4',
+    'init-stream1.m4s': 'audio/mp4',
+    'chunk-stream0-00001.m4s': 'video/iso.segment',
+    'chunk-stream0-00002.m4s': 'video/iso.segment',
+    'chunk-stream0-00003.m4s': 'video/iso.segment',
+    'chunk-stream1-00001.m4s': 'audio/iso.segment',
+    'chunk-stream1-00002.m4s': 'audio/iso.segment',
+    'chunk-stream1-00003.m4s': 'audio/iso.segment',
   };
   const requests = [];
+  let failedPlayback = false;
   const server = http.createServer((request, response) => {
-    const name = new URL(request.url, 'http://127.0.0.1').pathname.slice(1);
+    let name = new URL(request.url, 'http://127.0.0.1').pathname.slice(1);
     requests.push({ name, method: request.method, range: request.headers.range });
     response.setHeader('Access-Control-Allow-Origin', '*');
     if (!['GET', 'HEAD'].includes(request.method)) {
@@ -28,6 +38,14 @@ module.exports = async () => {
     if (name === 'redirect.mp4') {
       response.writeHead(302, { Location: '/playlist.m3u8' }).end();
       return;
+    }
+    if (name === 'retry.mp4') {
+      if (request.method === 'GET' && !failedPlayback) {
+        failedPlayback = true;
+        response.writeHead(503).end();
+        return;
+      }
+      name = 'sample.mp4';
     }
     if (!Object.prototype.hasOwnProperty.call(types, name)) {
       response.writeHead(404).end();

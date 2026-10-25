@@ -12,7 +12,7 @@
 .embed__wrapper--light-background {
   @extend .embed__wrapper;
 
-  .vjs-poster,
+  .player-poster,
   video {
     background-color: var(--color-white);
   }

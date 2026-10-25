@@ -1,54 +1,61 @@
-# Video.js 8 migration
+# Video.js 10 migration
 
-The player moves from Video.js 7.19.2 to 8.24.1, with quality-levels 4.1.0
-and HTTP Streaming (VHS) 3.17.5. The later [media dependency batch](legacy-media-adapters.md)
-replaces event-tracking 1.0.3 with local first-play, buffering and seeking handlers.
-The lockfile shares one Video.js instance between
-the player and plugins instead of retaining two copies of version 7. A Yarn
-resolution keeps their broad dependency ranges on 8.24.1; the renderer runner
-rejects installations that resolve a different player instance for a plugin.
+The desktop uses @videojs/react, @videojs/hlsjs-video and @videojs/dash-video
+10.2.0. This follows the [Video.js migration guide](https://videojs.org/docs/framework/react/guides/migrate-from-video-js-8):
+version 10 replaces the old player/component/plugin API with React components,
+media adapters and native media events. The unscoped video.js package no longer
+contains a player.
 
-Version 8 is an intermediate compatibility step. The
-[upstream support plan](https://videojs.org/docs/framework/react/guides/v10-roadmap)
-still provides fixes for it. Video.js 10 uses a new component architecture and
-requires a separate migration of our controls, overlays and event integration.
+## Compatibility
 
-## Compatibility changes
+MP4 and audio use native media elements. HLS uses hls.js through the official
+adapter because existing SDK streams can contain MPEG-TS segments; the SPF-only
+adapter does not cover that format. DASH retains its own official adapter.
+Source detection follows SDK redirects and recognizes manifest paths with query
+strings as well as response MIME types. Pending detection is aborted on unmount.
 
-The [7-to-8 migration guide](https://legacy.videojs.org/guides/videojs-7-to-8/)
-requires native classes for custom components. The old Babel configuration
-compiled our subclasses into functions, causing `MenuButton cannot be invoked without 'new'` during player startup. A scoped Babel override preserves classes
-only in the player's internal components and plugins. Production and development
-builds use that same override.
+The desktop retains its dark player controls, playback speeds (including 1.1x),
+playlist navigation, autoplay-next setting, theater/fullscreen controls, volume,
+saved position and timestamp links. Quality selection uses Video.js rendition
+state, with manual choices and Auto. Quality switches take effect at fragment
+boundaries rather than instantly replacing the current frame. Caption choices
+use native text tracks. Keyboard shortcuts defer to focused form controls and
+sliders; the timeline and volume controls have their own keyboard semantics.
 
-The bundled quality-selector, overlay, mobile-UI and recommendation plugins use
-`videojs.obj.merge` instead of deprecated `videojs.mergeOptions`. Existing ARIA
-attributes already use `setAttribute`; the tracking plugin listens for `playing`
-and does not depend on the removed `firstplay` event. Its separate
-`tracking:firstplay` event is retained.
-
-Source changes dispose the old player, remove its wrapper and unregister the
-exact keyboard listener that was installed. A delayed content-type check cannot
-create a player after its component has unmounted.
+The old quality-selector, mobile-UI, overlay, volume and recommendation plugins
+are removed, along with Video.js 8, quality-levels, VHS and the Babel subclass
+override. First-play, buffer and seek payloads retain their existing formats.
+Recommendation events read current telemetry consent, including during cleanup.
+Player cleanup saves position before adaptive adapters detach, removes listeners
+and stops playback. Updating a control does not recreate the decoder.
 
 ## Validation
 
-`node build/testRenderer.js` mounts the production player and custom controls
-against generated local media. The checks cover:
+The renderer test command (node build/testRenderer.js) exercises the production components in Electron
+against generated loopback fixtures. It covers:
 
-- H.264/AAC MP4, HTTP range requests, audio, redirected HLS and MediaSource
-  decoding, pause, playback speed, seeking, completion and disposal.
-- A two-rendition HLS master playlist, manual/Auto menu choices, selection ARIA
-  state and the corresponding enabled VHS representations. This checks the
-  selection policy, not immediate replacement of already-buffered frames.
-- Custom volume, next/previous, theater and autoplay controls; keyboard speed
-  changes and overlays; initial-play and seeking tracking events.
-- Source replacement, single keyboard dispatch after replacement, cleanup and
-  unmounting while content-type responses are pending.
+- MP4 range requests, redirected HLS, two HLS renditions, DASH and audio decoding;
+  play/pause, seek, speed, completion, replacement and cleanup.
+- Manual HLS choices changing decoded frame dimensions, returning to Auto,
+  and accessible control labels.
+- Real keyboard input for seek/volume sliders and rate selection, fullscreen
+  enter/exit, theater and autoplay switches, muted-playback recovery, VTT
+  captions, compact/embed layout, and dark/light screenshots.
+- Saved position, volume, mute and speed callbacks; Previous restarting the
+  current item after five seconds and otherwise navigating to the previous one.
+- Source detection failure, rejected autoplay, actual failed media loading and
+  retry, plus late detection after unmount.
 
-The existing Windows/Linux wallet backup, encryption, saved-password, updater,
-package and startup gates remain required. Fixtures use disposable profiles and
-local synthetic media; no public content or personal wallet is needed.
+Unit checks cover timing, consent withdrawal and listener cleanup. Flow checks
+include positive and negative contracts for the new player APIs. Package checks
+reject the removed dependencies. The existing wallet backup/encryption,
+saved-password migration/native storage, updater, SDK and installed-upgrade
+gates remain required on the candidate revision.
 
-Hardware decoding, live streams, complex adaptive streams, subtitles, native
-fullscreen interaction and macOS still need separate acceptance testing.
+The media phase runs in a separate fixture process, so decoding does not consume
+the general UI suite's timeout. The sandbox suite also decodes MP4, HLS and DASH
+with Node integration disabled and the production preload.
+
+Fixtures contain no personal wallet or third-party media. Hardware decoding,
+live/adaptive behavior on slow public streams, DRM and macOS still need separate
+acceptance testing. This migration does not change the SDK or Electron version.

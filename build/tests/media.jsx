@@ -1,42 +1,13 @@
 import { strict as assert } from 'assert';
 import React from 'react';
 import { ipcRenderer } from 'electron';
-import videojs from 'video.js';
 import VideoViewer from 'component/viewers/videoViewer/view';
 import analytics from 'analytics';
 import VideoJs from 'component/viewers/videoViewer/internal/videojs';
-import LbryVolumeBar from 'component/viewers/videoViewer/internal/lbry-volume-bar';
-import hlsQualitySelector from 'component/viewers/videoViewer/internal/plugins/videojs-hls-quality-selector/plugin';
-import { addTheaterModeButton } from 'component/viewers/videoViewer/internal/theater-mode';
-import { addAutoplayNextButton } from 'component/viewers/videoViewer/internal/autoplay-next';
-import { addPlayNextButton } from 'component/viewers/videoViewer/internal/play-next';
-import { addPlayPreviousButton } from 'component/viewers/videoViewer/internal/play-previous';
 import { render, unmount, waitFor } from './helpers';
+import mediaControls from './mediaControls';
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-async function lateQualityMenu() {
-  const element = document.createElement('video');
-  document.getElementById('app').appendChild(element);
-  const player = videojs(element, { controls: true });
-  try {
-    await new Promise((resolve) => player.ready(resolve));
-    for (const height of [32, 64]) {
-      player
-        .qualityLevels()
-        .addQualityLevel({ id: String(height), height, bitrate: height * 1000, enabled: () => true });
-    }
-    hlsQualitySelector.call(player, {});
-    await waitFor(() => typeof player.hlsQualitySelector === 'object', 'Late quality selector did not initialize');
-    assert.deepEqual(
-      player.controlBar.getChild('QualityButton').items.map((item) => item.item.value),
-      [32, 64, 'auto'],
-      'Quality levels loaded before plugin initialization must populate the menu'
-    );
-  } finally {
-    player.dispose();
-  }
-}
 
 async function lifecycle(store, history, origin) {
   const players = [];
@@ -49,6 +20,7 @@ async function lifecycle(store, history, origin) {
         isAudio={isAudio}
         autoplay={false}
         autoplaySetting={false}
+        collectionId="fixture-playlist"
         shareTelemetry={false}
         replay={false}
         videoTheaterMode={false}
@@ -56,7 +28,7 @@ async function lifecycle(store, history, origin) {
         playNext={() => next++}
         playPrevious={() => {}}
         onPlayerReady={(player) => {
-          player.muted(true);
+          player.muted = true;
           players.push(player);
         }}
       />,
@@ -69,13 +41,9 @@ async function lifecycle(store, history, origin) {
     await waitFor(() => players.length === 1, 'First source did not initialize');
     mount('audio.m4a', true);
     await waitFor(() => players.length === 2, 'Replacement source did not initialize');
-    assert(players[0].isDisposed(), 'A source change must dispose the old player');
+    assert(!players[0].isConnected && players[0].paused, 'A source change must dispose the old player');
     assert.equal(window.player, players[1]);
-    assert.equal(
-      document.querySelectorAll('[data-vjs-player]').length,
-      1,
-      'A source change must remove the old wrapper'
-    );
+    assert.equal(document.querySelectorAll('.lbry-player').length, 1, 'A source change must remove the old wrapper');
     playNext();
     assert.equal(next, 1, 'A source change must not duplicate keyboard shortcuts');
   } finally {
@@ -83,7 +51,7 @@ async function lifecycle(store, history, origin) {
   }
   playNext();
   assert.equal(next, 1, 'Unmount must remove keyboard shortcuts');
-  assert(players.every((player) => player.isDisposed()));
+  assert(players.every((player) => !player.isConnected && player.paused));
 
   const originalFetch = window.fetch;
   const release = [];
@@ -94,13 +62,12 @@ async function lifecycle(store, history, origin) {
   };
   try {
     mount('sample.mp4');
-    await waitFor(() => release.length === 2, 'The source checks did not start');
+    await waitFor(() => release.length === 1, 'The source checks did not start');
     unmount();
     release.forEach((resolve) => resolve());
     await delay(100);
     assert.equal(players.length, 2, 'Late source detection must not initialize an unmounted player');
     assert.equal(window.player, undefined);
-    assert.equal(Object.values(videojs.getPlayers()).filter(Boolean).length, 0);
   } finally {
     release.forEach((resolve) => resolve());
     window.fetch = originalFetch;
@@ -111,6 +78,10 @@ async function lifecycle(store, history, origin) {
 async function viewerCallbacks(store, history, origin) {
   const noop = () => {};
   const notifications = [];
+  const positions = [];
+  const volumes = [];
+  const mutes = [];
+  const rates = [];
   const previous = 'lbry://previous#def';
   const current = 'lbry://current#abc';
   const original = analytics.videoIsPlaying;
@@ -129,21 +100,21 @@ async function viewerCallbacks(store, history, origin) {
           value: { source: { size: 1000 }, video: { duration: 6 } },
         }}
         uri={current}
-        position={0}
+        position={1.5}
         muted
         volume={0.5}
-        videoPlaybackRate={1}
+        videoPlaybackRate={1.25}
         autoplayNext={false}
-        changeVolume={noop}
-        changeMute={noop}
+        changeVolume={(value) => volumes.push(value)}
+        changeMute={(value) => mutes.push(value)}
         doAnalyticsView={async () => {}}
         doAnalyticsBuffer={noop}
         claimRewards={noop}
-        savePosition={noop}
+        savePosition={(uri, value) => positions.push([uri, value])}
         clearPosition={noop}
         toggleVideoTheaterMode={noop}
         toggleAutoplayNext={noop}
-        setVideoPlaybackRate={noop}
+        setVideoPlaybackRate={(value) => rates.push(value)}
         userId={0}
         shareTelemetry={false}
         isFloating={false}
@@ -157,9 +128,21 @@ async function viewerCallbacks(store, history, origin) {
       store,
       history
     );
-    await waitFor(() => window.player && window.player.readyState() >= 2, 'Viewer must initialize a real player');
+    await waitFor(() => window.player && window.player.readyState >= 2, 'Viewer must initialize a real player');
     const player = window.player;
     player.pause();
+    await waitFor(() => !player.seeking && player.currentTime >= 1.5, 'Saved position is restored after metadata');
+    assert.equal(player.volume, 0.5);
+    assert.equal(player.muted, true);
+    assert.equal(player.playbackRate, 1.25);
+    player.volume = 0.3;
+    player.muted = false;
+    player.playbackRate = 1.1;
+    await waitFor(
+      () => volumes.at(-1) === 0.3 && mutes.at(-1) === false && rates.at(-1) === 1.1,
+      'Volume, mute and speed changes reach saved preferences'
+    );
+    player.muted = true;
     await player.play();
     await waitFor(() => notifications.some((event) => event.playing), 'Play notification must be delivered');
     assert(
@@ -167,16 +150,21 @@ async function viewerCallbacks(store, history, origin) {
       'Playback callbacks must receive the player, not the DOM event'
     );
     player.pause();
-    player.currentTime(5.5);
-    await waitFor(() => player.currentTime() > 5, 'Seek before testing Previous');
-    document.querySelector('.vjs-button--play-previous').click();
-    await waitFor(() => player.currentTime() < 0.1, 'Previous after five seconds restarts the current video');
+    player.currentTime = 5.5;
+    await waitFor(() => player.currentTime > 5, 'Seek before testing Previous');
+    document.querySelector('.player-previous').click();
+    await waitFor(() => player.currentTime < 0.1, 'Previous after five seconds restarts the current video');
     assert.equal(history.location.pathname, '/current:abc');
-    document.querySelector('.vjs-button--play-previous').click();
+    document.querySelector('.player-previous').click();
     await waitFor(
       () => history.location.pathname === '/previous:def',
       'Previous near the start navigates to the preceding item'
     );
+    player.currentTime = 2;
+    await waitFor(() => !player.seeking && player.currentTime === 2, 'Seek before saving on unmount');
+    positions.length = 0;
+    unmount();
+    assert.deepEqual(positions, [[current, 2]], 'Unmount saves the position once before resetting the decoder');
   } finally {
     unmount();
     analytics.videoIsPlaying = original;
@@ -184,17 +172,17 @@ async function viewerCallbacks(store, history, origin) {
 }
 
 export default async function media(store, history) {
-  await lateQualityMenu();
-  assert.equal(videojs.VERSION, '8.24.1');
   const { origin } = await ipcRenderer.invoke('fixture-media');
   for (const [file, type, audio] of [
     ['sample.mp4', 'video/mp4', false],
     ['redirect.mp4', 'video/mp4', false],
     ['master.m3u8', 'application/x-mpegURL', false],
+    ['manifest.mpd', 'application/dash+xml', false],
     ['audio.m4a', 'audio/mp4', true],
   ]) {
     let player;
     let element;
+    let disposedAt;
     const calls = { next: 0, previous: 0, theater: 0, autoplay: 0, firstplay: 0, seek: 0 };
     const called = (name) => () => calls[name]++;
     render(
@@ -204,6 +192,7 @@ export default async function media(store, history) {
         isAudio={audio}
         autoplay={false}
         autoplaySetting={false}
+        collectionId="fixture-playlist"
         shareTelemetry={false}
         replay={false}
         videoTheaterMode={false}
@@ -213,13 +202,12 @@ export default async function media(store, history) {
         onPlayerReady={(ready, node) => {
           player = ready;
           element = node;
-          player.muted(true);
-          addTheaterModeButton(player, called('theater'));
-          addAutoplayNextButton(player, called('autoplay'), false);
-          addPlayNextButton(player, called('next'));
-          addPlayPreviousButton(player, called('previous'));
-          player.on('tracking:firstplay', called('firstplay'));
-          player.on('tracking:seek', called('seek'));
+          player.muted = true;
+          player.addEventListener('tracking:firstplay', called('firstplay'));
+          player.addEventListener('tracking:seek', called('seek'));
+          return () => {
+            disposedAt = player.currentTime;
+          };
         }}
       />,
       store,
@@ -228,91 +216,89 @@ export default async function media(store, history) {
     const loaded = (predicate, message) =>
       waitFor(
         () => {
-          assert(!player || !player.error(), file + ': ' + JSON.stringify(player && player.error()));
+          assert(!player || !player.error, file + ': ' + JSON.stringify(player && player.error));
           return player && predicate();
         },
         file + ': ' + message
       );
     try {
       await loaded(() => element.readyState >= 2, 'media did not decode');
-      assert(Math.abs(player.duration() - 6) < 0.2, 'Read the actual fixture duration');
+      assert(Math.abs(player.duration - 6) < 0.2, 'Read the actual fixture duration');
       if (!audio) {
         assert([32, 64].includes(element.videoHeight));
         assert.equal(element.videoWidth / element.videoHeight, 1.5);
       }
-      if (file === 'redirect.mp4' || file === 'master.m3u8') {
+      if (file === 'redirect.mp4' || file === 'master.m3u8' || file === 'manifest.mpd') {
         assert(element.currentSrc.startsWith('blob:'), 'HLS must use the real MediaSource playback path');
       }
-      const controls = player.getChild('ControlBar');
-      const volumeControl = controls.getChild('VolumePanel').getChild('VolumeControl');
-      assert(
-        volumeControl.children().some((child) => child instanceof LbryVolumeBar),
-        'Use the custom volume bar'
-      );
       for (const [name, call] of [
-        ['TheaterModeButton', 'theater'],
-        ['PlayNextButton', 'next'],
-        ['PlayPreviousButton', 'previous'],
-        ['AutoplayNextButton', 'autoplay'],
+        ...(!audio ? [['theater', 'theater']] : []),
+        ['next', 'next'],
+        ['previous', 'previous'],
       ]) {
-        const button = controls.getChild(name).el();
-        assert(button.getAttribute('title') || button.getAttribute('aria-label'), 'Controls must retain their labels');
+        const button = document.querySelector('.player-' + name);
+        assert(button.getAttribute('aria-label'), 'Controls retain accessible labels');
         button.click();
-        assert.equal(calls[call], 1, name + ' must invoke its action once');
+        assert.equal(calls[call], 1, name + ' invokes its action once');
       }
-      assert.equal(controls.getChild('AutoplayNextButton').el().getAttribute('aria-checked'), 'false');
       if (file === 'master.m3u8') {
-        await loaded(() => player.qualityLevels().length === 2, 'master playlist did not expose both qualities');
-        const selector = player.hlsQualitySelector;
-        const button = controls.getChild('QualityButton');
-        assert(!button.hasClass('vjs-hidden'));
-        assert.deepEqual(
-          button.items.map((item) => item.item.value),
-          [32, 64, 'auto']
+        await loaded(
+          () => document.querySelector('.player-quality')?.options.length === 3,
+          'Both HLS qualities and Auto are available'
         );
-        const vhs = player.tech({ IWillNotUseThisInPlugins: true }).vhs;
-        for (const height of [32, 64, 'auto']) {
-          const item = button.items.find((entry) => entry.item.value === height);
-          item.el().click();
-          assert.equal(selector.getCurrentQuality(), height);
-          assert.equal(item.el().getAttribute('aria-checked'), 'true');
-          for (const representation of vhs.representations()) {
-            assert.equal(representation.enabled(), height === 'auto' || representation.height === height);
+        const selector = document.querySelector('.player-quality');
+        assert.deepEqual(
+          [...selector.options].map((option) => option.textContent).sort(),
+          ['32p', '64p', 'Auto'].sort()
+        );
+        for (const label of ['32p', '64p', 'Auto']) {
+          player.currentTime = 0;
+          await loaded(() => !player.seeking && player.currentTime < 0.1, 'Seek before changing quality');
+          selector.value = [...selector.options].find((option) => option.textContent === label).value;
+          selector.dispatchEvent(new Event('change', { bubbles: true }));
+          await delay(0);
+          await loaded(() => selector.selectedOptions[0].textContent === label, 'Quality selection retained');
+          if (label !== 'Auto') {
+            await player.play();
+            await loaded(
+              () => player.videoHeight === parseInt(label, 10) && !player.seeking,
+              'Manual quality must change the decoded frame size to ' + label
+            );
+            player.pause();
           }
         }
-      } else if (file !== 'redirect.mp4') {
-        assert(controls.getChild('QualityButton').hasClass('vjs-hidden'), 'MP4/audio must not show HLS choices');
+        player.currentTime = 0;
+        await loaded(() => !player.seeking && player.currentTime < 0.1, 'Quality checks return to the start');
+      } else if (audio || file === 'sample.mp4') {
+        assert(!document.querySelector('.player-quality'), 'Single MP4/audio has no adaptive quality selector');
       }
       await player.play();
-      await loaded(() => player.currentTime() > 0.25, 'playback did not advance');
-      assert.equal(calls.firstplay, 1, 'The tracking plugin must share the production Video.js instance');
+      await loaded(() => player.currentTime > 0.25, 'playback did not advance');
+      assert.equal(calls.firstplay, 1, 'Native playback must report its first play');
       if (!audio) assert(element.getVideoPlaybackQuality().totalVideoFrames > 0, 'Chromium must decode video frames');
       player.pause();
-      const pausedAt = player.currentTime();
+      const pausedAt = player.currentTime;
       await delay(150);
-      assert(player.paused());
-      assert(Math.abs(player.currentTime() - pausedAt) < 0.1, 'Pause must stop the playback clock');
+      assert(player.paused);
+      assert(Math.abs(player.currentTime - pausedAt) < 0.1, 'Pause must stop the playback clock');
+      document.querySelector('.lbry-player').focus();
       window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: 190, shiftKey: true }));
-      await loaded(() => player.playbackRate() === 1.1, 'keyboard playback speed did not change');
-      assert(player.el().querySelector('.vjs-overlay-playrate').textContent.includes('1.1x'));
-      player.currentTime(4);
-      await loaded(() => !element.seeking && Math.abs(player.currentTime() - 4) < 0.3, 'seek did not finish');
+      await loaded(() => player.playbackRate === 1.1, 'keyboard playback speed did not change');
+      assert(document.querySelector('.player-notice').textContent.includes('1.1x'));
+      player.currentTime = 4;
+      await loaded(() => !element.seeking && Math.abs(player.currentTime - 4) < 0.3, 'seek did not finish');
       assert(calls.seek > 0, 'The tracking plugin must receive seeks');
-      player.playbackRate(2);
+      player.playbackRate = 2;
       await player.play();
-      await loaded(() => player.ended(), 'playback did not reach the end after seeking');
-      assert(player.currentTime() >= 5.8);
+      await loaded(() => player.ended, 'playback did not reach the end after seeking');
+      assert(player.currentTime >= 5.8);
       assert.equal(calls.firstplay, 1, 'Resume must not double-count the initial play');
     } finally {
       unmount();
     }
-    assert(player.isDisposed(), 'Unmount must dispose the player');
+    assert(!player.isConnected && player.paused, 'Unmount stops and removes the native player');
+    assert(disposedAt >= 5.8, file + ': cleanup must run before the decoder clears its playback position');
     assert.equal(window.player, undefined);
-    assert.equal(
-      Object.values(videojs.getPlayers()).filter(Boolean).length,
-      0,
-      'No registered player survives unmount'
-    );
   }
   const { requests } = await ipcRenderer.invoke('fixture-media');
   for (const name of ['sample.mp4', 'redirect.mp4', 'audio.m4a']) {
@@ -333,5 +319,6 @@ export default async function media(store, history) {
   );
   await lifecycle(store, history, origin);
   await viewerCallbacks(store, history, origin);
-  return 'Video.js 8: MP4, HLS/MediaSource and audio decode; controls, quality choices, overlays, tracking, seek, source changes and disposal';
+  await mediaControls(store, history, origin);
+  return 'Video.js 10: MP4, HLS/DASH MediaSource and audio decode; controls, quality choices, overlays, tracking, seek, source changes and disposal';
 }

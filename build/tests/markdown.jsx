@@ -169,7 +169,10 @@ export default async function markdown(store, history) {
   const previousPlayer = window.player;
   let seek;
   window.player = {
-    currentTime: (value) => {
+    get currentTime() {
+      return seek;
+    },
+    set currentTime(value) {
       seek = value;
     },
   };

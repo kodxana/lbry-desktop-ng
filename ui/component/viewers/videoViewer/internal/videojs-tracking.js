@@ -8,17 +8,7 @@ type TrackingData = {
   seekTo?: number,
 };
 
-type TrackingPlayer = {
-  on: (string, () => void) => void,
-  off: (string, () => void) => void,
-  trigger: (string, TrackingData) => void,
-  currentTime: () => number,
-  readyState: () => number,
-  scrubbing: () => boolean,
-};
-
-export default function eventTracking(this: TrackingPlayer): void {
-  const player = this;
+export default function eventTracking(player: HTMLMediaElement): () => void {
   let firstPlay = true;
   let loadStarted: number | void;
   let secondsToLoad = 0;
@@ -27,7 +17,8 @@ export default function eventTracking(this: TrackingPlayer): void {
   let seekCount = 0;
   let ignoreBufferUntil = 0;
   const seconds = (started: number) => Number((Math.max(0, performance.now() - started) / 1000).toFixed(3));
-  const position = () => Math.round(player.currentTime());
+  const position = () => Math.round(player.currentTime);
+  const emit = (name: string, detail: TrackingData) => player.dispatchEvent(new CustomEvent(name, { detail }));
 
   function reset() {
     firstPlay = true;
@@ -50,23 +41,23 @@ export default function eventTracking(this: TrackingPlayer): void {
     playing: () => {
       if (firstPlay) {
         firstPlay = false;
-        player.trigger('tracking:firstplay', { secondsToLoad });
+        emit('tracking:firstplay', { secondsToLoad });
       }
     },
     pause: () => {
       buffer = undefined;
-      if (player.scrubbing()) ignoreBufferUntil = performance.now() + 200;
+      if (player.seeking) ignoreBufferUntil = performance.now() + 200;
     },
     waiting: () => {
-      if (!buffer && performance.now() >= ignoreBufferUntil && player.currentTime() > 0) {
-        buffer = { started: performance.now(), position: position(), readyState: player.readyState() };
+      if (!buffer && performance.now() >= ignoreBufferUntil && player.currentTime > 0) {
+        buffer = { started: performance.now(), position: position(), readyState: player.readyState };
       }
     },
     timeupdate: () => {
       const pending = buffer;
       if (pending && pending.position !== position()) {
         buffer = undefined;
-        player.trigger('tracking:buffered', {
+        emit('tracking:buffered', {
           currentTime: position(),
           readyState: pending.readyState,
           secondsToLoad: seconds(pending.started),
@@ -74,12 +65,16 @@ export default function eventTracking(this: TrackingPlayer): void {
         });
       }
     },
-    seeking: () => player.trigger('tracking:seek', { seekCount: ++seekCount, seekTo: position() }),
-    ended: reset,
-    dispose: () => {
-      reset();
-      Object.keys(listeners).forEach((event) => player.off(event, listeners[event]));
+    seeking: () => {
+      buffer = undefined;
+      ignoreBufferUntil = performance.now() + 200;
+      emit('tracking:seek', { seekCount: ++seekCount, seekTo: position() });
     },
+    ended: reset,
   };
-  Object.keys(listeners).forEach((event) => player.on(event, listeners[event]));
+  Object.keys(listeners).forEach((event) => player.addEventListener(event, listeners[event]));
+  return () => {
+    reset();
+    Object.keys(listeners).forEach((event) => player.removeEventListener(event, listeners[event]));
+  };
 }
