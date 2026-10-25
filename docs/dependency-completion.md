@@ -46,7 +46,12 @@ They remain open work rather than being counted as completed by the refresh.
 | --- | --- | --- |
 | Markdown editor | CodeMirror 5.65.21 / 6.0.2 | EasyMDE 2.21.0 requires CodeMirror 5. The React wrapper requires EasyMDE below 3. Replacing the editor must preserve drafts, undo, selection, keyboard shortcuts, previews, spelling and offline assets. |
 | Media player | Video.js 8.24.1 / 10.2.0 | videojs-contrib-quality-levels 4.1.0 declares Video.js 8. Migrate the player and quality integration together, with playback, seeking, captions, source changes and cleanup coverage. |
-| Lint tooling | ESLint 9.39.5 / 10.13.0 | ESLint 9 is deprecated upstream. Current React, import and Flow plugins declare peers only through ESLint 9. Replace or migrate the incompatible rules; keep the existing lint/type gates effective. |
+
+The [ESLint migration](lint-tooling.md#eslint-10-compatibility) now runs 10.13.0
+with import-x 4.17.1 and the official compatibility adapter for React/Flow rules.
+Existing checks and warnings are preserved. The React/Flow peer declarations
+still stop at ESLint 9; native plugin support remains maintenance work, and the
+adapter is required until those plugins migrate.
 
 Electron 45.0.0 is also available. The current patched 44.9.3 remains within
 Electron's [latest-three-stable-major support policy](https://www.electronjs.org/docs/latest/tutorial/electron-timelines).
@@ -57,11 +62,7 @@ player changes.
 The constraints above come from the published manifests for
 [EasyMDE](https://registry.npmjs.org/easymde/2.21.0),
 [the editor wrapper](https://registry.npmjs.org/react-simplemde-editor/5.2.0),
-[quality levels](https://registry.npmjs.org/videojs-contrib-quality-levels/4.1.0),
-[React lint rules](https://registry.npmjs.org/eslint-plugin-react/7.37.5),
-[import lint rules](https://registry.npmjs.org/eslint-plugin-import/2.32.0),
-[Flow lint rules](https://registry.npmjs.org/eslint-plugin-ft-flow/3.0.11) and
-[ESLint 9](https://registry.npmjs.org/eslint/9.39.5).
+[quality levels](https://registry.npmjs.org/videojs-contrib-quality-levels/4.1.0).
 
 ## Release criteria
 

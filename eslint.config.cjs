@@ -1,6 +1,7 @@
 const globals = require('globals');
 const { fixupPluginRules } = require('@eslint/compat');
-const react = require('eslint-plugin-react');
+// React still calls rule-context and JSDoc APIs removed in ESLint 10.
+const react = fixupPluginRules(require('eslint-plugin-react'));
 
 module.exports = [
   { ignores: ['**/node_modules/**', '**/dist/**', '.yarn/**', 'flow-typed/**', 'static/**'] },
@@ -22,7 +23,7 @@ module.exports = [
     plugins: {
       // Keep the existing Flow rule names used by inline directives.
       flowtype: fixupPluginRules(require('eslint-plugin-ft-flow')),
-      import: require('eslint-plugin-import'),
+      import: require('eslint-plugin-import-x'),
       n: require('eslint-plugin-n'),
       react,
       'react-hooks': require('eslint-plugin-react-hooks'),

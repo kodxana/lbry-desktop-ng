@@ -11,19 +11,19 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After the compatible dependency refresh (based on merged PR #79):
+After the ESLint 10 migration (based on merged PR #80):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
-| Upgraded to a newer resolved version   |    91 |
-| Removed or replaced                    |    77 |
+| Upgraded to a newer resolved version   |    90 |
+| Removed or replaced                    |    78 |
 | Still at the original resolved version |     1 |
 | Total                                  |   169 |
 
 That is **99.4% upgraded, removed or replaced** (168/169). Strict version upgrades
-alone account for 53.8% (91/169). This is package-count progress, not a measure of
+alone account for 53.3% (90/169). This is package-count progress, not a measure of
 remaining engineering effort, security or release readiness. The current direct
-dependency set has 146 packages, including 54 additions/replacements.
+dependency set has 146 packages, including 55 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
 The checker runs again. Required checks load all 89 declaration files, reject
@@ -146,3 +146,8 @@ The [package-manager/security batch](package-manager-security.md) upgrades Yarn
 and Electron 44, refreshes compatible nested dependencies and removes the obsolete
 flow-typed download CLI. That CLI moves from the upgraded count to removed;
 all maintained definitions and the required full Flow check remain in place.
+
+The [ESLint 10 migration](lint-tooling.md#eslint-10-compatibility) replaces
+eslint-plugin-import with import-x, moving one original package from upgraded
+to removed/replaced. React and Flow lint rules retain their behavior through
+ESLint's official compatibility adapter; no correctness rules are disabled.
