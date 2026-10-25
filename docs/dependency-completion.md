@@ -30,8 +30,8 @@ The update keeps the SDK, Electron, application version and profile paths fixed.
 The Webpack declaration contract follows the new pin. Updater regressions now
 cover recovery from invalid cached installer filenames, in addition to existing
 checksum, consent, shutdown and legacy-client coverage.
-The spelling plugin's wildcard dependency is deduplicated onto Typo.js 1.4.0;
-renderer checks require it to resolve the same copy as the editor.
+That refresh also updated Typo.js to 1.4.0. The subsequent CodeMirror migration
+removes the legacy spelling plugin and uses Typo.js directly.
 
 unist-util-visit 5.2.0 was published on the inventory date and is held at 5.1.0
 under Yarn's one-day release-age safeguard. Recheck it in the next maintenance
@@ -44,8 +44,12 @@ They remain open work rather than being counted as completed by the refresh.
 
 | Area | Current / available | Why it needs its own migration |
 | --- | --- | --- |
-| Markdown editor | CodeMirror 5.65.21 / 6.0.2 | EasyMDE 2.21.0 requires CodeMirror 5. The React wrapper requires EasyMDE below 3. Replacing the editor must preserve drafts, undo, selection, keyboard shortcuts, previews, spelling and offline assets. |
 | Media player | Video.js 8.24.1 / 10.2.0 | videojs-contrib-quality-levels 4.1.0 declares Video.js 8. Migrate the player and quality integration together, with playback, seeking, captions, source changes and cleanup coverage. |
+
+The [CodeMirror 6 migration](markdown-editor.md) replaces EasyMDE, its React
+wrapper and the old spelling plugin in both the Markdown editor and read-only
+viewer. Original offline dictionary bytes, draft handling and editor controls
+remain covered by the renderer tests.
 
 The [ESLint migration](lint-tooling.md#eslint-10-compatibility) now runs 10.13.0
 with import-x 4.17.1 and the official compatibility adapter for React/Flow rules.
@@ -60,8 +64,6 @@ password, backup and installer checks, rather than combining it with editor or
 player changes.
 
 The constraints above come from the published manifests for
-[EasyMDE](https://registry.npmjs.org/easymde/2.21.0),
-[the editor wrapper](https://registry.npmjs.org/react-simplemde-editor/5.2.0),
 [quality levels](https://registry.npmjs.org/videojs-contrib-quality-levels/4.1.0).
 
 ## Release criteria

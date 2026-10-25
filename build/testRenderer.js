@@ -13,11 +13,18 @@ for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels
     plugin + ' must use the application Video.js instance'
   );
 }
-assert.equal(
-  require.resolve('typo-js', { paths: [path.dirname(require.resolve('codemirror-spell-checker'))] }),
-  require.resolve('typo-js'),
-  'The Markdown editor and spelling plugin must share the upgraded Typo.js instance'
-);
+for (const module of [
+  '@codemirror/view',
+  '@codemirror/commands',
+  '@codemirror/language',
+  '@codemirror/lang-markdown',
+]) {
+  assert.equal(
+    require.resolve('@codemirror/state', { paths: [path.dirname(require.resolve(module))] }),
+    require.resolve('@codemirror/state'),
+    module + ' must share the editor state constructors'
+  );
+}
 const output = path.resolve('dist/renderer-tests');
 fs.mkdirSync(output, { recursive: true });
 fs.mkdirSync(path.join(output, 'webworkers'), { recursive: true });

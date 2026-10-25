@@ -52,7 +52,7 @@ async function run(phase) {
       plugins: true,
       // Hidden fixture windows still need animation frames for the real viewers.
       backgroundThrottling: false,
-      offscreen: phase === 'documents' || phase === 'three' || phase === 'comics',
+      offscreen: ['documents', 'three', 'comics', 'markdownEditor'].includes(phase),
     },
   });
   activeWindow = window;
@@ -188,10 +188,32 @@ app
         (await activeWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
       );
     });
+    ipcMain.handle('fixture-editor-capture', async (event, theme) => {
+      assert.equal(activePhase, 'markdownEditor');
+      assert.equal(event.sender, activeWindow.webContents);
+      assert(['dark', 'light'].includes(theme));
+      // Hidden windows can retain an older compositor frame after a theme change.
+      const contents = activeWindow.webContents;
+      const painted = await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Editor repaint timed out')), 10000);
+        contents.once('paint', (_event, _rect, image) => {
+          clearTimeout(timeout);
+          resolve(image);
+        });
+        contents.invalidate();
+      });
+      fs.writeFileSync(path.resolve(`dist/ci/editor-${theme}.png`), painted.toPNG());
+    });
     ipcMain.handle('fixture-editor-input', async (event, input) => {
       assert.equal(activePhase, 'markdownEditor');
       assert.equal(event.sender, activeWindow.webContents);
-      if (input.text !== undefined) {
+      if (input.composition !== undefined) {
+        await activeWindow.webContents.debugger.sendCommand('Input.imeSetComposition', {
+          text: input.composition,
+          selectionStart: input.composition.length,
+          selectionEnd: input.composition.length,
+        });
+      } else if (input.text !== undefined) {
         await activeWindow.webContents.debugger.sendCommand('Input.insertText', { text: input.text });
       } else {
         const key = { keyCode: input.key, modifiers: input.modifiers || [] };

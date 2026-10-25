@@ -67,8 +67,8 @@ const mainConfig = {
           to: `${DIST_ROOT}/electron/static/licenses/font-awesome-README.md`,
         },
         {
-          from: path.resolve(__dirname, 'node_modules/codemirror-spell-checker/LICENSE'),
-          to: `${DIST_ROOT}/electron/static/licenses/codemirror-spell-checker.LICENSE`,
+          from: path.resolve(__dirname, 'ui/util/dictionaries/LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/english-dictionary.LICENSE`,
         },
         {
           from: path.resolve(__dirname, 'ui/util/electron-cookies.LICENSE'),

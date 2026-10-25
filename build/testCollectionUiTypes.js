@@ -35,7 +35,6 @@ for (const file of fs.readdirSync(path.join(root, 'flow-typed')).filter((file) =
   const source = fs.readFileSync(path.join(root, 'flow-typed', file), 'utf8');
   if (!/declare module\s/.test(source)) write('flow-typed/' + file, source);
 }
-write('node_modules/easymde/dist/easymde.min.css', '');
 write(
   'ui/component/common/form.js',
   `// @flow

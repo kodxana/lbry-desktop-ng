@@ -15,15 +15,15 @@ After the ESLint 10 migration (based on merged PR #80):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
-| Upgraded to a newer resolved version   |    90 |
-| Removed or replaced                    |    78 |
+| Upgraded to a newer resolved version   |    88 |
+| Removed or replaced                    |    80 |
 | Still at the original resolved version |     1 |
 | Total                                  |   169 |
 
 That is **99.4% upgraded, removed or replaced** (168/169). Strict version upgrades
-alone account for 53.3% (90/169). This is package-count progress, not a measure of
+alone account for 52.1% (88/169). This is package-count progress, not a measure of
 remaining engineering effort, security or release readiness. The current direct
-dependency set has 146 packages, including 55 additions/replacements.
+dependency set has 149 packages, including 60 additions/replacements.
 
 PR #56 upgraded Flow 0.97.0 to 0.337.0 and flow-typed 3.8.0 to 4.1.1.
 The checker runs again. Required checks load all 89 declaration files, reject

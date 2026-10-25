@@ -29,31 +29,31 @@ export function openContextMenu(event) {
   });
 }
 
-async function openCodeMenu(codeMirror, event, editable) {
-  // Let CodeMirror prepare its input for native copy/cut/paste. The enclosing
-  // component's stopContextMenu handler suppresses the browser menu afterward.
+async function openCodeMenu(view, event, editable) {
+  // Focus the contenteditable before main-process copy/cut/paste commands run.
+  view.focus();
   const action = await showMenu(
     event,
     {
       kind: editable ? 'editor' : 'snippet',
-      hasText: codeMirror.doc.getValue().length > 0,
-      hasSelection: codeMirror.doc.getSelection().length > 0,
+      hasText: view.state.doc.length > 0,
+      hasSelection: !view.state.selection.main.empty,
     },
-    codeMirror.getWrapperElement()
+    view.dom
   );
-  if (action === 'editor-select-all' && codeMirror.getWrapperElement().isConnected) {
-    codeMirror.focus();
-    codeMirror.execCommand('selectAll');
+  if (action === 'editor-select-all' && view.dom.isConnected) {
+    view.focus();
+    view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
   }
 }
 
 // The publish-page Markdown editor and read-only code viewer share selection behavior.
-export function openEditorMenu(codeMirror, event) {
-  return openCodeMenu(codeMirror, event, !codeMirror.getOption('readOnly'));
+export function openEditorMenu(view, event) {
+  return openCodeMenu(view, event, !view.state.readOnly);
 }
 
-export function openSnippetMenu(codeMirror, event) {
-  return openCodeMenu(codeMirror, event, false);
+export function openSnippetMenu(view, event) {
+  return openCodeMenu(view, event, false);
 }
 
 export async function openClaimPreviewMenu(claim, event) {

@@ -1,62 +1,67 @@
-# Markdown editor dependencies
+# CodeMirror 6 editor
 
-This batch updates the shared editor used by posts, publish descriptions, channels
-and collections:
+Posts, publish descriptions, channels and collections now use CodeMirror 6
+without EasyMDE or react-simplemde-editor. The read-only document/code viewer
+also uses version 6, so CodeMirror 5 and its spelling plugin leave the lockfile.
 
-| Dependency | Previous resolved version | Current version |
-| --- | --- | --- |
-| react-simplemde-editor | 4.1.5 | 5.2.0 |
-| EasyMDE | 2.16.1 | 2.21.0 |
-| CodeMirror | 5.65.6 | 5.65.21 |
-| Typo.js | 1.2.1 | 1.4.0 |
+The direct modules are pinned: state 6.7.6, view 6.43.15, commands 6.11.1,
+language 6.13.1, lang-markdown 6.5.2, language-data 6.5.2 and Lezer highlight 1.2.5.
+The state constructors resolve to one copy across all editor packages.
 
-EasyMDE is now an explicit peer dependency of the React wrapper. CodeMirror stays
-on the latest 5.x release because EasyMDE requires its API; CodeMirror 6 is a
-separate editor migration. The lockfile shares one CodeMirror and one Typo.js
-version across the editor and its spelling plugin.
+## Editing compatibility
 
-## Compatibility changes
+The shared field creates one EditorView per mount. Controlled text changes and
+compartment reconfiguration preserve focus, selection and undo history while
+limits, disabled state, labels and placeholders change. External draft loads
+bypass editing limits and do not emit a user change or enter undo history.
+An over-limit restored draft is preserved; users can shorten it without losing
+unrelated text. Typed/pasted replacements account for removed characters, and
+limits do not split UTF-16 surrogate pairs. Formatting that cannot fit is rejected
+as a whole. Disabled and preview-only views reject document edits.
 
-The wrapper was rewritten with hooks. Changing its options object recreates the
-editor, which loses focus, selection and undo history on controlled form updates.
-The shared field now owns stable options, event handlers and an instance callback.
-The wrapper handles event subscription and editor cleanup. Changes to disabled
-state and placeholder update the existing CodeMirror instance directly.
+The toolbar retains bold, italic, quote, lists, links, preview and the Markdown
+guide, using the existing local Font Awesome assets and application theme colors.
+Formatting and link URL selection happen in one transaction. There is no delayed
+selection callback. Existing heading, image, task-list, code-block, clean-block,
+preview, F9 side-by-side and F11/Escape fullscreen shortcuts remain available.
+Enter continues lists; Tab/Shift-Tab indent lists while Tab outside lists remains
+available for keyboard navigation. Line, word, cursor and character counts remain.
 
-Length checks read the current field props, including after a limit changes.
-Selection replacement counts removed characters. Restoring a saved draft or
-loading an existing post preserves its complete text even when it exceeds the
-current editing limit. Disabled editors reject typing and toolbar modifications
-while still accepting loaded content.
+Preview uses the application's sanitized Markdown renderer and keeps LBRY links
+inert, as before. The editor does not introduce a second Markdown rendering engine.
+The existing English dictionary and license are preserved byte-for-byte under
+`ui/util/dictionaries`. A viewport-scoped CodeMirror view plugin uses Typo.js 1.4.0
+and native word segmentation; it excludes code, URLs and HTML markup. No editor
+asset requires a CDN, and dictionary bytes retain their ISO-8859-1 encoding.
 
-The existing link action continues to select the URL placeholder after Ctrl-K or
-a toolbar click, including multiline labels. Its delayed selection is cancelled
-on a later edit, mode switch or unmount. Preview still uses the app's Markdown
-renderer: formatting is preserved, scripts are removed and LBRY links remain
-inert within the editor preview.
+## Document viewer
 
-## Offline assets
-
-Font Awesome 4.7.0 provides the existing toolbar glyphs as a local dependency.
-The existing codemirror-spell-checker 1.1.2 plugin is also explicit, with its
-English dictionary bundled as bytes and decoded using the dictionary's Latin-1
-encoding. Its shared spelling engine is initialized on first editor use. These
-assets replace the editor's public CDN requests, without adding a new font or
-changing the dictionary language. Their package notices ship in static/licenses.
+The read-only viewer retains selection, native Copy/Select All, line numbers,
+wrapping and dark/light colors. Language support loads from locally bundled
+CodeMirror 6 chunks. Existing MIME mappings cover JavaScript/JSX, CSS, HTML/XML,
+PHP, Go, Ruby, C/C++/Java/C#, shell, Python and Markdown; unknown types remain
+readable plain text. A later content-type change or unmount invalidates an older
+language request, and a failed syntax chunk leaves the text visible.
 
 ## Validation
 
-`node build/testRenderer.js` mounts the production shared field in Electron and
-checks native text input and keyboard shortcuts, controlled updates, focus and
-undo retention, toolbar formatting, link selection, changing limits, longer
-restored drafts, disabled/loaded states, spelling (including accented words),
-local font loading, sanitized preview, native context-menu selection/paste, mode
-switches and unmount cleanup. System clipboard tests run only on disposable
-hosted CI runners. The network audit rejects external editor asset requests.
+`node build/testRenderer.js` exercises the production components in Electron:
+controlled input, selection, undo/redo, nested formatting, toolbar and keyboard
+commands, list continuation/indentation, URL selection, IME composition, live
+limits, emoji boundaries, restored drafts, disabled/loaded state, offline spelling,
+sanitized preview, theme styles, mode changes and unmount cleanup. Native context
+menus exercise editor and read-only viewer selection. Actual clipboard contents
+are changed only on disposable hosted CI runners.
 
-The same suite retains wallet backup/encryption, saved-password and update
-coverage. Production packaging, isolated SDK tests, packaged/development smoke
-tests and the hosted installed-upgrade workflow remain required.
+The renderer suite also retains wallet backup/encryption, saved-password migration
+and updater coverage. Full Flow and source-contract checks validate the version 6
+API declarations. Packaging verifies the removed editor packages are absent and
+the dictionary notice is included. The Windows/Linux desktop workflows and actual
+installed Windows upgrade workflow remain required before review is complete.
+Tests use disposable profiles and unfunded wallets; macOS and funded transactions
+are not part of this migration.
 
-References: [React wrapper v5 migration](https://github.com/RIP21/react-simplemde-editor#new-in-v5)
-and [EasyMDE changelog](https://github.com/Ionaru/easy-markdown-editor/blob/master/CHANGELOG.md).
+References: [CodeMirror migration guide](https://codemirror.net/docs/migration/),
+[transactions](https://codemirror.net/docs/ref/#state.Transaction),
+[configuration compartments](https://codemirror.net/examples/config/) and
+[the previous editor shortcuts](https://github.com/Ionaru/easy-markdown-editor/blob/2.21.0/src/js/easymde.js).
