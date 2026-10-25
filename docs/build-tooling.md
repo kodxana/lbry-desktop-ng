@@ -4,7 +4,7 @@ The build host uses Node 24.21.0, pinned in `.node-version`, with the checked-in
 Yarn 4.18.1 and immutable lockfile. CI and the packaging script use the same Node
 pin. No OpenSSL legacy-provider option is needed.
 
-This stage updates Webpack to 5.111.1 and its CLI, middleware, merge utility,
+This stage updates Webpack to 5.112.2 and its CLI, middleware, merge utility,
 Babel loader, asset-copy plugin, environment plugin, minifier and stylesheet
 loaders. PostCSS 8 uses the existing RTL plugin's compatible 2.0 release. The
 Sass compiler stayed at the RC3 lock's 1.53.0 during that stage; it was passed

@@ -1,6 +1,6 @@
 # Desktop compiler
 
-The desktop uses Babel 8.0.7 with runtime helpers from 8.0.7 and the existing
+The desktop uses Babel 8.0.9 with runtime helpers from 8.0.8 and the existing
 Webpack 5 / babel-loader 10 pipeline. The 12 direct Babel dependencies are pinned
 to compatible stable 8.x versions. The runtime helper version is also passed to
 `transform-runtime` so emitted imports match the declared dependency. Babel's
@@ -24,7 +24,7 @@ the older object-spread/import transforms had no callers and were removed.
 The dynamic-import syntax plugin is unnecessary with the current Babel parser;
 Webpack still receives ESM and dynamic imports for lazy chunks.
 
-`@babel/polyfill` is replaced at all three entry points by `core-js/stable` 3.50.0
+`@babel/polyfill` is replaced at all three entry points by `core-js/stable` 3.51.0
 and `regenerator-runtime/runtime` 0.14.1, following the
 [Babel polyfill guidance](https://babeljs.io/docs/babel-polyfill). Stable global
 APIs and the generator runtime remain available to legacy compiled dependencies.

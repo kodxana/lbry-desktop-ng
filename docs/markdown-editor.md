@@ -8,7 +8,7 @@ and collections:
 | react-simplemde-editor | 4.1.5 | 5.2.0 |
 | EasyMDE | 2.16.1 | 2.21.0 |
 | CodeMirror | 5.65.6 | 5.65.21 |
-| Typo.js | 1.2.1 | 1.3.2 |
+| Typo.js | 1.2.1 | 1.4.0 |
 
 EasyMDE is now an explicit peer dependency of the React wrapper. CodeMirror stays
 on the latest 5.x release because EasyMDE requires its API; CodeMirror 6 is a

@@ -1,5 +1,9 @@
 # Desktop dependency progress
 
+See [remaining upgrades and release criteria](dependency-completion.md) for the
+current scope. The percentage below describes the original package inventory,
+not the work still required.
+
 The original upstream baseline is commit
 `d14c9141db0bfa2db9b5dcf78fcaa72912cc767a`. Count each package name once across
 `dependencies` and `devDependencies`, and compare resolved versions in the two
@@ -7,7 +11,7 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After the package-manager/security batch (based on merged PR #78):
+After the compatible dependency refresh (based on merged PR #79):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
