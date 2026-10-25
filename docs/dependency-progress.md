@@ -11,7 +11,7 @@ lockfiles. Pinning a range to the same resolved version does not count as an
 upgrade. Transitive dependencies and new packages are excluded from the original
 denominator.
 
-After the ESLint 10 migration (based on merged PR #80):
+After the CodeMirror 6 migration (based on merged PR #81):
 
 | Original direct dependencies           | Count |
 | -------------------------------------- | ----: |
