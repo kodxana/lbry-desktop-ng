@@ -148,7 +148,7 @@ Development-mode detection uses `electron-is-dev` 3.0.1 in the main process.
 It uses Electron's `app.isPackaged` flag instead of version 0.3's executable-path
 heuristic. The existing `ELECTRON_IS_DEV` override remains supported; `NODE_ENV`
 does not determine whether the running app is packaged. The dependency is now
-ESM-only and requires Electron 28+, which the current Electron 44 runtime meets.
+ESM-only and requires Electron 28+, which the current Electron 45 runtime meets.
 Both application callers already use its default import. See the
 [upstream documentation](https://github.com/sindresorhus/electron-is-dev).
 Tests cover automatic development detection and explicit overrides in real
@@ -202,7 +202,7 @@ check window bounds written by the actual published RC3 through both upgrades.
   in `dist`. The unsupported case exits with 1633 without reaching that action.
   This checks the guard, not actual installation on a Windows 7 virtual machine.
 - The hosted Windows installed-upgrade test moves the checksum-pinned RC3
-  (Electron 17) to the private Electron 44 candidate, then to a second candidate.
+  (Electron 17) to the private Electron 45 candidate, then to a second candidate.
   It asserts both main and renderer runtime versions, install/decline choices,
   SDK exit before NSIS, automatic restart, unchanged wallet keys/addresses,
   encryption, remembered passwords and cookie/localStorage persistence. An

@@ -114,14 +114,16 @@ async function unitTests() {
     assert.equal(fs.readFileSync(store.file, 'utf8'), value, 'Never reset corrupt or future records on read');
   }
   const insecure = { ...backend(), encryptStringAsync: () => Buffer.from('v10-insecure') };
-  await assert.rejects(() => new PasswordStore(directory(), insecure, fs, 'linux').save(secret));
-  await assert.rejects(() =>
-    new PasswordStore(
-      directory(),
-      { ...backend(), encryptStringAsync: async () => Buffer.from('v99-unknown') },
-      fs,
-      'linux'
-    ).save(secret)
+  await assert.rejects(() => new PasswordStore(directory(), insecure, fs, 'linux').save(secret), /unavailable/);
+  await assert.rejects(
+    () =>
+      new PasswordStore(
+        directory(),
+        { ...backend(), encryptStringAsync: async () => Buffer.from('v99-unknown') },
+        fs,
+        'linux'
+      ).save(secret),
+    /unavailable/
   );
 
   const fixture = cookieFixture();

@@ -49,7 +49,7 @@ app
     } else if (phase === 'forgotten') {
       assert.equal((await store.read()).state, 'forgotten');
     } else if (phase === 'unavailable') {
-      await assert.rejects(() => store.save(secret));
+      await assert.rejects(() => store.save(secret), /unavailable/);
       assert.equal((await store.read()).state, 'forgotten', 'Insecure fallback must not replace the existing record');
     } else throw new Error('Unknown phase');
     assert(fs.existsSync(path.join(root, 'remembered-password.json')));
