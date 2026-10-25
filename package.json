@@ -1,6 +1,6 @@
 {
   "name": "lbry-desktop-ng",
-  "version": "0.54.0-rc.4",
+  "version": "0.54.0-rc.5",
   "description": "Community-maintained restoration of the original LBRY Desktop with LBRY SDK NG.",
   "keywords": [
     "lbry"
