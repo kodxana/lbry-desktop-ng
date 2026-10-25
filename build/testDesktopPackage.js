@@ -46,6 +46,9 @@ for (const name of [
   'electron-updater-legacy',
   '@electron/asar',
   'webpack',
+  'eslint',
+  'eslint-plugin-import-x',
+  'unrs-resolver',
   'express',
   'jsqr',
 ]) {

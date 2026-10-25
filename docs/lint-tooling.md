@@ -1,8 +1,39 @@
 # Lint and commit hooks
 
-The desktop uses ESLint 9.39.5, Prettier 3.9.10, Husky 9.1.7 and
-lint-staged 17.6.0 on the pinned Node 24 toolchain. ESLint 10 is deferred because
-the current React, import and Flow plugins declare support through ESLint 9.
+The desktop uses ESLint 10.13.0, Prettier 3.9.10, Husky 9.1.7 and
+lint-staged 17.6.0 on the pinned Node 24 toolchain. Import rules come from
+eslint-plugin-import-x 4.17.1. React and Flow rules use the official
+@eslint/compat 2.1.1 adapter for their legacy APIs.
+
+## ESLint 10 compatibility
+
+ESLint 10 removes legacy context methods and several SourceCode methods. React's
+version detection still calls `getFilename`, and its component detection uses
+`getJSDocComment`. Wrapping the plugin preserves those behaviors; running the
+React regression without the adapter fails on the removed `getFilename` method.
+The existing Flow adapter remains in place. Hermes 0.37.0 already implements the
+new scope-manager `addGlobals` contract, so the parser needs no local patch.
+
+The maintained import-plugin fork declares ESLint 10 support and retains the
+existing `import` rule namespace, including inline directives. No correctness
+rules are disabled. Before and after the migration, lint checks the same 1,101
+source files with zero errors and identical locations/messages for 83 warnings.
+
+React 7.37.5 and ft-flow 3.0.11 still declare peers only through ESLint 9. Yarn's
+peer warning is retained: these versions work through ESLint's compatibility
+adapter, not through native upstream ESLint 10 support. Do not suppress the
+warning or claim those manifests have changed. Revisit the adapters when the
+plugins add native support. The replacement import plugin's resolver remains a
+development dependency and must not enter packaged applications.
+
+Regression tests cover rejected React, Flow, import and Node violations,
+JSDoc-annotated components, Flow type/value imports, JSX fixes, rule directives
+and config discovery from a subdirectory. The real hook tests still cover
+partial staging, large batches and restoration after a failed commit.
+
+References: [ESLint 10 migration](https://eslint.org/docs/latest/use/migrate-to-10.0.0),
+[compatibility adapter](https://github.com/eslint/rewrite/tree/main/packages/compat),
+[import-plugin fork](https://github.com/un-ts/eslint-plugin-import-x).
 
 ## Commands
 

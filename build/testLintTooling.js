@@ -37,6 +37,77 @@ async function main() {
   assert(await eslint.isPathIgnored(path.join(root, 'dist/generated.js')));
   assert(await eslint.isPathIgnored(path.join(root, 'flow-typed/npm/fixture.js')));
 
+  // Keep the plugin checks effective across ESLint's rule-context API changes.
+  for (const [rule, source] of [
+    ['react/jsx-key', "import React from 'react'; export const items = [<span />];"],
+    ['react/jsx-no-undef', "import React from 'react'; export const item = <MissingComponent />;"],
+    ['react/no-unknown-property', "import React from 'react'; export const item = <div class='bad' />;"],
+    [
+      'react/prop-types',
+      "import React from 'react'; export function Item(props) { return <span>{props.label}</span>; }",
+    ],
+    [
+      'react/no-deprecated',
+      "import React from 'react'; export const Item = React.createClass({ render() { return null; } });",
+    ],
+    [
+      'react/no-danger-with-children',
+      "import React from 'react'; export const item = <div dangerouslySetInnerHTML={{__html: 'text'}}>child</div>;",
+    ],
+    [
+      'react/require-render-return',
+      'class Base {}\n/** @extends React.Component */\nexport class View extends Base { render() {} }',
+    ],
+    ['import/first', "export const value = 1; import React from 'react'; export default React;"],
+    [
+      'import/no-duplicates',
+      "import React from 'react'; import { useState } from 'react'; export { React, useState };",
+    ],
+    ['import/no-named-default', "import { default as React } from 'react'; export default React;"],
+    ['import/no-webpack-loader-syntax', "import text from 'raw!fixture'; export default text;"],
+    ['flowtype/no-types-missing-file-annotation', 'export type Unannotated = number;'],
+    ['n/no-deprecated-api', 'export const bytes = new Buffer(8);'],
+  ]) {
+    const messages = await lint(source);
+    assert(
+      messages.some((message) => message.ruleId === rule),
+      rule + ': ' + JSON.stringify(messages)
+    );
+  }
+  assert.deepEqual(await lint('// @flow\nexport type Annotated = number;'), []);
+  assert.deepEqual(
+    await lint(`// @flow
+      import type { Claim } from 'fixture';
+      import { value } from 'fixture';
+      export type ImportedClaim = Claim;
+      export { value };
+    `),
+    [],
+    'Keep separate Flow type and runtime imports'
+  );
+  assert.deepEqual(
+    await lint(
+      "/* eslint import/first: off */\nexport const value = 1; import React from 'react'; export default React;"
+    ),
+    [],
+    'Existing import rule directives remain valid after replacing the plugin'
+  );
+  const nested = new ESLint({ cwd: path.join(root, 'ui') });
+  const [nestedResult] = await nested.lintText('export const value = missingRuntimeValue;', {
+    filePath: 'lint-fixture.jsx',
+  });
+  assert(
+    nestedResult.messages.some((message) => message.ruleId === 'no-undef'),
+    'Discover the config from a subdirectory'
+  );
+  const fixer = new ESLint({ cwd: root, fix: true });
+  const [fixed] = await fixer.lintText(
+    "import React from 'react'; export const field = <input disabled={true}></input>;",
+    { filePath: 'ui/lint-fixture.jsx' }
+  );
+  assert.equal(fixed.errorCount, 0);
+  assert.match(fixed.output, /<input disabled\s*\/>/);
+
   const options = await prettier.resolveConfig(path.join(root, 'ui/lint-fixture.jsx'));
   assert.equal(options.trailingComma, 'es5');
   const modernFlow = await prettier.format(
