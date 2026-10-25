@@ -108,8 +108,17 @@ export default async function mediaControls(store, history, origin) {
     );
     await ipcRenderer.invoke('fixture-media-action', 'fullscreen');
     await waitFor(() => document.fullscreenElement === surface, 'Fullscreen targets the complete player and controls');
+    // fullscreenElement can change before the fullscreenchange event updates the control.
+    await waitFor(
+      () => document.querySelector('.player-fullscreen').getAttribute('aria-label') === 'Exit Fullscreen (f)',
+      'Fullscreen control reflects the completed entry transition'
+    );
     await ipcRenderer.invoke('fixture-media-action', 'fullscreen');
     await waitFor(() => !document.fullscreenElement, 'Fullscreen control exits cleanly');
+    await waitFor(
+      () => document.querySelector('.player-fullscreen').getAttribute('aria-label') === 'Fullscreen (f)',
+      'Fullscreen control returns to its normal state'
+    );
     await waitFor(() => document.querySelector('.player-captions'), 'Caption track appears in controls');
     const captionControl = document.querySelector('.player-captions');
     const english = [...captionControl.options].find((option) => option.textContent.includes('English'));
