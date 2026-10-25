@@ -21,15 +21,14 @@ node build/buildDesktop.js
 
 This runs the update tests and real SDK wallet/restart tests, compiles the app,
 and builds an NSIS installer under `dist/ng`. It does not publish or install it.
-The current build version is `0.54.0-rc.3`. Expected release files are:
+The current build version is `0.54.0-rc.4`. Expected Windows release files are:
 
-- `LBRY-Desktop-NG-0.54.0-rc.3-windows-x64.exe`
-- `LBRY-Desktop-NG-0.54.0-rc.3-windows-x64.exe.blockmap`
+- `LBRY-Desktop-NG-0.54.0-rc.4-windows-x64.exe`
+- `LBRY-Desktop-NG-0.54.0-rc.4-windows-x64.exe.blockmap`
 - `latest.yml`
 
 These builds are unsigned. A community signing identity has not been
-configured. Source builds use the supported Electron 45.0.0 release;
-the published RC3 still uses Electron 17.2.0. See the
+configured. RC4 uses Electron 45.0.0; the older RC3 uses Electron 17.2.0. See the
 [runtime migration](electron-runtime.md) for scope and installed-upgrade coverage.
 Current Windows source builds require Windows 10 or later. The installer rejects
 older versions before replacing an existing installation; the published RC3 is
@@ -104,7 +103,21 @@ not depend on the expiring Actions artifact. `SDK-CANDIDATE.json` records the
 original CI provenance and archive/executable hashes. Do not substitute the
 older SDK rc4 release just because its version string matches.
 
-## Published Windows prerelease
+## RC4 release candidate
+
+[0.54.0-rc.4](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.4)
+packages the dependency migrations through PR #85. It keeps RC3's SDK pin and
+NG profile identity. Windows x64 installers, Linux x64 AppImage/tar.gz packages,
+updater metadata, SDK archives, checksums and validation records are published
+together after the Windows/Linux desktop and installed-upgrade checks pass.
+The tag identifies the versioned source; `provenance.json` identifies the build
+run and artifact digests. Linux updates remain manual.
+
+Release publication is manual: assets are verified in a draft before it is
+made public as a prerelease, then downloaded anonymously and checked again.
+Existing release assets and tags are preserved.
+
+## Historical Windows prerelease
 
 [0.54.0-rc.1](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.1)
 was published manually from desktop commit
@@ -122,7 +135,8 @@ work. Future builds must use a new version and tag, preserving these assets.
 
 ## Automated coverage
 
-`node build/testDesktopUpdates.js` exercises the pinned electron-updater 4.6.5
+`node build/testDesktopUpdates.js` exercises the current electron-updater 6.8.11
+and the legacy 4.6.5 test client through their
 GitHub provider and NSIS download path against local HTTP fixtures. It verifies
 stable/prerelease selection, fork-only requests, opt-out of automatic download,
 SHA-512 rejection and recovery, and missing-release handling. Installer execution

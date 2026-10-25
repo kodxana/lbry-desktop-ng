@@ -1,6 +1,6 @@
 # Linux desktop prerelease
 
-The [0.54.0-rc.3 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.3)
+The [0.54.0-rc.4 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.4)
 provides Linux x64 packages with the same SDK source revision as the Windows
 build. The Linux SDK is pinned by SHA-256 in `build/sdk-candidate.json`.
 
@@ -9,11 +9,11 @@ build. The Linux SDK is pinned by SHA-256 in `build/sdk-candidate.json`.
 The bundled Linux SDK requires glibc 2.36 or newer. Ubuntu 24.04 is the current
 test baseline; Ubuntu 22.04's glibc 2.35 cannot run this SDK binary.
 
-Download `LBRY-Desktop-NG-0.54.0-rc.3-linux-x86_64.AppImage`, then:
+Download `LBRY-Desktop-NG-0.54.0-rc.4-linux-x86_64.AppImage`, then:
 
 ```sh
-chmod +x LBRY-Desktop-NG-0.54.0-rc.3-linux-x86_64.AppImage
-./LBRY-Desktop-NG-0.54.0-rc.3-linux-x86_64.AppImage
+chmod +x LBRY-Desktop-NG-0.54.0-rc.4-linux-x86_64.AppImage
+./LBRY-Desktop-NG-0.54.0-rc.4-linux-x86_64.AppImage
 ```
 
 AppImage requires the FUSE 2 compatibility library. On Ubuntu 24.04 its package
@@ -21,8 +21,8 @@ is `libfuse2t64`. A missing `libfuse.so.2` error refers to that system library.
 The tar.gz package is an alternative that does not use FUSE:
 
 ```sh
-tar -xzf LBRY-Desktop-NG-0.54.0-rc.3-linux-x64.tar.gz
-./LBRY-Desktop-NG-0.54.0-rc.3-linux-x64/lbry-desktop-ng
+tar -xzf LBRY-Desktop-NG-0.54.0-rc.4-linux-x64.tar.gz
+./LBRY-Desktop-NG-0.54.0-rc.4-linux-x64/lbry-desktop-ng
 ```
 
 Run as a regular user in a desktop session. The app needs the usual Electron
@@ -77,9 +77,11 @@ settings-only startup without a wallet, an unfunded wallet, recovery from a
 stalled hub and clean shutdown. See `VALIDATION-linux.md` in the release for
 the artifact-specific results. Physical desktop environments, GPU decoding,
 audio output, paid content, funded transactions and wallet encryption/backup UI
-still need acceptance testing. Electron/Node modernization remains outstanding.
+still need real-desktop acceptance testing. Current CI covers wallet encryption,
+backup restoration and password migration; Electron/Node modernization is included
+in RC4.
 
-For RC3, Windows and Linux packages are built by the same Desktop CI run.
+For RC4, Windows and Linux packages are built by the same Desktop CI run.
 The release includes shared source provenance and checksums. See the
 [password migration test guide](password-migration-testing.md) for upgrade
 and keyring checks, and [desktop CI coverage](desktop-ci.md) for the current

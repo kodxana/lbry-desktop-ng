@@ -24,8 +24,8 @@ automatic selection, a responding hub or a custom address. Startup keeps a
 Windows storage checks use the native
 disk-space API instead of WMIC. See [setup behavior and tests](docs/desktop-setup.md).
 
-Builds use Node 24.21.0 (pinned in `.node-version`) and Webpack 5. The desktop
-runtime is now pinned to the supported Electron 44.9.3 release;
+Builds use Node 24.22.1 (pinned in `.node-version`) and Webpack 5. The desktop
+runtime is pinned to Electron 45.0.0;
 Windows source builds require Windows 10 or later.
 The renderer now runs with Node integration disabled and the Chromium sandbox
 enabled; see [renderer isolation](docs/renderer-isolation.md). Application
@@ -38,15 +38,16 @@ dependency upgrades include the [wallet ZIP library](docs/wallet-archives.md),
 [document sanitizer](docs/document-sanitizer.md).
 See also [runtime migration notes](docs/electron-runtime.md)
 and [build-tooling migration notes](docs/build-tooling.md).
-The [0.54.0-rc.3 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.3)
-is available for Windows and Linux x64 testing and still contains Electron 17.2.0.
+The [0.54.0-rc.4 prerelease](https://github.com/kodxana/lbry-desktop-ng/releases/tag/v0.54.0-rc.4)
+provides the dependency migrations for Windows and Linux x64 testing, including
+Electron 45, React 19, Video.js 10 and CodeMirror 6.
 Download the Windows installer
 or Linux AppImage/tar.gz from its Assets list; see the [Linux instructions](docs/linux-desktop.md).
 The other files provide updater metadata, checksums, SDK source provenance and
 validation details. Historical upstream binaries do not contain this fork's
 integration changes.
 
-The current source builds `0.54.0-rc.3` with SDK transaction-history progress.
+The current source builds `0.54.0-rc.4` with the same SDK pin as RC3.
 Balances are marked as provisional while history catches up after account
 import. Remembered passwords now use OS-protected storage, with existing saved
 passwords migrated across two launches. See the [password migration test guide](docs/password-migration-testing.md).
@@ -56,13 +57,15 @@ See [build and launch instructions](docs/isolated-desktop-test.md) and the
 covers an unfunded light wallet, two free MP4 streams, playback controls, a
 paused download resumed after restart, and clean shutdown on Windows. Linux
 setup and wallet checks are recorded separately in the Linux guide. Paid
-content, funded transactions, wallet encryption/backup UI and macOS remain
-outside that acceptance coverage.
+content, funded transactions and macOS remain outside that live acceptance
+coverage. Automated CI additionally tests wallet encryption, backup restoration,
+native saved-password storage and playback with local media fixtures.
 
 See [NG installer and GitHub update instructions](docs/desktop-ng-releases.md)
 for `build:ng`, release files, profiles and update tests. Current installers are
-unsigned; an installed upgrade through a published release still needs acceptance
-testing. [Desktop CI and regression checks](docs/desktop-ci.md) build Windows and
+unsigned. Installed Windows CI tests real upgrades from published RC3 with
+disposable wallets, including password recovery and clean SDK shutdown.
+[Desktop CI and regression checks](docs/desktop-ci.md) build Windows and
 Linux test packages and exercise startup, updates, saved state and SDK shutdown.
 Signing and a community publishing workflow remain to be established.
 
