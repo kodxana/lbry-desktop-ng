@@ -1,3 +1,4 @@
+import { EditorView } from '@codemirror/view';
 import { strict as assert } from 'assert';
 import React from 'react';
 import fs from 'fs';
@@ -112,11 +113,11 @@ export default async function documents(store, history, root) {
     store,
     history
   );
-  await waitFor(() => document.querySelector('.CodeMirror'), 'Plain text editor did not load');
-  const editor = document.querySelector('.CodeMirror').CodeMirror;
-  assert.equal(editor.getValue(), fs.readFileSync(textFile, 'utf8'));
-  assert.equal(editor.getOption('readOnly'), true);
-  assert.equal(editor.getOption('theme'), 'monokai');
+  await waitFor(() => document.querySelector('.cm-editor'), 'Plain text editor did not load');
+  const editor = EditorView.findFromDOM(document.querySelector('.cm-editor'));
+  assert.equal(editor.state.doc.toString(), fs.readFileSync(textFile, 'utf8'));
+  assert.equal(editor.state.readOnly, true);
+  assert(document.querySelector('.code-viewer').classList.contains('cm-s-monokai'));
   render(
     <DocumentViewer
       ref={(value) => {
@@ -129,7 +130,7 @@ export default async function documents(store, history, root) {
     store,
     history
   );
-  assert.equal(editor.getOption('theme'), 'ttcn');
+  assert(document.querySelector('.code-viewer').classList.contains('cm-s-ttcn'));
   assert(code);
   unmount();
   const missing = { file: () => desktop.readDocument(path.join(root, 'missing.txt')), contentType: 'text/plain' };

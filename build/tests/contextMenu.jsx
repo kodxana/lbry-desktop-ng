@@ -1,7 +1,8 @@
 import { strict as assert } from 'assert';
 import { ipcRenderer } from 'electron';
 import desktop from 'util/desktop';
-import CodeMirror from 'codemirror';
+import { EditorState, Compartment } from '@codemirror/state';
+import { EditorView, lineNumbers } from '@codemirror/view';
 import React from 'react';
 import ClaimUri from 'component/claimUri/view';
 import {
@@ -108,18 +109,25 @@ export default async function contextMenu(store, history) {
   }
   window.getSelection().removeAllRanges();
 
-  const textarea = document.createElement('textarea');
-  container.appendChild(textarea);
-  const editor = CodeMirror.fromTextArea(textarea, { value: '', lineNumbers: true });
-  editor.setValue('First line ł\nSecond line');
-  const codeEvent = () => event(editor.getWrapperElement());
+  const readonly = new Compartment();
   let editorRequest;
-  editor.on('contextmenu', (instance, nativeEvent) => {
-    editorRequest = openEditorMenu(instance, nativeEvent);
+  const editor = new EditorView({
+    parent: container,
+    doc: 'First line ł\nSecond line',
+    extensions: [
+      lineNumbers(),
+      readonly.of(EditorState.readOnly.of(false)),
+      EditorView.domEventHandlers({
+        contextmenu(nativeEvent, view) {
+          editorRequest = openEditorMenu(view, nativeEvent);
+        },
+      }),
+    ],
   });
+  const codeEvent = () => event(editor.dom);
   const editorMenu = () => {
     input.focus();
-    const code = editor.getWrapperElement().querySelector('.CodeMirror-code');
+    const code = editor.dom.querySelector('.cm-content');
     const bounds = code.getBoundingClientRect();
     const nativeEvent = new MouseEvent('contextmenu', {
       bubbles: true,
@@ -129,35 +137,44 @@ export default async function contextMenu(store, history) {
     });
     code.dispatchEvent(nativeEvent);
     assert(nativeEvent.defaultPrevented, 'The custom menu must suppress the browser context menu');
-    assert(editor.hasFocus(), 'Right-click must focus the editor for native editing commands');
-    const field = editor.getInputField();
-    if (editor.somethingSelected()) {
-      const nativeSelection = field.value.slice(field.selectionStart, field.selectionEnd);
-      assert.equal(nativeSelection, editor.getSelection(), 'The native input must contain the CodeMirror selection');
+    assert(editor.hasFocus, 'Right-click must focus the editor for native editing commands');
+    if (!editor.state.selection.main.empty) {
+      assert.equal(
+        window.getSelection().toString(),
+        editor.state.doc.sliceString(editor.state.selection.main.from, editor.state.selection.main.to),
+        'The DOM selection must contain the CodeMirror selection for native copy'
+      );
     }
     return editorRequest;
   };
   await choose(editorMenu, 'editor-select-all');
-  assert.equal(editor.getSelection(), editor.getValue(), 'Select All must select the full CodeMirror document');
+  assert.equal(
+    editor.state.doc.sliceString(editor.state.selection.main.from, editor.state.selection.main.to),
+    editor.state.doc.toString(),
+    'Select All must select the full CodeMirror document'
+  );
   await choose(editorMenu, 'copy');
   if (nativeClipboard) {
     await waitFor(
-      async () => (await fixture()).clipboard.replace(/\r\n/g, '\n') === editor.getValue(),
+      async () => (await fixture()).clipboard.replace(/\r\n/g, '\n') === editor.state.doc.toString(),
       'Native editor Copy failed'
     );
     await choose(editorMenu, 'cut');
-    await waitFor(() => editor.getValue() === '', 'Native editor Cut failed');
+    await waitFor(() => editor.state.doc.toString() === '', 'Native editor Cut failed');
     await fixture('paste-fixture');
     await choose(editorMenu, 'paste');
-    await waitFor(() => editor.getValue() === 'Synthetic paste ł', 'Native editor Paste failed');
+    await waitFor(() => editor.state.doc.toString() === 'Synthetic paste ł', 'Native editor Paste failed');
   }
-  editor.setOption('readOnly', true);
-  editor.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 1 });
+  editor.dispatch({ effects: readonly.reconfigure(EditorState.readOnly.of(true)) });
+  editor.dispatch({ selection: { anchor: 0, head: 1 } });
   const snippet = await open(() => openSnippetMenu(editor, codeEvent()));
   assert(!snippet.state.items.some(({ id }) => id === 'cut' || id === 'paste'));
   await fixture('choose', 'editor-select-all');
   await snippet.pending;
-  assert.equal(editor.getSelection(), editor.getValue());
+  assert.equal(
+    editor.state.doc.sliceString(editor.state.selection.main.from, editor.state.selection.main.to),
+    editor.state.doc.toString()
+  );
   const readonlyEditor = await open(() => openEditorMenu(editor, codeEvent()));
   assert(!readonlyEditor.state.items.some(({ id }) => id === 'cut' || id === 'paste'));
   await fixture('dismiss');
@@ -197,7 +214,7 @@ export default async function contextMenu(store, history) {
   } finally {
     navigator.clipboard.writeText = writeText;
     desktop.openExternal = openExternal;
-    editor.toTextArea();
+    editor.destroy();
     container.removeEventListener('contextmenu', stopContextMenu);
     container.textContent = '';
   }

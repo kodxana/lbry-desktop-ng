@@ -13,6 +13,9 @@ const write = (file, source) => {
 };
 for (const file of [
   '.flowconfig',
+  'flow-typed/npm/codemirror.js',
+  'ui/util/editor-theme.js',
+  'flow-typed/i18n.js',
   'ui/redux/selectors/content.js',
   'ui/effects/use-lazy-loading.js',
   'ui/component/viewers/documentViewer.jsx',
@@ -67,25 +70,12 @@ declare module 'util/context-menu' {
   declare export function openSnippetMenu(...args: Array<unknown>): void;
   declare export function stopContextMenu(event: {preventDefault: () => void, stopPropagation: () => void, ...}): void;
 }
-declare module 'codemirror/lib/codemirror' {
-  declare export function fromTextArea(element: HTMLTextAreaElement, options: {mode: string, theme: string,
-    readOnly: boolean, styleSelectedText: boolean, dragDrop: boolean, lineNumbers: boolean, lineWrapping: boolean}): {
-    setOption: (string, string | boolean) => void, setValue: (string) => void,
-    on: (string, (...Array<unknown>) => void) => void, toTextArea: () => void,
-  };
-}
 `
 );
-for (const name of [
-  'addon/selection/mark-selection',
-  ...['go', 'jsx', 'css', 'xml', 'php', 'ruby', 'clike', 'shell', 'python', 'markdown', 'javascript'].map(
-    (mode) => 'mode/' + mode + '/' + mode
-  ),
-]) {
-  write('node_modules/codemirror/' + name + '.js', '// @flow\n');
-}
 const fixture = `// @flow
 import * as React from 'react';
+import {EditorState} from '@codemirror/state';
+import {EditorView} from '@codemirror/view';
 import Document from 'component/viewers/documentViewer';
 import Docx from 'component/viewers/docxViewer';
 import Code from 'component/viewers/codeViewer';
@@ -115,6 +105,10 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Content/viewer source and valid callers must type-check');
 const invalid = {
+  editorReadonly: 'export const invalid = EditorState.readOnly.of("true");',
+  editorOffset: 'export function invalid(view: EditorView): void {view.dispatch({selection: {anchor: "1"}});}',
+  editorChange: 'export function invalid(view: EditorView): void {view.dispatch({changes: {from: 0, insert: 42}});}',
+
   playing: 'export const invalid: PlayingUri = {uri: 1, primaryUri: null};',
   position: 'export const invalid: ContentState = {...state, positions: {id: {tx: "25"}}};',
   history: 'export const invalid: ContentHistoryItem = {uri: "uri", lastViewed: "today"};',

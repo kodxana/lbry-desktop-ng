@@ -1,5 +1,4 @@
 // @flow
-import 'easymde/dist/easymde.min.css';
 import { FF_MAX_CHARS_DEFAULT } from 'constants/form-field';
 import React from 'react';
 import type { Node } from 'react';
@@ -94,10 +93,6 @@ export class FormField extends React.PureComponent<Props> {
 
     const errorMessage = typeof error === 'object' ? error.message : error;
 
-    // Ideally, the character count should (and can) be appended to the
-    // SimpleMDE's "options::status" bar. However, I couldn't figure out how
-    // to pass the current value to it's callback, nor query the current
-    // text length from the callback. So, we'll use our own widget.
     const hasCharCount = charCount !== undefined && charCount >= 0;
     const countInfo = hasCharCount && textAreaMaxLength !== undefined && (
       <span className="comment__char-count-mde">{`${charCount || '0'}/${textAreaMaxLength}`}</span>

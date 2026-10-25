@@ -30,6 +30,10 @@ assert.deepEqual(
   asar.extractFile(archive, 'licenses/electron-cookies.LICENSE'),
   fs.readFileSync(path.join(__dirname, '../ui/util/electron-cookies.LICENSE'))
 );
+assert.deepEqual(
+  asar.extractFile(archive, 'licenses/english-dictionary.LICENSE'),
+  fs.readFileSync(path.join(__dirname, '../ui/util/dictionaries/LICENSE'))
+);
 for (const name of [
   '@electron/remote',
   '@meetfranz/electron-cookies',
@@ -37,6 +41,10 @@ for (const name of [
   'tempy',
   'sudo-prompt',
   'ffmpeg-probe',
+  'codemirror',
+  'codemirror-spell-checker',
+  'easymde',
+  'react-simplemde-editor',
 ]) {
   assert(!entries.has('/node_modules/' + name + '/package.json'), 'Removed dependency shipped: ' + name);
 }

@@ -1,16 +1,16 @@
 /* Based on Sublime Text's Monokai theme */
 /* Customised slightly for LBRY dark theme */
 
-.cm-s-monokai.CodeMirror {
+.cm-s-monokai .cm-editor {
   background: #212529;
   color: #f8f8f2;
 }
 
-.cm-s-monokai div.CodeMirror-selected {
+.cm-s-monokai ::selection {
   background: #717273;
 }
 
-.cm-s-monokai .CodeMirror-gutters {
+.cm-s-monokai .cm-gutters {
   background: #212529;
   border-right: 0px;
 }
@@ -23,11 +23,11 @@
   color: #d0d0d0;
 }
 
-.cm-s-monokai .CodeMirror-linenumber {
+.cm-s-monokai .cm-lineNumbers {
   color: #d0d0d0;
 }
 
-.cm-s-monokai .CodeMirror-cursor {
+.cm-s-monokai .cm-cursor {
   border-left: 1px solid #f8f8f0;
 }
 

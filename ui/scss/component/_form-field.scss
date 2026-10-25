@@ -97,14 +97,14 @@ fieldset-group,
 form,
 .checkbox,
 .radio,
-.form-field--SimpleMDE,
+.form-field--markdown,
 .form-field__help {
   + fieldset-section,
   + fieldset-group,
   + form,
   + .checkbox,
   + .radio,
-  + .form-field--SimpleMDE {
+  + .form-field--markdown {
     margin-top: var(--spacing-l);
   }
 

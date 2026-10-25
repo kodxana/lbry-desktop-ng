@@ -1,3 +1,6 @@
+import { languages } from '@codemirror/language-data';
+import { syntaxTree } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
 import { strict as assert } from 'assert';
 import React from 'react';
 import desktop from 'util/desktop';
@@ -114,18 +117,18 @@ export default async function viewerLifecycle(store, history) {
     );
   showCode('before import');
   showCode('after import', 'light', 'text/javascript');
-  await waitFor(() => document.querySelector('.CodeMirror'), 'Code viewer must initialize');
-  const editor = document.querySelector('.CodeMirror').CodeMirror;
-  assert.equal(editor.getValue(), 'after import', 'Async editor initialization must use current props');
-  assert.equal(editor.getOption('theme'), 'ttcn');
-  assert.equal(editor.getOption('mode'), 'text/javascript');
+  await waitFor(() => document.querySelector('.cm-editor'), 'Code viewer must initialize');
+  const editor = EditorView.findFromDOM(document.querySelector('.cm-editor'));
+  assert.equal(editor.state.doc.toString(), 'after import', 'Async editor initialization must use current props');
+  assert(document.querySelector('.code-viewer').classList.contains('cm-s-ttcn'));
+  await waitFor(() => document.querySelector('.cm-variable'), 'JavaScript syntax must load');
   showCode('changed', 'dark', 'text/css');
-  assert.equal(editor.getValue(), 'changed');
-  assert.equal(editor.getOption('theme'), 'monokai');
-  assert.equal(editor.getOption('mode'), 'text/css');
+  assert.equal(editor.state.doc.toString(), 'changed');
+  assert(document.querySelector('.code-viewer').classList.contains('cm-s-monokai'));
+  assert.equal(EditorView.findFromDOM(document.querySelector('.cm-editor')), editor);
   let cleaned = 0;
-  const cleanup = editor.toTextArea;
-  editor.toTextArea = () => {
+  const cleanup = editor.destroy.bind(editor);
+  editor.destroy = () => {
     cleaned++;
     cleanup();
   };
@@ -136,4 +139,54 @@ export default async function viewerLifecycle(store, history) {
   unmount();
   await tick();
   assert.equal(detached.codeMirror, null, 'A late chunk must not create an editor after unmount');
+  const javascript = languages.find((entry) => entry.name === 'JavaScript');
+  const css = languages.find((entry) => entry.name === 'CSS');
+  const originalJs = javascript.load;
+  const originalCss = css.load;
+  const jsSupport = await javascript.load();
+  const cssSupport = await css.load();
+  let resolveJs;
+  let resolveCss;
+  javascript.load = () =>
+    new Promise((resolve) => {
+      resolveJs = resolve;
+    });
+  css.load = () =>
+    new Promise((resolve) => {
+      resolveCss = resolve;
+    });
+  try {
+    showCode('const value = 1;', 'dark', 'text/javascript');
+    const view = editorView.codeMirror;
+    showCode('a {color: red}', 'light', 'text/css');
+    resolveCss(cssSupport);
+    await tick();
+    assert.equal(syntaxTree(view.state).topNode.name, 'StyleSheet');
+    resolveJs(jsSupport);
+    await tick();
+    assert.equal(
+      syntaxTree(view.state).topNode.name,
+      'StyleSheet',
+      'A stale syntax load must not replace the current language'
+    );
+    javascript.load = () => Promise.reject(new Error('fixture chunk unavailable'));
+    showCode('still readable', 'light', 'text/javascript');
+    await tick();
+    assert.equal(view.state.doc.toString(), 'still readable', 'A missing syntax chunk must preserve document text');
+    unmount();
+    javascript.load = () =>
+      new Promise((resolve) => {
+        resolveJs = resolve;
+      });
+    showCode('close during import', 'dark', 'text/javascript');
+    const closing = editorView.codeMirror;
+    unmount();
+    closing.dispatch = () => assert.fail('A late syntax chunk must not dispatch after unmount');
+    resolveJs(jsSupport);
+    await tick();
+  } finally {
+    unmount();
+    javascript.load = originalJs;
+    css.load = originalCss;
+  }
 }

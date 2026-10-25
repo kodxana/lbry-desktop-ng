@@ -18,7 +18,7 @@ import FormFieldPrice from 'component/common/form-components/form-field-price';
 import type { FormPrice } from 'component/common/form-components/form-field-price';
 import FormRow from 'component/common/form-components/form-row';
 import Form from 'component/common/form-components/form';
-import type { EditorPosition, EditorChange, EditorBeforeChange, MarkdownCodeMirror } from 'types/markdown-editor';
+import type { MarkdownEditorProps } from 'types/markdown-editor';
 import WalletBackup from 'component/walletBackup/view';
 import { Modal, ExpandableModal } from 'modal/modal';
 
@@ -49,13 +49,13 @@ export const keyboardField: React.Node = (
 export const expandableModal: React.Node = <ExpandableModal isOpen extraContent={<p>Details</p>} />;
 
 export const price: FormPrice = { amount: 0.00000001, currency: 'LBC' };
-export const position: EditorPosition = { line: 0, ch: 1 };
-export const change: EditorChange = { from: position, to: position, text: ['first', 'second'], origin: 'setValue' };
-export const beforeChange: EditorBeforeChange = { ...change, cancel() {}, update(from, to, text) {} };
-export function editorOptions(editor: MarkdownCodeMirror): void {
-  editor.setOption('readOnly', false);
-  editor.setOption('placeholder', 'Post text');
-}
+export const editor: MarkdownEditorProps = {
+  name: 'post',
+  value: 'draft',
+  disabled: false,
+  textAreaMaxLength: 100,
+  onChange: (text: string) => text.toUpperCase(),
+};
 export const creditDisplay: React.Node = <CreditAmount amount={0.00000001} />;
 export const fiatDisplay: React.Node = <CreditAmount customAmounts={{ amountFiat: 1.25, amountLBC: 100 }} />;
 const Lock = icons[ICONS.LOCK];
