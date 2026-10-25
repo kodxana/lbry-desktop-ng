@@ -2,7 +2,7 @@
 
 React Router 8.5.0 replaces version 5.3.4. Imports now come from `react-router`;
 the separate `react-router-dom` package is removed. The installed React 19.3.1
-and Node 24.21.0 meet version 8's requirements.
+and Node 24.22.1 meet version 8's requirements.
 
 `DesktopRouter` supplies the Redux location and action to the public `Router`
 component. It no longer imports private router contexts. The app's

@@ -1,8 +1,13 @@
 # Node 24 and Webpack 5 migration
 
-The build host uses Node 24.21.0, pinned in `.node-version`, with the checked-in
+The build host uses Node 24.22.1, pinned in `.node-version`, with the checked-in
 Yarn 4.18.1 and immutable lockfile. CI and the packaging script use the same Node
 pin. No OpenSSL legacy-provider option is needed.
+
+The [nested dependency refresh](dependency-completion.md#build-runtime-and-nested-dependency-refresh)
+also refreshes the compiler, archive, download and stylesheet helpers within
+their existing ranges. Node 24.22.1 is a build-host security update; Electron
+continues to supply the runtime used by installed applications.
 
 This stage updates Webpack to 5.112.2 and its CLI, middleware, merge utility,
 Babel loader, asset-copy plugin, environment plugin, minifier and stylesheet

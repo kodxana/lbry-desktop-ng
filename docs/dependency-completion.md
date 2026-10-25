@@ -61,6 +61,43 @@ See [runtime migration](electron-runtime.md) for the changes and validation.
 A registry recheck on October 25 found no other newer direct dependencies
 except unist-util-visit 5.2.0, still within the one-day release-age safeguard.
 
+## Build runtime and nested dependency refresh
+
+The October 25 maintenance pass updates the build host from Node 24.21.0 to
+[24.22.1](https://nodejs.org/en/blog/release/v24.22.1), an LTS security release.
+CI and packaging both read `.node-version`. This changes the build host only:
+Electron remains 45.0.0 with its own embedded Node 24.22.0, and the SDK pin is
+unchanged.
+
+Re-resolving the existing dependency ranges updates 79 nested package names
+and removes 56 redundant locked versions. Direct application pins and custom
+patches stay unchanged. Representative changes:
+
+| Area                      | Nested updates                                                                           |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| Compiler                  | Babel parser/types 7.29.11 and 8.0.8; block-scoping, classes and spread transforms 8.0.8 |
+| Browser targets/polyfills | browserslist 4.29.4; core-js-compat and core-js-pure 3.51.0                              |
+| Build and CSS             | schema-utils 4.8.1; postcss 8.5.31; postcss-selector-parser 7.1.7; source-map 0.7.6      |
+| Downloads and packaging   | got 11.8.6; cacheable-request 7.0.4; Electron's extract-zip 1.0.6; node-abi 4.40.0       |
+| Archives and documents    | jszip 3.10.2; sax 1.6.1; html-entities 2.6.0; dingbat-to-unicode 1.0.2                   |
+| Certificates and metadata | asn1js 3.1.0; pkijs 3.4.3; tldts 7.4.19                                                  |
+
+Every updated version satisfies its existing dependency range. The only major
+version jumps are four TypeScript definition packages requested with wildcard
+ranges (@types/estree, @types/ms, @types/node and @types/unist). They do not
+change the Node runtime or replace the application's maintained Flow definitions.
+The existing positive/negative type contracts remain required.
+
+Yarn's 1,440-minute release-age gate and disabled lifecycle scripts remain in
+effect. unist-util-visit stays at 5.1.0, including nested requests. The audit
+still reports the same two advisories confined to the development-only legacy
+updater fixture; the refresh adds none.
+
+Validation uses the complete Windows/Linux desktop and installed Windows
+upgrade workflows, including compilation, media decoding/quality controls,
+documents, wallet backups/encryption, native password restart/migration,
+updater consent/shutdown, packaged startup and development reloads.
+
 ## Release criteria
 
 A candidate can close the initial catch-up only after its exact revision passes

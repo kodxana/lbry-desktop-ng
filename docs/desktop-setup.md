@@ -84,7 +84,7 @@ volumes remain unvalidated.
 
 ## Regression checks
 
-Run `yarn test:desktop-setup` with the documented Node 24.21.0 build environment:
+Run `yarn test:desktop-setup` with the documented Node 24.22.1 build environment:
 
 - Native capacity queries with spaces, Unicode and shell metacharacters in the
   directory name; directory links, missing paths and non-directory paths.

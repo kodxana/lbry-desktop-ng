@@ -14,7 +14,7 @@ test loads the real devtools module without installing extensions.
 
 ## Compatibility
 
-node-fetch 3 is an ES module. The pinned Node 24.21.0 runtime can require its
+node-fetch 3 is an ES module. The pinned Node 24.22.1 runtime can require its
 synchronous module graph; download scripts select the default export. Replace
 the removed timeout option with AbortSignal deadlines covering both headers and
 response bodies. Binary downloads use arrayBuffer and preserve their bytes when

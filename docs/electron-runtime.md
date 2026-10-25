@@ -1,7 +1,7 @@
 # Electron runtime migration
 
 Source builds use Electron 45.0.0, with embedded Node 24.22.0 and Chromium
-156.0.8078.48. The build host remains Node 24.21.0. Published 0.54.0-rc.3
+156.0.8078.48. The build host remains Node 24.22.1. Published 0.54.0-rc.3
 installers remain on Electron 17.2.0. The source renderer uses a sandboxed
 preload. The SDK binary, wallet format, React, updater and application version
 are unchanged by the runtime update.
