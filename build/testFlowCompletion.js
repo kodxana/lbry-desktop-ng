@@ -140,34 +140,34 @@ assert.equal(reportInput.category, 'previous category');
 async function mediaSource() {
   let response;
   const requests = [];
-  const functions = load(
+  const resolve = load(
     'component/viewers/videoViewer/internal/videojs-functions.jsx',
     {},
     {
+      URL,
+      window: { location: { href: 'https://fixture/' } },
       fetch: async (...args) => {
         requests.push(args);
         if (response instanceof Error) throw response;
         return response;
       },
     }
-  ).default({
-    source: 'https://fixture/video.mp4',
-    sourceType: 'video/mp4',
-    videoJsOptions: { sources: [] },
-    isAudio: false,
-  });
-  response = { redirected: false };
-  assert.deepEqual(plain((await functions.detectFileType()).sources), [
-    { src: 'https://fixture/video.mp4', type: 'video/mp4' },
-  ]);
-  response = { redirected: true, url: 'https://fixture/master.m3u8' };
-  assert.deepEqual(plain((await functions.detectFileType()).sources), [
-    { src: response.url, type: 'application/x-mpegURL' },
-  ]);
+  ).default;
+  const run = () => resolve('https://fixture/video.mp4', 'video/mp4');
+  response = { redirected: false, headers: new Headers() };
+  assert.deepEqual(plain(await run()), { src: 'https://fixture/video.mp4', type: 'video/mp4' });
+  for (const [url, type] of [
+    ['https://fixture/master.m3u8?token=fixture', 'application/x-mpegURL'],
+    ['https://fixture/dash.mpd?token=fixture', 'application/dash+xml'],
+  ]) {
+    response = { redirected: true, url, headers: new Headers() };
+    assert.deepEqual(plain(await run()), { src: url, type });
+  }
+  response = { redirected: false, headers: new Headers({ 'content-type': 'application/vnd.apple.mpegurl' }) };
+  assert.equal((await run()).type, 'application/x-mpegURL');
   assert.equal(requests[0][1].method, 'HEAD');
   response = new Error('fixture offline');
-  await assert.rejects(functions.detectFileType(), /fixture offline/);
-  assert.equal(functions.createVideoPlayerDOM(null), undefined);
+  await assert.rejects(run(), /fixture offline/);
 }
 
 mediaSource()

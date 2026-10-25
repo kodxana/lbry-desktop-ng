@@ -30,24 +30,29 @@ function tracking() {
   const emitted = [];
   const emit = (name) => listeners.get(name)?.();
   const player = {
-    on: (name, fn) => listeners.set(name, fn),
-    off: (name, fn) => {
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: (name, fn) => {
       assert.equal(listeners.get(name), fn);
       listeners.delete(name);
     },
-    trigger: (name, data) => emitted.push([name, JSON.parse(JSON.stringify(data))]),
-    currentTime: () => time,
-    readyState: () => 2,
-    scrubbing: () => scrubbing,
+    dispatchEvent: ({ type, detail }) => emitted.push([type, JSON.parse(JSON.stringify(detail))]),
+    get currentTime() {
+      return time;
+    },
+    readyState: 2,
+    get seeking() {
+      return scrubbing;
+    },
   };
   const install = load(
     'component/viewers/videoViewer/internal/videojs-tracking.js',
     {},
     {
       performance: { now: () => now },
+      CustomEvent,
     }
   ).default;
-  install.call(player);
+  let cleanup = install(player);
   const last = () => emitted[emitted.length - 1];
   emit('loadstart');
   now = 1250;
@@ -117,6 +122,7 @@ function tracking() {
     assert.deepEqual(last(), ['tracking:firstplay', { secondsToLoad: 0 }]);
     emit('seeking');
     assert.equal(last()[1].seekCount, 1);
+    now += 200;
     emit('waiting');
     now += 50;
     time++;
@@ -124,7 +130,7 @@ function tracking() {
     assert.equal(last()[1].bufferCount, 1);
   }
   emit('waiting');
-  emit('dispose');
+  cleanup();
   assert.equal(listeners.size, 0, 'Disposal removes every listener, including pending stalls');
   const disposed = emitted.length;
   now += 5000;
@@ -132,11 +138,11 @@ function tracking() {
   for (const name of ['timeupdate', 'playing', 'seeking']) emit(name);
   assert.equal(emitted.length, disposed);
 
-  install.call(player);
+  cleanup = install(player);
   emit('loadeddata');
   emit('playing');
   assert.deepEqual(last(), ['tracking:firstplay', { secondsToLoad: 0 }], 'Late attachment must not report epoch time');
-  emit('dispose');
+  cleanup();
 }
 
 async function probing() {
@@ -205,9 +211,59 @@ async function probing() {
   }
 }
 
+function recommendations() {
+  const events = [];
+  const disposed = [];
+  const listeners = new Map();
+  let enabled = true;
+  const media = {
+    currentTime: 0,
+    playbackRate: 1,
+    seeking: false,
+    addEventListener: (name, fn) => listeners.set(name, fn),
+    removeEventListener: (name, fn) => {
+      assert.equal(listeners.get(name), fn);
+      listeners.delete(name);
+    },
+  };
+  const track = load('component/viewers/videoViewer/internal/track-recommendations.js', {
+    'recsys/recsys': {
+      onRecsysPlayerEvent: (claim, data) => events.push([claim, JSON.parse(JSON.stringify(data))]),
+      onPlayerDispose: (claim) => disposed.push(claim),
+    },
+  }).default;
+  const cleanup = track(media, 'fixture', () => enabled);
+  listeners.get('playing')();
+  media.currentTime = 2;
+  listeners.get('timeupdate')();
+  media.currentTime = 4;
+  listeners.get('seeking')();
+  media.playbackRate = 1.1;
+  listeners.get('ratechange')();
+  listeners.get('pause')();
+  assert.deepEqual(events, [
+    ['fixture', { event: 0, offset: 0 }],
+    ['fixture', { event: 2, offset: 2, arg: 4 }],
+    ['fixture', { event: 3, offset: 4, arg: 1.1 }],
+    ['fixture', { event: 1, offset: 4 }],
+  ]);
+  enabled = false;
+  listeners.get('playing')();
+  listeners.get('ended')();
+  cleanup();
+  assert.equal(events.length, 4, 'Revoking consent stops event collection immediately');
+  assert.deepEqual(disposed, [], 'Revoked consent must not flush tracking data on cleanup');
+  assert.equal(listeners.size, 0);
+  enabled = true;
+  track(media, 'replacement', () => enabled)();
+  assert.deepEqual(disposed, ['replacement']);
+  assert.equal(listeners.size, 0);
+}
+
 (async () => {
   countries();
   tracking();
+  recommendations();
   await probing();
   console.log('PASS country compatibility, playback timing/lifecycle and bounded media probing');
 })().catch((error) => {

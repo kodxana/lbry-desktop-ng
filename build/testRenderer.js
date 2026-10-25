@@ -5,14 +5,20 @@ const { spawnSync } = require('child_process');
 const assert = require('assert').strict;
 
 process.chdir(path.resolve(__dirname, '..'));
-// Player components and plugins must share constructors and the plugin registry.
-for (const plugin of ['@videojs/http-streaming', 'videojs-contrib-quality-levels']) {
+for (const name of ['@videojs/react', '@videojs/core', '@videojs/hlsjs-video', '@videojs/dash-video', 'video.js']) {
   assert.equal(
-    require.resolve('video.js', { paths: [path.dirname(require.resolve(plugin))] }),
-    require.resolve('video.js'),
-    plugin + ' must use the application Video.js instance'
+    JSON.parse(fs.readFileSync(path.resolve('node_modules', name, 'package.json'), 'utf8')).version,
+    '10.2.0'
+  );
+  assert.equal(
+    require.resolve('@videojs/media', { paths: [path.dirname(require.resolve(name))] }),
+    require.resolve('@videojs/media')
   );
 }
+for (const name of ['videojs-contrib-quality-levels', '@videojs/http-streaming']) {
+  assert.throws(() => require.resolve(name), { code: 'MODULE_NOT_FOUND' }, 'Remove the legacy player and plugins');
+}
+// CodeMirror extensions must share state constructors.
 for (const module of [
   '@codemirror/view',
   '@codemirror/commands',

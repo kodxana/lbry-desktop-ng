@@ -45,6 +45,9 @@ for (const name of [
   'codemirror-spell-checker',
   'easymde',
   'react-simplemde-editor',
+  'video.js',
+  'videojs-contrib-quality-levels',
+  '@videojs/http-streaming',
 ]) {
   assert(!entries.has('/node_modules/' + name + '/package.json'), 'Removed dependency shipped: ' + name);
 }

@@ -18,6 +18,7 @@ const versions = {
   reselect: '5.3.0',
   webpack: '5.112.2',
   'react-modal': '3.16.3',
+  '@videojs/react': '10.2.0',
 };
 const manifest = require('../package.json');
 const parent = path.join(root, 'dist', 'flow-tests');
@@ -73,6 +74,14 @@ const check = () => {
 };
 assert.deepEqual(check().errors, [], 'Current dependency APIs and valid application patterns must type-check');
 const invalid = {
+  'player-rate':
+    "import {usePlayer} from '@videojs/react/video'; export function read(): string { return usePlayer(s => s.playbackRate); }",
+  'player-snapshot':
+    "import {usePlayer} from '@videojs/react/video'; export function read(): void { usePlayer().getSnapshot(); }",
+  'player-quality':
+    "import {useQualityOptions} from '@videojs/react'; export function select(): void { useQualityOptions()?.setValue(720); }",
+  'player-media':
+    "import * as React from 'react'; import {HlsJsVideo} from '@videojs/react/media/hlsjs-video'; export const video: React.Node = <HlsJsVideo src={42} />;",
   'codec-input': "import {compressToUTF16} from 'lz-string'; compressToUTF16({state: true});",
   'codec-null':
     "import {decompressFromUTF16} from 'lz-string'; export const text: string = decompressFromUTF16('invalid');",

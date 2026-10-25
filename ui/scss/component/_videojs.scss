@@ -1,285 +1,240 @@
-$control-bar-height: 2.5rem;
-$control-bar-font-size: 0.8rem;
-$control-bar-popup-font-size: 0.8rem;
-$control-bar-icon-size: 0.8rem;
-
-.video-js {
-  font-size: 12px;
+.video-js-parent {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: black;
+}
+.lbry-player {
+  @include font-sans;
+  --color-text: #dbd8d8;
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+  color: #dbd8d8;
+  background: black;
+  font-size: 0.8rem;
   overflow: hidden;
-
-  // Control Bar (container)
-  .vjs-control-bar {
-    background: none;
-    color: #dbd8d8;
-    height: $control-bar-height;
-
-    &::before {
-      position: absolute;
-      bottom: 0;
-      content: '';
-      height: 5rem;
-      width: 100%;
-      background: rgba(20, 20, 20, 0.45);
-      background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 10%, rgba(0, 0, 0, 0) 100%);
+  > video,
+  > audio,
+  > .player-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  > audio {
+    position: absolute;
+    inset: 0;
+  }
+  &:has(.player-controls[data-visible]) > video::-webkit-media-text-track-container {
+    transform: translateY(-3.5rem);
+  }
+  &:fullscreen {
+    width: 100vw;
+    height: 100vh;
+  }
+  button,
+  select {
+    font: inherit;
+    color: inherit;
+  }
+  button:focus-visible,
+  select:focus-visible,
+  [role='slider']:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .player-controls {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 1.8rem 0.7rem 0.2rem;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.85), transparent);
+    transition: opacity 0.1s;
+    &:not([data-visible]) {
+      opacity: 0;
+      pointer-events: none;
+    }
+    &:not([data-visible]):focus-within {
+      opacity: 1;
+      pointer-events: auto;
     }
   }
-
-  // Progress Bar
-  .vjs-progress-control.vjs-control {
-    position: absolute;
+  .player-buttons {
     display: flex;
     align-items: center;
-    width: 100%;
-    height: 1rem;
-    bottom: 90%;
-
-    // Circle play head
-    .vjs-play-progress::before {
-      transform: scale(0);
-      transition: transform 0.1s;
-    }
-
-    &:hover {
-      .vjs-play-progress::before {
-        transform: scale(1);
+    gap: 0.2rem;
+    min-height: 2.5rem;
+    > button {
+      position: relative;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+      width: 2rem;
+      height: 2rem;
+      border: 0;
+      padding: 0.3rem;
+      background: transparent;
+      cursor: pointer;
+      svg {
+        width: 100%;
+        height: 100%;
+        fill: currentColor;
       }
     }
-
-    // Progress Slider
-    .vjs-slider {
-      margin: 0 1rem;
+    select {
+      width: auto;
+      min-width: 3.5rem;
+      max-width: 6rem;
+      margin: 0;
+      padding: 0.25rem;
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      option {
+        background: #24282b;
+        color: white;
+      }
+    }
+    .player-autoplay {
+      width: 26px;
+      height: 14px;
+      border-radius: 10px;
+      background: var(--color-gray-4);
+      margin: 0 0.4rem;
+      padding: 0;
+      &::after {
+        content: '';
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        left: 0;
+        top: 0;
+        border-radius: 50%;
+        background: white;
+      }
+      &[aria-checked='true'] {
+        background: var(--color-primary);
+      }
+      &[aria-checked='true']::after {
+        left: 12px;
+      }
     }
   }
-
-  // Load progress color
-  .vjs-load-progress,
-  .vjs-load-progress div {
-    background-color: rgba(var(--color-secondary), 0.5);
+  .player-time {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
   }
-
-  // Progress Bar Background
-  .vjs-slider {
-    background-color: rgba(60, 60, 60, 0.5);
+  .player-spacer {
+    flex: 1;
   }
-
-  // Primary Color Progress
-  .vjs-slider-bar {
-    background-color: var(--color-gray-5);
+  .player-timeline,
+  .player-volume {
+    position: relative;
+    height: 16px;
+    cursor: pointer;
+    touch-action: none;
+    .player-track {
+      position: absolute;
+      inset: 6px 0;
+      background: #474747;
+    }
+    .player-fill,
+    .player-buffer {
+      position: absolute;
+      height: 100%;
+      inset: 0 auto 0 0;
+    }
+    .player-fill {
+      width: var(--media-slider-fill, 0%);
+      background: var(--color-primary);
+    }
+    .player-buffer {
+      width: var(--media-slider-buffer, 0%);
+      background: #777;
+    }
+    .player-thumb {
+      position: absolute;
+      top: 2px;
+      left: var(--media-slider-fill, 0%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: white;
+      transform: translateX(-50%);
+    }
+    &[data-dragging] .player-thumb {
+      left: var(--media-slider-pointer);
+    }
+    &[data-dragging] .player-fill {
+      width: var(--media-slider-pointer);
+    }
   }
-
-  // Inner Progress Bar
-  .vjs-play-progress {
-    background-color: var(--color-primary);
-    color: var(--color-primary);
+  .player-volume {
+    width: 4.5rem;
+    flex-shrink: 0;
+    margin: 0 0.6rem 0 0.2rem;
   }
-
-  // Spacer
-  .vjs-custom-control-spacer {
-    display: flex;
-    flex: auto;
+  .player-notice {
+    position: absolute;
+    top: 35%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 1.2rem;
+    pointer-events: none;
   }
-
-  // Transcoding menu
-  /*.vjs-tech {
-    height: auto !important;
-    position: absolute !important;
-  }*/
-
-  // Volume slider
-  .vjs-volume-panel {
-    margin-right: calc(var(--spacing-xxs) * -1);
-
-    .vjs-volume-control.vjs-volume-horizontal {
-      transition: 0.1s;
-      margin-top: 2px;
+  .player-unmute {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.65);
+    border: 1px solid #aaa;
+    border-radius: var(--border-radius);
+  }
+  @container (max-width: 500px) {
+    .player-volume,
+    .player-time {
+      display: none;
+    }
+    .player-buttons {
+      gap: 0;
+    }
+    .player-buttons > button {
+      width: 1.7rem;
+    }
+  }
+  @container (max-width: 330px) {
+    .player-buttons .player-theater,
+    .player-rate {
+      display: none;
+    }
+    .player-buttons select {
+      width: 3.5rem;
+      min-width: 3.5rem;
+      max-width: 3.5rem;
     }
   }
 }
-
-// Tooltip
-.vjs-mouse-display .vjs-time-tooltip {
+.player-message {
+  position: absolute;
+  inset: 25% 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
   color: white;
-}
-
-// Tooltip
-.video-js {
-  .vjs-progress-control {
-    .vjs-play-progress {
-      .vjs-time-tooltip {
-        display: none;
-      }
-    }
+  padding: 1rem;
+  text-align: center;
+  button {
+    background: var(--color-primary);
+    border: 0;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
   }
-}
-
-// Transitions control bar between active / inactive
-.vjs-has-started {
-  .vjs-control-bar {
-    opacity: 1;
-    transition: 0.1s;
-  }
-
-  &.vjs-user-inactive.vjs-playing {
-    .vjs-control-bar {
-      opacity: 0;
-      transition: 0.1s;
-    }
-  }
-
-  &.vjs-user-active.vjs-playing {
-    .vjs-control-bar {
-    }
-  }
-}
-
-// Button glow
-.video-js {
-  .vjs-control,
-  .vjs-time-divider {
-    user-select: none;
-
-    &:focus:before,
-    &:hover:before,
-    &:focus {
-      // Disable builtin button glow
-      text-shadow: none;
-    }
-  }
-}
-
-.bottom-gradient {
-  background-image: linear-gradient(to top, rgba(0, 0, 0, 0.4) 0%, transparent 72px);
-}
-
-.vjs-hover {
-  opacity: 1;
-}
-
-[dir] .vjs-menu-button-popup .vjs-menu .vjs-menu-content {
-  background-color: rgba(43, 51, 63);
-  max-height: 20em;
-  margin-bottom: calc(var(--spacing-xxs) * -1); // Prevents accidental dismissal when the gap is hovered.
-
-  li {
-    font-size: $control-bar-popup-font-size;
-  }
-}
-
-.vjs-slider-horizontal {
-  background-color: #474747 !important;
-}
-
-.vjs-mouse-display {
-  color: white !important;
-  background-color: lightgrey !important;
-  width: 8px !important;
-  margin-left: -5px !important;
-}
-
-.vjs_video_3_ima-ad-container {
-  display: none;
-}
-
-.ima-ad-container {
-  display: none;
-}
-
-.vjs-chromecast-button {
-  .vjs-icon-placeholder {
-    width: 19px;
-    height: 19px;
-  }
-}
-
-.video-js-parent .vjs-tech-chromecast {
-  .vjs-tech-chromecast-poster {
-    &::after {
-      $chromecast-poster-width: 50px;
-      width: $chromecast-poster-width;
-      left: calc(50% - #{$chromecast-poster-width * 0.5});
-    }
-  }
-
-  .vjs-tech-chromecast-poster-img {
-    $chromecast-poster-max-height: 50px;
-    max-height: $chromecast-poster-max-height;
-    &.vjs-tech-chromecast-poster-img-empty {
-      width: 80px;
-      height: 90px;
-    }
-  }
-
-  .vjs-tech-chromecast-title-container {
-    margin-bottom: var(--spacing-main-padding);
-  }
-
-  .vjs-tech-chromecast-title {
-    font-size: var(--font-title);
-    @media (max-width: $breakpoint-small) {
-      font-size: var(--font-small);
-    }
-  }
-
-  .vjs-tech-chromecast-subtitle {
-    color: var(--color-text-subtitle);
-    font-size: var(--font-body);
-    @media (max-width: $breakpoint-small) {
-      font-size: var(--font-xsmall);
-    }
-  }
-}
-
-// larger than default spinner for all but smallest devices
-@media (min-width: 680px) {
-  .vjs-loading-spinner {
-    border-radius: 100px;
-    height: 75px;
-    width: 75px;
-    margin: -49px 0 0 -37px;
-  }
-}
-
-// TODO: make sure there's no bad side effects of this
-button.vjs-big-play-button {
-  display: none !important;
-}
-
-// Rearrange icons
-.vjs-play-control {
-  order: 1 !important;
-}
-.vjs-volume-panel {
-  order: 2 !important;
-}
-.vjs-current-time {
-  order: 3 !important;
-}
-.vjs-time-divider {
-  order: 4 !important;
-}
-.vjs-duration {
-  order: 5 !important;
-}
-
-.vjs-custom-control-spacer {
-  order: 6 !important;
-}
-
-.vjs-button--autoplay-next {
-  order: 7 !important;
-}
-.vjs-playback-rate {
-  order: 8 !important;
-}
-.vjs-chromecast-button {
-  order: 9 !important;
-}
-.vjs-quality-selector {
-  order: 10 !important;
-}
-.vjs-button--theater-mode {
-  order: 11 !important;
-}
-.vjs-fullscreen-control {
-  order: 12 !important;
 }

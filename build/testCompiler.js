@@ -115,21 +115,6 @@ if (process.argv[2] !== '--child') {
     assert.deepEqual(yielded, [1, 2]);
     await assert.rejects(reject(), /fixture failure/);
 
-    // Video.js supplies native constructors outside Babel's transformed modules.
-    class NativeComponent {
-      constructor(value) {
-        this.value = value;
-      }
-    }
-    const { Player } = evaluate(
-      'export class Player extends NativeComponent { constructor(value) { super(value); } read = () => this.value; }',
-      'ui/component/viewers/videoViewer/internal/compiler-fixture.jsx',
-      { NativeComponent }
-    );
-    const player = new Player('playing');
-    assert(player instanceof NativeComponent);
-    assert.equal(player.read(), 'playing');
-
     const esm = babel.transformSync('export const load = () => import("./lazy.js");', {
       filename: path.resolve(__dirname, 'tests/compiler-lazy.js'),
     }).code;
@@ -167,7 +152,7 @@ if (process.argv[2] !== '--child') {
     console.log(
       'PASS: ' +
         process.env.NODE_ENV +
-        ' compiler: Flow fields, React JSX, public/private fields, async errors/generators, symbols, native player inheritance, lazy imports, renderer-only Fast Refresh and register entry point'
+        ' compiler: Flow fields, React JSX, public/private fields, async errors/generators, symbols, lazy imports, renderer-only Fast Refresh and register entry point'
     );
   };
   main().catch((error) => {

@@ -20,6 +20,7 @@ const root = fs.mkdtempSync(path.join(output, 'profile-'));
 app.setPath('userData', root);
 const graphics = process.argv.includes('--three');
 const comics = process.argv.includes('--comics');
+const mediaOnly = process.argv.includes('--media');
 if (graphics) {
   // Exercise real WebGL 2 rendering deterministically on GPU-less CI runners.
   app.commandLine.appendSwitch('use-angle', 'swiftshader');
@@ -52,7 +53,7 @@ async function run(phase) {
       plugins: true,
       // Hidden fixture windows still need animation frames for the real viewers.
       backgroundThrottling: false,
-      offscreen: ['documents', 'three', 'comics', 'markdownEditor'].includes(phase),
+      offscreen: ['documents', 'three', 'comics', 'markdownEditor', 'media'].includes(phase),
     },
   });
   activeWindow = window;
@@ -87,6 +88,32 @@ async function run(phase) {
 app
   .whenReady()
   .then(async () => {
+    ipcMain.handle('fixture-media-action', async (event, action) => {
+      assert.equal(activePhase, 'media');
+      assert.equal(event.sender, activeWindow.webContents);
+      if (action === 'fullscreen') {
+        await activeWindow.webContents.executeJavaScript('document.querySelector(".player-fullscreen").click()', true);
+      } else {
+        assert(['capture-dark', 'capture-light', 'capture-compact', 'capture-captions'].includes(action));
+        const contents = activeWindow.webContents;
+        await contents.executeJavaScript(
+          'new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))'
+        );
+        const painted = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('Media repaint timed out')), 10000);
+          contents.once('paint', (_event, _rect, image) => {
+            clearTimeout(timeout);
+            resolve(image);
+          });
+          contents.invalidate();
+        });
+        assert(!painted.isEmpty());
+        fs.writeFileSync(
+          path.resolve(`dist/ci/media-${action.slice(8)}.png`),
+          (await contents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
+        );
+      }
+    });
     ipcMain.handle('fixture-comic-fullscreen', async (event, label) => {
       assert.equal(activePhase, 'comics');
       assert.equal(event.sender, activeWindow.webContents);
@@ -114,15 +141,16 @@ app
       );
     });
     ipcMain.handle('fixture-controls-focus', async (event) => {
-      assert(['accessibleControls', 'collections', 'reactState', 'formsAndDates'].includes(activePhase));
+      assert(['accessibleControls', 'collections', 'reactState', 'formsAndDates', 'media'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
       activeWindow.webContents.debugger.attach('1.3');
       await activeWindow.webContents.debugger.sendCommand('Emulation.setFocusEmulationEnabled', { enabled: true });
     });
     ipcMain.handle('fixture-controls-key', async (event, key) => {
-      assert(['accessibleControls', 'collections', 'fileUploads', 'reactState'].includes(activePhase));
+      assert(['accessibleControls', 'collections', 'fileUploads', 'reactState', 'media'].includes(activePhase));
       assert.equal(event.sender, activeWindow.webContents);
       const codes = {
+        k: 75,
         Tab: 9,
         Home: 36,
         End: 35,
@@ -320,45 +348,47 @@ app
         callback({ cancel: true });
       }
     );
-    for (const phase of graphics
-      ? ['three']
-      : comics
-        ? ['comics']
-        : [
-            'bundling',
-            'fresh',
-            'legacy',
-            'restart',
-            'stateUpdates',
-            'reactState',
-            'uiComponents',
-            'accessibleControls',
-            'collections',
-            'browserIntegrations',
-            'formsAndDates',
-            'markdownEditor',
-            'documents',
-            'media',
-            'fileDialogs',
-            'fileUploads',
-            'windowControls',
-            'contextMenu',
-            'updater',
-            'updaterRestart',
-            'wallet',
-            'downloadNotifications',
-            'passwords',
-            'passwordRestart',
-            'analytics',
-            'analyticsEnabled',
-            'analyticsDisabled',
-            'analyticsUnconfigured',
-          ]) {
+    for (const phase of mediaOnly
+      ? ['media']
+      : graphics
+        ? ['three']
+        : comics
+          ? ['comics']
+          : [
+              'bundling',
+              'fresh',
+              'legacy',
+              'restart',
+              'stateUpdates',
+              'reactState',
+              'uiComponents',
+              'accessibleControls',
+              'collections',
+              'browserIntegrations',
+              'formsAndDates',
+              'markdownEditor',
+              'documents',
+              'media',
+              'fileDialogs',
+              'fileUploads',
+              'windowControls',
+              'contextMenu',
+              'updater',
+              'updaterRestart',
+              'wallet',
+              'downloadNotifications',
+              'passwords',
+              'passwordRestart',
+              'analytics',
+              'analyticsEnabled',
+              'analyticsDisabled',
+              'analyticsUnconfigured',
+            ]) {
       await run(phase);
     }
     assert.deepEqual(
       analyticsRequests,
-      graphics || comics
+      graphics || comics || mediaOnly
         ? []
         : [
             { phase: 'analytics', url: 'https://analytics.lbry.com/matomo.js' },
@@ -367,7 +397,7 @@ app
       'Only explicit analytics opt-in may request the tracking script'
     );
     assert.deepEqual(blocked, [], 'Unexpected renderer requests: ' + JSON.stringify(blocked));
-    if (!graphics && !comics) {
+    if (!graphics && !comics && !mediaOnly) {
       const purchases = integrationRequests.filter((request) => request.type === 'subFrame');
       assert(purchases.length >= 2, 'The purchase fixture must exercise signed iframe destinations');
       for (const { url } of purchases) {

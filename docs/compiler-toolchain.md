@@ -14,7 +14,7 @@ build modes. The [React 19 upgrade](react-and-material.md) enables the automatic
 JSX transform, required by the new runtime. Named assumptions replace
 `preset-env`'s `loose` option, with strict public/private fields kept separately: fields must not call
 inherited setters, and private members must remain hidden and brand-checked.
-The Video.js override still preserves native classes. Type-only Flow fields
+The Video.js 10 migration removes the obsolete subclass override. Type-only Flow fields
 continue to become own properties initialized to `undefined`.
 
 Deprecated class/private-field proposal plugins are replaced by their supported
@@ -33,8 +33,7 @@ This does not remove every transitive core-js 2 dependency from the older UI sta
 
 `node build/testCompiler.js` checks both production and development compilation:
 Flow fields, automatic JSX runtime imports, spread precedence and keys, field
-descriptors and private brands, async error propagation/generators, object spread, native player
-inheritance and lazy imports. Fast Refresh registration is restricted to UI
+descriptors and private brands, async error propagation/generators, object spread and lazy imports. Fast Refresh registration is restricted to UI
 modules in development. These semantic checks passed on Babel 7 with both the
 old configuration and the replacement assumptions before the upgrade. The suite
 also loads the devtools installer through `@babel/register`, with explicit

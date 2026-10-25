@@ -24,6 +24,29 @@ import classes from 'classnames';
 import dedupe from 'classnames/dedupe';
 import bind from 'classnames/bind';
 import chalk from 'chalk';
+import { VideoPlayer, Video, usePlayer } from '@videojs/react/video';
+import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
+import { useQualityOptions } from '@videojs/react';
+
+export function MediaContract(): React.Node {
+  const store = usePlayer();
+  const paused: boolean = usePlayer((state) => state.paused);
+  const quality = useQualityOptions();
+  return (
+    <VideoPlayer>
+      <Video src="fixture.mp4" preload="auto" playsInline />
+      <HlsJsVideo src="fixture.m3u8" onClick={() => quality?.setValue('auto')} />
+      <button
+        disabled={!paused}
+        onClick={() => {
+          if (!store.state.isFullscreen) store.requestFullscreen();
+        }}
+      >
+        Fullscreen
+      </button>
+    </VideoPlayer>
+  );
+}
 
 type State = { balance: string };
 type Own = { address: string };

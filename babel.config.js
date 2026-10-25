@@ -33,14 +33,6 @@ module.exports = (api) => {
         test: /[\\/]ui[\\/]/,
         plugins: process.env.NODE_ENV === 'development' ? ['react-refresh/babel'] : [],
       },
-      {
-        // Video.js 8 components are native classes. Transpiled constructors
-        // cannot call their superclasses without `new`.
-        test: /[\\/]ui[\\/]component[\\/]viewers[\\/]videoViewer[\\/]internal[\\/]/,
-        presets: [
-          ['@babel/env', { modules: false, exclude: ['@babel/transform-classes', '@babel/transform-typeof-symbol'] }],
-        ],
-      },
     ],
     plugins: [
       ['@babel/plugin-transform-runtime', { version: require('./package.json').dependencies['@babel/runtime'] }],
