@@ -33,15 +33,15 @@ type Props = {
   // For example, to only accept images pass the
   // following filter:
   // { name: 'Images', extensions: ['jpg', 'png', 'gif'] },
-  filters?: Array<{ name: string, extension: string[] }>,
+  filters?: Array<{ name: string, extensions: string[] }>,
   type?: string,
 };
 
-function filePreview(file) {
+function filePreview(file: Blob): Promise<string | void> {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = () => {
-      resolve(reader.result.toString());
+      resolve(typeof reader.result === 'string' ? reader.result : undefined);
     };
     reader.onerror = () => {
       resolve(undefined);
@@ -50,7 +50,7 @@ function filePreview(file) {
   });
 }
 
-function SelectAsset(props: Props) {
+function SelectAsset(props: Props): React.Node {
   const { onUpdate, onDone, assetName, currentValue, recommended, title, inline, buildImagePreview, filters, type } =
     props;
   const [pathSelected, setPathSelected] = React.useState('');
@@ -58,14 +58,14 @@ function SelectAsset(props: Props) {
   const [uploadStatus, setUploadStatus] = React.useState(SPEECH_READY);
   const [useUrl, setUseUrl] = usePersistedState('thumbnail-upload:mode', false);
   const [url, setUrl] = React.useState(currentValue);
-  const [error, setError] = React.useState();
+  const [error, setError] = React.useState<string | void>();
 
   function doUploadAsset() {
-    const uploadError = (error = '') => {
+    const uploadError = (error: string = '') => {
       setError(error);
     };
 
-    const onSuccess = async (thumbnailUrl) => {
+    const onSuccess = async (thumbnailUrl: string) => {
       let preview;
       setUploadStatus(SPEECH_READY);
 
@@ -135,7 +135,6 @@ function SelectAsset(props: Props) {
             autoFocus
             disabled={uploadStatus === SPEECH_UPLOADING}
             label={fileSelectorLabel}
-            name="assetSelector"
             currentPath={pathSelected}
             onFileChosen={(fileWithPath) => {
               if (fileWithPath.file.name) {

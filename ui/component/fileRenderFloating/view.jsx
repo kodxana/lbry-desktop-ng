@@ -14,15 +14,27 @@ import { onFullscreenChange } from 'util/full-screen';
 import { generateListSearchUrlParams, formatLbryUrlForWeb } from 'util/url';
 import { useIsMobile, useIsMediumScreen } from 'effects/use-screensize';
 import debounce from 'util/debounce';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { isURIEqual } from 'util/lbryURI';
 import AutoplayCountdown from 'component/autoplayCountdown';
+import desktop from 'util/desktop';
+
+type ViewerRect = {
+  top: number,
+  right: number,
+  bottom: number,
+  left: number,
+  width: number,
+  height: number,
+  x: number,
+  windowOffset: number,
+};
 
 // scss/init/vars.scss
 // --header-height
 const HEADER_HEIGHT = 60;
 
-const IS_DESKTOP_MAC = typeof process === 'object' ? process.platform === 'darwin' : false;
+const IS_DESKTOP_MAC = desktop.platform === 'darwin';
 const DEBOUNCE_WINDOW_RESIZE_HANDLER_MS = 100;
 export const INLINE_PLAYER_WRAPPER_CLASS = 'inline-player__wrapper';
 
@@ -53,7 +65,7 @@ function getFloatingPlayerRect() {
   }
 }
 
-function clampRectToScreen(x, y, rect) {
+function clampRectToScreen(x: number, y: number, rect: ?DOMRect): { x: number, y: number } {
   if (rect) {
     const ESTIMATED_SCROLL_BAR_PX = 50;
     const screenW = getScreenWidth();
@@ -71,7 +83,7 @@ function clampRectToScreen(x, y, rect) {
   return { x, y };
 }
 
-function calculateRelativePos(x, y) {
+function calculateRelativePos(x: number, y: number): { x: number, y: number } {
   return {
     x: x / getScreenWidth(),
     y: y / getScreenHeight(),
@@ -83,7 +95,7 @@ function calculateRelativePos(x, y) {
 
 type Props = {
   isFloating: boolean,
-  fileInfo: FileListItem,
+  fileInfo: ?FileListItem,
   mature: boolean,
   uri: string,
   streamingUrl?: string,
@@ -98,13 +110,13 @@ type Props = {
   doFetchRecommendedContent: (string, boolean) => void,
   doPlayUri: (string, string, boolean) => void,
   collectionId: string,
-  costInfo: any,
+  costInfo: ?{ cost: number, ... },
   claimWasPurchased: boolean,
   nextListUri: string,
   previousListUri: string,
 };
 
-export default function FileRenderFloating(props: Props) {
+export default function FileRenderFloating(props: Props): React.Node {
   const {
     fileInfo,
     mature,
@@ -127,7 +139,7 @@ export default function FileRenderFloating(props: Props) {
     nextListUri,
     previousListUri,
   } = props;
-  const { location, push } = useHistory();
+  const { location, push } = useDesktopHistory();
   const hideFloatingPlayer = location.state && location.state.hideFloatingPlayer;
   const playingUriSource = playingUri && playingUri.source;
   const isComment = playingUriSource === 'comment';
@@ -135,8 +147,8 @@ export default function FileRenderFloating(props: Props) {
   const isMediumScreen = useIsMediumScreen();
   const mainFilePlaying = !isFloating && primaryUri && isURIEqual(uri, primaryUri);
 
-  const [fileViewerRect, setFileViewerRect] = useState();
-  const [desktopPlayStartTime, setDesktopPlayStartTime] = useState();
+  const [fileViewerRect, setFileViewerRect] = useState<ViewerRect | void>();
+  const [desktopPlayStartTime, setDesktopPlayStartTime] = useState<number | void>();
   const [wasDragging, setWasDragging] = useState(false);
   const [doNavigate, setDoNavigate] = useState(false);
   const [playNextUrl, setPlayNextUrl] = useState(true);
@@ -146,10 +158,11 @@ export default function FileRenderFloating(props: Props) {
     y: window.innerHeight - 400,
   });
   const relativePosRef = React.useRef({ x: 0, y: 0 });
+  const draggableRef = React.useRef(null);
 
   const navigateUrl =
     playingUri &&
-    (playingUri.primaryUri || playingUri.uri) + (collectionId ? generateListSearchUrlParams(collectionId) : '');
+    (playingUri.primaryUri || playingUri.uri || '') + (collectionId ? generateListSearchUrlParams(collectionId) : '');
 
   const isFree = costInfo && costInfo.cost === 0;
   const canViewFile = isFree || claimWasPurchased;
@@ -179,7 +192,7 @@ export default function FileRenderFloating(props: Props) {
       // When the player begins floating, remove the comment source
       // so that it doesn't try to resize again in case of going back
       // to the origin's comment section and fail to position correctly
-      if (isComment && playingUri) clearSecondarySource(playingUri.uri);
+      if (isComment && playingUri?.uri) clearSecondarySource(playingUri.uri);
     }
   }, [isFloating, isComment, clearSecondarySource, playingUri]);
 
@@ -206,8 +219,8 @@ export default function FileRenderFloating(props: Props) {
 
   const handleResize = React.useCallback(() => {
     const element = mainFilePlaying
-      ? document.querySelector(`.${PRIMARY_PLAYER_WRAPPER_CLASS}`)
-      : document.querySelector(`.${INLINE_PLAYER_WRAPPER_CLASS}`);
+      ? document.querySelector<HTMLElement>(`.${PRIMARY_PLAYER_WRAPPER_CLASS}`)
+      : document.querySelector<HTMLElement>(`.${INLINE_PLAYER_WRAPPER_CLASS}`);
 
     if (!element) return;
 
@@ -221,11 +234,9 @@ export default function FileRenderFloating(props: Props) {
       left: rect.left,
       width: rect.width,
       height: rect.height,
-      // $FlowFixMe
       x: rect.x,
     };
 
-    // $FlowFixMe
     setFileViewerRect({ ...objectRect, windowOffset: window.pageYOffset });
   }, [mainFilePlaying]);
 
@@ -262,15 +273,14 @@ export default function FileRenderFloating(props: Props) {
   }, [doFetchRecommendedContent, isFloating, mature, uri]);
 
   const doPlay = React.useCallback(
-    (playUri) => {
+    (playUri: string): void => {
       setDoNavigate(false);
       if (!isFloating) {
         const navigateUrl = formatLbryUrlForWeb(playUri);
-        push({
-          pathname: navigateUrl,
-          search: collectionId && generateListSearchUrlParams(collectionId),
-          state: { collectionId, forceAutoplay: true, hideFloatingPlayer: true },
-        });
+        push(
+          { pathname: navigateUrl, search: (collectionId && generateListSearchUrlParams(collectionId)) || '' },
+          { collectionId, forceAutoplay: true, hideFloatingPlayer: true }
+        );
       } else {
         doPlayUri(playUri, collectionId, true);
       }
@@ -303,7 +313,7 @@ export default function FileRenderFloating(props: Props) {
     setWasDragging(false);
   }
 
-  function handleDragMove(e, ui) {
+  function handleDragMove(e: unknown, ui: { x: number, y: number, ... }): void {
     const { x, y } = position;
     const newX = ui.x;
     const newY = ui.y;
@@ -314,7 +324,7 @@ export default function FileRenderFloating(props: Props) {
     }
   }
 
-  function handleDragStop(e, ui) {
+  function handleDragStop(e: unknown, ui: { x: number, y: number, ... }): void {
     if (wasDragging) {
       setWasDragging(false);
     }
@@ -329,6 +339,7 @@ export default function FileRenderFloating(props: Props) {
 
   return (
     <Draggable
+      nodeRef={draggableRef}
       onDrag={handleDragMove}
       onStart={handleDragStart}
       onStop={handleDragStop}
@@ -340,6 +351,7 @@ export default function FileRenderFloating(props: Props) {
       cancel=".button"
     >
       <div
+        ref={draggableRef}
         className={classnames('content__viewer', {
           'content__viewer--floating': isFloating,
           'content__viewer--inline': !isFloating,

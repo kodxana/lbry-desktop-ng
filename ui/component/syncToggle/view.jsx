@@ -3,7 +3,7 @@ import * as MODALS from 'constants/modal_types';
 import React from 'react';
 import Button from 'component/button';
 import SettingsRow from 'component/settingsRow';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { FormField } from 'component/common/form';
 
 type Props = {
@@ -48,4 +48,5 @@ function SyncToggle(props: Props) {
   );
 }
 
-export default withRouter(SyncToggle);
+const RoutedSyncToggle: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(SyncToggle);
+export default RoutedSyncToggle;

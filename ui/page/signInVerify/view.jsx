@@ -1,7 +1,7 @@
 // @flow
 import * as PAGES from 'constants/pages';
 import React, { useState } from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import Page from 'component/page';
 import ReCAPTCHA from 'react-google-recaptcha';
 import Button from 'component/button';
@@ -10,7 +10,7 @@ import I18nMessage from 'component/i18nMessage';
 import Card from 'component/common/card';
 type Props = {
   history: { push: (string) => void, location: { search: string } },
-  doToast: ({}) => void,
+  doToast: ({ message: string, isError: boolean }) => void,
 };
 
 function SignInVerifyPage(props: Props) {
@@ -21,31 +21,67 @@ function SignInVerifyPage(props: Props) {
   const [isAuthenticationSuccess, setIsAuthenticationSuccess] = useState(false);
   const [showCaptchaMessage, setShowCaptchaMessage] = useState(false);
   const [captchaLoaded, setCaptchaLoaded] = useState(false);
+  const active = React.useRef(false);
+  const pending = React.useRef(false);
+  const request = React.useRef(0);
   const urlParams = new URLSearchParams(location.search);
   const authToken = urlParams.get('auth_token');
   const userSubmittedEmail = urlParams.get('email');
   const verificationToken = urlParams.get('verification_token');
   const needsRecaptcha = urlParams.get('needs_recaptcha') === 'true';
 
-  function onAuthError(message) {
-    doToast({
-      message: message || __('Authentication failure.'),
-      isError: true,
-    });
-    push(`/$/${PAGES.AUTH}`);
-  }
+  const onAuthError = React.useCallback(
+    (message?: string) => {
+      if (!active.current) return;
+      request.current++;
+      pending.current = false;
+      doToast({ message: message || __('Authentication failure.'), isError: true });
+      push(`/$/${PAGES.AUTH}`);
+    },
+    [doToast, push]
+  );
+
+  const verifyUser = React.useCallback(
+    (captchaValue?: ?string) => {
+      if (!active.current || pending.current || !authToken || !userSubmittedEmail || !verificationToken) return;
+      if (needsRecaptcha && !captchaValue) return;
+      pending.current = true;
+      const id = ++request.current;
+      Lbryio.call('user_email', 'confirm', {
+        auth_token: authToken,
+        email: userSubmittedEmail,
+        verification_token: verificationToken,
+        ...(captchaValue ? { recaptcha: captchaValue } : {}),
+      })
+        .then(() => {
+          if (active.current && id === request.current) {
+            active.current = false;
+            setIsAuthenticationSuccess(true);
+          }
+        })
+        .catch(() => {
+          if (active.current && id === request.current) {
+            onAuthError(__('Invalid captcha response or other authentication error.'));
+          }
+        });
+    },
+    [authToken, userSubmittedEmail, verificationToken, needsRecaptcha, onAuthError]
+  );
 
   React.useEffect(() => {
+    active.current = true;
+    pending.current = false;
+    request.current++;
+    setIsAuthenticationSuccess(false);
     if (!authToken || !userSubmittedEmail || !verificationToken) {
       onAuthError(__('Invalid or expired sign-in link.'));
-    }
-  }, [authToken, userSubmittedEmail, verificationToken, doToast, push]);
-
-  React.useEffect(() => {
-    if (!needsRecaptcha) {
+    } else if (!needsRecaptcha) {
       verifyUser();
     }
-  }, [needsRecaptcha]);
+    return () => {
+      active.current = false;
+    };
+  }, [authToken, userSubmittedEmail, verificationToken, needsRecaptcha, onAuthError, verifyUser]);
 
   React.useEffect(() => {
     let captchaTimeout;
@@ -63,27 +99,13 @@ function SignInVerifyPage(props: Props) {
     };
   }, [needsRecaptcha, captchaLoaded]);
 
-  function onCaptchaChange(value) {
+  function onCaptchaChange(value: ?string) {
     verifyUser(value);
   }
 
-  function onCaptchaReady() {
-    setCaptchaLoaded(true);
-  }
-
-  function verifyUser(captchaValue) {
-    Lbryio.call('user_email', 'confirm', {
-      auth_token: authToken,
-      email: userSubmittedEmail,
-      verification_token: verificationToken,
-      ...(captchaValue ? { recaptcha: captchaValue } : {}),
-    })
-      .then(() => {
-        setIsAuthenticationSuccess(true);
-      })
-      .catch(() => {
-        onAuthError(__('Invalid captcha response or other authentication error.'));
-      });
+  function onCaptchaReady({ loaded, errored }: { loaded: boolean, errored: boolean }) {
+    setCaptchaLoaded(Boolean(loaded && !errored));
+    setShowCaptchaMessage(Boolean(errored));
   }
 
   return (
@@ -97,8 +119,8 @@ function SignInVerifyPage(props: Props) {
                 {isAuthenticationSuccess
                   ? __('You can now close this tab.')
                   : needsRecaptcha
-                  ? null
-                  : __('Welcome back! You are automatically being signed in.')}
+                    ? null
+                    : __('Welcome back! You are automatically being signed in.')}
               </p>
               {showCaptchaMessage && !isAuthenticationSuccess && (
                 <p>
@@ -120,6 +142,7 @@ function SignInVerifyPage(props: Props) {
             needsRecaptcha && (
               <div className="section__actions">
                 <ReCAPTCHA
+                  key={`${String(authToken)}:${String(verificationToken)}`}
                   sitekey="6LePsJgUAAAAAFTuWOKRLnyoNKhm0HA4C3elrFMG"
                   onChange={onCaptchaChange}
                   asyncScriptOnLoad={onCaptchaReady}
@@ -135,4 +158,6 @@ function SignInVerifyPage(props: Props) {
   );
 }
 
-export default withRouter(SignInVerifyPage);
+const RoutedSignInVerifyPage: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(SignInVerifyPage);
+export default RoutedSignInVerifyPage;

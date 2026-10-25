@@ -33,3 +33,9 @@
   padding: var(--spacing-s);
   background-color: var(--color-card-background);
 }
+
+.first-run {
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}

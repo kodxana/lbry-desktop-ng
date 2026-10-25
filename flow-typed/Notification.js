@@ -1,5 +1,4 @@
 // @flow
-import * as ACTIONS from 'constants/action_types';
 
 /*
   Toasts:
@@ -15,16 +14,19 @@ declare type ToastParams = {
   linkText?: string,
   linkTarget?: string,
   isError?: boolean,
+  ...
 };
 
 declare type Toast = {
   id: string,
   params: ToastParams,
+  ...
 };
 
 declare type DoToast = {
-  type: ACTIONS.CREATE_TOAST,
+  type: 'CREATE_TOAST',
   data: Toast,
+  ...
 };
 
 /*
@@ -33,7 +35,7 @@ declare type DoToast = {
     - Always saved, but can be manually deleted
     - Can happen in the background, or because of user interaction (ex: publish confirmed)
 */
-declare type Notification = {
+declare type AppNotification = {
   id: string, // Unique id
   dateCreated: number,
   isRead: boolean, // Used to display "new" notifications that a user hasn't seen yet
@@ -42,25 +44,31 @@ declare type Notification = {
   // and if the user should see it immediately
   // isDissmied: boolean,
   // priority?: number
+  ...
 };
 
 declare type DoNotification = {
-  type: ACTIONS.CREATE_NOTIFICATION,
-  data: Notification,
+  type: 'CREATE_NOTIFICATION',
+  data: AppNotification,
+  ...
 };
 
 declare type DoEditNotification = {
-  type: ACTIONS.EDIT_NOTIFICATION,
+  type: 'EDIT_NOTIFICATION',
   data: {
-    notification: Notification,
+    notification: AppNotification,
+    ...
   },
+  ...
 };
 
 declare type DoDeleteNotification = {
-  type: ACTIONS.DELETE_NOTIFICATION,
+  type: 'DELETE_NOTIFICATION',
   data: {
     id: string, // The id to delete
+    ...
   },
+  ...
 };
 
 /*
@@ -70,26 +78,32 @@ declare type DoDeleteNotification = {
     - For errors that can be shown without interrupting a user, use Toast with the isError flag
 */
 declare type ErrorNotification = {
-  title: string,
-  text: string,
+  error: string | { ... },
+  ...
 };
 
 declare type DoError = {
-  type: ACTIONS.CREATE_ERROR,
+  type: 'CREATE_ERROR',
   data: ErrorNotification,
+  ...
 };
 
 declare type DoDismissError = {
-  type: ACTIONS.DISMISS_ERROR,
+  type: 'DISMISS_ERROR',
+  ...
 };
 
 /*
   NotificationState
 */
 declare type NotificationState = {
-  notifications: Array<Notification>,
+  notifications: Array<WebNotification>,
+  notificationsFiltered: Array<WebNotification>,
+  notificationCategories: void | Array<NotificationCategory>,
+  fetchingNotifications: boolean,
   errors: Array<ErrorNotification>,
   toasts: Array<Toast>,
+  ...
 };
 
 declare type WebNotification = {
@@ -112,6 +126,7 @@ declare type WebNotification = {
       text: string,
       title: string,
       type: string,
+      ...
     },
     dynamic: {
       comment_author: string,
@@ -120,17 +135,21 @@ declare type WebNotification = {
       claim_title: string,
       comment?: string,
       channel_url: string,
+      ...
     },
-    email: {},
+    email: { ... },
+    ...
   },
   notification_rule: string,
   type: string,
   updated_at: string,
   user_id: number,
   group_count?: number,
+  ...
 };
 
 declare type NotificationCategory = {
   name: string,
   types: ?Array<string>,
+  ...
 };

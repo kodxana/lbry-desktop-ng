@@ -1,7 +1,8 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import { NavLink, useHistory } from 'react-router-dom';
+import { NavLink } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import ClaimPreviewTile from 'component/claimPreviewTile';
 import TruncatedText from 'component/common/truncated-text';
 import CollectionCount from './collectionCount';
@@ -19,7 +20,7 @@ type Props = {
   pendingCollection?: Collection,
   claim: ?Claim,
   channelClaim: ?ChannelClaim,
-  collectionItemUrls: Array<string>,
+  collectionItemUrls: ?Array<?string>,
   resolveUri: (string) => void,
   isResolvingUri: boolean,
   thumbnail?: string,
@@ -38,11 +39,11 @@ type Props = {
   showMature: boolean,
   collectionId: string,
   deleteCollection: (string) => void,
-  resolveCollectionItems: (any) => void,
+  resolveCollectionItems: ({ collectionId: string, page_size: number }) => void,
   isResolvingCollectionClaims: boolean,
 };
 
-function CollectionPreviewTile(props: Props) {
+function CollectionPreviewTile(props: Props): React.Node {
   const {
     uri,
     collectionId,
@@ -55,7 +56,7 @@ function CollectionPreviewTile(props: Props) {
     resolveCollectionItems,
   } = props;
 
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const hasClaim = Boolean(claim);
   React.useEffect(() => {
     if (collectionId && hasClaim && resolveCollectionItems) {
@@ -66,9 +67,10 @@ function CollectionPreviewTile(props: Props) {
   // const signingChannel = claim && claim.signing_channel;
 
   const navigateUrl =
-    formatLbryUrlForWeb(collectionItemUrls[0] || '/') + (collectionId ? generateListSearchUrlParams(collectionId) : '');
+    formatLbryUrlForWeb(collectionItemUrls?.[0] || '/') +
+    (collectionId ? generateListSearchUrlParams(collectionId) : '');
 
-  function handleClick(e) {
+  function handleClick(): void {
     if (navigateUrl) {
       push(navigateUrl);
     }
@@ -76,7 +78,7 @@ function CollectionPreviewTile(props: Props) {
 
   const navLinkProps = {
     to: navigateUrl,
-    onClick: (e) => e.stopPropagation(),
+    onClick: (e: { stopPropagation: () => void, ... }): void => e.stopPropagation(),
   };
 
   /* REMOVE IF WORKS
@@ -144,12 +146,14 @@ function CollectionPreviewTile(props: Props) {
           </React.Fragment>
         </FileThumbnail>
       </NavLink>
-      <NavLink {...navLinkProps}>
-        <h2 className="claim-tile__title">
-          <TruncatedText text={collectionName} lines={1} />
-          <CollectionMenuList collectionId={collectionId} />
-        </h2>
-      </NavLink>
+      <div className="claim-tile__header">
+        <NavLink {...navLinkProps}>
+          <h2 className="claim-tile__title">
+            <TruncatedText text={collectionName} lines={1} />
+          </h2>
+        </NavLink>
+        <CollectionMenuList collectionId={collectionId} />
+      </div>
       <div>
         <div className="claim-tile__info">
           <React.Fragment>

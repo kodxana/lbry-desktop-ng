@@ -1,11 +1,24 @@
-const { DOMAIN } = require('../../config.js');
+import desktop from 'util/desktop';
+const { DOMAIN } = require('config');
 const AUTH_TOKEN = 'auth_token';
-const SAVED_PASSWORD = 'saved_password';
+const { createPasswordClient, legacyPasswordCookies } = require('./password-storage.cjs');
 const domain =
   typeof window === 'object' && window.location.hostname.includes('localhost') ? window.location.hostname : DOMAIN;
 const isProduction = process.env.NODE_ENV === 'production';
 const maxExpiration = 2147483647;
-let sessionPassword;
+const passwords = createPasswordClient(async (operation, value) => {
+  try {
+    const result = await desktop.password(operation, value);
+    if (operation === 'notice' && (!result || !result.ok)) throw new Error('Storage notice failed');
+    return result;
+  } catch (error) {
+    if (operation !== 'notice') throw error;
+    // Keep manual entry available even if the storage service cannot answer.
+    window.alert('Password storage failed. Any existing saved copy may remain. Please try again.');
+    return { ok: true };
+  }
+}, legacyPasswordCookies(window.localStorage, [domain]));
+const { setSavedPassword, getSavedPassword, getSavedPasswordState, hasSavedPassword, deleteSavedPassword } = passwords;
 
 function setCookie(name, value, expirationDaysOnWeb) {
   let expires = '';
@@ -57,46 +70,6 @@ function deleteCookie(name) {
   document.cookie = name + `=; Max-Age=-99999999; domain=.${domain}; path=/;`;
 }
 
-function setSavedPassword(value, saveToDisk) {
-  return new Promise((resolve) => {
-    const password = value === undefined || value === null ? '' : value;
-    sessionPassword = password;
-
-    if (saveToDisk) {
-      if (password) {
-        setCookie(SAVED_PASSWORD, password, 14);
-      } else {
-        deleteSavedPassword();
-      }
-    }
-  });
-}
-
-function getSavedPassword() {
-  return new Promise((resolve) => {
-    if (sessionPassword) {
-      resolve(sessionPassword);
-    }
-
-    return getPasswordFromCookie().then((p) => resolve(p));
-  });
-}
-
-function getPasswordFromCookie() {
-  return new Promise((resolve) => {
-    let password;
-    password = getCookie(SAVED_PASSWORD);
-    resolve(password);
-  });
-}
-
-function deleteSavedPassword() {
-  return new Promise((resolve) => {
-    deleteCookie(SAVED_PASSWORD);
-    resolve();
-  });
-}
-
 function getAuthToken() {
   return getCookie(AUTH_TOKEN);
 }
@@ -112,12 +85,11 @@ function deleteAuthToken() {
   });
 }
 
-function doSignOutCleanup() {
-  return new Promise((resolve) => {
-    deleteAuthToken();
-    deleteSavedPassword();
-    resolve();
-  });
+async function doSignOutCleanup() {
+  const forgotten = await deleteSavedPassword();
+  if (!forgotten) return false;
+  await deleteAuthToken();
+  return true;
 }
 
 function doAuthTokenRefresh() {
@@ -128,10 +100,11 @@ function doAuthTokenRefresh() {
   }
 }
 
-module.exports = {
+export {
   setSavedPassword,
   getSavedPassword,
-  getPasswordFromCookie,
+  getSavedPasswordState,
+  hasSavedPassword,
   deleteSavedPassword,
   getAuthToken,
   setAuthToken,

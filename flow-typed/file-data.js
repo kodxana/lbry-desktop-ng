@@ -7,4 +7,5 @@ declare type FileData = {
   size?: number,
   mimeType: string,
   error?: string,
-}
+  ...
+};

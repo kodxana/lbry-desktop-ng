@@ -28,14 +28,12 @@ type State = {
 };
 
 class TransactionListTableItem extends React.PureComponent<Props, State> {
-  constructor() {
-    super();
+  constructor(props: Props) {
+    super(props);
     this.state = { abandonState: ABANDON_STATES.READY };
-    (this: any).abandonClaim = this.abandonClaim.bind(this);
-    (this: any).getLink = this.getLink.bind(this);
   }
 
-  getLink(type: string, tip: boolean, valueType: string) {
+  getLink = (type: string, tip: boolean, valueType: string): React.Node => {
     const { abandonState } = this.state;
 
     if (type === 'claim' && valueType !== 'repost') {
@@ -67,13 +65,13 @@ class TransactionListTableItem extends React.PureComponent<Props, State> {
         title={__(abandonTitle)}
       />
     );
-  }
+  };
 
-  abandonClaim() {
+  abandonClaim = () => {
     this.props.revokeClaim(this.props.txo, (abandonState) => this.setState({ abandonState }));
-  }
+  };
 
-  render() {
+  render(): React.Node {
     const { reward, txo, isRevokeable, signingChannel } = this.props;
 
     const {

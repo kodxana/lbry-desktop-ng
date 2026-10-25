@@ -16,7 +16,7 @@ type Props = {
   setDaemonSetting: (string, ?SetDaemonSettingArg) => void,
 };
 
-function SettingDataHosting(props: Props) {
+function SettingDataHosting(props: Props): React.Node {
   const { daemonSettings, setDaemonSetting } = props;
 
   return (

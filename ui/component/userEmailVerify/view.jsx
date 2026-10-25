@@ -27,7 +27,6 @@ class UserEmailVerify extends React.PureComponent<Props, State> {
     super(props);
     this.emailVerifyCheckInterval = null;
     this.state = { wait: false };
-    (this: any).handleResendVerificationEmail = this.handleResendVerificationEmail.bind(this);
   }
 
   componentDidMount() {
@@ -50,7 +49,7 @@ class UserEmailVerify extends React.PureComponent<Props, State> {
     }
   }
 
-  handleResendVerificationEmail() {
+  handleResendVerificationEmail = () => {
     const { email, resendVerificationEmail, toast } = this.props;
     if (!this.state.wait) {
       resendVerificationEmail(email);
@@ -62,16 +61,16 @@ class UserEmailVerify extends React.PureComponent<Props, State> {
     } else {
       toast(__('Please wait a bit longer before requesting again.'));
     }
-  }
+  };
 
   checkIfVerified() {
     const { checkEmailVerified } = this.props;
     checkEmailVerified();
   }
 
-  emailVerifyCheckInterval: ?IntervalID;
+  emailVerifyCheckInterval: ?ReturnType<typeof setInterval>;
 
-  render() {
+  render(): React.Node {
     const { email, isReturningUser, resendingEmail } = this.props;
 
     return (

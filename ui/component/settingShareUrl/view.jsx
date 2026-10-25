@@ -12,7 +12,7 @@ type Props = {
   setCustomShareUrl: (string) => void,
 };
 
-function SettingShareUrl(props: Props) {
+function SettingShareUrl(props: Props): React.Node {
   const { customShareUrlEnabled, customShareUrl, setCustomShareUrlEnabled, setCustomShareUrl } = props;
   const [url, setUrl] = React.useState(customShareUrl);
 

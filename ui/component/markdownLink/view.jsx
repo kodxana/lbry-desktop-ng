@@ -17,7 +17,7 @@ type Props = {
   simpleLinks?: boolean,
 };
 
-function MarkdownLink(props: Props) {
+function MarkdownLink(props: Props): React.Node {
   const {
     children,
     href,
@@ -42,7 +42,7 @@ function MarkdownLink(props: Props) {
 
   // Regex for url protocol
   const protocolRegex = new RegExp('^(https?|lbry|mailto)+:', 'i');
-  const protocol = href ? protocolRegex.exec(href) : null;
+  const protocol = protocolRegex.exec(href);
 
   let linkUrlObject;
   try {
@@ -67,7 +67,7 @@ function MarkdownLink(props: Props) {
 
       const lbryLinkIsValid = possibleLbryUrl && isURIValid(possibleLbryUrl);
       const isMarkdownLinkWithLabel =
-        children && Array.isArray(children) && React.Children.count(children) === 1 && children.toString() !== href;
+        React.Children.count(children) === 1 && React.Children.toArray(children).toString() !== href;
 
       if (lbryLinkIsValid && !isMarkdownLinkWithLabel) {
         lbryUrlFromLink = possibleLbryUrl;
@@ -90,7 +90,7 @@ function MarkdownLink(props: Props) {
         className="button--external-link"
         onClick={() => {
           if (window.player) {
-            window.player.currentTime(parseInt(href.slice(3)));
+            window.player.currentTime = parseInt(href.slice(3));
             window.scrollTo(0, 0);
           }
         }}

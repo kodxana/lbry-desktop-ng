@@ -9,7 +9,7 @@ type Props = {
   onCancel: (boolean) => void,
 };
 
-const isValidServerString = (serverString) => {
+const isValidServerString = (serverString: string): boolean => {
   const si = serverString.indexOf('/');
   const pi = serverString.indexOf(':');
   const path = si === -1 ? '' : serverString.slice(si);
@@ -22,11 +22,11 @@ const isValidServerString = (serverString) => {
     (host === 'localhost' || VALID_IPADDRESS_REGEX.test(host) || VALID_HOSTNAME_REGEX.test(host)) &&
     (!path || VALID_ENDPOINT_REGEX.test(path)) &&
     // eslint-disable-next-line
-    (pi === -1 || (port && typeof portInt === 'number' && portInt === portInt))
+    (pi === -1 || (Boolean(port) && typeof portInt === 'number' && portInt === portInt))
   ); // NaN !== NaN
 };
 
-function ServerInputRow(props: Props) {
+function ServerInputRow(props: Props): React.Node {
   const { update, onCancel } = props;
   const [nameString, setNameString] = useState('');
   const [hostString, setHostString] = useState('');

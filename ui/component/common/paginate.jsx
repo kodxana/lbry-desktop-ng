@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { Form, FormField } from 'component/common/form';
 import ReactPaginate from 'react-paginate';
 import { useIsMobile } from 'effects/use-screensize';
@@ -43,16 +43,20 @@ function Paginate(props: Props) {
 
   function handlePaginateKeyUp() {
     const newPage = Number(textValue);
-    if (newPage && newPage > 0 && newPage <= totalPages) {
+    if (Number.isInteger(newPage) && newPage > 0 && newPage <= totalPages) {
       handleChangePage(newPage);
     }
   }
 
   React.useEffect(() => {
-    if (urlParamPage) {
-      setCurrentPage(urlParamPage);
-    }
-  }, [urlParamPage, setCurrentPage]);
+    if (!disableHistory) setCurrentPage(urlParamPage || 1);
+  }, [urlParamPage, disableHistory]);
+
+  // Controlled pagination has no initial callback; retain the initial fetch even
+  // when the controls are hidden while loading or there is only one page.
+  React.useEffect(() => {
+    if (onPageChange) onPageChange(initialPage);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     // Hide the paginate controls if we are loading or there is only one page
@@ -72,8 +76,7 @@ function Paginate(props: Props) {
             breakClassName="pagination__item pagination__item--break"
             marginPagesDisplayed={2}
             onPageChange={(e) => handleChangePage(e.selected + 1)}
-            forcePage={currentPage - 1}
-            initialPage={currentPage - 1}
+            forcePage={totalPages > 0 ? currentPage - 1 : undefined}
             containerClassName="pagination"
           />
         </fieldset-section>
@@ -93,4 +96,5 @@ function Paginate(props: Props) {
   );
 }
 
-export default withRouter(Paginate);
+const RoutedPaginate: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(Paginate);
+export default RoutedPaginate;

@@ -16,10 +16,10 @@ type Props = {
   referralCode: ?string,
 };
 
-export default function EmbedTextArea(props: Props) {
+export default function EmbedTextArea(props: Props): React.Node {
   const { doToast, snackMessage, label, claim, includeStartTime, startTime, referralCode } = props;
   const { claim_id: claimId, name } = claim;
-  const input = useRef();
+  const input = useRef<{ input: { current: HTMLTextAreaElement | null } } | null>(null);
 
   const streamUrl = generateEmbedUrl(name, claimId, includeStartTime, startTime, referralCode);
   let embedText = `<iframe id="lbry-iframe" width="560" height="315" src="${streamUrl}" allowfullscreen></iframe>`;
@@ -35,7 +35,7 @@ export default function EmbedTextArea(props: Props) {
 
   function onFocus() {
     // We have to go a layer deep since the input is inside the form component
-    const topRef = input && input.current;
+    const topRef = input.current;
     if (topRef && topRef.input && topRef.input.current) {
       topRef.input.current.select();
     }

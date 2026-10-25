@@ -22,6 +22,7 @@ import Comments from 'comments';
 import { selectPrefsReady } from 'redux/selectors/sync';
 import { doAlertWaitingForSync } from 'redux/actions/app';
 
+declare var process: { env: { NODE_ENV?: string } };
 const isDev = process.env.NODE_ENV !== 'production';
 const FETCH_API_FAILED_TO_FETCH = 'Failed to fetch';
 const PROMISE_FULFILLED = 'fulfilled';
@@ -67,14 +68,14 @@ const ERR_MAP: CommentronErrorMap = {
   },
 };
 
-function devToast(dispatch, msg) {
+function devToast(dispatch: Dispatch, msg: string): void {
   if (isDev) {
     console.error(msg); // eslint-disable-line
     dispatch(doToast({ isError: true, message: `DEV: ${msg}` }));
   }
 }
 
-function resolveCommentronError(commentronMsg: string) {
+function resolveCommentronError(commentronMsg: string): ToastParams {
   for (const key in ERR_MAP) {
     // noinspection JSUnfilteredForInLoop
     const data = ERR_MAP[key];
@@ -90,7 +91,7 @@ function resolveCommentronError(commentronMsg: string) {
     } else {
       const match = commentronMsg.match(data.commentron);
       if (match) {
-        const subs = {};
+        const subs: { [string]: string } = {};
         for (let i = 1; i < match.length; ++i) {
           subs[`${i}`] = match[i];
         }
@@ -119,13 +120,13 @@ export function doCommentList(
   page: number = 1,
   pageSize: number = 99999,
   sortBy: number = SORT_BY.NEWEST
-) {
+): ThunkAction<Promise<CommentListResponse | void> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = selectClaimsByUri(state)[uri];
     const claimId = claim ? claim.claim_id : null;
 
-    if (!claimId) {
+    if (!claim || !claimId) {
       dispatch({
         type: ACTIONS.COMMENT_LIST_FAILED,
         data: 'unable to find claim for uri',
@@ -208,7 +209,7 @@ export function doCommentListOwn(
   page: number = 1,
   pageSize: number = 99999,
   sortBy: number = SORT_BY.NEWEST_NO_PINS
-) {
+): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannelClaims = selectMyChannelClaims(state);
@@ -300,7 +301,7 @@ export function doCommentListOwn(
   };
 }
 
-export function doCommentById(commentId: string, toastIfNotFound: boolean = true) {
+export function doCommentById(commentId: string, toastIfNotFound: boolean = true): ThunkAction<Promise<unknown>> {
   return (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.COMMENT_BY_ID_STARTED,
@@ -338,7 +339,7 @@ export function doCommentById(commentId: string, toastIfNotFound: boolean = true
   };
 }
 
-export function doCommentReset(claimId: string) {
+export function doCommentReset(claimId: string): ThunkAction<void> {
   return (dispatch: Dispatch) => {
     if (!claimId) {
       console.error(`Failed to reset comments`); //eslint-disable-line
@@ -354,7 +355,7 @@ export function doCommentReset(claimId: string) {
   };
 }
 
-export function doSuperChatList(uri: string) {
+export function doSuperChatList(uri: string): ThunkAction<Promise<void> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = selectClaimsByUri(state)[uri];
@@ -392,7 +393,7 @@ export function doSuperChatList(uri: string) {
   };
 }
 
-export function doCommentReactList(commentIds: Array<string>) {
+export function doCommentReactList(commentIds: Array<string>): ThunkAction<Promise<void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const activeChannelClaim = selectActiveChannelClaim(state);
@@ -439,7 +440,7 @@ export function doCommentReactList(commentIds: Array<string>) {
   };
 }
 
-export function doCommentReact(commentId: string, type: string) {
+export function doCommentReact(commentId: string, type: string): ThunkAction<Promise<void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const activeChannelClaim = selectActiveChannelClaim(state);
@@ -502,7 +503,7 @@ export function doCommentReact(commentId: string, type: string) {
     });
 
     // simulate api return shape: ['like'] -> { 'like': 1 }
-    const myReactsObj = myReacts.reduce((acc, el) => {
+    const myReactsObj = myReacts.reduce<{ [string]: number }>((acc, el) => {
       acc[el] = 1;
       return acc;
     }, {});
@@ -530,7 +531,7 @@ export function doCommentReact(commentId: string, type: string) {
 
         const myRevertedReactsObj = myReacts
           .filter((el) => el !== type)
-          .reduce((acc, el) => {
+          .reduce<{ [string]: number }>((acc, el) => {
             acc[el] = 1;
             return acc;
           }, {});
@@ -567,7 +568,7 @@ export function doCommentCreate(
   payment_intent_id?: string,
   environment?: string,
   sticker: boolean
-) {
+): ThunkAction<Promise<CommentCreateResponse | void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
 
@@ -601,7 +602,7 @@ export function doCommentCreate(
 
     // Comments is a function which helps make calls to the backend
     // these params passed in POST call.
-    return Comments.comment_create({
+    const params: CommentCreateParams = {
       comment: comment,
       claim_id: claim_id,
       channel_id: activeChannelClaim.claim_id,
@@ -610,10 +611,11 @@ export function doCommentCreate(
       signature: signatureData.signature,
       signing_ts: signatureData.signing_ts,
       sticker: sticker,
-      ...(txid ? { support_tx_id: txid } : {}), // add transaction id if it exists
-      ...(payment_intent_id ? { payment_intent_id } : {}), // add payment_intent_id if it exists
-      ...(environment ? { environment } : {}), // add environment for stripe if it exists
-    })
+    };
+    if (txid) params.support_tx_id = txid;
+    if (payment_intent_id) params.payment_intent_id = payment_intent_id;
+    if (environment) params.environment = environment;
+    return Comments.comment_create(params)
       .then((result: CommentCreateResponse) => {
         dispatch({
           type: ACTIONS.COMMENT_CREATE_COMPLETED,
@@ -633,7 +635,11 @@ export function doCommentCreate(
   };
 }
 
-export function doCommentPin(commentId: string, claimId: string, remove: boolean) {
+export function doCommentPin(
+  commentId: string,
+  claimId: string,
+  remove: boolean
+): ThunkAction<Promise<void | DoToast>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const activeChannel = selectActiveChannelClaim(state);
@@ -687,7 +693,7 @@ export function doCommentPin(commentId: string, claimId: string, remove: boolean
   };
 }
 
-export function doCommentAbandon(commentId: string, creatorChannelUri?: string) {
+export function doCommentAbandon(commentId: string, creatorChannelUri?: string): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const claim = creatorChannelUri ? selectClaimsByUri(state)[creatorChannelUri] : undefined;
@@ -709,12 +715,16 @@ export function doCommentAbandon(commentId: string, creatorChannelUri?: string) 
       } catch (e) {}
     }
 
-    return Comments.comment_abandon({
+    const params: CommentAbandonParams = {
       comment_id: commentId,
-      ...(creatorChannelId ? { creator_channel_id: creatorChannelId } : {}),
-      ...(creatorChannelName ? { creator_channel_name: creatorChannelName } : {}),
-      ...(commentIdSignature || {}),
-    })
+    };
+    if (commentIdSignature) {
+      params.signature = commentIdSignature.signature;
+      params.signing_ts = commentIdSignature.signing_ts;
+    }
+    if (creatorChannelId) params.creator_channel_id = creatorChannelId;
+    if (creatorChannelName) params.creator_channel_name = creatorChannelName;
+    return Comments.comment_abandon(params)
       .then((result: CommentAbandonResponse) => {
         // Comment may not be deleted if the signing channel can't be signed.
         // This will happen if the channel was recently created or abandoned.
@@ -753,7 +763,10 @@ export function doCommentAbandon(commentId: string, creatorChannelUri?: string) 
   };
 }
 
-export function doCommentUpdate(comment_id: string, comment: string) {
+export function doCommentUpdate(
+  comment_id: string,
+  comment: string
+): ThunkAction<Promise<void>> | ThunkAction<Promise<void | DoToast>> {
   // if they provided an empty string, they must have wanted to abandon
   if (comment === '') {
     return doCommentAbandon(comment_id);
@@ -818,23 +831,19 @@ export function doCommentUpdate(comment_id: string, comment: string) {
   }
 }
 
-async function channelSignName(channelClaimId: string, channelName: string) {
-  let signedObject;
+type ChannelNameSignature = { ...ChannelSignResponse, claim_id: string, name: string, ... };
 
+async function channelSignName(channelClaimId: string, channelName: string): Promise<ChannelNameSignature | void> {
   try {
-    signedObject = await Lbry.channel_sign({
+    const signedObject = await Lbry.channel_sign({
       channel_id: channelClaimId,
       hexdata: toHex(channelName),
     });
-
-    signedObject['claim_id'] = channelClaimId;
-    signedObject['name'] = channelName;
+    return { ...signedObject, claim_id: channelClaimId, name: channelName };
   } catch (e) {}
-
-  return signedObject;
 }
 
-async function channelSignData(channelClaimId: string, data: string) {
+async function channelSignData(channelClaimId: string, data: string): Promise<ChannelSignResponse | void> {
   let signedObject;
 
   try {
@@ -847,7 +856,7 @@ async function channelSignData(channelClaimId: string, data: string) {
   return signedObject;
 }
 
-function safeParseURI(uri) {
+function safeParseURI(uri: string): LbryUrlObj | {} {
   try {
     return parseURI(uri);
   } catch {
@@ -893,12 +902,13 @@ function doCommentModToggleBlock(
           {
             // Find the first channel that is a moderator for 'creatorId'.
             const delegatorsById = selectModerationDelegatorsById(state);
-            blockerChannelClaims = [
-              blockerChannelClaims.find((x) => {
-                const delegatorDataForId = delegatorsById[x.claim_id];
-                return delegatorDataForId && Object.values(delegatorDataForId.delegators).includes(creatorId);
-              }),
-            ];
+            const moderator = blockerChannelClaims.find((x) => {
+              const delegatorDataForId = delegatorsById[x.claim_id];
+              return (
+                creatorId && delegatorDataForId && Object.values(delegatorDataForId.delegators).includes(creatorId)
+              );
+            });
+            blockerChannelClaims = moderator ? [moderator] : [];
           }
           break;
 
@@ -906,9 +916,10 @@ function doCommentModToggleBlock(
           {
             // Find the first admin channel and use that.
             const delegatorsById = selectModerationDelegatorsById(state);
-            blockerChannelClaims = [
-              blockerChannelClaims.find((x) => delegatorsById[x.claim_id] && delegatorsById[x.claim_id].global),
-            ];
+            const admin = blockerChannelClaims.find(
+              (x) => delegatorsById[x.claim_id] && delegatorsById[x.claim_id].global
+            );
+            blockerChannelClaims = admin ? [admin] : [];
           }
           break;
       }
@@ -926,48 +937,48 @@ function doCommentModToggleBlock(
       },
     });
 
+    if (!blockerChannelClaims.length || !channelClaimId || !channelName) {
+      dispatch({
+        type: unblock ? ACTIONS.COMMENT_MODERATION_UN_BLOCK_FAILED : ACTIONS.COMMENT_MODERATION_BLOCK_FAILED,
+        data: { blockedUri: commenterUri, creatorUri: creatorUri || undefined, blockLevel },
+      });
+      dispatch(doToast({ message: __('No channel is available to perform this moderation action.'), isError: true }));
+      return;
+    }
+
     const commenterIdForAction = channelClaimId;
     const commenterNameForAction = channelName;
 
-    let channelSignatures = [];
-
-    const sharedModBlockParams = unblock
-      ? {
-          un_blocked_channel_id: commenterIdForAction,
-          un_blocked_channel_name: commenterNameForAction,
-        }
-      : {
-          blocked_channel_id: commenterIdForAction,
-          blocked_channel_name: commenterNameForAction,
-        };
-
-    const commentAction = unblock ? Comments.moderation_unblock : Comments.moderation_block;
+    let channelSignatures: Array<ChannelNameSignature> = [];
 
     return Promise.all(blockerChannelClaims.map((x) => channelSignName(x.claim_id, x.name)))
       .then((response) => {
-        channelSignatures = response;
-        // $FlowFixMe
+        channelSignatures = response.filter((signature) => signature !== undefined);
         return Promise.allSettled(
-          channelSignatures
-            .filter((x) => x !== undefined && x !== null)
-            .map((signatureData) =>
-              commentAction({
-                // $FlowFixMe
-                mod_channel_id: signatureData.claim_id,
-                // $FlowFixMe
-                mod_channel_name: signatureData.name,
-                // $FlowFixMe
-                signature: signatureData.signature,
-                // $FlowFixMe
-                signing_ts: signatureData.signing_ts,
-                creator_channel_id: creatorUri ? creatorId : undefined,
-                creator_channel_name: creatorUri ? creatorName : undefined,
-                block_all: unblock ? undefined : blockLevel === BLOCK_LEVEL.ADMIN,
-                global_un_block: unblock ? blockLevel === BLOCK_LEVEL.ADMIN : undefined,
-                ...sharedModBlockParams,
-                time_out: unblock ? undefined : timeoutSec,
-              })
-            )
+          channelSignatures.map((signatureData) => {
+            const common = {
+              mod_channel_id: signatureData.claim_id,
+              mod_channel_name: signatureData.name,
+              signature: signatureData.signature,
+              signing_ts: signatureData.signing_ts,
+              creator_channel_id: creatorUri ? creatorId : undefined,
+              creator_channel_name: creatorUri ? creatorName : undefined,
+            };
+            return unblock
+              ? Comments.moderation_unblock({
+                  ...common,
+                  un_blocked_channel_id: commenterIdForAction,
+                  un_blocked_channel_name: commenterNameForAction,
+                  global_un_block: blockLevel === BLOCK_LEVEL.ADMIN,
+                })
+              : Comments.moderation_block({
+                  ...common,
+                  blocked_channel_id: commenterIdForAction,
+                  blocked_channel_name: commenterNameForAction,
+                  block_all: blockLevel === BLOCK_LEVEL.ADMIN,
+                  time_out: timeoutSec,
+                });
+          })
         )
           .then((response) => {
             const failures = [];
@@ -976,7 +987,6 @@ function doCommentModToggleBlock(
               if (res.status === 'rejected') {
                 // TODO: This should be error codes
                 if (res.reason.message !== 'validation is disallowed for non controlling channels') {
-                  // $FlowFixMe
                   failures.push(channelSignatures[index].name + ': ' + res.reason.message);
                 }
               }
@@ -1046,7 +1056,11 @@ function doCommentModToggleBlock(
  * @param showLink
  * @returns {function(Dispatch): *}
  */
-export function doCommentModBlock(commenterUri: string, timeoutSec?: number, showLink: boolean = true) {
+export function doCommentModBlock(
+  commenterUri: string,
+  timeoutSec?: number,
+  showLink: boolean = true
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentModToggleBlock(false, commenterUri, '', [], BLOCK_LEVEL.SELF, timeoutSec, showLink));
   };
@@ -1060,7 +1074,11 @@ export function doCommentModBlock(commenterUri: string, timeoutSec?: number, sho
  * @param timeoutSec
  * @returns {function(Dispatch): *}
  */
-export function doCommentModBlockAsAdmin(commenterUri: string, blockerId: string, timeoutSec?: number) {
+export function doCommentModBlockAsAdmin(
+  commenterUri: string,
+  blockerId: string,
+  timeoutSec?: number
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(
       doCommentModToggleBlock(false, commenterUri, '', blockerId ? [blockerId] : [], BLOCK_LEVEL.ADMIN, timeoutSec)
@@ -1083,7 +1101,7 @@ export function doCommentModBlockAsModerator(
   creatorUri: string,
   blockerId: string,
   timeoutSec?: number
-) {
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(
       doCommentModToggleBlock(
@@ -1105,7 +1123,10 @@ export function doCommentModBlockAsModerator(
  * @param showLink
  * @returns {function(Dispatch): *}
  */
-export function doCommentModUnBlock(commenterUri: string, showLink: boolean = true) {
+export function doCommentModUnBlock(
+  commenterUri: string,
+  showLink: boolean = true
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentModToggleBlock(true, commenterUri, '', [], BLOCK_LEVEL.SELF, undefined, showLink));
   };
@@ -1118,7 +1139,10 @@ export function doCommentModUnBlock(commenterUri: string, showLink: boolean = tr
  * @param blockerId
  * @returns {function(Dispatch): *}
  */
-export function doCommentModUnBlockAsAdmin(commenterUri: string, blockerId: string) {
+export function doCommentModUnBlockAsAdmin(
+  commenterUri: string,
+  blockerId: string
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentModToggleBlock(true, commenterUri, '', blockerId ? [blockerId] : [], BLOCK_LEVEL.ADMIN));
   };
@@ -1133,7 +1157,11 @@ export function doCommentModUnBlockAsAdmin(commenterUri: string, blockerId: stri
  * @param blockerId
  * @returns {function(Dispatch): *}
  */
-export function doCommentModUnBlockAsModerator(commenterUri: string, creatorUri: string, blockerId: string) {
+export function doCommentModUnBlockAsModerator(
+  commenterUri: string,
+  creatorUri: string,
+  blockerId: string
+): ThunkAction<Promise<void | DoToast>> {
   return (dispatch: Dispatch) => {
     return dispatch(
       doCommentModToggleBlock(true, commenterUri, creatorUri, blockerId ? [blockerId] : [], BLOCK_LEVEL.MODERATOR)
@@ -1141,7 +1169,7 @@ export function doCommentModUnBlockAsModerator(commenterUri: string, creatorUri:
   };
 }
 
-export function doFetchModBlockedList() {
+export function doFetchModBlockedList(): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const LOOP_CHUNK_SIZE = 1;
     const yieldThread = () => new Promise((resolve) => setTimeout(resolve));
@@ -1157,46 +1185,51 @@ export function doFetchModBlockedList() {
       type: ACTIONS.COMMENT_MODERATION_BLOCK_LIST_STARTED,
     });
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
 
     return Promise.all(myChannels.map((channel) => channelSignName(channel.claim_id, channel.name)))
       .then((response) => {
-        channelSignatures = response;
-        // $FlowFixMe
+        channelSignatures = response.filter((signature) => signature !== undefined);
         return Promise.allSettled(
-          channelSignatures
-            .filter((x) => x !== undefined && x !== null)
-            .map((signatureData) =>
-              Comments.moderation_block_list({
-                mod_channel_id: signatureData.claim_id,
-                mod_channel_name: signatureData.name,
-                signature: signatureData.signature,
-                signing_ts: signatureData.signing_ts,
-              })
-            )
+          channelSignatures.map((signatureData) =>
+            Comments.moderation_block_list({
+              mod_channel_id: signatureData.claim_id,
+              mod_channel_name: signatureData.name,
+              signature: signatureData.signature,
+              signing_ts: signatureData.signing_ts,
+            })
+          )
         )
           .then(async (res) => {
-            let personalBlockList = [];
-            let adminBlockList = [];
-            let moderatorBlockList = [];
-            let moderatorBlockListDelegatorsMap = {};
+            type BlockList = Array<{ channelUri: string, blockedAt: string }>;
+            type TimeoutMap = { [string]: { blockedAt: string, bannedFor: number, banRemaining: number | void } };
+            let personalBlockList: BlockList = [];
+            let adminBlockList: BlockList = [];
+            let moderatorBlockList: BlockList = [];
+            let moderatorBlockListDelegatorsMap: { [string]: Array<string> } = {};
 
             // These should just be part of the block list above, but it is
             // separated for now because there are too many clients that we need
             // to update.
-            const personalTimeoutMap = {};
-            const adminTimeoutMap = {};
-            const moderatorTimeoutMap = {};
+            const personalTimeoutMap: TimeoutMap = {};
+            const adminTimeoutMap: TimeoutMap = {};
+            const moderatorTimeoutMap: TimeoutMap = {};
 
             const blockListsPerChannel = [];
             for (let i = 0; i < res.length; ++i) {
-              blockListsPerChannel.push(res[i].value);
+              const result = res[i];
+              blockListsPerChannel.push(result.status === 'fulfilled' ? result.value : undefined);
               if (i % 2 === 0) {
                 await yieldThread();
               }
             }
             for (let i = 0; i < blockListsPerChannel.length; ++i) {
-              const storeList = async (fetchedList, blockedList, timeoutMap, blockedByMap) => {
+              const storeList = async (
+                fetchedList: ?Array<BlockedChannel>,
+                blockedList: BlockList,
+                timeoutMap: TimeoutMap,
+                blockedByMap?: { [string]: Array<string> }
+              ): Promise<void> => {
                 if (fetchedList) {
                   for (let j = 0; j < fetchedList.length; ++j) {
                     const blockedChannel = fetchedList[j];
@@ -1221,7 +1254,11 @@ export function doFetchModBlockedList() {
                         }
                       }
 
-                      if (blockedByMap !== undefined) {
+                      if (
+                        blockedByMap !== undefined &&
+                        blockedChannel.blocked_by_channel_name &&
+                        blockedChannel.blocked_by_channel_id
+                      ) {
                         const blockedByChannelUri = buildURI({
                           channelName: blockedChannel.blocked_by_channel_name,
                           channelClaimId: blockedChannel.blocked_by_channel_id,
@@ -1264,19 +1301,19 @@ export function doFetchModBlockedList() {
                 personalBlockList:
                   personalBlockList.length > 0
                     ? personalBlockList
-                        .sort((a, b) => new Date(a.blockedAt) - new Date(b.blockedAt))
+                        .sort((a, b) => new Date(a.blockedAt).getTime() - new Date(b.blockedAt).getTime())
                         .map((blockedChannel) => blockedChannel.channelUri)
                     : null,
                 adminBlockList:
                   adminBlockList.length > 0
                     ? adminBlockList
-                        .sort((a, b) => new Date(a.blockedAt) - new Date(b.blockedAt))
+                        .sort((a, b) => new Date(a.blockedAt).getTime() - new Date(b.blockedAt).getTime())
                         .map((blockedChannel) => blockedChannel.channelUri)
                     : null,
                 moderatorBlockList:
                   moderatorBlockList.length > 0
                     ? moderatorBlockList
-                        .sort((a, b) => new Date(a.blockedAt) - new Date(b.blockedAt))
+                        .sort((a, b) => new Date(a.blockedAt).getTime() - new Date(b.blockedAt).getTime())
                         .map((blockedChannel) => blockedChannel.channelUri)
                     : null,
                 moderatorBlockListDelegatorsMap: moderatorBlockListDelegatorsMap,
@@ -1300,15 +1337,14 @@ export function doFetchModBlockedList() {
   };
 }
 
-export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim) => {
+export const doUpdateBlockListForPublishedChannel = (
+  channelClaim: ChannelClaim
+): ThunkAction<Promise<Array<ModerationBlockResponse | void> | void>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const blockedUris = selectModerationBlockList(state);
 
-    let channelSignature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let channelSignature: ?ChannelSignResponse;
     try {
       channelSignature = await Lbry.channel_sign({
         channel_id: channelClaim.claim_id,
@@ -1320,6 +1356,7 @@ export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim)
       return;
     }
 
+    const { signature, signing_ts } = channelSignature;
     return Promise.all(
       blockedUris.map((uri) => {
         const { channelName, channelClaimId } = parseURI(uri);
@@ -1327,10 +1364,8 @@ export const doUpdateBlockListForPublishedChannel = (channelClaim: ChannelClaim)
           return Comments.moderation_block({
             mod_channel_id: channelClaim.claim_id,
             mod_channel_name: channelClaim.name,
-            // $FlowFixMe
-            signature: channelSignature.signature,
-            // $FlowFixMe
-            signing_ts: channelSignature.signing_ts,
+            signature,
+            signing_ts,
             blocked_channel_id: channelClaimId,
             blocked_channel_name: channelName,
           });
@@ -1345,12 +1380,9 @@ export function doCommentModAddDelegate(
   modChannelName: string,
   creatorChannelClaim: ChannelClaim,
   showToast: boolean = false
-) {
+): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
-    let signature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let signature: ?ChannelSignResponse;
     try {
       signature = await Lbry.channel_sign({
         channel_id: creatorChannelClaim.claim_id,
@@ -1399,12 +1431,9 @@ export function doCommentModRemoveDelegate(
   modChannelId: string,
   modChannelName: string,
   creatorChannelClaim: ChannelClaim
-) {
+): ThunkAction<Promise<unknown>> {
   return async (dispatch: Dispatch, getState: GetState) => {
-    let signature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let signature: ?ChannelSignResponse;
     try {
       signature = await Lbry.channel_sign({
         channel_id: creatorChannelClaim.claim_id,
@@ -1434,16 +1463,13 @@ export function doCommentModRemoveDelegate(
   };
 }
 
-export function doCommentModListDelegates(channelClaim: ChannelClaim) {
+export function doCommentModListDelegates(channelClaim: ChannelClaim): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     dispatch({
       type: ACTIONS.COMMENT_FETCH_MODERATION_DELEGATES_STARTED,
     });
 
-    let signature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let signature: ?ChannelSignResponse;
     try {
       signature = await Lbry.channel_sign({
         channel_id: channelClaim.claim_id,
@@ -1481,7 +1507,7 @@ export function doCommentModListDelegates(channelClaim: ChannelClaim) {
   };
 }
 
-export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
+export function doFetchCommentModAmIList(channelClaim: ChannelClaim): ThunkAction<Promise<void>> {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannels = selectMyChannelClaims(state);
@@ -1492,26 +1518,23 @@ export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
 
     dispatch({ type: ACTIONS.COMMENT_MODERATION_AM_I_LIST_STARTED });
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
 
     return Promise.all(myChannels.map((channel) => channelSignName(channel.claim_id, channel.name)))
       .then((response) => {
-        channelSignatures = response;
-        // $FlowFixMe
+        channelSignatures = response.filter((signature) => signature !== undefined);
         return Promise.allSettled(
-          channelSignatures
-            .filter((x) => x !== undefined && x !== null)
-            .map((signatureData) =>
-              Comments.moderation_am_i({
-                channel_name: signatureData.name,
-                channel_id: signatureData.claim_id,
-                signature: signatureData.signature,
-                signing_ts: signatureData.signing_ts,
-              })
-            )
+          channelSignatures.map((signatureData) =>
+            Comments.moderation_am_i({
+              channel_name: signatureData.name,
+              channel_id: signatureData.claim_id,
+              signature: signatureData.signature,
+              signing_ts: signatureData.signing_ts,
+            })
+          )
         )
           .then((results) => {
-            const delegatorsById = {};
+            const delegatorsById: CommentsState['moderationDelegatorsById'] = {};
 
             results.forEach((result, index) => {
               if (result.status === PROMISE_FULFILLED) {
@@ -1539,7 +1562,7 @@ export function doFetchCommentModAmIList(channelClaim: ChannelClaim) {
   };
 }
 
-export const doFetchCreatorSettings = (channelId: string) => {
+export const doFetchCreatorSettings = (channelId: string): ThunkAction<Promise<void>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannels = selectMyChannelClaims(state);
@@ -1603,7 +1626,10 @@ export const doFetchCreatorSettings = (channelId: string) => {
  * @param settings
  * @returns {function(Dispatch, GetState): any}
  */
-export const doUpdateCreatorSettings = (channelClaim: ChannelClaim, settings: PerChannelSettings) => {
+export const doUpdateCreatorSettings = (
+  channelClaim: ChannelClaim,
+  settings: PerChannelSettings
+): ThunkAction<Promise<unknown>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const channelSignature = await channelSignName(channelClaim.claim_id, channelClaim.name);
     if (!channelSignature) {
@@ -1612,23 +1638,24 @@ export const doUpdateCreatorSettings = (channelClaim: ChannelClaim, settings: Pe
     }
 
     return Comments.setting_update({
+      ...settings,
       channel_name: channelClaim.name,
       channel_id: channelClaim.claim_id,
       signature: channelSignature.signature,
       signing_ts: channelSignature.signing_ts,
-      ...settings,
     }).catch((err) => {
       dispatch(doToast({ message: err.message, isError: true }));
     });
   };
 };
 
-export const doCommentWords = (channelClaim: ChannelClaim, words: Array<string>, isUnblock: boolean) => {
+export const doCommentWords = (
+  channelClaim: ChannelClaim,
+  words: Array<string>,
+  isUnblock: boolean
+): ThunkAction<Promise<unknown>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
-    let channelSignature: ?{
-      signature: string,
-      signing_ts: string,
-    };
+    let channelSignature: ?ChannelSignResponse;
     try {
       channelSignature = await Lbry.channel_sign({
         channel_id: channelClaim.claim_id,
@@ -1659,19 +1686,25 @@ export const doCommentWords = (channelClaim: ChannelClaim, words: Array<string>,
   };
 };
 
-export const doCommentBlockWords = (channelClaim: ChannelClaim, words: Array<string>) => {
+export const doCommentBlockWords = (
+  channelClaim: ChannelClaim,
+  words: Array<string>
+): ThunkAction<Promise<unknown>> => {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentWords(channelClaim, words, false));
   };
 };
 
-export const doCommentUnblockWords = (channelClaim: ChannelClaim, words: Array<string>) => {
+export const doCommentUnblockWords = (
+  channelClaim: ChannelClaim,
+  words: Array<string>
+): ThunkAction<Promise<unknown>> => {
   return (dispatch: Dispatch) => {
     return dispatch(doCommentWords(channelClaim, words, true));
   };
 };
 
-export const doFetchBlockedWords = () => {
+export const doFetchBlockedWords = (): ThunkAction<Promise<void>> => {
   return async (dispatch: Dispatch, getState: GetState) => {
     const state = getState();
     const myChannels = selectMyChannelClaims(state);
@@ -1680,7 +1713,7 @@ export const doFetchBlockedWords = () => {
       type: ACTIONS.COMMENT_FETCH_BLOCKED_WORDS_STARTED,
     });
 
-    let channelSignatures = [];
+    let channelSignatures: Array<ChannelNameSignature> = [];
     if (myChannels) {
       for (const channelClaim of myChannels) {
         try {
@@ -1705,7 +1738,7 @@ export const doFetchBlockedWords = () => {
       )
     )
       .then((blockedWords) => {
-        const blockedWordsByChannelId = {};
+        const blockedWordsByChannelId: { [string]: Array<string> } = {};
 
         for (let i = 0; i < channelSignatures.length; ++i) {
           const claim_id = channelSignatures[i].claim_id;

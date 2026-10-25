@@ -36,7 +36,7 @@ class ModalConfirmTransaction extends React.PureComponent<Props> {
     closeModal();
   }
 
-  render() {
+  render(): React.Node {
     const { amount, destination, closeModal, isAddress, incognito, activeChannelClaim } = this.props;
     const activeChannelUrl = activeChannelClaim && activeChannelClaim.canonical_url;
     const title = __('Confirm Transaction');
@@ -57,7 +57,14 @@ class ModalConfirmTransaction extends React.PureComponent<Props> {
                       {incognito ? (
                         'Anonymous'
                       ) : (
-                        <ClaimPreview key={activeChannelUrl} uri={activeChannelUrl} actions={''} type={'small'} hideMenu hideRepostLabel />
+                        <ClaimPreview
+                          key={activeChannelUrl}
+                          uri={activeChannelUrl}
+                          actions={''}
+                          type={'small'}
+                          hideMenu
+                          hideRepostLabel
+                        />
                       )}
                     </div>
                   )}
@@ -65,7 +72,14 @@ class ModalConfirmTransaction extends React.PureComponent<Props> {
                   <div className="confirm__label">{__('To')}</div>
                   <div className="confirm__value">
                     {!isAddress ? (
-                      <ClaimPreview key={destination} uri={destination} actions={''} type={'small'} hideMenu hideRepostLabel />
+                      <ClaimPreview
+                        key={destination}
+                        uri={destination}
+                        actions={''}
+                        type={'small'}
+                        hideMenu
+                        hideRepostLabel
+                      />
                     ) : (
                       destination
                     )}

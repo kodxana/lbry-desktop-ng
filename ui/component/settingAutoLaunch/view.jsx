@@ -10,7 +10,7 @@ type Props = {
   noLabels?: boolean,
 };
 
-function SettingAutoLaunch(props: Props) {
+function SettingAutoLaunch(props: Props): React.Node {
   const { autoLaunch, setAutoLaunch, noLabels } = props;
 
   return (

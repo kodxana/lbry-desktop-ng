@@ -1,7 +1,8 @@
 // @flow
 import * as PAGES from 'constants/pages';
 import React, { useEffect } from 'react';
-import { Redirect, useHistory } from 'react-router-dom';
+import { Navigate } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Spinner from 'component/spinner';
 import ChannelPage from 'page/channel';
 import Page from 'component/page';
@@ -20,7 +21,7 @@ type Props = {
   resolveUri: (string) => void,
   isSubscribed: boolean,
   uri: string,
-  claim: StreamClaim,
+  claim: ?Claim,
   location: UrlLocation,
   title: string,
   claimIsMine: boolean,
@@ -36,7 +37,7 @@ type Props = {
   errorCensor: ?ClaimErrorCensor,
 };
 
-function ShowPage(props: Props) {
+function ShowPage(props: Props): React.Node {
   const {
     isResolvingUri,
     resolveUri,
@@ -64,7 +65,7 @@ function ShowPage(props: Props) {
   const haventFetchedYet = claim === undefined;
   const isMine = claim && claim.is_my_output;
   const { contentName, isChannel } = parseURI(uri); // deprecated contentName - use streamName and channelName
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const isCollection = claim && claim.value_type === 'collection';
   const resolvedCollection = collection && collection.id; // not null
 
@@ -77,7 +78,7 @@ function ShowPage(props: Props) {
 
   useEffect(() => {
     if (
-      (resolveUri && !isResolvingUri && uri && haventFetchedYet) ||
+      (!isResolvingUri && uri && haventFetchedYet) ||
       (claimExists && !claimIsPending && (!canonicalUrl || isMine === undefined))
     ) {
       resolveUri(uri);
@@ -87,10 +88,9 @@ function ShowPage(props: Props) {
   // Don't navigate directly to repost urls
   // Always redirect to the actual content
   // Also need to add repost_url to the Claim type for flow
-  // $FlowFixMe
   if (claim && claim.repost_url === uri) {
     const newUrl = formatLbryUrlForWeb(claim.canonical_url);
-    return <Redirect to={newUrl} />;
+    return <Navigate replace to={newUrl} />;
   }
   let urlForCollectionZero;
   if (claim && claim.value_type === 'collection' && collectionUrls && collectionUrls.length) {
@@ -99,7 +99,7 @@ function ShowPage(props: Props) {
     const urlParams = new URLSearchParams(search);
     urlParams.set(COLLECTIONS_CONSTS.COLLECTION_ID, claimId);
     const newUrl = formatLbryUrlForWeb(`${urlForCollectionZero}?${urlParams.toString()}`);
-    return <Redirect to={newUrl} />;
+    return <Navigate replace to={newUrl} />;
   }
 
   let innerContent = '';

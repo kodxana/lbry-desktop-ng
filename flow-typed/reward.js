@@ -13,4 +13,5 @@ declare type Reward = {
   transaction_id: ?string,
   updated_at: ?string,
   claim_code: string,
+  ...
 };

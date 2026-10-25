@@ -25,7 +25,7 @@ type Props = {
   uri: string,
 };
 
-export default function SubscribeButton(props: Props) {
+export default function SubscribeButton(props: Props): React.Node {
   const {
     permanentUrl,
     doChannelSubscribe,
@@ -124,7 +124,7 @@ export default function SubscribeButton(props: Props) {
           <Button
             button="alt"
             icon={notificationsDisabled ? ICONS.BELL : ICONS.BELL_ON}
-            className={isSubscribed ? 'button-following' : ''}
+            className="button-following"
             aria-label={notificationsDisabled ? __('Turn on notifications') : __('Turn off notifications')}
             onClick={() => {
               const newNotificationsDisabled = !notificationsDisabled;

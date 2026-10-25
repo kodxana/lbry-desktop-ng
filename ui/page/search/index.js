@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { doSearch } from 'redux/actions/search';
 import {
   selectIsSearching,
@@ -43,4 +43,4 @@ const perform = (dispatch) => ({
   search: (query, options) => dispatch(doSearch(query, options)),
 });
 
-export default withRouter(connect(select, perform)(SearchPage));
+export default withDesktopRouter(connect(select, perform)(SearchPage));

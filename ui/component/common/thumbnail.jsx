@@ -8,7 +8,7 @@ type Props = {
   className?: string,
 };
 
-const Thumbnail = (props: Props) => {
+const Thumbnail = (props: Props): React.Node => {
   const { className, src, shouldObscure } = props;
   return (
     <img

@@ -12,7 +12,7 @@ type Props = {
   assetName: string,
 };
 
-function ModalImageUpload(props: Props) {
+function ModalImageUpload(props: Props): React.Node {
   const { closeModal, currentValue, title, assetName, helpText, onUpdate } = props;
   const filters = React.useMemo(() => [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif', 'svg'] }]);
 

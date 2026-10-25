@@ -1,5 +1,11 @@
 // @flow
-import { Combobox, ComboboxInput, ComboboxPopover, ComboboxList, ComboboxOption } from '@reach/combobox';
+import {
+  Combobox,
+  ComboboxInput,
+  ComboboxPopover,
+  ComboboxList,
+  ComboboxOption,
+} from 'component/common/search-combobox';
 import { matchSorter } from 'match-sorter';
 import React from 'react';
 import classnames from 'classnames';
@@ -33,21 +39,21 @@ type Props = {
   help: string,
   titleEmptyList: string,
   subtitleEmptyList: string,
-  getActionButtons?: (url: string) => React$Node,
+  getActionButtons?: (url: string) => React.Node,
   className: ?string,
 };
 
-export default function BlockList(props: Props) {
+export default function BlockList(props: Props): React.Node {
   const { uris: list, help, titleEmptyList, subtitleEmptyList, getActionButtons, className } = props;
 
   // Keep a local list to allow for undoing actions in this component
-  const [localList, setLocalList] = React.useState(undefined);
+  const [localList, setLocalList] = React.useState<Array<string> | void>();
   const stringifiedList = JSON.stringify(list);
   const hasLocalList = localList && localList.length > 0;
   const justBlocked = list && localList && localList.length < list.length;
 
   const [page, setPage] = React.useState(1);
-  const [searchList, setSearchList] = React.useState(null); // null: not searching; []: no results;
+  const [searchList, setSearchList] = React.useState<?Array<string>>(null); // null: not searching; []: no results;
   const isShowingSearchResults = searchList !== null;
 
   let totalPages = 0;
@@ -62,7 +68,7 @@ export default function BlockList(props: Props) {
 
   function getRenderActions() {
     if (getActionButtons) {
-      return (claim) => <div className="section__actions">{getActionButtons(claim.permanent_url)}</div>;
+      return (claim: Claim) => <div className="section__actions">{getActionButtons(claim.permanent_url)}</div>;
     }
     return undefined;
   }
@@ -154,8 +160,7 @@ function SearchList(props: LsbProps) {
   const { list, placeholder, formatter, onResultsUpdated } = props;
   const [term, setTerm] = React.useState('');
   const results = useAuthorMatch(term, list);
-  const handleChange = (event) => setTerm(event.target.value);
-  const handleSelect = (e) => setTerm(e);
+  const handleSelect = (value: string) => setTerm(value);
 
   React.useEffect(() => {
     if (onResultsUpdated) {
@@ -166,11 +171,16 @@ function SearchList(props: LsbProps) {
   return (
     <div className="wunderbar__wrapper">
       <label>{__('Search blocked channel name')}</label>
-      <Combobox className="wunderbar" onSelect={handleSelect}>
+      <Combobox className="wunderbar" onSelect={handleSelect} value={term} setValue={setTerm}>
         <Icon icon={ICONS.SEARCH} />
-        <ComboboxInput selectOnClick className="wunderbar__input" onChange={handleChange} placeholder={placeholder} />
+        <ComboboxInput
+          aria-label={__('Search blocked channel name')}
+          selectOnClick
+          className="wunderbar__input"
+          placeholder={placeholder}
+        />
         {results && (
-          <ComboboxPopover className="wunderbar__suggestions" portal={false}>
+          <ComboboxPopover className="wunderbar__suggestions">
             {results.length > 0 ? (
               <ComboboxList>
                 {results.slice(0, 10).map((result, index) => (
@@ -191,12 +201,12 @@ function SearchList(props: LsbProps) {
   );
 }
 
-function useAuthorMatch(term, list) {
+function useAuthorMatch(term: string, list: ?Array<string>): ?Array<string> {
   const throttledTerm = useThrottle(term, 200);
   return React.useMemo(() => {
     return !throttledTerm || throttledTerm.trim() === ''
       ? null
-      : matchSorter(list, throttledTerm, {
+      : matchSorter(list || [], throttledTerm, {
           keys: [(item) => reduceUriToChannelName(item)],
           threshold: matchSorter.rankings.CONTAINS,
         });

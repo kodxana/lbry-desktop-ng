@@ -9,16 +9,16 @@ type Props = {
   uri: string,
   focusable: boolean,
   hasClaimInWatchLater: boolean,
-  doToast: ({ message: string }) => void,
+  doToast: ({ message: string, linkText?: string | false, linkTarget?: string | false }) => void,
   doCollectionEdit: (string, any) => void,
 };
 
-function FileWatchLaterLink(props: Props) {
+function FileWatchLaterLink(props: Props): React.Node {
   const { uri, hasClaimInWatchLater, doToast, doCollectionEdit, focusable = true } = props;
   const buttonRef = useRef();
   let isHovering = useHover(buttonRef);
 
-  function handleWatchLater(e) {
+  function handleWatchLater(e: { stopPropagation: () => void, preventDefault: () => void, ... }) {
     e.preventDefault();
     doToast({
       message: hasClaimInWatchLater ? __('Item removed from Watch Later') : __('Item added to Watch Later'),

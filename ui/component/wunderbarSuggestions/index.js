@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { selectShowMatureContent } from 'redux/selectors/settings';
 import { doToast } from 'redux/actions/notifications';
 import { doOpenModal, doHideModal } from 'redux/actions/app';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { doResolveUris } from 'redux/actions/claims';
 import analytics from 'analytics';
 import Wunderbar from './view';
@@ -24,4 +24,4 @@ const perform = (dispatch, ownProps) => ({
   doCloseMobileSearch: () => dispatch(doHideModal()),
 });
 
-export default withRouter(connect(select, perform)(Wunderbar));
+export default withDesktopRouter(connect(select, perform)(Wunderbar));

@@ -1,62 +1,124 @@
 /* eslint no-console:0 */
 /* eslint space-before-function-paren:0 */
 // Module imports
-import '@babel/polyfill';
-import SemVer from 'semver';
-import https from 'https';
-import { app, dialog, ipcMain, session, shell, BrowserWindow } from 'electron';
+import 'core-js/stable';
+import 'regenerator-runtime/runtime';
+import { app, dialog, ipcMain, session, safeStorage, Menu, clipboard, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import Lbry from 'lbry';
 import LbryFirstInstance from './LbryFirstInstance';
-import Daemon from './Daemon';
 import isDev from 'electron-is-dev';
 import createTray from './createTray';
-import createWindow from './createWindow';
+import createWindow, { rendererURL } from './createWindow';
+import { DOMAIN } from 'config';
 import pjson from '../package.json';
-import startSandbox from './startSandbox';
 import installDevtools from './installDevtools';
 import fs from 'fs';
 import path from 'path';
-import { diskSpaceLinux, diskSpaceWindows, diskSpaceMac } from '../ui/util/diskspace';
+import desktopSettings from '../desktop-settings.json';
 
-const { download } = require('electron-dl');
-const mime = require('mime');
-const remote = require('@electron/remote/main');
-const os = require('os');
-const sudo = require('sudo-prompt');
-const probe = require('ffmpeg-probe');
-const MAX_IPC_SEND_BUFFER_SIZE = 500000000; // large files crash when serialized for ipc message
+const Daemon = require('./Daemon.cjs');
+const { createProfile } = require('./testProfile.cjs');
+const DesktopUpdater = require('./DesktopUpdater.cjs');
+const { registerUpdaterIpc } = require('./updaterIpc.cjs');
+const { registerPasswordStorage } = require('./passwordStorage.cjs');
+const { registerFileSelection } = require('./fileSelection.cjs');
+const { registerWindowControls } = require('./windowControls.cjs');
+const { registerContextMenu } = require('./contextMenu.cjs');
+const { registerDesktopInfo } = require('./desktopInfo.cjs');
+const { registerDownloadNotifications } = require('./downloadNotifications.cjs');
+const { getDiskSpace } = require('./diskSpace.cjs');
+const { HubSelection, parseHubConfig } = require('./hubServers.cjs');
+const probe = require('./mediaProbe.cjs');
 
-remote.initialize();
-const filePath = path.join(process.resourcesPath, 'static', 'upgradeDisabled');
-let upgradeDisabled;
-try {
-  fs.accessSync(filePath, fs.constants.R_OK);
-  upgradeDisabled = true;
-} catch (err) {
-  upgradeDisabled = false;
-}
-autoUpdater.autoDownload = !upgradeDisabled;
-autoUpdater.allowPrerelease = false;
-
-const UPDATE_STATE_INIT = 0;
-const UPDATE_STATE_CHECKING = 1;
-const UPDATE_STATE_UPDATES_FOUND = 2;
-const UPDATE_STATE_NO_UPDATES_FOUND = 3;
-const UPDATE_STATE_DOWNLOADING = 4;
-const UPDATE_STATE_DOWNLOADED = 5;
-let updateState = UPDATE_STATE_INIT;
-let updateDownloadItem;
-
-const isAutoUpdateSupported = ['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE;
-
-// This is used to keep track of whether we are showing the special dialog
-// that we show on Windows after you decline an upgrade and close the app later.
-let showingAutoUpdateCloseAlert = false;
+const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
+const rootArgument = process.argv.find((arg) => arg.startsWith(rootFlag));
+const desktopProfile = createProfile(
+  rootArgument ? rootArgument.slice(rootFlag.length) : path.join(app.getPath('appData'), desktopSettings.appName),
+  desktopSettings
+);
+app.setPath('userData', desktopProfile.desktop);
+// Chromium session data defaults to this profile's userData directory.
+app.setPath('logs', desktopProfile.logs);
+app.setPath('downloads', desktopProfile.downloads);
+app.setPath('temp', desktopProfile.temp);
 
 // Keep a global reference, if you don't, they will be closed automatically when the JavaScript
 // object is garbage collected.
 let rendererWindow;
+const { createRendererGuard } = require('./rendererGuard.cjs');
+const allowed = createRendererGuard(() => rendererWindow, rendererURL);
+const rpc = (method, params = {}) => {
+  if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
+  return daemon.rpc(method, params);
+};
+const contentFiles = require('./contentFiles.cjs').registerContentFiles({
+  ipcMain,
+  shell,
+  rpc,
+  profile: desktopProfile,
+  probe,
+  getWindow: () => rendererWindow,
+  rendererURL,
+});
+require('./walletBackup.cjs').registerWalletBackup({
+  ipcMain,
+  app,
+  shell,
+  rpc,
+  getWindow: () => rendererWindow,
+  rendererURL,
+});
+const AutoLaunch = require('auto-launch');
+require('./desktopActions.cjs').registerDesktopActions({
+  ipcMain,
+  shell,
+  profile: desktopProfile,
+  launcher: new AutoLaunch({ name: 'lbry', isHidden: true }),
+  getWindow: () => rendererWindow,
+  rendererURL,
+});
+if (isDev) {
+  const file = process.env.LBRY_I18N_OUTPUT_FILE || path.join(__static, 'app-strings.json');
+  if (!fs.existsSync(file)) fs.copyFileSync(path.join(__static, 'app-strings.json'), file);
+  require('./translationCollection.cjs').registerTranslationCollection({
+    ipcMain,
+    file,
+    getWindow: () => rendererWindow,
+    rendererURL,
+  });
+}
+registerDesktopInfo({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
+const attachDownloadNotifications = registerDownloadNotifications({
+  ipcMain,
+  app,
+  getWindow: () => rendererWindow,
+  rendererURL,
+});
+registerFileSelection({
+  ipcMain,
+  app,
+  dialog,
+  getWindow: () => rendererWindow,
+  rendererURL,
+  onSelected: contentFiles.grant,
+});
+registerWindowControls({ ipcMain, app, getWindow: () => rendererWindow, rendererURL });
+registerContextMenu({ ipcMain, Menu, clipboard, getWindow: () => rendererWindow, rendererURL, isDev });
+registerPasswordStorage({
+  ipcMain,
+  safeStorage,
+  directory: desktopProfile.desktop,
+  getWindow: () => rendererWindow,
+  rendererURL,
+  cookies: {
+    get: (...args) => session.defaultSession.cookies.get(...args),
+    remove: (...args) => session.defaultSession.cookies.remove(...args),
+    flushStore: () => session.defaultSession.cookies.flushStore(),
+  },
+  dialog,
+  domains: [DOMAIN],
+});
 
 let tray; // eslint-disable-line
 let daemon;
@@ -65,17 +127,9 @@ let lbryFirst;
 const appState = {};
 const PROTOCOL = 'lbry';
 
-if (isDev && process.platform === 'win32') {
-  // Setting this is required to get this working in dev mode.
-  app.setAsDefaultProtocolClient(PROTOCOL, process.execPath, [
-    path.resolve(process.argv[1]),
-  ]);
-} else if (process.platform !== 'linux') {
-  app.setAsDefaultProtocolClient(PROTOCOL);
-}
-
-app.name = 'LBRY';
-app.setAppUserModelId('io.lbry.LBRY');
+// Keep the community and test profiles separate from the original desktop app.
+app.name = desktopSettings.appName;
+app.setAppUserModelId(desktopSettings.appId);
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
 
@@ -85,37 +139,67 @@ if (isDev) {
   process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
 }
 
-const startDaemon = async () => {
-  let isDaemonRunning = false;
-
-  await Lbry.status()
-    .then(() => {
-      isDaemonRunning = true;
-      console.log('SDK already running');
-    })
-    .catch(() => {
-      console.log('Starting SDK');
-    });
-
-  if (!isDaemonRunning) {
-    daemon = new Daemon();
-    daemon.on('exit', () => {
-      if (!isDev) {
-        daemon = null;
-        if (!appState.isQuitting) {
-          dialog.showErrorBox(
-            'Daemon has Exited',
-            'The daemon may have encountered an unexpected error, or another daemon instance is already running. \n\n' +
-              'For more information please visit: \n' +
-              'https://lbry.com/faq/startup-troubleshooting'
-          );
-        }
-        app.quit();
-      }
-    });
-    await daemon.launch();
-  }
+const startDaemon = async (settingsOnly = false) => {
+  const directory = isDev ? path.join(__static, 'daemon') : path.join(process.resourcesPath, 'static', 'daemon');
+  const binary =
+    process.env.LBRY_DAEMON || path.join(directory, 'lbrynet' + (process.platform === 'win32' ? '.exe' : ''));
+  daemon = new Daemon(desktopProfile, binary, process.env.LBRY_HEADERS);
+  await daemon.launch({ settingsOnly });
+  const ownedDaemon = daemon;
+  ownedDaemon.on('exit', () => {
+    if (daemon === ownedDaemon) daemon = null;
+    if (!appState.isQuitting && !ownedDaemon.expectedExit) {
+      dialog.showErrorBox('SDK exited', 'See the logs in ' + desktopProfile.logs);
+      app.quit();
+    }
+  });
 };
+
+const hubSetupMarker = path.join(desktopProfile.root, 'hub-setup-complete.json');
+const readHubConfig = () => parseHubConfig(fs.readFileSync(desktopProfile.config, 'utf8'));
+const hubs = new HubSelection({
+  settingsOnly: !fs.existsSync(hubSetupMarker),
+  rpc: (method, params) => {
+    if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
+    return daemon.rpc(method, params);
+  },
+  hasCustomServers: () => readHubConfig() !== null,
+  onConfigured: () => fs.writeFileSync(hubSetupMarker, JSON.stringify({ version: 1 }) + '\n'),
+  restart: async (settingsOnly) => {
+    if (appState.isQuitting) throw new Error('Application is closing.');
+    if (daemon && daemon.subprocess) {
+      daemon.expectedExit = true;
+      await daemon.quitForUpdate();
+    }
+    if (appState.isQuitting) throw new Error('Application is closing.');
+    await startDaemon(settingsOnly);
+  },
+});
+
+ipcMain.handle('hub-servers-scan', (event) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return hubs.scan();
+});
+ipcMain.handle('hub-servers-select', (event, endpoint) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return hubs.select(endpoint);
+});
+ipcMain.handle('hub-startup-state', (event) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return { settingsOnly: hubs.settingsOnly };
+});
+ipcMain.handle('hub-servers-prepare', (event) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return hubs.prepare();
+});
+ipcMain.handle('hub-servers-check', (event, endpoint) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return hubs.checkCustom(endpoint);
+});
+ipcMain.handle('hub-servers-config', (event) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return readHubConfig();
+});
 
 let isLbryFirstRunning = false;
 const startLbryFirst = async () => {
@@ -129,7 +213,7 @@ const startLbryFirst = async () => {
 
   try {
     lbryFirst = new LbryFirstInstance();
-    lbryFirst.on('exit', e => {
+    lbryFirst.on('exit', (e) => {
       if (!isDev) {
         lbryFirst = null;
         isLbryFirstRunning = false;
@@ -174,13 +258,13 @@ if (!gotSingleInstanceLock) {
     // Send the url to the app to navigate first, then focus
     if (rendererWindow) {
       // External uri (last item on argv):
-      const EXTERNAL_URI = (argv.length) ? argv[argv.length - 1] : '';
+      const EXTERNAL_URI = argv.length ? argv[argv.length - 1] : '';
       // Handle protocol requests for windows and linux
-      const platforms = (process.platform === 'win32' || process.platform === 'linux');
+      const platforms = process.platform === 'win32' || process.platform === 'linux';
       // Is LBRY protocol
       const isProtocolURI = String(EXTERNAL_URI).startsWith(PROTOCOL + '://');
       // External protocol requested:
-      if (platforms  && isProtocolURI) {
+      if (platforms && isProtocolURI) {
         let URI = EXTERNAL_URI;
         // Keep only command line / deep linked arguments
         // Windows normalizes URIs when they're passed in from other apps. On Windows, this tries to
@@ -191,9 +275,7 @@ if (!gotSingleInstanceLock) {
         //     an anchor and converts it to lbry://channel/#claimid. We remove the slash here as well.
         //   - ? also interpreted as an anchor, remove slash also.
         if (process.platform === 'win32') {
-          URI = URI.replace(/\/$/, '')
-            .replace('/#', '#')
-            .replace('/?', '?');
+          URI = URI.replace(/\/$/, '').replace('/#', '#').replace('/?', '?');
         }
 
         rendererWindow.webContents.send('open-uri-requested', URI);
@@ -204,13 +286,18 @@ if (!gotSingleInstanceLock) {
   });
 
   app.on('ready', async () => {
-    await startDaemon();
-    startSandbox();
-
-    if (isDev) {
+    try {
+      await startDaemon(hubs.settingsOnly);
+    } catch (error) {
+      dialog.showErrorBox('SDK startup failed', error.message);
+      app.exit(1);
+      return;
+    }
+    if (isDev && !process.argv.includes('--skip-devtools')) {
       await installDevtools();
     }
     rendererWindow = createWindow(appState);
+    attachDownloadNotifications(rendererWindow);
     tray = createTray(rendererWindow);
 
     if (!isDev) {
@@ -238,40 +325,24 @@ app.on('activate', () => {
   }
 });
 
-app.on('will-quit', event => {
-  if (
-    process.platform === 'win32' &&
-    updateState === UPDATE_STATE_DOWNLOADED &&
-    isAutoUpdateSupported &&
-    !appState.autoUpdateAccepted &&
-    !showingAutoUpdateCloseAlert
-  ) {
-    // We're on Win and have an update downloaded, but the user declined it (or closed
-    // the app without accepting it). Now the user is closing the app, so the new update
-    // will install. On Mac this is silent, but on Windows they get a confusing permission
-    // escalation dialog, so we show Windows users a warning dialog first.
-
-    showingAutoUpdateCloseAlert = true;
-    dialog.showMessageBox(
-      {
-        type: 'info',
-        title: 'LBRY Will Upgrade',
-        message: 'LBRY has a pending upgrade. Please select "Yes" to install it on the prompt shown after this one.',
-      },
-      () => {
-        app.quit();
-      }
-    );
-
-    event.preventDefault();
-    return;
-  }
-
+app.on('will-quit', (event) => {
   appState.isQuitting = true;
 
   if (daemon) {
-    daemon.quit();
     event.preventDefault();
+    if (!appState.waitingForDaemon) {
+      appState.waitingForDaemon = true;
+      daemon
+        .quit()
+        .then(() => {
+          daemon = null;
+          app.quit();
+        })
+        .catch((error) => {
+          dialog.showErrorBox('SDK shutdown failed', error.message);
+          app.exit(1);
+        });
+    }
   }
   if (lbryFirst) {
     lbryFirst.quit();
@@ -302,197 +373,25 @@ app.on('before-quit', () => {
   appState.isQuitting = true;
 });
 
-// Get the content of a file as a raw buffer of bytes.
-// Useful to convert a file path to a File instance.
-// Example:
-// const result = await ipcMain.invoke('get-file-from-path', 'path/to/file');
-// const file = new File([result.buffer], result.name);
-// NOTE: if path points to a folder, an empty
-// file will be given.
-ipcMain.handle('get-file-from-path', (event, path, readContents = true) => {
-  return new Promise((resolve, reject) => {
-    fs.stat(path, (error, stats) => {
-      if (error) {
-        reject(error);
-        return;
-      }
-      // Separate folders considering "\" and "/"
-      // as separators (cross platform)
-      const folders = path.split(/[\\/]/);
-      const name = folders[folders.length - 1];
-      if (stats.isDirectory()) {
-        resolve({
-          name,
-          mime: undefined,
-          path,
-          buffer: new ArrayBuffer(0),
-        });
-        return;
-      }
-      if (!readContents) {
-        resolve({
-          name,
-          mime: mime.getType(name) || undefined,
-          path,
-          buffer: new ArrayBuffer(0),
-        });
-        return;
-      }
-      // Encoding null ensures data results in a Buffer.
-      fs.readFile(path, { encoding: null }, (err, data) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve({
-          name,
-          mime: mime.getType(name) || undefined,
-          path,
-          buffer: data,
-        });
-      });
-    });
-  });
-});
-
-ipcMain.handle('get-file-details-from-path', async (event, path) => {
-    const isFfMp4 = (ffprobeResults) => {
-      return ffprobeResults &&
-      ffprobeResults.format &&
-      ffprobeResults.format.format_name &&
-      ffprobeResults.format.format_name.includes('mp4');
-    };
-    const folders = path.split(/[\\/]/);
-    const name = folders[folders.length - 1];
-    let duration = 0, size = 0, mimeType;
-    try {
-      await fs.promises.stat(path);
-      let ffprobeResults;
-      try {
-        ffprobeResults = await probe(path);
-        duration = ffprobeResults.format.duration;
-        size = ffprobeResults.format.size;
-      } catch (e) {
-      }
-      let fileReadResult;
-      if (size < MAX_IPC_SEND_BUFFER_SIZE) {
-        try {
-          fileReadResult = await fs.promises.readFile(path);
-        } catch (e) {
-
-        }
-      }
-      // TODO: use mmmagic to inspect file and get mime type
-      mimeType = isFfMp4(ffprobeResults) ? 'video/mp4' : mime.getType(name);
-      const fileData = {name, mime: mimeType || undefined, path, duration: duration, size, buffer: fileReadResult };
-      return fileData;
-    } catch (e) {
-      // no stat
-      return { error: 'no file' };
-    }
-});
-
 ipcMain.on('get-disk-space', async (event) => {
+  if (!allowed(event)) return;
   try {
     const { data_dir } = await Lbry.settings_get();
-    let diskSpace;
-    switch (os.platform()) {
-      case 'linux':
-        diskSpace = await diskSpaceLinux(data_dir);
-        break;
-      case 'darwin':
-        diskSpace = await diskSpaceMac(data_dir);
-        break;
-      case 'win32':
-        diskSpace = await diskSpaceWindows(data_dir);
-        break;
-      default:
-        throw new Error('unknown platform');
-    }
-    rendererWindow.webContents.send('send-disk-space', { diskSpace });
+    const diskSpace = await getDiskSpace(path.join(data_dir, 'blobfiles'));
+    if (allowed(event)) event.reply('send-disk-space', { diskSpace });
   } catch (e) {
-    rendererWindow.webContents.send('send-disk-space', { error: e.message || e });
+    if (allowed(event)) event.reply('send-disk-space', { error: e.message || e });
     console.log('Failed to get disk space', e);
   }
 });
 
-ipcMain.on('version-info-requested', () => {
-  function formatRc(ver) {
-    // Adds dash if needed to make RC suffix SemVer friendly
-    return ver.replace(/([^-])rc/, '$1-rc');
-  }
-
-  const localVersion = pjson.version;
-  let result = '';
-  const onSuccess = res => {
-    res.on('data', data => {
-      result += data;
-    });
-
-    res.on('end', () => {
-      let json;
-      try {
-        json = JSON.parse(result);
-      } catch (e) {
-        return;
-      }
-      const tagName = json.tag_name;
-      if (tagName) {
-        const [, remoteVersion] = tagName.match(/^v([\d.]+(?:-?rc\d+)?)$/);
-        if (!remoteVersion) {
-          if (rendererWindow) {
-            rendererWindow.webContents.send('version-info-received', localVersion);
-          }
-        } else {
-          const upgradeAvailable = SemVer.gt(formatRc(remoteVersion), formatRc(localVersion));
-          if (rendererWindow) {
-            rendererWindow.webContents.send('version-info-received', {
-              remoteVersion,
-              localVersion,
-              upgradeAvailable,
-            });
-          }
-        }
-      } else if (rendererWindow) {
-        rendererWindow.webContents.send('version-info-received', { localVersion });
-      }
-    });
-  };
-
-  const requestLatestRelease = (alreadyRedirected = false) => {
-    const req = https.get(
-      {
-        hostname: 'api.github.com',
-        path: '/repos/lbryio/lbry-desktop/releases/latest',
-        headers: { 'user-agent': `LBRY/${localVersion}` },
-      },
-      res => {
-        if (res.statusCode === 301 || res.statusCode === 302) {
-          requestLatestRelease(res.headers.location, true);
-        } else {
-          onSuccess(res);
-        }
-      }
-    );
-
-    if (alreadyRedirected) return;
-    req.on('error', err => {
-      console.log('Failed to get current version from GitHub. Error:', err);
-      if (rendererWindow) {
-        rendererWindow.webContents.send('version-info-received', null);
-      }
-    });
-  };
-
-  if (upgradeDisabled && rendererWindow) {
-    rendererWindow.webContents.send('version-info-received', { localVersion });
-    return;
-  }
-
-  requestLatestRelease();
+ipcMain.on('version-info-requested', (event) => {
+  if (!allowed(event)) return;
+  event.reply('version-info-received', updates.versionInfo());
 });
 
-ipcMain.on('launch-lbry-first', async () => {
+ipcMain.on('launch-lbry-first', async (event) => {
+  if (!allowed(event)) return;
   try {
     await startLbryFirst();
   } catch (e) {
@@ -501,169 +400,43 @@ ipcMain.on('launch-lbry-first', async () => {
   }
 });
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', async (error) => {
   console.log(error);
   dialog.showErrorBox('Error Encountered', `Caught error: ${error}`);
   appState.isQuitting = true;
-  if (daemon) daemon.quit();
-  app.exit(1);
-});
-
-// Auto updater
-autoUpdater.on('download-progress', () => {
-  updateState = UPDATE_STATE_DOWNLOADING;
-});
-
-autoUpdater.on('update-downloaded', () => {
-  updateState = UPDATE_STATE_DOWNLOADED;
-
-  // If this download was trigger by
-  // autoUpdateAccepted it means, the user
-  // wants to install the new update but
-  // needed to downloaded the files first.
-  if (appState.autoUpdateAccepted) {
-    autoUpdater.quitAndInstall();
+  try {
+    if (daemon) await daemon.quit();
+  } finally {
+    app.exit(1);
   }
 });
 
-autoUpdater.on('update-available', () => {
-  if (updateState === UPDATE_STATE_DOWNLOADING) {
-    return;
-  }
-  updateState = UPDATE_STATE_UPDATES_FOUND;
+autoUpdater.logger = require('./updaterLogger.cjs')(path.join(desktopProfile.desktop, 'logs'));
+const updates = new DesktopUpdater(autoUpdater, {
+  enabled: app.isPackaged && desktopSettings.autoUpdates === true && process.platform === 'win32',
+  version: pjson.version,
+  stopSdk: async () => {
+    appState.isQuitting = true;
+    try {
+      if (daemon) await daemon.quitForUpdate();
+      daemon = null;
+    } catch (error) {
+      appState.isQuitting = false;
+      throw error;
+    }
+  },
+  onError: (error, installing) => {
+    console.error('Desktop update failed:', error.message);
+    if (installing) {
+      appState.isQuitting = false;
+      dialog.showErrorBox('Update could not be installed', error.message + '\nPlease restart LBRY Desktop NG.');
+    }
+  },
 });
 
-autoUpdater.on('update-not-available', () => {
-  updateState = UPDATE_STATE_NO_UPDATES_FOUND;
-});
+registerUpdaterIpc({ ipcMain, updates, getWindow: () => rendererWindow, rendererURL });
 
-autoUpdater.on('error', () => {
-  if (updateState === UPDATE_STATE_DOWNLOADING) {
-    updateState = UPDATE_STATE_UPDATES_FOUND;
-    return;
-  }
-  updateState = UPDATE_STATE_INIT;
-});
-
-// Manual (.deb) update
-ipcMain.on('cancel-download-upgrade', () => {
-  if (updateDownloadItem) {
-    // Cancel the download and execute the onCancel
-    // callback set in the options.
-    updateDownloadItem.cancel();
-  }
-});
-
-ipcMain.on('download-upgrade', (event, params) => {
-  if (updateState !== UPDATE_STATE_UPDATES_FOUND) {
-    return;
-  }
-  if (isAutoUpdateSupported) {
-    updateState = UPDATE_STATE_DOWNLOADING;
-    autoUpdater.downloadUpdate();
-    return;
-  }
-
-  const { url, options } = params;
-  const dir = fs.mkdtempSync(app.getPath('temp') + path.sep);
-
-  updateState = UPDATE_STATE_DOWNLOADING;
-
-  // Grab the download item's handler to allow
-  // cancelling the operation if required.
-  options.onStarted = function(downloadItem) {
-    updateDownloadItem = downloadItem;
-  };
-  options.onCancel = function() {
-    updateState = UPDATE_STATE_UPDATES_FOUND;
-    updateDownloadItem = undefined;
-  };
-  options.onProgress = function(p) {
-    rendererWindow.webContents.send('download-progress-update', p);
-  };
-  options.onCompleted = function(c) {
-    updateState = UPDATE_STATE_DOWNLOADED;
-    updateDownloadItem = undefined;
-    rendererWindow.webContents.send('download-update-complete', c);
-  };
-  options.directory = dir;
-  const win = BrowserWindow.getFocusedWindow();
-  download(win, url, options).catch(e => {
-    updateState = UPDATE_STATE_UPDATES_FOUND;
-    console.log('e', e);
-  });
-});
-
-// Update behavior
-ipcMain.on('autoUpdateAccepted', () => {
-  appState.autoUpdateAccepted = true;
-
-  // quitAndInstall can only be called if the
-  // update has been downloaded. Since the user
-  // can disable auto updates, we have to make
-  // sure it has been downloaded first.
-  if (updateState === UPDATE_STATE_DOWNLOADED) {
-    autoUpdater.quitAndInstall();
-    return;
-  }
-
-  if (updateState !== UPDATE_STATE_UPDATES_FOUND) {
-    return;
-  }
-
-  // If the update hasn't been downloaded,
-  // start downloading it. After it's done, the
-  // event 'update-downloaded' will be triggered,
-  // where we will be able to resume the
-  // update installation.
-  updateState = UPDATE_STATE_DOWNLOADING;
-  autoUpdater.downloadUpdate();
-});
-
-ipcMain.on('check-for-updates', (event, autoDownload) => {
-  if (![UPDATE_STATE_INIT, UPDATE_STATE_NO_UPDATES_FOUND].includes(updateState)) {
-    return;
-  }
-
-  updateState = UPDATE_STATE_CHECKING;
-
-  // If autoDownload is true, checkForUpdates will begin the
-  // download automatically.
-  if (autoDownload) {
-    updateState = UPDATE_STATE_DOWNLOADING;
-  }
-
-  autoUpdater.autoDownload = autoDownload;
-  autoUpdater.checkForUpdates();
-});
-
-ipcMain.on('upgrade', (event, installerPath) => {
-  // what to do if no shutdown in a long time?
-  console.log('Update downloaded to', installerPath);
-  console.log('The app will close and you will be prompted to install the latest version of LBRY.');
-  console.log('After the install is complete, please reopen the app.');
-
-  // Prevent .deb package from opening with archive manager (Ubuntu >= 20)
-  if (process.platform === 'linux' && !process.env.APPIMAGE) {
-    sudo.exec(`dpkg -i ${installerPath}`, { name: app.name }, (err, stdout, stderr) => {
-      if (err || stderr) {
-        rendererWindow.webContents.send('upgrade-installing-error');
-        return;
-      }
-
-      // Re-launch the application when the installation finishes.
-      app.relaunch();
-      app.quit();
-    });
-
-    return;
-  }
-
-  app.on('quit', () => {
-    console.log('Launching upgrade installer at', installerPath);
-    // This gets triggered called after *all* other quit-related events, so
-    // we'll only get here if we're fully prepared and quitting for real.
-    shell.openPath(installerPath);
-  });
-  app.quit();
+ipcMain.handle('desktop-versions', (event) => {
+  if (!allowed(event)) throw new Error('Unknown window.');
+  return updates.versionInfo();
 });

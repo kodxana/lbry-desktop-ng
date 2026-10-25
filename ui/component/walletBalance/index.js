@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 import {
   selectBalance,
+  selectWalletSyncStatus,
   selectClaimsBalance,
   selectSupportsBalance,
   selectTipsBalance,
@@ -19,6 +20,7 @@ import WalletBalance from './view';
 
 const select = (state) => ({
   balance: selectBalance(state),
+  syncStatus: selectWalletSyncStatus(state),
   claimsBalance: selectClaimsBalance(state) || 0,
   supportsBalance: selectSupportsBalance(state) || 0,
   tipsBalance: selectTipsBalance(state) || 0,

@@ -22,7 +22,7 @@ type Props = {
   editedCollection: Collection,
 };
 
-export default function PreviewOverlayProperties(props: Props) {
+export default function PreviewOverlayProperties(props: Props): React.Node {
   const {
     uri,
     downloaded,
@@ -35,8 +35,7 @@ export default function PreviewOverlayProperties(props: Props) {
     editedCollection,
   } = props;
   const isCollection = claim && claim.value_type === 'collection';
-  // $FlowFixMe
-  const claimLength = claim && claim.value && claim.value.claims && claim.value.claims.length;
+  const claimLength = claim && claim.value_type === 'collection' ? claim.value.claims.length : undefined;
 
   const claimCount = editedCollection ? editedCollection.items.length : claimLength;
   const isStream = claim && claim.value_type === 'stream';

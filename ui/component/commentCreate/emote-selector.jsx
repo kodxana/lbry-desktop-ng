@@ -3,21 +3,15 @@ import 'scss/component/_emote-selector.scss';
 import { EMOTES_48px as EMOTES } from 'constants/emotes';
 import * as ICONS from 'constants/icons';
 import Button from 'component/button';
-import EMOJIS from 'emoji-dictionary';
+import { get as getEmoji } from 'node-emoji';
 import OptimizedImage from 'component/optimizedImage';
 import React from 'react';
 
-const OLD_QUICK_EMOJIS = [
-  EMOJIS.getUnicode('rocket'),
-  EMOJIS.getUnicode('jeans'),
-  EMOJIS.getUnicode('fire'),
-  EMOJIS.getUnicode('heart'),
-  EMOJIS.getUnicode('open_mouth'),
-];
+const QUICK_EMOJIS = ['rocket', 'jeans', 'fire', 'heart', 'open_mouth'];
 
 type Props = { commentValue: string, setCommentValue: (string) => void, closeSelector: () => void };
 
-export default function EmoteSelector(props: Props) {
+export default function EmoteSelector(props: Props): React.Node {
   const { commentValue, setCommentValue, closeSelector } = props;
 
   function addEmoteToComment(emote: string) {
@@ -33,14 +27,14 @@ export default function EmoteSelector(props: Props) {
       <div className="emoteSelector__list">
         <div className="emoteSelector__listRow">
           <div className="emoteSelector__listRowItems">
-            {OLD_QUICK_EMOJIS.map((emoji) => (
+            {QUICK_EMOJIS.map((name) => (
               <Button
-                key={emoji}
-                label={emoji}
-                title={`:${EMOJIS.getName(emoji)}:`}
+                key={name}
+                label={getEmoji(name)}
+                title={`:${name}:`}
                 button="alt"
                 className="button--file-action"
-                onClick={() => addEmoteToComment(emoji)}
+                onClick={() => addEmoteToComment(getEmoji(name))}
               />
             ))}
             {EMOTES.map((emote) => {

@@ -7,7 +7,7 @@ import Button from 'component/button';
 import { useIsMobile } from 'effects/use-screensize';
 import ClaimSupportButton from 'component/claimSupportButton';
 import FileReactions from 'component/fileReactions';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { EDIT_PAGE, PAGE_VIEW_QUERY } from 'page/collection/view';
 import classnames from 'classnames';
 import { ENABLE_FILE_REACTIONS } from 'config';
@@ -15,8 +15,8 @@ import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
 type Props = {
   uri: string,
-  claim: StreamClaim,
-  openModal: (id: string, {}) => void,
+  claim: ?CollectionClaim,
+  openModal: (id: string, { uri: string, collectionId?: string, redirect?: string, webShareable?: boolean }) => void,
   claimIsPending: boolean,
   isMyCollection: boolean,
   collectionId: string,
@@ -27,11 +27,11 @@ type Props = {
   collectionHasEdits: boolean,
   isBuiltin: boolean,
   doToggleShuffleList: (string, boolean) => void,
-  playNextUri: string,
-  firstItem: string,
+  playNextUri: ?string,
+  firstItem: ?string,
 };
 
-function CollectionActions(props: Props) {
+function CollectionActions(props: Props): React.Node {
   const {
     uri,
     openModal,
@@ -50,23 +50,19 @@ function CollectionActions(props: Props) {
     setShowEdit,
   } = props;
   const [doShuffle, setDoShuffle] = React.useState(false);
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const isMobile = useIsMobile();
   const claimId = claim && claim.claim_id;
   const webShareable = true; // collections have cost?
   const isEmptyCollection = !firstItem;
 
   const doPlay = React.useCallback(
-    (playUri) => {
+    (playUri: ?string): void => {
       if (!playUri) {
         return;
       }
       const navigateUrl = formatLbryUrlForWeb(playUri);
-      push({
-        pathname: navigateUrl,
-        search: generateListSearchUrlParams(collectionId),
-        state: { forceAutoplay: true },
-      });
+      push({ pathname: navigateUrl, search: generateListSearchUrlParams(collectionId) }, { forceAutoplay: true });
     },
     [collectionId, push]
   );
@@ -151,7 +147,8 @@ function CollectionActions(props: Props) {
             title={__('Report content')}
             className="button--file-action"
             icon={ICONS.REPORT}
-            navigate={`/$/${PAGES.REPORT_CONTENT}?claimId=${claimId}`}
+            disabled={!claimId}
+            navigate={claimId ? `/$/${PAGES.REPORT_CONTENT}?claimId=${claimId}` : undefined}
           />
         ))}
     </>

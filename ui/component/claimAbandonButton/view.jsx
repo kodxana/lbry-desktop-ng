@@ -5,13 +5,13 @@ import React from 'react';
 import Button from 'component/button';
 
 type Props = {
-  doOpenModal: (string, {}) => void,
+  doOpenModal: (string, { claim: Claim, cb?: () => void }) => void,
   claim: Claim,
   abandonActionCallback: (any) => void,
   iconSize: number,
 };
 
-export default function ClaimAbandonButton(props: Props) {
+export default function ClaimAbandonButton(props: Props): React.Node {
   const { doOpenModal, claim, abandonActionCallback } = props;
   const { value_type } = claim || {};
   let buttonLabel;

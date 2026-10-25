@@ -21,9 +21,9 @@ type Props = {
   abandonClaimError: ?string,
 };
 
-const SupportsLiquidate = (props: Props) => {
+const SupportsLiquidate = (props: Props): React.Node => {
   const { claim, abandonSupportForClaim, handleClose, abandonClaimError } = props;
-  const [previewBalance, setPreviewBalance] = useState(undefined);
+  const [previewBalance, setPreviewBalance] = useState<number | void>(undefined);
   const [defaultValueAssigned, setDefaultValueAssigned] = useState(false);
   const [unlockTextAmount, setUnlockTextAmount] = useState('');
   const [error, setError] = useState(false);
@@ -55,14 +55,14 @@ const SupportsLiquidate = (props: Props) => {
   }
 
   const handleRangeChange = useCallback(
-    (newValue) => {
+    (newValue: number) => {
       setUnlockTextAmount(String(newValue));
     },
     [setUnlockTextAmount]
   );
 
   const handleChangeUnlockText = useCallback(
-    (newValue) => {
+    (newValue: string) => {
       // Get rid of all characters except digits, commas and periods.
       const onlyValidAmount = newValue.replace(/[^0-9.,]+/, '');
       setUnlockTextAmount(onlyValidAmount);

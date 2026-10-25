@@ -6,7 +6,7 @@ type Props = {
   setClientSetting: (boolean) => void,
   disableAutoUpdates: boolean,
 };
-function SettingDisableAutoUpdates(props: Props) {
+function SettingDisableAutoUpdates(props: Props): React.Node {
   const { setClientSetting, disableAutoUpdates } = props;
   return (
     <React.Fragment>

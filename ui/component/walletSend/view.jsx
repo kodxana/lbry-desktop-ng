@@ -14,7 +14,10 @@ import ChannelSelector from 'component/channelSelector';
 import ClaimPreview from 'component/claimPreview';
 
 type Props = {
-  openModal: (id: string, { destination: string, amount: string, isAddress: boolean }) => void,
+  openModal: (
+    id: string,
+    { destination: string, amount: string, isAddress: boolean, setConfirmed: (boolean) => void }
+  ) => void,
   draftTransaction: { address: string, amount: string },
   setDraftTransaction: ({ address: string, amount: string }) => void,
   balance: number,
@@ -37,14 +40,24 @@ type Props = {
 };
 
 class WalletSend extends React.PureComponent<Props> {
-  constructor() {
-    super();
-
-    (this: any).handleSubmit = this.handleSubmit.bind(this);
-    (this: any).handleClear = this.handleClear.bind(this);
+  canSubmit(): boolean {
+    const { draftTransaction, balance, sendLabel, isAddress, contentClaim } = this.props;
+    const amount = Number(draftTransaction.amount);
+    return (
+      Number.isFinite(amount) &&
+      amount > 0 &&
+      amount < balance &&
+      sendLabel !== 'Sending...' &&
+      (isAddress
+        ? Boolean(draftTransaction.address) && validateSendTx(draftTransaction.address).address === ''
+        : Boolean(contentClaim))
+    );
   }
 
-  handleSubmit() {
+  handleSubmit = (_values: {}, { setSubmitting }: { setSubmitting: (boolean) => void }): void => {
+    // Submission opens a confirmation dialog; cancelling it must allow another attempt.
+    setSubmitting(false);
+    if (!this.canSubmit()) return;
     const { draftTransaction, openModal, isAddress, contentUri, setConfirmed } = this.props;
     const destination = isAddress ? draftTransaction.address : contentUri;
     const amount = draftTransaction.amount;
@@ -52,18 +65,18 @@ class WalletSend extends React.PureComponent<Props> {
     const modalProps = { destination, amount, isAddress, setConfirmed };
 
     openModal(MODALS.CONFIRM_TRANSACTION, modalProps);
-  }
+  };
 
-  handleClear() {
+  handleClear = (): void => {
     const { setDraftTransaction, setConfirmed } = this.props;
     setDraftTransaction({
       address: '',
       amount: '',
     });
     setConfirmed(false);
-  }
+  };
 
-  render() {
+  render(): React.Node {
     const {
       draftTransaction,
       setDraftTransaction,
@@ -71,7 +84,6 @@ class WalletSend extends React.PureComponent<Props> {
       isAddress,
       setIsAddress,
       contentUri,
-      contentClaim,
       setEnteredContentUri,
       contentError,
       confirmed,
@@ -100,7 +112,8 @@ class WalletSend extends React.PureComponent<Props> {
               amount: '',
             }}
             onSubmit={this.handleSubmit}
-            render={({ values, errors, touched, handleBlur, handleSubmit }) => (
+          >
+            {({ values, errors, touched, handleBlur, handleSubmit }) => (
               <div>
                 <div className="section">
                   <Button
@@ -185,19 +198,7 @@ class WalletSend extends React.PureComponent<Props> {
                     </fieldset-group>
 
                     <div className="card__actions">
-                      <Button
-                        button="primary"
-                        type="submit"
-                        label={__(sendLabel)}
-                        disabled={
-                          !(parseFloat(draftTransaction.amount) > 0.0) ||
-                          parseFloat(draftTransaction.amount) >= balance ||
-                          sendLabel === 'Sending...' ||
-                          (isAddress
-                            ? !draftTransaction.address || validateSendTx(draftTransaction.address).address !== ''
-                            : !contentClaim)
-                        }
-                      />
+                      <Button button="primary" type="submit" label={__(sendLabel)} disabled={!this.canSubmit()} />
                       {!!Object.keys(errors).length || (
                         <span className="error__text">
                           {(!!draftTransaction.address && touched.address && errors.address) ||
@@ -213,7 +214,7 @@ class WalletSend extends React.PureComponent<Props> {
                 </div>
               </div>
             )}
-          />
+          </Formik>
         }
       />
     );

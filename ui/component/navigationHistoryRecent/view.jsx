@@ -12,7 +12,7 @@ type Props = {
   history: Array<HistoryItem>,
 };
 
-export default function NavigationHistoryRecent(props: Props) {
+export default function NavigationHistoryRecent(props: Props): React.Node {
   const { history = [] } = props;
 
   return history.length ? (

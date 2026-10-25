@@ -5,7 +5,7 @@ import { makeSelectWinningUriForQuery } from 'redux/selectors/search';
 // import { MAX_LIVESTREAM_COMMENTS } from 'constants/livestream';
 import { selectChannelMentionData } from 'redux/selectors/comments';
 import { selectShowMatureContent } from 'redux/selectors/settings';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import TextareaWithSuggestions from './view';
 
 const select = (state, props) => {
@@ -43,4 +43,4 @@ const perform = (dispatch) => ({
   doSetMentionSearchResults: (query, uris) => dispatch(doSetMentionSearchResults(query, uris)),
 });
 
-export default withRouter(connect(select, perform)(TextareaWithSuggestions));
+export default withDesktopRouter(connect(select, perform)(TextareaWithSuggestions));

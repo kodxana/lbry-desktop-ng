@@ -9,7 +9,7 @@ import Spinner from 'component/spinner';
 import Icon from 'component/common/icon';
 import Button from 'component/button';
 import Yrbl from 'component/yrbl';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import analytics from 'analytics';
 
 type Props = {
@@ -20,16 +20,29 @@ type Props = {
 const UNAUTHENTICATED_ERROR = 'unauthenticated';
 const GENERIC_ERROR = 'error';
 
-export default function CreatorAnalytics(props: Props) {
+type ContentStats = {
+  ChannelSubs: number,
+  ChannelSubChange: number,
+  AllContentViews: number,
+  AllContentViewChange: number,
+  VideoURITopNew?: string,
+  VideoViewsTopNew: number,
+  VideoViewChangeTopNew: number,
+  VideoURITopCommentNew?: string,
+  VideoCommentTopCommentNew: number,
+  VideoCommentChangeTopCommentNew: number,
+  VideoURITopAllTime: string,
+  VideoViewsTopAllTime: number,
+  VideoViewChangeTopAllTime: number,
+};
+
+export default function CreatorAnalytics(props: Props): React.Node {
   const { claim } = props;
-  const history = useHistory();
-  const [stats, setStats] = React.useState();
-  const [error, setError] = React.useState();
+  const history = useDesktopHistory();
+  const [stats, setStats] = React.useState<?ContentStats>();
+  const [error, setError] = React.useState<?string>();
   const [fetchingStats, setFetchingStats] = React.useState(false);
   const claimId = claim && claim.claim_id;
-  // TODO: put this back when hubs are fixed
-  // const channelHasClaims = claim && claim.meta && claim.meta.claims_in_channel && claim.meta.claims_in_channel > 0 || true;
-  const channelHasClaims = true;
 
   React.useEffect(() => {
     setStats(null);
@@ -37,7 +50,7 @@ export default function CreatorAnalytics(props: Props) {
 
   const channelForEffect = JSON.stringify(claim);
   React.useEffect(() => {
-    if (claimId && channelForEffect && channelHasClaims) {
+    if (claimId && channelForEffect) {
       setFetchingStats(true);
       Lbryio.call('reports', 'content', { claim_id: claimId })
         .then((res) => {
@@ -56,7 +69,7 @@ export default function CreatorAnalytics(props: Props) {
           setFetchingStats(false);
         });
     }
-  }, [claimId, channelForEffect, channelHasClaims, setFetchingStats, setStats]);
+  }, [claimId, channelForEffect, setFetchingStats, setStats]);
 
   return (
     <React.Fragment>
@@ -82,41 +95,18 @@ export default function CreatorAnalytics(props: Props) {
                 />
               )}
 
-              {!error && !channelHasClaims ? (
-                <Yrbl
-                  type="sad"
-                  title={__("You haven't uploaded anything")}
-                  subtitle={__('Upload something to start tracking your stats!')}
-                  actions={
-                    <div className="section__actions">
-                      <Button
-                        button="primary"
-                        label={__('Upload Something')}
-                        onClick={() => {
-                          history.push(`/$/${PAGES.UPLOAD}`);
-                        }}
-                      />
-                    </div>
-                  }
-                />
-              ) : (
-                <Yrbl
-                  title={
-                    channelHasClaims
-                      ? __('No recent uploads')
-                      : __("You haven't uploaded anything with this channel yet!")
-                  }
-                  actions={
-                    <div className="section__actions">
-                      <Button
-                        button="primary"
-                        label={__('Upload Something')}
-                        onClick={() => history.push(`/$/${PAGES.UPLOAD}`)}
-                      />
-                    </div>
-                  }
-                />
-              )}
+              <Yrbl
+                title={__('No recent uploads')}
+                actions={
+                  <div className="section__actions">
+                    <Button
+                      button="primary"
+                      label={__('Upload Something')}
+                      onClick={() => history.push(`/$/${PAGES.UPLOAD}`)}
+                    />
+                  </div>
+                }
+              />
             </div>
           )}
         </div>
@@ -126,7 +116,6 @@ export default function CreatorAnalytics(props: Props) {
         <div className="section">
           <div className="columns">
             <Card
-              iconColor
               title={<span>{__('%follower_count% followers', { follower_count: stats.ChannelSubs })}</span>}
               icon={ICONS.SUBSCRIBE}
               subtitle={

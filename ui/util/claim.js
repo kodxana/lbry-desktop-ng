@@ -24,7 +24,7 @@ export const isClaimNsfw = (claim: Claim): boolean => {
   return false;
 };
 
-export function createNormalizedClaimSearchKey(options: { page: number, release_time?: string }) {
+export function createNormalizedClaimSearchKey(options: { page: number, release_time?: string, ... }): string {
   // Ignore page because we don't care what the last page searched was, we want everything
   // Ignore release_time because that will change depending on when you call claim_search ex: release_time: ">12344567"
   const { page: optionToIgnoreForQuery, release_time: anotherToIgnore, ...rest } = options;
@@ -73,7 +73,7 @@ export function filterClaims(claims: Array<Claim>, query: ?string): Array<Claim>
  * @param claim
  * @param uri An abandoned claim will be null, so provide the `uri` as a fallback to parse.
  */
-export function isChannelClaim(claim: ?Claim, uri?: string) {
+export function isChannelClaim(claim: ?Claim, uri?: string): boolean {
   // 1. parseURI can't resolve a repost's channel, so a `claim` will be needed.
   // 2. parseURI is still needed to cover the case of abandoned claims.
   if (claim) {
@@ -89,7 +89,7 @@ export function isChannelClaim(claim: ?Claim, uri?: string) {
   }
 }
 
-export function getChannelIdFromClaim(claim: ?Claim) {
+export function getChannelIdFromClaim(claim: ?Claim): string | void {
   if (claim) {
     if (claim.value_type === 'channel') {
       return claim.claim_id;
@@ -99,21 +99,19 @@ export function getChannelIdFromClaim(claim: ?Claim) {
   }
 }
 
-export function getChannelFromClaim(claim: ?Claim) {
+export function getChannelFromClaim(claim: ?Claim): ?ChannelClaim {
   return !claim
     ? null
     : claim.value_type === 'channel'
-    ? claim
-    : claim.signing_channel && claim.is_channel_signature_valid
-    ? claim.signing_channel
-    : null;
+      ? claim
+      : claim.signing_channel && claim.is_channel_signature_valid
+        ? claim.signing_channel
+        : null;
 }
 
-export function isClaimPlayable(claim: ?Claim) {
-  // $FlowFixMe
-  if (!claim || !claim.value || !claim.value.stream_type) {
+export function isClaimPlayable(claim: ?Claim): boolean {
+  if (!claim || claim.value_type !== 'stream' || !claim.value || !claim.value.stream_type) {
     return false;
   }
-  // $FlowFixMe
   return ['audio', 'video'].includes(claim.value.stream_type);
 }

@@ -1,4 +1,4 @@
-const { URL, LBRY_WEB_STREAMING_API } = require('../../config');
+const { URL, LBRY_WEB_STREAMING_API } = require('config');
 
 const CONTINENT_COOKIE = 'continent';
 

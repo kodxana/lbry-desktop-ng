@@ -7,7 +7,7 @@ type Props = {
   type: string,
 };
 
-function ClaimPreviewLoading(props: Props) {
+function ClaimPreviewLoading(props: Props): React.Node {
   const { isChannel, type } = props;
   return (
     <li

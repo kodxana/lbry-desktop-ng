@@ -1,46 +1,52 @@
 // @flow
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';
-import { useRect } from '@reach/rect';
 
 const COLLAPSED_HEIGHT = 120;
 
 type Props = {
-  children: React$Node | Array<React$Node>,
+  children: React.Node | Array<React.Node>,
 };
 
-export default function Expandable(props: Props) {
+export default function Expandable(props: Props): React.Node {
   const [expanded, setExpanded] = useState(false);
   const { children } = props;
-  const ref = useRef();
-  const rect = useRect(ref);
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [canExpand, setCanExpand] = useState(false);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => setCanExpand(element.getBoundingClientRect().height > COLLAPSED_HEIGHT);
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => observer.disconnect();
+  }, []);
 
   function handleClick() {
     setExpanded(!expanded);
   }
 
   return (
-    <div ref={ref}>
-      {rect && rect.height > COLLAPSED_HEIGHT ? (
-        <div ref={ref}>
-          <div
-            className={classnames({
-              'expandable--open': expanded,
-              'expandable--closed': !expanded,
-            })}
-          >
-            {children}
-          </div>
-          <Button
-            button="link"
-            className="expandable__button"
-            label={expanded ? __('Less') : __('More')}
-            onClick={handleClick}
-          />
-        </div>
-      ) : (
-        <div>{children}</div>
+    <div>
+      <div
+        className={classnames({
+          'expandable--open': canExpand && expanded,
+          'expandable--closed': canExpand && !expanded,
+        })}
+      >
+        {/* Measure the full content, not the clipped container or its button. */}
+        <div ref={ref}>{children}</div>
+      </div>
+      {canExpand && (
+        <Button
+          button="link"
+          className="expandable__button"
+          label={expanded ? __('Less') : __('More')}
+          aria-expanded={expanded}
+          onClick={handleClick}
+        />
       )}
     </div>
   );

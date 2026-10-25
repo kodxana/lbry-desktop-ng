@@ -1,22 +1,22 @@
 // @flow
 import React from 'react';
 import 'scss/component/_view_count.scss';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { toCompactNotation } from 'util/string';
 
 type Props = {
   uri: string,
   // --- select ---
   claim: ?StreamClaim,
-  viewCount: string,
+  viewCount: number,
   lang: ?string,
 };
 
-export default function FileViewCountInline(props: Props) {
+export default function FileViewCountInline(props: Props): React.Node {
   const { claim, viewCount, lang } = props;
   const {
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
   const formattedViewCount = toCompactNotation(viewCount, lang);
 
   // Limit the view-count visibility to Channel Pages for now. I believe we'll

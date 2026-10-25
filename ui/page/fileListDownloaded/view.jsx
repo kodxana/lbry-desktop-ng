@@ -9,7 +9,7 @@ import { PAGE_SIZE } from 'constants/claim';
 import { Form } from 'component/common/form-components/form';
 import Icon from 'component/common/icon';
 import { FormField } from 'component/common/form-components/form-field';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import classnames from 'classnames';
 import { PURCHASES_PAGE_SIZE } from 'page/library/view';
 import Spinner from 'component/spinner';
@@ -45,7 +45,7 @@ function FileListDownloaded(props: Props) {
   const [viewMode, setViewMode] = usePersistedState('library-view-mode', VIEW_PURCHASES);
   const [searchQuery, setSearchQuery] = useState('');
 
-  function handleInputChange(e) {
+  function handleInputChange(e: { target: { value: string }, ... }) {
     const { value } = e.target;
     if (value !== searchQuery) {
       setSearchQuery(value);
@@ -114,4 +114,6 @@ function FileListDownloaded(props: Props) {
   );
 }
 
-export default withRouter(FileListDownloaded);
+const RoutedFileListDownloaded: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(FileListDownloaded);
+export default RoutedFileListDownloaded;

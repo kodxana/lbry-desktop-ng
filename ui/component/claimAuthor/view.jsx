@@ -8,7 +8,7 @@ type Props = {
   channelSubCount?: number,
 };
 
-function ClaimAuthor(props: Props) {
+function ClaimAuthor(props: Props): React.Node {
   const { channelUri, hideActions, channelSubCount } = props;
 
   return channelUri ? (

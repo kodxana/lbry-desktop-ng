@@ -35,7 +35,7 @@ type Props = {
   // clearContentCache: () => void,
 };
 
-export default function SettingContent(props: Props) {
+export default function SettingContent(props: Props): React.Node {
   const {
     isAuthenticated,
     floatingPlayer,

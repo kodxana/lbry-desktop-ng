@@ -6,19 +6,20 @@ import { FormField } from 'component/common/form';
 import Icon from 'component/common/icon';
 
 type Props = {
-  collection: Collection,
+  collection: ?Collection,
   hasClaim: boolean,
   category: string,
   edited: boolean,
   editCollection: (string, CollectionEditParams) => void,
   uri: string,
-  collectionPending: Collection,
+  collectionPending: ?boolean,
 };
 
-function CollectionSelectItem(props: Props) {
+function CollectionSelectItem(props: Props): React.Node {
   const { collection, hasClaim, category, editCollection, uri, collectionPending } = props;
+  if (!collection) return null;
   const { name, id } = collection;
-  const handleChange = (e) => {
+  const handleChange = (): void => {
     editCollection(id, { uris: [uri], remove: hasClaim });
   };
 
@@ -43,8 +44,7 @@ function CollectionSelectItem(props: Props) {
     <div className={'collection-select__item'}>
       <FormField
         checked={hasClaim}
-        disabled={collectionPending}
-        icon={icon}
+        disabled={Boolean(collectionPending)}
         type="checkbox"
         name={`select-${id}`}
         onChange={handleChange} // edit the collection

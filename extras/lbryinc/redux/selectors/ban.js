@@ -12,7 +12,12 @@ import { selectBlacklistedOutpointMap, selectFilteredOutpointMap } from 'lbryinc
 import { getChannelFromClaim } from 'util/claim';
 import { isURIEqual } from 'util/lbryURI';
 
-export const selectBanStateForUri = createCachedSelector(
+type BanState = { blacklisted?: boolean, filtered?: boolean, muted?: boolean, blocked?: boolean };
+
+export const selectBanStateForUri: (
+  Parameters<typeof selectClaimForUri>[0] & Parameters<typeof selectMutedChannels>[0],
+  string
+) => BanState = createCachedSelector(
   selectClaimForUri,
   selectBlacklistedOutpointMap,
   selectFilteredOutpointMap,
@@ -20,7 +25,7 @@ export const selectBanStateForUri = createCachedSelector(
   selectModerationBlockList,
   (state, uri) => makeSelectIsBlacklisted(uri)(state),
   (claim, blackListedOutpointMap, filteredOutpointMap, mutedChannelUris, personalBlocklist, isBlacklisted) => {
-    const banState = {};
+    const banState: BanState = {};
 
     if (!claim) {
       return banState;

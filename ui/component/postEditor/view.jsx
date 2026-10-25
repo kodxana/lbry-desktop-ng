@@ -6,18 +6,18 @@ type Props = {
   uri: ?string,
   label: ?string,
   disabled: ?boolean,
-  filePath: File,
+  filePath: ?string,
   fileText: ?string,
   fileMimeType: ?string,
   streamingUrl: ?string,
   isStillEditing: boolean,
   fetchStreamingUrl: (string) => void,
   setPrevFileText: (string) => void,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   setCurrentFileType: (string) => void,
 };
 
-function PostEditor(props: Props) {
+function PostEditor(props: Props): React.Node {
   const {
     uri,
     label,
@@ -60,11 +60,11 @@ function PostEditor(props: Props) {
   }, [fileText, loading, setLoading]);
 
   useEffect(() => {
-    function readFileStream(url) {
+    function readFileStream(url: string): Promise<string> {
       return fetch(url).then((res) => res.text());
     }
 
-    async function updateEditorText(url) {
+    async function updateEditorText(url: string): Promise<void> {
       try {
         const text = await readFileStream(url);
         if (text) {

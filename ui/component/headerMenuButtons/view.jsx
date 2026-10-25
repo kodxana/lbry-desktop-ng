@@ -2,7 +2,7 @@
 // import 'scss/component/_header.scss'; // ody codesplits this; no.
 
 import { ENABLE_UI_NOTIFICATIONS } from 'config';
-import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
+import { Menu, MenuList, MenuButton, MenuItem } from 'component/common/menu';
 import * as ICONS from 'constants/icons';
 import * as PAGES from 'constants/pages';
 import HeaderMenuLink from 'component/common/header-menu-link';
@@ -18,7 +18,7 @@ type HeaderMenuButtonProps = {
   handleThemeToggle: (boolean, string) => void,
 };
 
-export default function HeaderMenuButtons(props: HeaderMenuButtonProps) {
+export default function HeaderMenuButtons(props: HeaderMenuButtonProps): React.Node {
   const { automaticDarkModeEnabled, currentTheme, user, handleThemeToggle } = props;
 
   const notificationsEnabled = ENABLE_UI_NOTIFICATIONS || (user && user.experimental_ui);
@@ -51,7 +51,7 @@ export default function HeaderMenuButtons(props: HeaderMenuButtonProps) {
           <HeaderMenuLink page={PAGES.SETTINGS} icon={ICONS.SETTINGS} name={__('Settings')} />
           <HeaderMenuLink page={PAGES.HELP} icon={ICONS.HELP} name={__('Help')} />
 
-          <MenuItem className="menu__link" onSelect={() => handleThemeToggle(automaticDarkModeEnabled, currentTheme)}>
+          <MenuItem className="menu__link" onClick={() => handleThemeToggle(automaticDarkModeEnabled, currentTheme)}>
             <Icon icon={currentTheme === 'light' ? ICONS.DARK : ICONS.LIGHT} />
             {currentTheme === 'light' ? __('Dark') : __('Light')}
           </MenuItem>

@@ -11,7 +11,7 @@ import DebouncedInput from 'component/common/debounced-input';
 import ChannelThumbnail from 'component/channelThumbnail';
 import { useIsMobile, isTouch } from 'effects/use-screensize';
 import { IS_MAC } from 'component/app/view';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { ENABLE_UI_NOTIFICATIONS } from 'config';
 
 const FOLLOWED_ITEM_INITIAL_LIMIT = 10;
@@ -43,11 +43,11 @@ type Props = {
   purchaseSuccess: boolean,
   doClearPurchasedUriSuccess: () => void,
   user: ?User,
-  homepageData: any,
+  homepageData: HomepageData,
   activeChannelStakedLevel: number,
 };
 
-function SideNavigation(props: Props) {
+function SideNavigation(props: Props): React.Node {
   const {
     subscriptions,
     doSignOut,
@@ -65,7 +65,7 @@ function SideNavigation(props: Props) {
 
   const {
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const HOME = {
     title: 'Home',
@@ -237,7 +237,7 @@ function SideNavigation(props: Props) {
     displayedFollowedTags = followedTags.slice(0, FOLLOWED_ITEM_INITIAL_LIMIT);
   }
 
-  function getLink(props: SideNavLink) {
+  function getLink(props: Readonly<SideNavLink>) {
     const { hideForUnauth, route, link, ...passedProps } = props;
     const { title, icon, extra } = passedProps;
 
@@ -338,7 +338,7 @@ function SideNavigation(props: Props) {
   }, [setPulseLibrary, purchaseSuccess, doClearPurchasedUriSuccess]);
 
   React.useEffect(() => {
-    function handleKeydown(e: SyntheticKeyboardEvent<*>) {
+    function handleKeydown(e: KeyboardEvent) {
       if (e.keyCode === KEYCODES.ESCAPE && isAbsolute) {
         setSidebarOpen(false);
       } else if (e.keyCode === KEYCODES.BACKSLASH) {

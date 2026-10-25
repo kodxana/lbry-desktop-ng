@@ -29,7 +29,7 @@ class SettingsPage extends React.PureComponent<Props> {
     exitSettings();
   }
 
-  render() {
+  render(): React.Node {
     const { daemonSettings } = this.props;
     const noDaemonSettings = !daemonSettings || Object.keys(daemonSettings).length === 0;
 

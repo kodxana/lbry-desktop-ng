@@ -6,7 +6,7 @@ import * as SETTINGS from 'constants/settings';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
 import { selectCostInfoForUri } from 'lbryinc';
 import { makeSelectClientSetting } from 'redux/selectors/settings';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import {
   makeSelectIsPlaying,
   selectShouldObscurePreviewForUri,
@@ -44,4 +44,4 @@ const perform = (dispatch) => ({
   },
 });
 
-export default withRouter(connect(select, perform)(FileRenderInitiator));
+export default withDesktopRouter(connect(select, perform)(FileRenderInitiator));

@@ -10,11 +10,11 @@ type Props = {
   description?: string,
 };
 
-export default function HelpLink(props: Props) {
+export default function HelpLink(props: Props): React.Node {
   const { href, navigate, icon, description } = props;
   return (
     <Button
-      onClick={e => {
+      onClick={(e) => {
         if (href) {
           e.stopPropagation();
         }

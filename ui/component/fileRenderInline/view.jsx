@@ -16,7 +16,7 @@ type Props = {
   claimWasPurchased: boolean,
 };
 
-export default function FileRenderInline(props: Props) {
+export default function FileRenderInline(props: Props): React.Node {
   const {
     isPlaying,
     fileInfo,
@@ -28,7 +28,7 @@ export default function FileRenderInline(props: Props) {
     costInfo,
     claimWasPurchased,
   } = props;
-  const [playTime, setPlayTime] = useState();
+  const [playTime, setPlayTime] = useState<?number>();
   const isFree = !costInfo || (costInfo.cost !== undefined && costInfo.cost === 0);
   const isReadyToView = fileInfo && fileInfo.completed;
   const isReadyToPlay = streamingUrl || isReadyToView;

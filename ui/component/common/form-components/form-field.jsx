@@ -1,20 +1,38 @@
 // @flow
-import 'easymde/dist/easymde.min.css';
 import { FF_MAX_CHARS_DEFAULT } from 'constants/form-field';
 import React from 'react';
-import type { ElementRef, Node } from 'react';
+import type { Node } from 'react';
+
+type FieldEvent = {
+  target: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  currentTarget: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+  preventDefault: () => void,
+  stopPropagation: () => void,
+  ...
+};
 
 type Props = {
   affixClass?: string, // class applied to prefix/postfix label
   autoFocus?: boolean,
   blockWrap: boolean,
   charCount?: number,
-  children?: React$Node,
+  children?: React.Node,
   defaultValue?: string | number,
   disabled?: boolean,
-  error?: string | boolean,
-  helper?: string | React$Node,
-  inputButton?: React$Node,
+  checked?: boolean,
+  className?: string,
+  id?: string,
+  step?: number | 'any',
+  maxLength?: number,
+  onWheel?: ({ preventDefault: () => void, ... }) => void,
+  onClick?: (FieldEvent) => unknown,
+  onBlur?: (FieldEvent) => unknown,
+  onKeyPress?: ({ ...FieldEvent, key: string, charCode: number }) => unknown,
+  onKeyDown?: ({ ...FieldEvent, key: string, code: string, repeat: boolean }) => unknown,
+  error?: string | boolean | { message: string, ... },
+  helper?: string | React.Node,
+  inputButton?: React.Node,
+  inputName?: string,
   label?: string | Node,
   labelOnLeft: boolean,
   max?: number,
@@ -30,13 +48,13 @@ type Props = {
   type?: string,
   value?: string | number,
   onChange?: (any) => any,
-  render?: () => React$Node,
+  render?: () => React.Node,
 };
 
 export class FormField extends React.PureComponent<Props> {
-  static defaultProps = { labelOnLeft: false, blockWrap: true };
+  static defaultProps: { labelOnLeft: boolean, blockWrap: boolean } = { labelOnLeft: false, blockWrap: true };
 
-  input: { current: ElementRef<any> };
+  input: { current: HTMLInputElement | HTMLTextAreaElement | null };
 
   constructor(props: Props) {
     super(props);
@@ -50,7 +68,7 @@ export class FormField extends React.PureComponent<Props> {
     if (input && autoFocus) input.focus();
   }
 
-  render() {
+  render(): React.Node {
     const {
       affixClass,
       autoFocus,
@@ -60,6 +78,7 @@ export class FormField extends React.PureComponent<Props> {
       error,
       helper,
       inputButton,
+      inputName,
       label,
       labelOnLeft,
       name,
@@ -74,26 +93,22 @@ export class FormField extends React.PureComponent<Props> {
 
     const errorMessage = typeof error === 'object' ? error.message : error;
 
-    // Ideally, the character count should (and can) be appended to the
-    // SimpleMDE's "options::status" bar. However, I couldn't figure out how
-    // to pass the current value to it's callback, nor query the current
-    // text length from the callback. So, we'll use our own widget.
     const hasCharCount = charCount !== undefined && charCount >= 0;
     const countInfo = hasCharCount && textAreaMaxLength !== undefined && (
       <span className="comment__char-count-mde">{`${charCount || '0'}/${textAreaMaxLength}`}</span>
     );
-    const Wrapper = blockWrap
+    const Wrapper: ({ children: React.Node }) => React.Node = blockWrap
       ? ({ children: innerChildren }) => <fieldset-section class="radio">{innerChildren}</fieldset-section>
       : ({ children: innerChildren }) => <span className="radio">{innerChildren}</span>;
 
-    const inputSimple = (type: string) => (
+    const inputSimple = (type: string): React.Node => (
       <>
-        <input id={name} type={type} {...inputProps} />
+        <input id={name} name={inputName} type={type} {...inputProps} />
         <label htmlFor={name}>{label}</label>
       </>
     );
 
-    const inputSelect = (selectClass: string) => (
+    const inputSelect = (selectClass: string): React.Node => (
       <fieldset-section class={selectClass}>
         {(label || errorMessage) && (
           <label htmlFor={name}>{errorMessage ? <span className="error__text">{errorMessage}</span> : label}</label>
@@ -104,7 +119,7 @@ export class FormField extends React.PureComponent<Props> {
       </fieldset-section>
     );
 
-    const input = () => {
+    const input = (): React.Node => {
       switch (type) {
         case 'radio':
           return <Wrapper>{inputSimple('radio')}</Wrapper>;

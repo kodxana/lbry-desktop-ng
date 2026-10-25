@@ -14,12 +14,14 @@ import SettingShareUrl from 'component/settingShareUrl';
 import SettingsRow from 'component/settingsRow';
 import SettingWalletServer from 'component/settingWalletServer';
 import Spinner from 'component/spinner';
-import { getPasswordFromCookie } from 'util/saved-passwords';
+import { hasSavedPassword } from 'util/saved-passwords';
 import * as DAEMON_SETTINGS from 'constants/daemon_settings';
 import SettingEnablePrereleases from 'component/settingEnablePrereleases';
 import SettingDisableAutoUpdates from 'component/settingDisableAutoUpdates';
 
+const desktopSettings = require('../../../desktop-settings.json');
 const IS_MAC = process.platform === 'darwin';
+const { isolatedTestBuild } = require('../../../package.json').lbrySettings;
 
 type Price = {
   currency: string,
@@ -54,11 +56,11 @@ type Props = {
   encryptWallet: () => void,
   decryptWallet: () => void,
   updateWalletStatus: () => void,
-  confirmForgetPassword: ({}) => void,
+  confirmForgetPassword: ({ callback: () => void }) => void,
   toggle3PAnalytics: (boolean) => void,
 };
 
-export default function SettingSystem(props: Props) {
+export default function SettingSystem(props: Props): React.Node {
   const {
     daemonSettings,
     ffmpegStatus,
@@ -108,11 +110,13 @@ export default function SettingSystem(props: Props) {
   // Update storedPassword state
   React.useEffect(() => {
     updateWalletStatus();
-    getPasswordFromCookie().then((p) => {
-      if (typeof p === 'string') {
-        setStoredPassword(true);
-      }
+    let active = true;
+    hasSavedPassword().then((saved) => {
+      if (active) setStoredPassword(saved);
     });
+    return () => {
+      active = false;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -169,11 +173,13 @@ export default function SettingSystem(props: Props) {
                 checked={daemonSettings.share_usage_data}
                 label={<React.Fragment>{__('Allow the app to share data to LBRY.inc')}</React.Fragment>}
                 helper={
-                  isAuthenticated
-                    ? __('Internal sharing is required while signed in.')
-                    : __('Internal sharing is required to participate in rewards programs.')
+                  isolatedTestBuild
+                    ? __('Usage reporting is disabled in this community build.')
+                    : isAuthenticated
+                      ? __('Internal sharing is required while signed in.')
+                      : __('Internal sharing is required to participate in rewards programs.')
                 }
-                disabled={isAuthenticated && daemonSettings.share_usage_data}
+                disabled={isolatedTestBuild || (isAuthenticated && daemonSettings.share_usage_data)}
               />
               <FormField
                 type="checkbox"
@@ -185,33 +191,41 @@ export default function SettingSystem(props: Props) {
               />
             </SettingsRow>
             {/* Auto launch in a hidden state doesn't work on mac https://github.com/Teamwork/node-auto-launch/issues/81 */}
-            {!IS_MAC && (
-              <SettingsRow
-                title={__('Start minimized')}
-                subtitle={__(
-                  'Improve view speed and help the LBRY network by allowing the app to cuddle up in your system tray.'
+            {!isolatedTestBuild && (
+              <React.Fragment>
+                {!IS_MAC && (
+                  <SettingsRow
+                    title={__('Start minimized')}
+                    subtitle={__(
+                      'Improve view speed and help the LBRY network by allowing the app to cuddle up in your system tray.'
+                    )}
+                  >
+                    <SettingAutoLaunch noLabels />
+                  </SettingsRow>
                 )}
-              >
-                <SettingAutoLaunch noLabels />
-              </SettingsRow>
+                <SettingsRow title={__('Leave app running in notification area when the window is closed')}>
+                  <SettingClosingBehavior noLabels />
+                </SettingsRow>
+              </React.Fragment>
             )}
-            <SettingsRow title={__('Leave app running in notification area when the window is closed')}>
-              <SettingClosingBehavior noLabels />
-            </SettingsRow>
-            <SettingsRow
-              title={__('Enable Upgrade to Test Builds')}
-              subtitle={__('Prereleases may break things and we may not be able to fix them for you.')}
-            >
-              <SettingEnablePrereleases />
-            </SettingsRow>
-            <SettingsRow
-              title={__('Disable automatic updates')}
-              subtitle={__(
-                "Preven't new updates to be downloaded automatically in the background (we will keep notifying you if there is an update)"
-              )}
-            >
-              <SettingDisableAutoUpdates />
-            </SettingsRow>
+            {desktopSettings.autoUpdates && process.platform === 'win32' && (
+              <React.Fragment>
+                <SettingsRow
+                  title={__('Enable Upgrade to Test Builds')}
+                  subtitle={__('Prereleases may break things and we may not be able to fix them for you.')}
+                >
+                  <SettingEnablePrereleases />
+                </SettingsRow>
+                <SettingsRow
+                  title={__('Disable automatic updates')}
+                  subtitle={__(
+                    'Prevent new updates from downloading automatically in the background. You will still be notified when an update is available.'
+                  )}
+                >
+                  <SettingDisableAutoUpdates />
+                </SettingsRow>
+              </React.Fragment>
+            )}
             <SettingsRow
               title={
                 <span>
@@ -225,7 +239,6 @@ export default function SettingSystem(props: Props) {
                 placeholder={__('A Folder containing FFmpeg')}
                 currentPath={ffmpegPath || daemonSettings.ffmpeg_path}
                 onFileChosen={(newDirectory: FileWithPath) => {
-                  // $FlowFixMe
                   setDaemonSetting('ffmpeg_path', newDirectory.path);
                   findFFmpeg();
                 }}
@@ -301,10 +314,10 @@ export default function SettingSystem(props: Props) {
               />
             </SettingsRow>
 
-            {walletEncrypted && storedPassword && (
+            {storedPassword && (
               <SettingsRow
                 title={__('Save wallet password')}
-                subtitle={__('Automatically unlock your wallet on startup')}
+                subtitle={__('Forget the password stored on this device.')}
               >
                 <FormField
                   type="checkbox"

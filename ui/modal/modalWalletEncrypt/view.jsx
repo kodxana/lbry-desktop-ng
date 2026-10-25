@@ -7,9 +7,7 @@ import { setSavedPassword } from 'util/saved-passwords';
 
 type Props = {
   closeModal: () => void,
-  walletEncryptSucceded: boolean,
-  updateWalletStatus: boolean,
-  encryptWallet: (?string) => void,
+  encryptWallet: (?string) => Promise<boolean>,
   updateWalletStatus: () => void,
 };
 
@@ -19,7 +17,7 @@ type State = {
   passwordMismatch: boolean,
   understandConfirmed: boolean,
   understandError: boolean,
-  submitted: boolean,
+  pending: boolean,
   failMessage: ?string,
   rememberPassword: boolean,
 };
@@ -27,54 +25,52 @@ type State = {
 const acknowledgementText = __('I Understand');
 
 class ModalWalletEncrypt extends React.PureComponent<Props, State> {
-  state = {
+  saving = false;
+  pendingRequest = false;
+  unmounted = false;
+
+  state: State = {
     newPassword: null,
     newPasswordConfirm: null,
     passwordMismatch: false,
     understandConfirmed: false,
     understandError: false,
-    submitted: false, // Prior actions could be marked complete
+    pending: false,
     failMessage: undefined,
     rememberPassword: false,
   };
 
-  componentDidUpdate() {
-    const { props, state } = this;
-
-    if (state.submitted) {
-      if (props.walletEncryptSucceded === true) {
-        props.closeModal();
-        props.updateWalletStatus();
-      } else if (props.walletEncryptSucceded === false) {
-        // See https://github.com/lbryio/lbry/issues/1307
-        this.setState({ failMessage: 'Unable to encrypt wallet.' });
-      }
-    }
+  componentDidMount() {
+    this.unmounted = false;
   }
 
-  onChangeNewPassword(event: SyntheticInputEvent<>) {
+  componentWillUnmount() {
+    this.unmounted = true;
+  }
+
+  onChangeNewPassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ newPassword: event.target.value });
   }
 
-  onChangeRememberPassword(event: SyntheticInputEvent<>) {
+  onChangeRememberPassword(event: { target: HTMLInputElement, ... }) {
     this.setState({ rememberPassword: event.target.checked });
   }
 
-  onChangeNewPasswordConfirm(event: SyntheticInputEvent<>) {
+  onChangeNewPasswordConfirm(event: { target: HTMLInputElement, ... }) {
     this.setState({ newPasswordConfirm: event.target.value });
   }
 
-  onChangeUnderstandConfirm(event: SyntheticInputEvent<>) {
+  onChangeUnderstandConfirm(event: { target: HTMLInputElement, ... }) {
     const regex = new RegExp('^.?' + acknowledgementText + '.?$', 'i');
     this.setState({
       understandConfirmed: regex.test(event.target.value),
     });
   }
 
-  submitEncryptForm() {
+  async submitEncryptForm() {
     const { state } = this;
 
-    if (!state.newPassword) {
+    if (this.saving || this.pendingRequest || this.unmounted || !state.newPassword) {
       return;
     }
 
@@ -94,15 +90,36 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
       return;
     }
 
-    setSavedPassword(state.newPassword, state.rememberPassword);
-    this.setState({ submitted: true });
-    this.props.encryptWallet(state.newPassword);
+    const { newPassword, rememberPassword } = state;
+    this.pendingRequest = true;
+    this.setState({
+      pending: true,
+      passwordMismatch: false,
+      understandError: false,
+      failMessage: undefined,
+    });
+    try {
+      const succeeded = await this.props.encryptWallet(newPassword);
+      if (this.unmounted) return;
+      if (succeeded) {
+        this.saving = true;
+        this.props.updateWalletStatus();
+        await setSavedPassword(newPassword, rememberPassword);
+        if (!this.unmounted) this.props.closeModal();
+      } else {
+        this.setState({ failMessage: 'Unable to encrypt wallet.' });
+      }
+    } finally {
+      this.pendingRequest = false;
+      if (!this.unmounted) this.setState({ pending: false });
+    }
   }
 
-  render() {
+  render(): React.Node {
     const { closeModal } = this.props;
 
     const { passwordMismatch, understandError, failMessage } = this.state;
+    const pending = this.state.pending;
     return (
       <Modal
         isOpen
@@ -156,7 +173,7 @@ class ModalWalletEncrypt extends React.PureComponent<Props, State> {
             )}
           </div>
           <FormField
-            inputButton={<Submit label={failMessage ? __('Encrypting Wallet') : __('Encrypt wallet')} />}
+            inputButton={<Submit disabled={pending} label={pending ? __('Encrypting Wallet') : __('Encrypt wallet')} />}
             error={
               understandError === true
                 ? __('You must enter "%acknowledgement_text%"', { acknowledgement_text: acknowledgementText })

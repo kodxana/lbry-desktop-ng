@@ -6,7 +6,7 @@ import WalletAddress from 'component/walletAddress';
 
 type Props = {};
 
-export default function ReceivePage(props: Props) {
+export default function ReceivePage(props: Props): React.Node {
   return (
     <Page
       noSideNavigation

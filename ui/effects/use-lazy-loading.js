@@ -1,5 +1,4 @@
 // @flow
-import type { ElementRef } from 'react';
 import React, { useEffect } from 'react';
 
 /**
@@ -10,15 +9,15 @@ import React, { useEffect } from 'react';
  * @param {Array<>} [deps=[]] - The dependencies this lazy-load is reliant on.
  */
 export default function useLazyLoading(
-  elementRef: { current: ?ElementRef<any> },
+  elementRef: Readonly<{ current: HTMLElement | null }>,
   backgroundFallback: string = '',
   yOffsetPx: number = 500,
-  deps: Array<any> = []
-) {
+  deps: Array<unknown> = []
+): boolean {
   const [srcLoaded, setSrcLoaded] = React.useState(false);
   const threshold = 0.01;
 
-  function calcRootMargin(value) {
+  function calcRootMargin(value: number): number {
     const devicePixelRatio = window.devicePixelRatio || 1.0;
     if (devicePixelRatio < 1.0) {
       return Math.ceil(value / devicePixelRatio);
@@ -27,21 +26,26 @@ export default function useLazyLoading(
   }
 
   useEffect(() => {
-    if (!elementRef.current) {
+    const element = elementRef.current;
+    if (!element) {
       return;
     }
 
+    let active = true;
+    let fallbackImage: HTMLImageElement | null = null;
+    setSrcLoaded(false);
     const lazyLoadingObserver = new IntersectionObserver(
       (entries, observer) => {
+        if (!active) return;
         entries.forEach((entry) => {
           if (entry.intersectionRatio >= threshold) {
             const { target } = entry;
+            if (!(target instanceof HTMLElement)) return;
 
             observer.unobserve(target);
 
             // useful for lazy loading img tags
-            if (target.dataset.src) {
-              // $FlowFixMe
+            if (target instanceof HTMLImageElement && target.dataset.src) {
               target.src = target.dataset.src;
               setSrcLoaded(true);
               // No fallback handling here (clients have access to 'onerror' on the image ref).
@@ -49,15 +53,17 @@ export default function useLazyLoading(
             }
 
             // useful for lazy loading background images on divs
-            if (target.dataset.backgroundImage) {
+            const background = target.dataset.backgroundImage;
+            if (background) {
               if (backgroundFallback) {
                 const tmpImage = new Image();
+                fallbackImage = tmpImage;
                 tmpImage.onerror = () => {
-                  target.style.backgroundImage = `url(${backgroundFallback})`;
+                  if (active) target.style.backgroundImage = `url(${backgroundFallback})`;
                 };
-                tmpImage.src = target.dataset.backgroundImage;
+                tmpImage.src = background;
               }
-              target.style.backgroundImage = `url(${target.dataset.backgroundImage})`;
+              target.style.backgroundImage = `url(${background})`;
             }
           }
         });
@@ -69,8 +75,12 @@ export default function useLazyLoading(
       }
     );
 
-    // $FlowFixMe
-    lazyLoadingObserver.observe(elementRef.current);
+    lazyLoadingObserver.observe(element);
+    return () => {
+      active = false;
+      lazyLoadingObserver.disconnect();
+      if (fallbackImage) fallbackImage.onerror = null;
+    };
   }, deps);
 
   return srcLoaded;

@@ -1,0 +1,8 @@
+{
+  "appId": "net.lbry.community.desktop",
+  "appName": "LBRY Desktop NG",
+  "apiPort": 36279,
+  "streamingPort": 36280,
+  "peerPort": 35444,
+  "autoUpdates": true
+}

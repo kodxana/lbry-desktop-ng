@@ -21,16 +21,9 @@ type Props = {
   claimId: string,
 };
 
-export default React.memo<Props>(function RecommendedContent(props: Props) {
-  const {
-    uri,
-    doFetchRecommendedContent,
-    recommendedContentUris,
-    nextRecommendedUri,
-    isSearching,
-    claim,
-    claimId,
-  } = props;
+const RecommendedContent: React.ComponentType<Props> = React.memo<Props>(function RecommendedContent(props: Props) {
+  const { uri, doFetchRecommendedContent, recommendedContentUris, nextRecommendedUri, isSearching, claim, claimId } =
+    props;
   const [viewMode, setViewMode] = React.useState(VIEW_ALL_RELATED);
   const signingChannel = claim && claim.signing_channel;
   const channelName = signingChannel ? signingChannel.name : null;
@@ -54,8 +47,8 @@ export default React.memo<Props>(function RecommendedContent(props: Props) {
     }
   }, [recommendedContentUris, onRecommendationsLoaded, claimId, nextRecommendedUri, viewMode]);
 
-  function handleRecommendationClicked(e, clickedClaim) {
-    if (claim) {
+  function handleRecommendationClicked(e: { defaultPrevented: boolean, ... }, clickedClaim?: ?Claim) {
+    if (claim && clickedClaim) {
       onRecommendationClicked(claim.claim_id, clickedClaim.claim_id);
     }
   }
@@ -157,3 +150,5 @@ function areEqual(prevProps: Props, nextProps: Props) {
 
   return true;
 }
+
+export default RecommendedContent;

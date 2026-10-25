@@ -13,38 +13,35 @@ const defaultState = {
   recommendationClicks: {}, // { "claimId": [clicked indices...] }
 };
 
-reducers[ACTIONS.SET_PRIMARY_URI] = (state, action) =>
-  Object.assign({}, state, {
-    primaryUri: action.data.uri,
-  });
+reducers[ACTIONS.SET_PRIMARY_URI] = (state, action) => ({ ...state, primaryUri: action.data.uri });
 
-reducers[ACTIONS.SET_PLAYING_URI] = (state, action) =>
-  Object.assign({}, state, {
-    playingUri: {
-      uri: action.data.uri,
-      source: action.data.source,
-      pathname: action.data.pathname,
-      commentId: action.data.commentId,
-      collectionId: action.data.collectionId,
-      primaryUri: state.primaryUri,
-    },
-  });
+reducers[ACTIONS.SET_PLAYING_URI] = (state, action) => ({
+  ...state,
+  playingUri: {
+    uri: action.data.uri,
+    source: action.data.source,
+    pathname: action.data.pathname,
+    commentId: action.data.commentId,
+    collectionId: action.data.collectionId,
+    primaryUri: state.primaryUri,
+  },
+});
 
-reducers[ACTIONS.TOGGLE_LOOP_LIST] = (state, action) =>
-  Object.assign({}, state, {
-    loopList: {
-      collectionId: action.data.collectionId,
-      loop: action.data.loop,
-    },
-  });
+reducers[ACTIONS.TOGGLE_LOOP_LIST] = (state, action) => ({
+  ...state,
+  loopList: {
+    collectionId: action.data.collectionId,
+    loop: action.data.loop,
+  },
+});
 
-reducers[ACTIONS.TOGGLE_SHUFFLE_LIST] = (state, action) =>
-  Object.assign({}, state, {
-    shuffleList: {
-      collectionId: action.data.collectionId,
-      newUrls: action.data.newUrls,
-    },
-  });
+reducers[ACTIONS.TOGGLE_SHUFFLE_LIST] = (state, action) => ({
+  ...state,
+  shuffleList: {
+    collectionId: action.data.collectionId,
+    newUrls: action.data.newUrls,
+  },
+});
 
 reducers[ACTIONS.SET_CONTENT_POSITION] = (state, action) => {
   const { claimId, outpoint, position } = action.data;

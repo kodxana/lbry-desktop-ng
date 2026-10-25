@@ -1,0 +1,8 @@
+# Patch context lines may consist of a single space; keep their diff syntax intact.
+.yarn/patches/*.patch text eol=lf -whitespace
+.husky/* text eol=lf
+
+# Preserve the original offline dictionary bytes and encoding.
+ui/util/dictionaries/*.aff -text -whitespace linguist-vendored
+ui/util/dictionaries/*.dic -text -whitespace linguist-vendored
+ui/util/dictionaries/LICENSE -text -whitespace linguist-vendored

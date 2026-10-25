@@ -1,12 +1,13 @@
 // @flow
 import type { Node } from 'react';
 import React, { useEffect, forwardRef } from 'react';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import { isEmpty } from 'util/object';
 import classnames from 'classnames';
 import { isURIValid } from 'util/lbryURI';
 import * as COLLECTIONS_CONSTS from 'constants/collections';
-import { isChannelClaim } from 'util/claim';
+import { isChannelClaim, isClaimPlayable } from 'util/claim';
 import { formatLbryUrlForWeb } from 'util/url';
 import { formatClaimPreviewTitle } from 'util/formatAriaLabel';
 import { formatNumber } from 'util/number';
@@ -175,15 +176,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   }, [channelSubCount]);
   const isValid = uri && isURIValid(uri, false);
 
-  // $FlowFixMe
-  const isPlayable =
-    claim &&
-    // $FlowFixMe
-    claim.value &&
-    // $FlowFixMe
-    claim.value.stream_type &&
-    // $FlowFixMe
-    (claim.value.stream_type === 'audio' || claim.value.stream_type === 'video');
+  const isPlayable = isClaimPlayable(claim);
   const isChannelUri = isChannelClaim(claim, uri);
   const signingChannel = claim && claim.signing_channel;
   const repostedChannelUri =
@@ -217,7 +210,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
     });
   }
 
-  const handleNavLinkClick = (e) => {
+  const handleNavLinkClick = (e: { stopPropagation: () => void, preventDefault: () => void, ... }) => {
     if (onClick) {
       onClick(e, claim, indexInContainer); // not sure indexInContainer is used for anything.
     }
@@ -259,7 +252,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   // Make sure this happens after we figure out if this claim needs to be hidden
   const thumbnailUrl = useGetThumbnail(uri, claim, streamingUrl, getFile, shouldHide);
 
-  function handleOnClick(e) {
+  function handleOnClick(e: unknown) {
     if (onClick) {
       onClick(e, claim, indexInContainer);
     }
@@ -385,7 +378,7 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
                   </NavLink>
                 )}
               </div>
-              <div className="claim-tile__info" uri={uri}>
+              <div className="claim-tile__info" data-uri={uri}>
                 {!isChannelUri && signingChannel && (
                   <div className="claim-preview__channel-staked">
                     <UriIndicator focusable={false} uri={uri} link hideAnonymous>
@@ -423,8 +416,8 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
                     {typeof properties === 'function'
                       ? properties(claim)
                       : properties !== undefined
-                      ? properties
-                      : !isMobile && <ClaimTags uri={uri} type={type} />}
+                        ? properties
+                        : !isMobile && <ClaimTags uri={uri} type={type} />}
                   </React.Fragment>
                 )}
               </div>
@@ -437,4 +430,6 @@ const ClaimPreview = forwardRef<any, {}>((props: Props, ref: any) => {
   );
 });
 
-export default withRouter(ClaimPreview);
+const RoutedClaimPreview: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ClaimPreview);
+export default RoutedClaimPreview;

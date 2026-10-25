@@ -1,6 +1,6 @@
 // @flow
 import React, { useState } from 'react';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { FormField, Form } from 'component/common/form';
 import Button from 'component/button';
 import ErrorText from 'component/common/error-text';
@@ -16,12 +16,12 @@ type Props = {
   passwordSetError: ?string,
 };
 
-export default function SettingAccountPassword(props: Props) {
+export default function SettingAccountPassword(props: Props): React.Node {
   const { user, doToast, doUserPasswordSet, passwordSetSuccess, passwordSetError, doClearPasswordEntry } = props;
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const hasPassword = user && user.password_set;
-  const { goBack } = useHistory();
+  const { goBack } = useDesktopHistory();
 
   const title = hasPassword ? __('Update Your Password') : __('Add A Password');
   const subtitle = hasPassword ? '' : __('You do not currently have a password set.');

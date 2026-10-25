@@ -4,18 +4,21 @@ import React from 'react';
 
 type Props = {
   claim?: Claim,
-  emote?: any,
+  emote?: { name: string, url: string } | { name: string, unicode: string },
   uri?: string,
+  dispatch?: (action: any) => any,
 };
 
-export default function TextareaSuggestionsItem(props: Props) {
-  const { claim, emote, uri, ...autocompleteProps } = props;
+export default function TextareaSuggestionsItem(props: Props): React.Node {
+  const { claim, emote, uri, dispatch, ...autocompleteProps } = props;
 
   if (emote) {
-    const { name: value, url, unicode } = emote;
+    const { name: value } = emote;
+    const unicode = 'unicode' in emote ? emote.unicode : undefined;
+    const url = 'url' in emote ? emote.url : undefined;
 
     return (
-      <div {...autocompleteProps} dispatch={undefined}>
+      <div {...autocompleteProps}>
         {unicode ? <div className="emote">{unicode}</div> : <img className="emote" src={url} />}
 
         <div className="textareaSuggestion__label">
@@ -31,7 +34,7 @@ export default function TextareaSuggestionsItem(props: Props) {
     const value = claim.canonical_url.replace('lbry://', '').replace('#', ':');
 
     return (
-      <div {...autocompleteProps} dispatch={undefined}>
+      <div {...autocompleteProps}>
         <ChannelThumbnail xsmall uri={uri} />
 
         <div className="textareaSuggestion__label">

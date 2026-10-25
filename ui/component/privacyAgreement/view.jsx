@@ -4,12 +4,12 @@ import Button from 'component/button';
 import I18nMessage from 'component/i18nMessage';
 import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
-import { withRouter } from 'react-router-dom';
-// $FlowFixMe cannot resolve ...
+import { withDesktopRouter } from 'component/common/desktop-router';
 import image from 'static/img/yrblsec.svg';
 
 const LIMITED = 'limited';
 const NONE = 'none';
+const { isolatedTestBuild } = require('../../../package.json').lbrySettings;
 
 type Props = {
   signOut: () => void,
@@ -21,7 +21,17 @@ type Props = {
 
 function PrivacyAgreement(props: Props) {
   const { setShareDataInternal, authenticated, signOut, authenticateIfSharingData, handleNextPage } = props;
-  const [share, setShare] = useState(undefined); // preload
+  const [share, setShare] = useState<string | void>(undefined); // preload
+
+  if (isolatedTestBuild) {
+    return (
+      <section className="main--contained">
+        <h1>{__('Welcome to LBRY Desktop NG')}</h1>
+        <p>{__('This community build uses a separate wallet. Usage reporting is disabled.')}</p>
+        <Button button="primary" label={__('Next')} onClick={handleNextPage} />
+      </section>
+    );
+  }
 
   function handleSubmit() {
     if (share === LIMITED) {
@@ -111,4 +121,6 @@ function PrivacyAgreement(props: Props) {
   );
 }
 
-export default withRouter(PrivacyAgreement);
+const RoutedPrivacyAgreement: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(PrivacyAgreement);
+export default RoutedPrivacyAgreement;

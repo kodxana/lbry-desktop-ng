@@ -6,8 +6,8 @@ import React from 'react';
 import Spinner from 'component/spinner';
 
 type Props = {
-  fetchedReplies: Array<Comment>,
-  resolvedReplies: Array<Comment>,
+  fetchedReplies: Array<LbryComment>,
+  resolvedReplies: Array<LbryComment>,
   uri: string,
   parentId: string,
   claimIsMine: boolean,
@@ -22,7 +22,7 @@ type Props = {
   onShowMore?: () => void,
 };
 
-function CommentsReplies(props: Props) {
+function CommentsReplies(props: Props): React.Node {
   const {
     uri,
     parentId,
@@ -70,7 +70,7 @@ function CommentsReplies(props: Props) {
             className="comment__action"
             label={__('Show Replies')}
             onClick={() => setExpanded(!isExpanded)}
-            icon={isExpanded ? ICONS.UP : ICONS.DOWN}
+            icon={ICONS.DOWN}
           />
         </div>
       ) : (

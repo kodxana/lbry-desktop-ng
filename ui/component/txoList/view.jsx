@@ -1,7 +1,7 @@
 // @flow
 import * as ICONS from 'constants/icons';
 import React, { useEffect } from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as TXO from 'constants/txo_list';
 import TransactionListTable from 'component/transactionListTable';
 import Paginate from 'component/common/paginate';
@@ -22,7 +22,7 @@ type Props = {
   fetchTxoPage: () => void,
   fetchTransactions: () => void,
   isFetchingTransactions: boolean,
-  transactionsFile: string,
+  transactionsFile: ?string,
   updateTxoPageParams: (any) => void,
   toast: (string, boolean) => void,
 };
@@ -311,4 +311,5 @@ function TxoList(props: Props) {
   );
 }
 
-export default withRouter(TxoList);
+const RoutedTxoList: React.ComponentType<Omit<Props, 'history' | 'location'>> = withDesktopRouter<Props>(TxoList);
+export default RoutedTxoList;

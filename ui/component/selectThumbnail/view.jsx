@@ -18,18 +18,18 @@ type Props = {
   formDisabled: boolean,
   uploadThumbnailStatus: string,
   thumbnailPath: ?string,
-  thumbnailError: ?string,
+  thumbnailError: ?boolean,
   thumbnailParam: ?string,
   thumbnailParamError: boolean,
   thumbnailParamStatus: string,
-  openModal: (id: string, {}) => void,
-  updatePublishForm: ({}) => void,
-  updateThumbnailParams: ({}) => void,
+  openModal: (id: string, { file?: FileWithPath, filePath?: ?string, cb?: (string) => void }) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
+  updateThumbnailParams?: (ThumbnailParams) => void,
   resetThumbnailStatus: () => void,
   usePublishFormMode: boolean,
 };
 
-function SelectThumbnail(props: Props) {
+function SelectThumbnail(props: Props): React.Node {
   const {
     filePath,
     fileInfos,
@@ -63,18 +63,14 @@ function SelectThumbnail(props: Props) {
   let isSupportedVideo = false;
   if (typeof actualFilePath === 'string') {
     isSupportedVideo = Lbry.getMediaType(null, actualFilePath) === 'video';
-  } else if (actualFilePath && actualFilePath.type) {
-    isSupportedVideo = actualFilePath.type.split('/')[0] === 'video';
   }
 
-  function handleThumbnailChange(e: SyntheticInputEvent<*>) {
+  function handleThumbnailChange(e: { target: { value: string, ... }, ... }): void {
     const newThumbnail = e.target.value.replace(' ', '');
     if (updateThumbnailParams) {
       updateThumbnailParams({ thumbnail_url: newThumbnail });
     }
-    if (updatePublishForm) {
-      updatePublishForm({ thumbnail: newThumbnail });
-    }
+    updatePublishForm({ thumbnail: newThumbnail });
   }
 
   React.useEffect(() => {
@@ -163,7 +159,9 @@ function SelectThumbnail(props: Props) {
                     onFileChosen={(fileWithPath) =>
                       openModal(MODALS.CONFIRM_THUMBNAIL_UPLOAD, {
                         file: fileWithPath,
-                        cb: (url) => updateThumbnailParams && updateThumbnailParams({ thumbnail_url: url }),
+                        cb: (url: string): void => {
+                          if (updateThumbnailParams) updateThumbnailParams({ thumbnail_url: url });
+                        },
                       })
                     }
                   />

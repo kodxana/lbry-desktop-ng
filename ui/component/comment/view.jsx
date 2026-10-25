@@ -15,14 +15,14 @@ import Expandable from 'component/expandable';
 import MarkdownPreview from 'component/common/markdown-preview';
 import CommentBadge from 'component/common/comment-badge'; // have this?
 import ChannelThumbnail from 'component/channelThumbnail';
-import { Menu, MenuButton } from '@reach/menu-button';
+import { Menu, MenuButton } from 'component/common/menu';
 import Icon from 'component/common/icon';
 import { FormFieldAreaAdvanced, Form } from 'component/common/form';
 import classnames from 'classnames';
 import usePersistedState from 'effects/use-persisted-state';
 import CommentReactions from 'component/commentReactions';
 import CommentsReplies from 'component/commentsReplies';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import CommentCreate from 'component/commentCreate';
 import CommentMenuList from 'component/commentMenuList';
 import UriIndicator from 'component/uriIndicator';
@@ -35,7 +35,7 @@ import { useIsMobile } from 'effects/use-screensize';
 const AUTO_EXPAND_ALL_REPLIES = false;
 
 type Props = {
-  comment: Comment,
+  comment: LbryComment,
   myChannelIds: ?Array<string>,
   clearPlayingUri: () => void,
   uri: string,
@@ -63,13 +63,13 @@ type Props = {
   playingUri: ?PlayingUri,
   stakedLevel: number,
   supportDisabled: boolean,
-  setQuickReply: (any) => void,
+  setQuickReply?: (any) => void,
   quickReply: any,
 };
 
 const LENGTH_TO_COLLAPSE = 300;
 
-function CommentView(props: Props) {
+function CommentView(props: Props): React.Node {
   const {
     comment,
     myChannelIds,
@@ -120,7 +120,7 @@ function CommentView(props: Props) {
     push,
     replace,
     location: { pathname, search },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const isLinkedComment = linkedCommentId && linkedCommentId === commentId;
   const isInLinkedCommentChain =
@@ -158,7 +158,7 @@ function CommentView(props: Props) {
       setCharCount(editedMessage.length);
 
       // a user will try and press the escape key to cancel editing their comment
-      const handleEscape = (event) => {
+      const handleEscape = (event: KeyboardEvent) => {
         if (event.keyCode === KEYCODES.ESCAPE) {
           setEditing(false);
         }
@@ -179,8 +179,8 @@ function CommentView(props: Props) {
     }
   }, [page, uri, commentId, fetchReplies]);
 
-  function handleEditMessageChanged(event) {
-    setCommentValue(advancedEditor ? event : event.target.value);
+  function handleEditMessageChanged(event: string | { target: { value: string }, ... }) {
+    setCommentValue(typeof event === 'string' ? event : event.target.value);
   }
 
   function handleEditComment() {
@@ -347,20 +347,10 @@ function CommentView(props: Props) {
                     </div>
                   ) : editedMessage.length >= LENGTH_TO_COLLAPSE ? (
                     <Expandable>
-                      <MarkdownPreview
-                        content={message}
-                        promptLinks
-                        parentCommentId={commentId}
-                        stakedLevel={stakedLevel}
-                      />
+                      <MarkdownPreview content={message} parentCommentId={commentId} stakedLevel={stakedLevel} />
                     </Expandable>
                   ) : (
-                    <MarkdownPreview
-                      content={message}
-                      promptLinks
-                      parentCommentId={commentId}
-                      stakedLevel={stakedLevel}
-                    />
+                    <MarkdownPreview content={message} parentCommentId={commentId} stakedLevel={stakedLevel} />
                   )}
                 </div>
 

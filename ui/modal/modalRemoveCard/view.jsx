@@ -14,7 +14,7 @@ type Props = {
   setAsConfirmingCard: () => void, // ?
 };
 
-export default function ModalRemoveCard(props: Props) {
+export default function ModalRemoveCard(props: Props): React.Node {
   const { closeModal, paymentMethodId } = props;
 
   function removeCard() {

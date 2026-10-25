@@ -7,7 +7,7 @@ import React from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';
 import ChannelThumbnail from 'component/channelThumbnail';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { useIsMobile } from 'effects/use-screensize';
 import { formatNumber } from 'util/number';
 
@@ -20,13 +20,13 @@ type Props = {
   claimIsMine: boolean,
   activeChannelId: ?string,
   uri: string,
-  claim: ?ChannelClaim,
+  claim: ?Claim,
   doToast: ({ message: string }) => void,
   hideCreatorLike: boolean,
   resolve: (string) => void,
 };
 
-export default function CommentReactions(props: Props) {
+export default function CommentReactions(props: Props): React.Node {
   const {
     myReacts,
     othersReacts,
@@ -43,7 +43,7 @@ export default function CommentReactions(props: Props) {
   const {
     push,
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const isMobile = useIsMobile();
 
@@ -64,7 +64,7 @@ export default function CommentReactions(props: Props) {
       ? claim.canonical_url
       : claim && claim.signing_channel && claim.signing_channel.canonical_url;
 
-  const getCountForReact = (type) => {
+  const getCountForReact = (type: string) => {
     let count = 0;
     if (othersReacts && othersReacts[type]) {
       count += othersReacts[type];

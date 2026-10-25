@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import classnames from 'classnames';
-import { ComboboxOption } from '@reach/combobox';
+import { ComboboxOption } from 'component/common/search-combobox';
 import FileThumbnail from 'component/fileThumbnail';
 import ChannelThumbnail from 'component/channelThumbnail';
 import FileProperties from 'component/previewOverlayProperties';
@@ -13,7 +13,7 @@ type Props = {
   isResolvingUri: boolean,
 };
 
-export default function WunderbarSuggestion(props: Props) {
+export default function WunderbarSuggestion(props: Props): React.Node {
   const { claim, uri, isResolvingUri } = props;
 
   if (isResolvingUri) {

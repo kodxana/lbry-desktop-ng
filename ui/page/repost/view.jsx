@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import Page from 'component/page';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import RepostCreate from 'component/repostCreate';
 import YrblWalletEmpty from 'component/yrblWalletEmpty';
 import useThrottle from 'effects/use-throttle';
@@ -9,9 +9,9 @@ import classnames from 'classnames';
 
 type Props = {
   balance: number,
-  resolveUri: string => void,
+  resolveUri: (string) => void,
 };
-function RepostPage(props: Props) {
+function RepostPage(props: Props): React.Node {
   const { balance, resolveUri } = props;
 
   const REPOST_FROM = 'from';
@@ -19,7 +19,7 @@ function RepostPage(props: Props) {
   const REDIRECT = 'redirect';
   const {
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const urlParams = new URLSearchParams(search);
   const repostFrom = urlParams.get(REPOST_FROM);

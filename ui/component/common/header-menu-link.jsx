@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { MenuLink } from '@reach/menu-button';
+import { Link } from 'react-router';
+import { MenuItem } from 'component/common/menu';
 import Icon from 'component/common/icon';
 
 type Props = {
@@ -10,13 +10,13 @@ type Props = {
   page: string,
 };
 
-export default function HeaderMenuLink(props: Props) {
+export default function HeaderMenuLink(props: Props): React.Node {
   const { icon, name, page } = props;
 
   return (
-    <MenuLink className="menu__link" as={Link} to={`/$/${page}`}>
+    <MenuItem className="menu__link" render={<Link to={`/$/${page}`} />}>
       <Icon aria-hidden icon={icon} />
       {name}
-    </MenuLink>
+    </MenuItem>
   );
 }

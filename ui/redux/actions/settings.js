@@ -18,6 +18,7 @@ import { getSubsetFromKeysArray } from 'util/sync-settings';
 
 const { DEFAULT_LANGUAGE } = require('config');
 const { SDK_SYNC_KEYS, CLIENT_SYNC_KEYS } = SHARED_PREFERENCES;
+const { isolatedTestBuild } = require('../../../package.json').lbrySettings;
 
 export const IS_MAC = process.platform === 'darwin';
 const UPDATE_IS_NIGHT_INTERVAL = 5 * 60 * 1000;
@@ -66,6 +67,9 @@ export function doGetDaemonStatus() {
 
 export function doClearDaemonSetting(key) {
   return (dispatch, getState) => {
+    if (isolatedTestBuild && key === DAEMON_SETTINGS.SHARE_USAGE_DATA) {
+      return dispatch(doSetDaemonSetting(key, false));
+    }
     const state = getState();
     const ready = selectPrefsReady(state);
 
@@ -101,6 +105,7 @@ export function doClearDaemonSetting(key) {
 }
 // if doPopulate is applying settings, we don't want to cause a loop; doNotDispatch = true.
 export function doSetDaemonSetting(key, value, doNotDispatch = false) {
+  if (isolatedTestBuild && key === DAEMON_SETTINGS.SHARE_USAGE_DATA) value = false;
   return (dispatch, getState) => {
     const state = getState();
     const ready = selectPrefsReady(state);
@@ -397,7 +402,7 @@ export function doSetAutoLaunch(value) {
     const state = getState();
     const autoLaunch = makeSelectClientSetting(SETTINGS.AUTO_LAUNCH)(state);
 
-    if (IS_MAC || process.env.NODE_ENV !== 'production') {
+    if (isolatedTestBuild || IS_MAC || process.env.NODE_ENV !== 'production') {
       return;
     }
 

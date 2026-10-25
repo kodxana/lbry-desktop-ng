@@ -11,11 +11,11 @@ type Props = {
   className?: string,
 };
 
-const Thumb = (props: Props) => {
+const Thumb = (props: Props): React.Node => {
   const { thumb, fallback, children, className } = props;
-  const thumbnailRef = React.useRef(null);
+  const thumbnailRef = React.useRef<HTMLDivElement | null>(null);
 
-  useLazyLoading(thumbnailRef, fallback || '');
+  useLazyLoading(thumbnailRef, fallback || '', 500, [thumb, fallback]);
 
   return (
     <div ref={thumbnailRef} data-background-image={thumb} className={classnames('media__thumb', className)}>

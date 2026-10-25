@@ -8,7 +8,7 @@ type Props = {
   source: string,
 };
 
-function ImageViewer(props: Props) {
+function ImageViewer(props: Props): React.Node {
   const { source } = props;
   const [loadingError, setLoadingError] = React.useState(false);
 

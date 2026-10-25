@@ -1,6 +1,6 @@
 // @flow
 import { getChannelFromClaim } from 'util/claim';
-import { MenuList, MenuItem } from '@reach/menu-button';
+import { MenuList, MenuItem } from 'component/common/menu';
 import { parseURI } from 'util/lbryURI';
 import * as ICONS from 'constants/icons';
 import * as MODALS from 'constants/modal_types';
@@ -27,7 +27,17 @@ type Props = {
   // --- perform ---
   doToast: ({ message: string }) => void,
   handleEditComment: () => void,
-  openModal: (id: string, {}) => void,
+  openModal: (
+    id: string,
+    | {
+        commentId: string,
+        commentIsMine: boolean,
+        contentChannelPermanentUrl: ?string,
+        setQuickReply: (unknown) => void,
+        supportAmount?: number,
+      }
+    | { contentUri: ?string, commenterUri: string }
+  ) => void,
   clearPlayingUri: () => void,
   muteChannel: (string) => void,
   pinComment: (string, string, boolean) => Promise<any>,
@@ -35,7 +45,7 @@ type Props = {
   setQuickReply: (any) => void,
 };
 
-function CommentMenuList(props: Props) {
+function CommentMenuList(props: Props): React.Node {
   const {
     uri,
     claim,
@@ -150,7 +160,7 @@ function CommentMenuList(props: Props) {
       {activeChannelIsCreator && isTopLevel && (
         <MenuItem
           className="comment__menu-option menu__link"
-          onSelect={() => pinComment(commentId, claim ? claim.claim_id : '', isPinned)}
+          onClick={() => pinComment(commentId, claim ? claim.claim_id : '', isPinned)}
         >
           <span className={'button__content'}>
             <Icon aria-hidden icon={ICONS.PIN} className={'icon'} />
@@ -160,7 +170,7 @@ function CommentMenuList(props: Props) {
       )}
 
       {activeChannelIsCreator && activeChannelClaim && activeChannelClaim.permanent_url !== authorUri && (
-        <MenuItem className="comment__menu-option" onSelect={assignAsModerator}>
+        <MenuItem className="comment__menu-option" onClick={assignAsModerator}>
           <div className="menu__link">
             <Icon aria-hidden icon={ICONS.ADD} />
             {__('Add as moderator')}
@@ -174,7 +184,7 @@ function CommentMenuList(props: Props) {
       )}
 
       {commentIsMine && activeChannelClaim && activeChannelClaim.permanent_url === authorUri && !disableEdit && (
-        <MenuItem className="comment__menu-option menu__link" onSelect={handleEditComment}>
+        <MenuItem className="comment__menu-option menu__link" onClick={handleEditComment}>
           <Icon aria-hidden icon={ICONS.EDIT} />
           {__('Edit')}
         </MenuItem>
@@ -184,7 +194,7 @@ function CommentMenuList(props: Props) {
         activeChannelClaim &&
         (activeChannelClaim.permanent_url === authorUri ||
           activeChannelClaim.permanent_url === contentChannelPermanentUrl) && (
-          <MenuItem className="comment__menu-option" onSelect={handleDeleteComment}>
+          <MenuItem className="comment__menu-option" onClick={handleDeleteComment}>
             <div className="menu__link">
               <Icon aria-hidden icon={ICONS.DELETE} />
               {__('Remove')}
@@ -196,11 +206,11 @@ function CommentMenuList(props: Props) {
         <>
           <MenuItem
             className="comment__menu-option"
-            onSelect={() => openModal(MODALS.BLOCK_CHANNEL, { contentUri: uri, commenterUri: authorUri })}
+            onClick={() => openModal(MODALS.BLOCK_CHANNEL, { contentUri: uri, commenterUri: authorUri })}
           >
             {getBlockOptionElem()}
           </MenuItem>
-          <MenuItem className="comment__menu-option" onSelect={() => muteChannel(authorUri)}>
+          <MenuItem className="comment__menu-option" onClick={() => muteChannel(authorUri)}>
             <div className="menu__link">
               <Icon aria-hidden icon={ICONS.MUTE} />
               {__('Mute')}

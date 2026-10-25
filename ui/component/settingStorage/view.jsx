@@ -22,7 +22,7 @@ type Props = {
   cleanBlobs: () => Promise<any>,
 };
 
-export default function SettingStorage(props: Props) {
+export default function SettingStorage(props: Props): React.Node {
   const { daemonSettings, isSetting, isWelcome, cleanBlobs } = props;
 
   const saveBlobs = daemonSettings && daemonSettings.save_blobs;

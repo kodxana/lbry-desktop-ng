@@ -3,7 +3,7 @@
 import * as ICONS from 'constants/icons';
 import { MINIMUM_PUBLISH_BID, INVALID_NAME_ERROR } from 'constants/claim';
 import React from 'react';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Card from 'component/common/card';
 import Button from 'component/button';
 import ChannelSelector from 'component/channelSelector';
@@ -20,15 +20,15 @@ import BidHelpText from 'component/publishBid/bid-help-text';
 import Spinner from 'component/spinner';
 
 type Props = {
-  doToast: ({ message: string }) => void,
+  doToast: ({ message: string, linkText?: string, linkTarget?: string }) => void,
   doClearRepostError: () => void,
-  doRepost: (StreamRepostOptions) => Promise<*>,
+  doRepost: (StreamRepostOptions) => Promise<Claim | void>,
   doHideModal: () => void,
   title: string,
   claim?: StreamClaim,
   enteredContentClaim?: StreamClaim,
   balance: number,
-  doCheckPublishNameAvailability: (string) => Promise<*>,
+  doCheckPublishNameAvailability: (string) => Promise<boolean>,
   error: ?string,
   reposting: boolean,
   uri: string,
@@ -49,7 +49,7 @@ type Props = {
   redirectUri?: string,
 };
 
-function RepostCreate(props: Props) {
+function RepostCreate(props: Props): React.Node {
   const {
     doToast,
     doClearRepostError,
@@ -82,18 +82,18 @@ function RepostCreate(props: Props) {
   const enteredClaimId = enteredContentClaim && enteredContentClaim.claim_id;
 
   const [repostBid, setRepostBid] = React.useState(0.01);
-  const [repostBidError, setRepostBidError] = React.useState(undefined);
+  const [repostBidError, setRepostBidError] = React.useState<string | void>(undefined);
   const [enteredRepostName, setEnteredRepostName] = React.useState(defaultName);
   const [available, setAvailable] = React.useState(true);
-  const [enteredContent, setEnteredContentUri] = React.useState(undefined);
+  const [enteredContent, setEnteredContentUri] = React.useState<string | void>(undefined);
   const [contentError, setContentError] = React.useState('');
-  const { replace, goBack } = useHistory();
+  const { replace, goBack } = useDesktopHistory();
 
   const resolvingRepost = isResolvingEnteredRepost || isResolvingPassedRepost;
   const repostUrlName = `lbry://${incognito || !activeChannelClaim ? '' : `${activeChannelClaim.name}/`}`;
 
   const contentFirstRender = React.useRef(true);
-  const setAutoRepostBid = (amount) => {
+  const setAutoRepostBid = (amount: number) => {
     if (balance && balance > 0.02) {
       if (uri) {
         setRepostBid(0.01);
@@ -105,7 +105,7 @@ function RepostCreate(props: Props) {
     }
   };
 
-  function getSearchUri(value) {
+  function getSearchUri(value: string) {
     const WEB_DEV_PREFIX = `${URL_DEV}/`;
     const WEB_LOCAL_PREFIX = `${URL_LOCAL}/`;
     const WEB_PROD_PREFIX = `${SITE_URL}/`;
@@ -118,7 +118,7 @@ function RepostCreate(props: Props) {
     const isLbryUrl = value.startsWith('lbry://') && value !== 'lbry://';
     const error = '';
 
-    const addLbryIfNot = (term) => {
+    const addLbryIfNot = (term: string) => {
       return term.startsWith('lbry://') ? term : `lbry://${term}`;
     };
     if (wasCopiedFromWeb) {
@@ -260,7 +260,7 @@ function RepostCreate(props: Props) {
 
   const repostClaimId = contentClaimId || enteredClaimId;
 
-  const getRedirect = (entered, passed, redirect) => {
+  const getRedirect = (entered: ?string, passed: ?string, redirect: ?string) => {
     if (redirect) {
       return redirect;
     } else if (entered) {
@@ -289,7 +289,8 @@ function RepostCreate(props: Props) {
         bid: creditsToString(repostBid),
         channel_id: activeChannelClaim && !incognito ? activeChannelClaim.claim_id : undefined,
         claim_id: repostClaimId,
-      }).then((repostClaim: StreamClaim) => {
+      }).then((repostClaim) => {
+        if (!repostClaim) return;
         doCheckPendingClaims();
         analytics.apiLogPublish(repostClaim);
         doToast({

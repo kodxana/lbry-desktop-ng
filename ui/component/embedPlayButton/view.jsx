@@ -4,9 +4,11 @@ import React, { useEffect } from 'react';
 import classnames from 'classnames';
 import Button from 'component/button';
 import FileViewerEmbeddedTitle from 'component/fileViewerEmbeddedTitle';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { useIsMobile } from 'effects/use-screensize';
 import { formatLbryUrlForWeb } from 'util/url';
+
+type PlayingOptions = { uri: string, pathname: string, source?: string, commentId?: string };
 
 type Props = {
   uri: string,
@@ -20,11 +22,11 @@ type Props = {
   doAnaltyicsPurchaseEvent: (GetResponse) => void,
   parentCommentId?: string,
   isMarkdownPost: boolean,
-  doSetPlayingUri: ({}) => void,
+  doSetPlayingUri: (PlayingOptions) => void,
   renderMode: string,
 };
 
-export default function EmbedPlayButton(props: Props) {
+export default function EmbedPlayButton(props: Props): React.Node {
   const {
     uri,
     thumbnail = '',
@@ -43,7 +45,7 @@ export default function EmbedPlayButton(props: Props) {
   const {
     push,
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
   const isMobile = useIsMobile();
   const hasResolvedUri = claim !== undefined;
   const hasCostInfo = costInfo !== undefined;
@@ -70,7 +72,7 @@ export default function EmbedPlayButton(props: Props) {
       push(formattedUrl);
     } else {
       doPlayUri(uri, undefined, undefined, (fileInfo) => {
-        let playingOptions = { uri, pathname, source: undefined, commentId: undefined };
+        const playingOptions: PlayingOptions = { uri, pathname, source: undefined, commentId: undefined };
         if (parentCommentId) {
           playingOptions.source = 'comment';
           playingOptions.commentId = parentCommentId;

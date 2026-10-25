@@ -10,7 +10,7 @@ import ErrorText from 'component/common/error-text';
 import ChannelThumbnail from 'component/channelThumbnail';
 import { isNameValid, parseURI } from 'util/lbryURI';
 import ClaimAbandonButton from 'component/claimAbandonButton';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { MINIMUM_PUBLISH_BID, INVALID_NAME_ERROR, ESTIMATED_FEE } from 'constants/claim';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'component/common/tabs';
 import Card from 'component/common/card';
@@ -63,7 +63,7 @@ type Props = {
   hasClaimedInitialRewards: boolean,
 };
 
-function ChannelForm(props: Props) {
+function ChannelForm(props: Props): React.Node {
   const {
     uri,
     claim,
@@ -91,7 +91,7 @@ function ChannelForm(props: Props) {
     isClaimingInitialRewards,
     hasClaimedInitialRewards,
   } = props;
-  const [nameError, setNameError] = React.useState(undefined);
+  const [nameError, setNameError] = React.useState<string | void>(undefined);
   const [bidError, setBidError] = React.useState('');
   const [isUpload, setIsUpload] = React.useState({ cover: false, thumbnail: false });
   const [thumbError, setThumbError] = React.useState(false);
@@ -102,7 +102,7 @@ function ChannelForm(props: Props) {
   const { channelName } = parseURI(uri);
   const name = params.name;
   const isNewChannel = !uri;
-  const { replace } = useHistory();
+  const { replace } = useDesktopHistory();
   const languageParam = params.languages;
   const primaryLanguage = Array.isArray(languageParam) && languageParam.length && languageParam[0];
   const secondaryLanguage = Array.isArray(languageParam) && languageParam.length >= 2 && languageParam[1];
@@ -182,7 +182,7 @@ function ChannelForm(props: Props) {
     }
   }
 
-  function handleLanguageChange(index, code) {
+  function handleLanguageChange(index: number, code: string) {
     let langs = [...languageParam];
     if (index === 0) {
       if (code === LANG_NONE) {
@@ -337,10 +337,10 @@ function ChannelForm(props: Props) {
 
         <Tabs className="channelPage-wrapper">
           <TabList className="tabs__list--channel-page">
-            <Tab>{__('General')}</Tab>
-            <Tab>{__('Credit Details')}</Tab>
-            <Tab>{__('Tags')}</Tab>
-            <Tab>{__('Other')}</Tab>
+            <Tab index={0}>{__('General')}</Tab>
+            <Tab index={1}>{__('Credit Details')}</Tab>
+            <Tab index={2}>{__('Tags')}</Tab>
+            <Tab index={3}>{__('Other')}</Tab>
           </TabList>
           <TabPanels>
             <TabPanel>

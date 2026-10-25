@@ -1,5 +1,5 @@
 import { app, Menu, shell } from 'electron';
-import { ZOOM } from 'util/zoomWindow';
+import { ZOOM } from 'constants/zoom';
 
 export default () => {
   const template = [

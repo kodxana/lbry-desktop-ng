@@ -23,7 +23,7 @@ type Props = {
   addNewChannel?: boolean,
 };
 
-export default function YoutubeTransferStatus(props: Props) {
+export default function YoutubeTransferStatus(props: Props): React.Node {
   const {
     youtubeChannels,
     youtubeImportPending,
@@ -57,7 +57,7 @@ export default function YoutubeTransferStatus(props: Props) {
     total = videosImported[1];
   }
 
-  function getMessage(channel) {
+  function getMessage(channel: { transferable: boolean, transfer_state: string, sync_status: string, ... }) {
     const { transferable, transfer_state: transferState, sync_status: syncStatus } = channel;
     if (!transferable) {
       switch (transferState) {
@@ -98,10 +98,10 @@ export default function YoutubeTransferStatus(props: Props) {
           isNotElligible
             ? __('Process complete')
             : isYoutubeTransferComplete
-            ? __('Transfer complete')
-            : youtubeChannels.length > 1
-            ? __('Your YouTube channels')
-            : __('Your YouTube channel')
+              ? __('Transfer complete')
+              : youtubeChannels.length > 1
+                ? __('Your YouTube channels')
+                : __('Your YouTube channel')
         }
         subtitle={
           <span>

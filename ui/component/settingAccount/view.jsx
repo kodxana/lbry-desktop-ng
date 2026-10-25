@@ -7,7 +7,7 @@ import Button from 'component/button';
 import Card from 'component/common/card';
 import SettingsRow from 'component/settingsRow';
 import SyncToggle from 'component/syncToggle';
-import { getPasswordFromCookie } from 'util/saved-passwords';
+import { getSavedPasswordState } from 'util/saved-passwords';
 
 type Props = {
   isAuthenticated: boolean,
@@ -17,18 +17,20 @@ type Props = {
   doWalletStatus: () => void,
 };
 
-export default function SettingAccount(props: Props) {
+export default function SettingAccount(props: Props): React.Node {
   const { isAuthenticated, walletEncrypted, hasChannels, doWalletStatus } = props;
   const [storedPassword, setStoredPassword] = React.useState(false);
 
   // Determine if password is stored.
   React.useEffect(() => {
     doWalletStatus();
-    getPasswordFromCookie().then((p) => {
-      if (typeof p === 'string') {
-        setStoredPassword(true);
-      }
+    let active = true;
+    getSavedPasswordState().then(({ remembered }) => {
+      if (active) setStoredPassword(remembered);
     });
+    return () => {
+      active = false;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -53,7 +55,7 @@ export default function SettingAccount(props: Props) {
               </SettingsRow>
             )}
 
-            <SyncToggle disabled={walletEncrypted && !storedPassword && storedPassword !== ''} />
+            <SyncToggle disabled={walletEncrypted && !storedPassword} />
 
             {hasChannels && (
               <SettingsRow title={__('Comments')} subtitle={__('View your past comments.')}>

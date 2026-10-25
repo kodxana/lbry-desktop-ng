@@ -9,7 +9,6 @@ import { FormField } from 'component/common/form';
 import HomepageSelector from 'component/homepageSelector';
 import SettingLanguage from 'component/settingLanguage';
 import SettingsRow from 'component/settingsRow';
-// $FlowFixMe
 import homepages from 'homepages';
 
 type Props = {
@@ -17,7 +16,7 @@ type Props = {
   setSearchInLanguage: (boolean) => void,
 };
 
-export default function SettingUnauthenticated(props: Props) {
+export default function SettingUnauthenticated(props: Props): React.Node {
   const { searchInLanguage, setSearchInLanguage } = props;
 
   return (

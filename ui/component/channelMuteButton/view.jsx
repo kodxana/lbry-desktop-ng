@@ -10,7 +10,7 @@ type Props = {
   doChannelUnmute: (string, boolean) => void,
 };
 
-function ChannelMuteButton(props: Props) {
+function ChannelMuteButton(props: Props): React.Node {
   const { uri, doChannelMute, doChannelUnmute, isMuted } = props;
 
   function handleClick() {

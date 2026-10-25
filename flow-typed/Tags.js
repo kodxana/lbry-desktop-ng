@@ -1,10 +1,12 @@
 declare type TagState = {
   followedTags: FollowedTags,
   knownTags: KnownTags,
+  ...
 };
 
 declare type Tag = {
   name: string,
+  ...
 };
 
 declare type KnownTags = {
@@ -17,5 +19,7 @@ declare type TagAction = {
   type: string,
   data: {
     name: string,
+    ...
   },
+  ...
 };

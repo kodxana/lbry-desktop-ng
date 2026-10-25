@@ -8,7 +8,6 @@ import HomepageSelector from 'component/homepageSelector';
 import SettingLanguage from 'component/settingLanguage';
 import SettingsRow from 'component/settingsRow';
 import ThemeSelector from 'component/themeSelector';
-// $FlowFixMe
 import homepages from 'homepages';
 
 type Props = {
@@ -20,7 +19,7 @@ type Props = {
   setSearchInLanguage: (boolean) => void,
 };
 
-export default function SettingAppearance(props: Props) {
+export default function SettingAppearance(props: Props): React.Node {
   const { clock24h, disableBackground, searchInLanguage, hideBalance, setClientSetting, setSearchInLanguage } = props;
 
   return (

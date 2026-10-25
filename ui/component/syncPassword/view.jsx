@@ -4,9 +4,8 @@ import { Form, FormField } from 'component/common/form';
 import Button from 'component/button';
 import Card from 'component/common/card';
 import { setSavedPassword } from 'util/saved-passwords';
-import usePersistedState from 'effects/use-persisted-state';
 import I18nMessage from 'component/i18nMessage';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import { SITE_HELP_EMAIL } from 'config';
 
 type Props = {
@@ -18,24 +17,23 @@ type Props = {
   handleSyncComplete: (any, boolean) => void,
 };
 
-function SyncPassword(props: Props) {
+function SyncPassword(props: Props): React.Node {
   const { getSync, getSyncIsPending, email, signOut, passwordError, handleSyncComplete } = props;
   const {
     push,
     location: { search },
-  } = useHistory();
+  } = useDesktopHistory();
   const urlParams = new URLSearchParams(search);
   const redirect = urlParams.get('redirect');
   const [password, setPassword] = React.useState('');
-  const [rememberPassword, setRememberPassword] = usePersistedState(true);
+  const [rememberPassword, setRememberPassword] = React.useState(false);
 
   function handleSubmit() {
     getSync((error, hasDataChanged) => {
       handleSyncComplete(error, hasDataChanged);
 
       if (!error) {
-        push(redirect || '/');
-        setSavedPassword(password, rememberPassword);
+        setSavedPassword(password, rememberPassword).then(() => push(redirect || '/'));
       }
     }, password);
   }

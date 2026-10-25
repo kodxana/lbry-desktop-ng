@@ -1,11 +1,3 @@
-[data-reach-tooltip] {
-  border-radius: var(--border-radius);
-  border: none;
-  padding: var(--spacing-s);
-  overflow: hidden;
-  white-space: normal;
-}
-
 .MuiTooltip-tooltip {
   border-radius: var(--border-radius) !important;
   background-color: rgba(var(--color-header-background-base), 0.8) !important;

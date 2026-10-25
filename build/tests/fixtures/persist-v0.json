@@ -1,0 +1,74 @@
+{
+  "source": "Synthetic application preferences encoded with the RC2 lockfile at 7568f7d64fcffe3f46c5a0291f683b3f797767d5. No account or wallet data.",
+  "expected": {
+    "settings": {
+      "clientSettings": {
+        "theme": "dark",
+        "hide_balance": true,
+        "auto_download": false
+      },
+      "customWalletServers": [
+        "hub.fixture.invalid:50001"
+      ]
+    },
+    "content": {
+      "positions": {
+        "fixture-claim": {
+          "fixture-tx:0": 42.5
+        }
+      },
+      "history": [
+        {
+          "uri": "lbry://fixture#abc",
+          "lastViewed": 1700000000000
+        }
+      ]
+    },
+    "subscriptions": {
+      "subscriptions": [
+        {
+          "uri": "lbry://@fixture#abc",
+          "channelName": "@fixture",
+          "notificationsDisabled": true
+        }
+      ]
+    },
+    "collections": {
+      "builtin": {
+        "watchlater": {
+          "id": "watchlater",
+          "name": "Watch Later",
+          "type": "playlist",
+          "items": [
+            "lbry://fixture#abc"
+          ],
+          "updatedAt": 1700000000
+        }
+      },
+      "saved": [
+        "fixture-saved"
+      ],
+      "unpublished": {
+        "fixture-list": {
+          "id": "fixture-list",
+          "name": "Zażółć — fixture",
+          "items": [
+            "lbry://fixture#abc"
+          ],
+          "type": "playlist"
+        }
+      },
+      "edited": {},
+      "pending": {}
+    },
+    "wallet": {
+      "receiveAddress": "fixture-public-address-not-a-wallet"
+    },
+    "app": {
+      "volume": 0.35,
+      "muted": true,
+      "welcomeVersion": 1
+    }
+  },
+  "serialized": "{\"settings\":\"\\\"ᯡࡑ䂌ঀ匣堥悅ర唀㦡乀ழȠⲀஃἰ¸ѐԀ᫤TႪ䕬Ȕĸ梦丸՜Ҕżㅸ殨 ㌅❀ᷮȼ䵊簠朝墀̚妧໯᩠ᵿ䉊ਗ਼ᢕ㤐Ή宩瀧⛵#悮Ꮑ䆘㈍簼㰠⬠Ʈဨ愠̈ಠ \\\"\",\"content\":\"\\\"ᯡࠣ䈌ഀ䬡㣢ǹ∡㥠᦬ē䃎¼ʸ׀ಀ۠↬ƍ榋䂳◣䴠ഈƀӠݠૠంဦ䈠˦਼Ѣ¾琡嫀䒃傤値㉶䀾䂛༱ㄠ把Ḅ⅄槨ͱ䙀༌․溠ᆠᶳ忠こ䉀ױठ \\\"\",\"subscriptions\":\"\\\"ᯡࡓ䅼ِ҆Ꭱᘠ㠥梣氧㌨්̀Ʌ碠۪㰢㴐ཧ‡䐠竂⁳äĬ冀䀡傥䀡㐅䖫岠Ჿ{ᝒᜍḀ嚪惮䫶࿚㙐B䒀ϩ㠡ᰅ➡נ០ᝩ栠 \\\"\",\"collections\":\"\\\"ᯡ࠱䅼ঀᬡ㥠㬰תǼѓ䃦x曠⦠❵Ⅰӵࡺ灘夠桤⦠孂㐮囿$R䙀ⴀʘY㣁Ҹ⹆ਠ㎼⢰⢐䗻ᛀ۱Ʀɼ┠㴹䁓ᐠམࡄ䐣॑䄁+冁॒壅@䵥(性〠ᣃ共Ⱬᥳ&牆僀෌瘮∠ⴲ㕚䘂¤≨⃠䫪㱔礨୞椋䫎ѳ吋㚭㲶窻Ꭶ䀥哤Ě!侠Ⅰ⁘ဿ䠢䁇灔珵᫺崬懑哢惘熓㪙䓄㊒Ծ籫൙㺼k䤲ᅈ䠠玒㱰  \\\"\",\"wallet\":\"\\\"ᯡ࠳䅬ಁӐᮤаӥ䠹憰עí〡瀥恋刡㐠᳨Ҁ۶ᒴѓ⦦䨣堯ㅍ加㯋̦ࡄ•粠 \\\"\",\"app\":\"\\\"ᯡ࠻䈌΀圥場戡㠠怽ìː͢᱐Ɛ 䕂Ř恿ĎӀಁᄠ横⠹恅䈠癈ĸƜ䀠 \\\"\",\"_persist\":\"\\\"ᯡ࠻䅬Ԁ朤堾恛ࠥ恍¬ð䔨Ð਀Ӫ¦|Ⴖ勈˘‷搠 \\\"\"}"
+}

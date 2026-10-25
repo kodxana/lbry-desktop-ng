@@ -7,7 +7,7 @@ import { SITE_HELP_EMAIL } from 'config';
 
 type Props = {};
 
-export default function SyncFatalError(props: Props) {
+export default function SyncFatalError(props: Props): React.Node {
   let downTime = false;
 
   return (

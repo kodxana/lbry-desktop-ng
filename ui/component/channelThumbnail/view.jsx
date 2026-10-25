@@ -26,11 +26,11 @@ type Props = {
   hideTooltip?: boolean,
   xsmall?: boolean,
   noOptimization?: boolean,
-  setThumbUploadError: (boolean) => void,
+  setThumbUploadError?: (boolean) => void,
   ThumbUploadError: boolean,
 };
 
-function ChannelThumbnail(props: Props) {
+function ChannelThumbnail(props: Props): React.Node {
   const {
     thumbnail: rawThumbnail,
     uri,

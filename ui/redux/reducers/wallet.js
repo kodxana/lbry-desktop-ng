@@ -15,6 +15,7 @@ type ActionResult = {
 };
 
 type WalletState = {
+  syncStatus: ?StatusResponse,
   balance: any,
   totalBalance: any,
   reservedBalance: any,
@@ -54,12 +55,13 @@ type WalletState = {
   pendingConsolidateTxid?: string,
   massClaimingTips: boolean,
   pendingMassClaimTxid?: string,
-  pendingSupportTransactions: {}, // { claimId: {txid: 123, amount 12.3}, }
+  pendingSupportTransactions: { [string]: { txid: string, type: string, effective: string } },
   pendingTxos: Array<string>,
   abandonClaimSupportError?: string,
 };
 
 const defaultState = {
+  syncStatus: null,
   balance: undefined,
   totalBalance: undefined,
   reservedBalance: undefined,
@@ -110,7 +112,7 @@ const defaultState = {
   abandonClaimSupportError: undefined,
 };
 
-export const walletReducer = handleActions(
+export const walletReducer: (state: WalletState | void, action: { type: string, ... }) => WalletState = handleActions(
   {
     [ACTIONS.FETCH_TRANSACTIONS_STARTED]: (state: WalletState) => ({
       ...state,
@@ -323,7 +325,7 @@ export const walletReducer = handleActions(
     [ACTIONS.ABANDON_CLAIM_SUPPORT_COMPLETED]: (state: WalletState, action: any): WalletState => {
       const { claimId, type, txid, effective }: { claimId: string, type: string, txid: string, effective: string } =
         action.data;
-      const pendingtxs = Object.assign({}, state.pendingSupportTransactions);
+      const pendingtxs = { ...state.pendingSupportTransactions };
 
       pendingtxs[claimId] = { txid, type, effective };
 
@@ -359,8 +361,11 @@ export const walletReducer = handleActions(
       return { ...state, gettingNewAddress: false, receiveAddress: address };
     },
 
+    [ACTIONS.WALLET_SYNC_STATUS_UNAVAILABLE]: (state: WalletState) => ({ ...state, syncStatus: null }),
+
     [ACTIONS.UPDATE_BALANCE]: (state: WalletState, action) => ({
       ...state,
+      syncStatus: action.data.syncStatus,
       totalBalance: action.data.totalBalance,
       balance: action.data.balance,
       reservedBalance: action.data.reservedBalance,
@@ -399,16 +404,13 @@ export const walletReducer = handleActions(
       return { ...state, draftTransaction: newDraftTransaction };
     },
 
-    [ACTIONS.SEND_TRANSACTION_COMPLETED]: (state: WalletState) =>
-      Object.assign({}, state, {
-        draftTransaction: buildDraftTransaction(),
-      }),
+    [ACTIONS.SEND_TRANSACTION_COMPLETED]: (state: WalletState) => ({
+      ...state,
+      draftTransaction: buildDraftTransaction(),
+    }),
 
     [ACTIONS.SEND_TRANSACTION_FAILED]: (state: WalletState, action) => {
-      const newDraftTransaction = Object.assign({}, state.draftTransaction, {
-        sending: false,
-        error: action.data.error,
-      });
+      const newDraftTransaction = { ...state.draftTransaction, sending: false, error: action.data.error };
 
       return { ...state, draftTransaction: newDraftTransaction };
     },
@@ -504,7 +506,7 @@ export const walletReducer = handleActions(
 
     [ACTIONS.WALLET_LOCK_START]: (state: WalletState) => ({
       ...state,
-      walletLockPending: false,
+      walletLockPending: true,
       walletLockSucceded: null,
       walletLockResult: null,
     }),

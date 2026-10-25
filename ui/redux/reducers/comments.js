@@ -50,7 +50,7 @@ const defaultState: CommentsState = {
   fetchingBlockedWords: false,
 };
 
-function pushToArrayInObject(obj, key, valueToPush) {
+function pushToArrayInObject(obj: { [string]: Array<string> }, key: string, valueToPush: string): void {
   if (!obj[key]) {
     obj[key] = [valueToPush];
   } else if (!obj[key].includes(valueToPush)) {
@@ -58,7 +58,7 @@ function pushToArrayInObject(obj, key, valueToPush) {
   }
 }
 
-export default handleActions(
+const commentsReducer: (state: CommentsState | void, action: { type: string, ... }) => CommentsState = handleActions(
   {
     [ACTIONS.COMMENT_CREATE_STARTED]: (state: CommentsState, action: any): CommentsState => ({
       ...state,
@@ -71,14 +71,14 @@ export default handleActions(
     }),
 
     [ACTIONS.COMMENT_CREATE_COMPLETED]: (state: CommentsState, action: any): CommentsState => {
-      const { comment, claimId, uri }: { comment: Comment, claimId: string, uri: string } = action.data;
+      const { comment, claimId, uri }: { comment: LbryComment, claimId: string, uri: string } = action.data;
 
-      const commentById = Object.assign({}, state.commentById);
-      const byId = Object.assign({}, state.byId);
-      const totalCommentsById = Object.assign({}, state.totalCommentsById);
-      const topLevelCommentsById = Object.assign({}, state.topLevelCommentsById); // was byId {ClaimId -> [commentIds...]}
-      const repliesByParentId = Object.assign({}, state.repliesByParentId); // {ParentCommentID -> [commentIds...] } list of reply comments
-      const commentsByUri = Object.assign({}, state.commentsByUri);
+      const commentById = { ...state.commentById };
+      const byId = { ...state.byId };
+      const totalCommentsById = { ...state.totalCommentsById };
+      const topLevelCommentsById = { ...state.topLevelCommentsById }; // was byId {ClaimId -> [commentIds...]}
+      const repliesByParentId = { ...state.repliesByParentId }; // {ParentCommentID -> [commentIds...] } list of reply comments
+      const commentsByUri = { ...state.commentsByUri };
       const comments = byId[claimId] || [];
       const newCommentIds = comments.slice();
 
@@ -93,16 +93,17 @@ export default handleActions(
         totalCommentsById[claimId] += 1;
       }
 
-      if (comment['parent_id']) {
-        if (!repliesByParentId[comment.parent_id]) {
-          repliesByParentId[comment.parent_id] = [comment.comment_id];
+      const parentId = comment.parent_id;
+      if (parentId) {
+        if (!repliesByParentId[parentId]) {
+          repliesByParentId[parentId] = [comment.comment_id];
         } else {
-          repliesByParentId[comment.parent_id].unshift(comment.comment_id);
+          repliesByParentId[parentId].unshift(comment.comment_id);
         }
 
         // Update the parent's "replies" value
-        if (commentById[comment.parent_id]) {
-          commentById[comment.parent_id].replies = (commentById[comment.parent_id].replies || 0) + 1;
+        if (commentById[parentId]) {
+          commentById[parentId].replies = (commentById[parentId].replies || 0) + 1;
         }
       } else {
         if (!topLevelCommentsById[claimId]) {
@@ -171,8 +172,8 @@ export default handleActions(
 
     [ACTIONS.COMMENT_REACTION_LIST_COMPLETED]: (state: CommentsState, action: any): CommentsState => {
       const { myReactions, othersReactions, channelId, commentIds } = action.data;
-      const myReacts = Object.assign({}, state.myReactsByCommentId);
-      const othersReacts = Object.assign({}, state.othersReactsByCommentId);
+      const myReacts: { [string]: Array<string> } = { ...state.myReactsByCommentId };
+      const othersReacts: { [string]: { [string]: number } } = { ...state.othersReactsByCommentId };
 
       const myReactionsEntries = myReactions ? Object.entries(myReactions) : [];
       const othersReactionsEntries = othersReactions ? Object.entries(othersReactions) : [];
@@ -180,7 +181,7 @@ export default handleActions(
       if (myReactionsEntries.length > 0) {
         myReactionsEntries.forEach(([commentId, reactions]) => {
           const key = channelId ? `${commentId}:${channelId}` : commentId;
-          myReacts[key] = Object.entries(reactions).reduce((acc, [name, count]) => {
+          myReacts[key] = Object.entries(reactions).reduce<Array<string>>((acc, [name, count]) => {
             if (count === 1) {
               acc.push(name);
             }
@@ -216,7 +217,7 @@ export default handleActions(
 
     [ACTIONS.COMMENT_LIST_STARTED]: (state, action: any) => {
       const { parentId } = action.data;
-      const isLoadingByParentId = Object.assign({}, state.isLoadingByParentId);
+      const isLoadingByParentId = { ...state.isLoadingByParentId };
       if (parentId) {
         isLoadingByParentId[parentId] = true;
       }
@@ -229,30 +230,21 @@ export default handleActions(
     },
 
     [ACTIONS.COMMENT_LIST_COMPLETED]: (state: CommentsState, action: any) => {
-      const {
-        comments,
-        parentId,
-        totalItems,
-        totalFilteredItems,
-        totalPages,
-        claimId,
-        uri,
-        disabled,
-        creatorClaimId,
-      } = action.data;
+      const { comments, parentId, totalItems, totalFilteredItems, totalPages, claimId, uri, disabled, creatorClaimId } =
+        action.data;
 
-      const commentById = Object.assign({}, state.commentById);
-      const byId = Object.assign({}, state.byId);
-      const topLevelCommentsById = Object.assign({}, state.topLevelCommentsById); // was byId {ClaimId -> [commentIds...]}
-      const topLevelTotalCommentsById = Object.assign({}, state.topLevelTotalCommentsById);
-      const topLevelTotalPagesById = Object.assign({}, state.topLevelTotalPagesById);
-      const commentsByUri = Object.assign({}, state.commentsByUri);
-      const repliesByParentId = Object.assign({}, state.repliesByParentId);
-      const totalCommentsById = Object.assign({}, state.totalCommentsById);
-      const pinnedCommentsById = Object.assign({}, state.pinnedCommentsById);
-      const repliesTotalPagesByParentId = Object.assign({}, state.repliesTotalPagesByParentId);
-      const isLoadingByParentId = Object.assign({}, state.isLoadingByParentId);
-      const settingsByChannelId = Object.assign({}, state.settingsByChannelId);
+      const commentById = { ...state.commentById };
+      const byId = { ...state.byId };
+      const topLevelCommentsById = { ...state.topLevelCommentsById }; // was byId {ClaimId -> [commentIds...]}
+      const topLevelTotalCommentsById = { ...state.topLevelTotalCommentsById };
+      const topLevelTotalPagesById = { ...state.topLevelTotalPagesById };
+      const commentsByUri = { ...state.commentsByUri };
+      const repliesByParentId = { ...state.repliesByParentId };
+      const totalCommentsById = { ...state.totalCommentsById };
+      const pinnedCommentsById = { ...state.pinnedCommentsById };
+      const repliesTotalPagesByParentId = { ...state.repliesTotalPagesByParentId };
+      const isLoadingByParentId = { ...state.isLoadingByParentId };
+      const settingsByChannelId = { ...state.settingsByChannelId };
 
       settingsByChannelId[creatorClaimId] = {
         ...(settingsByChannelId[creatorClaimId] || {}),
@@ -272,7 +264,12 @@ export default handleActions(
           topLevelTotalPagesById[claimId] = totalPages;
         }
 
-        const commonUpdateAction = (comment, commentById, commentIds, index) => {
+        const commonUpdateAction = (
+          comment: LbryComment,
+          commentById: CommentsState['commentById'],
+          commentIds: Array<string>,
+          index: number
+        ): void => {
           // map the comment_ids to the new comments
           commentById[comment.comment_id] = comment;
           commentIds[index] = comment.comment_id;
@@ -334,21 +331,27 @@ export default handleActions(
       const { comment, ancestors } = action.data;
       const claimId = comment.claim_id;
 
-      const commentById = Object.assign({}, state.commentById);
-      const byId = Object.assign({}, state.byId);
-      const topLevelCommentsById = Object.assign({}, state.topLevelCommentsById); // was byId {ClaimId -> [commentIds...]}
-      const topLevelTotalCommentsById = Object.assign({}, state.topLevelTotalCommentsById);
-      const topLevelTotalPagesById = Object.assign({}, state.topLevelTotalPagesById);
-      const pinnedCommentsById = Object.assign({}, state.pinnedCommentsById);
-      const repliesByParentId = Object.assign({}, state.repliesByParentId);
-      const linkedCommentAncestors = Object.assign({}, state.linkedCommentAncestors);
+      const commentById = { ...state.commentById };
+      const byId = { ...state.byId };
+      const topLevelCommentsById = { ...state.topLevelCommentsById }; // was byId {ClaimId -> [commentIds...]}
+      const topLevelTotalCommentsById = { ...state.topLevelTotalCommentsById };
+      const topLevelTotalPagesById = { ...state.topLevelTotalPagesById };
+      const pinnedCommentsById = { ...state.pinnedCommentsById };
+      const repliesByParentId = { ...state.repliesByParentId };
+      const linkedCommentAncestors = { ...state.linkedCommentAncestors };
 
-      const updateStore = (comment, commentById, byId, repliesByParentId, topLevelCommentsById) => {
+      const updateStore = (
+        comment: LbryComment,
+        commentById: CommentsState['commentById'],
+        byId: CommentsState['byId'],
+        repliesByParentId: CommentsState['repliesByParentId'],
+        topLevelCommentsById: CommentsState['topLevelCommentsById']
+      ): void => {
         commentById[comment.comment_id] = comment;
         byId[claimId] ? byId[claimId].unshift(comment.comment_id) : (byId[claimId] = [comment.comment_id]);
 
         const parentId = comment.parent_id;
-        if (comment.parent_id) {
+        if (parentId) {
           pushToArrayInObject(repliesByParentId, parentId, comment.comment_id);
         } else {
           if (comment.is_pinned) {
@@ -412,16 +415,16 @@ export default handleActions(
     [ACTIONS.COMMENT_LIST_RESET]: (state: CommentsState, action: any) => {
       const { claimId } = action.data;
 
-      const byId = Object.assign({}, state.byId);
-      const totalCommentsById = Object.assign({}, state.totalCommentsById);
-      const topLevelCommentsById = Object.assign({}, state.topLevelCommentsById); // was byId {ClaimId -> [commentIds...]}
-      const topLevelTotalCommentsById = Object.assign({}, state.topLevelTotalCommentsById);
-      const topLevelTotalPagesById = Object.assign({}, state.topLevelTotalPagesById);
-      const pinnedCommentsById = Object.assign({}, state.pinnedCommentsById);
-      const myReacts = Object.assign({}, state.myReactsByCommentId);
-      const othersReacts = Object.assign({}, state.othersReactsByCommentId);
+      const byId = { ...state.byId };
+      const totalCommentsById = { ...state.totalCommentsById };
+      const topLevelCommentsById = { ...state.topLevelCommentsById }; // was byId {ClaimId -> [commentIds...]}
+      const topLevelTotalCommentsById = { ...state.topLevelTotalCommentsById };
+      const topLevelTotalPagesById = { ...state.topLevelTotalPagesById };
+      const pinnedCommentsById = { ...state.pinnedCommentsById };
+      const myReacts = { ...state.myReactsByCommentId };
+      const othersReacts = { ...state.othersReactsByCommentId };
 
-      function deleteReacts(reactObj, commentIdsToRemove) {
+      function deleteReacts<T>(reactObj: { [string]: T }, commentIdsToRemove: ?Array<string>): void {
         if (commentIdsToRemove && commentIdsToRemove.length > 0) {
           let reactionKeys = Object.keys(reactObj);
           reactionKeys.forEach((rk) => {
@@ -459,11 +462,11 @@ export default handleActions(
 
     [ACTIONS.COMMENT_RECEIVED]: (state: CommentsState, action: any) => {
       const { uri, claimId, comment } = action.data;
-      const commentsByUri = Object.assign({}, state.commentsByUri);
-      const commentsByClaimId = Object.assign({}, state.byId);
-      const allCommentsById = Object.assign({}, state.commentById);
-      const topLevelCommentsById = Object.assign({}, state.topLevelCommentsById);
-      const superChatsByUri = Object.assign({}, state.superChatsByUri);
+      const commentsByUri = { ...state.commentsByUri };
+      const commentsByClaimId = { ...state.byId };
+      const allCommentsById = { ...state.commentById };
+      const topLevelCommentsById = { ...state.topLevelCommentsById };
+      const superChatsByUri = { ...state.superChatsByUri };
       const commentsForId = topLevelCommentsById[claimId];
 
       allCommentsById[comment.comment_id] = comment;
@@ -534,10 +537,10 @@ export default handleActions(
     }),
     [ACTIONS.COMMENT_ABANDON_COMPLETED]: (state: CommentsState, action: any) => {
       const { comment_id } = action.data;
-      const commentById = Object.assign({}, state.commentById);
-      const byId = Object.assign({}, state.byId);
-      const repliesByParentId = Object.assign({}, state.repliesByParentId); // {ParentCommentID -> [commentIds...] } list of reply comments
-      const totalCommentsById = Object.assign({}, state.totalCommentsById);
+      const commentById = { ...state.commentById };
+      const byId = { ...state.byId };
+      const repliesByParentId = { ...state.repliesByParentId }; // {ParentCommentID -> [commentIds...] } list of reply comments
+      const totalCommentsById = { ...state.totalCommentsById };
 
       const comment = commentById[comment_id];
 
@@ -551,13 +554,14 @@ export default handleActions(
       }
 
       // Update replies
-      if (comment['parent_id'] && repliesByParentId[comment.parent_id]) {
-        const index = repliesByParentId[comment.parent_id].indexOf(comment.comment_id);
+      const parentId = comment.parent_id;
+      if (parentId && repliesByParentId[parentId]) {
+        const index = repliesByParentId[parentId].indexOf(comment.comment_id);
         if (index > -1) {
-          repliesByParentId[comment.parent_id].splice(index, 1);
+          repliesByParentId[parentId].splice(index, 1);
 
-          if (commentById[comment.parent_id]) {
-            commentById[comment.parent_id].replies = Math.max(0, (commentById[comment.parent_id].replies || 0) - 1);
+          if (commentById[parentId]) {
+            commentById[parentId].replies = Math.max(0, (commentById[parentId].replies || 0) - 1);
           }
         }
       }
@@ -588,7 +592,7 @@ export default handleActions(
     }),
     [ACTIONS.COMMENT_UPDATE_COMPLETED]: (state: CommentsState, action: any) => {
       const { comment } = action.data;
-      const commentById = Object.assign({}, state.commentById);
+      const commentById = { ...state.commentById };
       commentById[comment.comment_id] = comment;
 
       return {
@@ -604,9 +608,9 @@ export default handleActions(
 
     [ACTIONS.COMMENT_PIN_COMPLETED]: (state: CommentsState, action: any) => {
       const { pinnedComment, claimId, unpin } = action.data;
-      const commentById = Object.assign({}, state.commentById);
-      const topLevelCommentsById = Object.assign({}, state.topLevelCommentsById);
-      const pinnedCommentsById = Object.assign({}, state.pinnedCommentsById);
+      const commentById = { ...state.commentById };
+      const topLevelCommentsById = { ...state.topLevelCommentsById };
+      const pinnedCommentsById = { ...state.pinnedCommentsById };
 
       if (pinnedComment) {
         if (topLevelCommentsById[claimId]) {
@@ -711,7 +715,7 @@ export default handleActions(
           };
 
         case BLOCK_LEVEL.MODERATOR:
-          const newMap = Object.assign({}, state.togglingForDelegatorMap);
+          const newMap = { ...state.togglingForDelegatorMap };
           const togglingDelegatorsForBlockedUri = newMap[blockedUri];
           if (togglingDelegatorsForBlockedUri) {
             if (!togglingDelegatorsForBlockedUri.includes(creatorUri)) {
@@ -744,7 +748,7 @@ export default handleActions(
           };
 
         case BLOCK_LEVEL.MODERATOR:
-          const newMap = Object.assign({}, state.togglingForDelegatorMap);
+          const newMap = { ...state.togglingForDelegatorMap };
           const togglingDelegatorsForBlockedUri = newMap[blockedUri];
           if (togglingDelegatorsForBlockedUri) {
             if (!togglingDelegatorsForBlockedUri.includes(creatorUri)) {
@@ -777,7 +781,7 @@ export default handleActions(
           };
 
         case BLOCK_LEVEL.MODERATOR:
-          const newMap = Object.assign({}, state.togglingForDelegatorMap);
+          const newMap = { ...state.togglingForDelegatorMap };
           const togglingDelegatorsForBlockedUri = newMap[blockedUri];
           if (togglingDelegatorsForBlockedUri) {
             newMap[blockedUri] = togglingDelegatorsForBlockedUri.filter((x) => x !== creatorUri);
@@ -806,7 +810,7 @@ export default handleActions(
           };
 
         case BLOCK_LEVEL.MODERATOR:
-          const newMap = Object.assign({}, state.togglingForDelegatorMap);
+          const newMap = { ...state.togglingForDelegatorMap };
           const togglingDelegatorsForBlockedUri = newMap[blockedUri];
           if (togglingDelegatorsForBlockedUri) {
             newMap[blockedUri] = togglingDelegatorsForBlockedUri.filter((x) => x !== creatorUri);
@@ -821,13 +825,13 @@ export default handleActions(
 
     [ACTIONS.COMMENT_MODERATION_BLOCK_COMPLETE]: (state: CommentsState, action: any) => {
       const { blockedUri, creatorUri, blockLevel } = action.data;
-      const commentById = Object.assign({}, state.commentById);
-      const blockingByUri = Object.assign({}, state.blockingByUri);
+      const commentById = { ...state.commentById };
+      const blockingByUri = { ...state.blockingByUri };
 
       for (const commentId in commentById) {
         const comment = commentById[commentId];
 
-        if (isURIEqual(blockedUri, comment.channel_url)) {
+        if (comment.channel_url && isURIEqual(blockedUri, comment.channel_url)) {
           delete commentById[comment.comment_id];
         }
       }
@@ -857,7 +861,7 @@ export default handleActions(
           }
 
           // Update list of delegators
-          const moderatorBlockListDelegatorsMap = Object.assign({}, state.moderatorBlockListDelegatorsMap);
+          const moderatorBlockListDelegatorsMap = { ...state.moderatorBlockListDelegatorsMap };
           const delegatorUrisForBlockedUri = moderatorBlockListDelegatorsMap[blockedUri];
           if (delegatorUrisForBlockedUri) {
             if (!delegatorUrisForBlockedUri.includes(creatorUri)) {
@@ -868,7 +872,7 @@ export default handleActions(
           }
 
           // Remove "toggling" flag
-          const togglingMap = Object.assign({}, state.togglingForDelegatorMap);
+          const togglingMap = { ...state.togglingForDelegatorMap };
           const togglingDelegatorsForBlockedUri = togglingMap[blockedUri];
           if (togglingDelegatorsForBlockedUri) {
             togglingMap[blockedUri] = togglingDelegatorsForBlockedUri.filter((x) => x !== creatorUri);
@@ -899,7 +903,7 @@ export default handleActions(
     },
     [ACTIONS.COMMENT_MODERATION_UN_BLOCK_COMPLETE]: (state: CommentsState, action: any) => {
       const { blockedUri, creatorUri, blockLevel } = action.data;
-      const unBlockingByUri = Object.assign(state.unBlockingByUri, {});
+      const unBlockingByUri = { ...state.unBlockingByUri };
 
       switch (blockLevel) {
         case BLOCK_LEVEL.SELF: {
@@ -925,9 +929,9 @@ export default handleActions(
         case BLOCK_LEVEL.MODERATOR: {
           const blockList = state.moderatorBlockList || [];
           const newBlockList = blockList.slice();
-          const togglingMap = Object.assign({}, state.togglingForDelegatorMap);
+          const togglingMap = { ...state.togglingForDelegatorMap };
 
-          const moderatorBlockListDelegatorsMap = Object.assign({}, state.moderatorBlockListDelegatorsMap);
+          const moderatorBlockListDelegatorsMap = { ...state.moderatorBlockListDelegatorsMap };
           const delegatorUrisForBlockedUri = moderatorBlockListDelegatorsMap[blockedUri];
           if (delegatorUrisForBlockedUri) {
             const index = delegatorUrisForBlockedUri.indexOf(creatorUri);
@@ -967,7 +971,7 @@ export default handleActions(
       fetchingModerationDelegates: false,
     }),
     [ACTIONS.COMMENT_FETCH_MODERATION_DELEGATES_COMPLETED]: (state: CommentsState, action: any) => {
-      const moderationDelegatesById = Object.assign({}, state.moderationDelegatesById);
+      const moderationDelegatesById = { ...state.moderationDelegatesById };
       if (action.data.delegates) {
         moderationDelegatesById[action.data.id] = action.data.delegates.map((delegate) => {
           return {
@@ -1014,7 +1018,7 @@ export default handleActions(
     }),
     [ACTIONS.COMMENT_FETCH_SETTINGS_COMPLETED]: (state: CommentsState, action: any) => {
       const { channelId, settings, partialUpdate } = action.data;
-      const settingsByChannelId = Object.assign({}, state.settingsByChannelId);
+      const settingsByChannelId = { ...state.settingsByChannelId };
 
       if (partialUpdate) {
         settingsByChannelId[channelId] = {
@@ -1047,7 +1051,7 @@ export default handleActions(
     }),
     [ACTIONS.COMMENT_FETCH_BLOCKED_WORDS_COMPLETED]: (state: CommentsState, action: any) => {
       const blockedWordsByChannelId = action.data;
-      const settingsByChannelId = Object.assign({}, state.settingsByChannelId);
+      const settingsByChannelId = { ...state.settingsByChannelId };
 
       // blockedWordsByChannelId: {string: [string]}
       Object.entries(blockedWordsByChannelId).forEach((x) => {
@@ -1067,3 +1071,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default commentsReducer;

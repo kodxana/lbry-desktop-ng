@@ -3,11 +3,11 @@ import React from 'react';
 import Button from 'component/button';
 import DateTimePicker from 'react-datetime-picker';
 
-function linuxTimestampToDate(linuxTimestamp: number) {
+function linuxTimestampToDate(linuxTimestamp: number): Date {
   return new Date(linuxTimestamp * 1000);
 }
 
-function dateToLinuxTimestamp(date: Date) {
+function dateToLinuxTimestamp(date: Date): number {
   return Number(Math.round(date.getTime() / 1000));
 }
 
@@ -18,13 +18,13 @@ const RESET_TO_ORIGINAL = 'reset-to-original';
 type Props = {
   releaseTime: ?number,
   releaseTimeEdited: ?number,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
-const PublishReleaseDate = (props: Props) => {
+const PublishReleaseDate = (props: Props): React.Node => {
   const { releaseTime, releaseTimeEdited, updatePublishForm } = props;
   const maxDate = new Date();
-  const [date, setDate] = React.useState(releaseTime ? linuxTimestampToDate(releaseTime) : new Date());
+  const [date, setDate] = React.useState<Date | void>(releaseTime ? linuxTimestampToDate(releaseTime) : new Date());
 
   const isNew = releaseTime === undefined;
   const isEdit = !isNew;
@@ -33,7 +33,7 @@ const PublishReleaseDate = (props: Props) => {
   const showDefaultBtn = isNew && releaseTimeEdited !== undefined;
   const showDatePicker = isEdit || releaseTimeEdited !== undefined;
 
-  const onDateTimePickerChanged = (value) => {
+  const onDateTimePickerChanged = (value: Date | null): void => {
     if (value) {
       newDate(value);
     } else {
@@ -83,7 +83,15 @@ const PublishReleaseDate = (props: Props) => {
         {showDatePicker && (
           <DateTimePicker
             className="date-picker-input"
-            calendarClassName="form-field-calendar"
+            calendarProps={{ className: 'form-field-calendar' }}
+            calendarAriaLabel={__('Choose release date')}
+            yearAriaLabel={__('Year')}
+            monthAriaLabel={__('Month')}
+            dayAriaLabel={__('Day')}
+            hourAriaLabel={__('Hour')}
+            minuteAriaLabel={__('Minute')}
+            amPmAriaLabel={__('AM/PM')}
+            nativeInputAriaLabel={__('Release date')}
             onChange={onDateTimePickerChanged}
             value={date}
             maxDate={maxDate}

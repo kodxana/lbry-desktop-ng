@@ -1,0 +1,16 @@
+diff --git a/es/MatomoTracker.js b/es/MatomoTracker.js
+--- a/es/MatomoTracker.js
++++ b/es/MatomoTracker.js
+@@ -55,1 +55,3 @@
+-        this.enableLinkTracking(linkTracking);
++        if (linkTracking) {
++            this.enableLinkTracking(linkTracking);
++        }
+diff --git a/lib/MatomoTracker.js b/lib/MatomoTracker.js
+--- a/lib/MatomoTracker.js
++++ b/lib/MatomoTracker.js
+@@ -76,1 +76,3 @@
+-        this.enableLinkTracking(linkTracking);
++        if (linkTracking) {
++            this.enableLinkTracking(linkTracking);
++        }

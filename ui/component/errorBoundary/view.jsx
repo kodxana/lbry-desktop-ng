@@ -3,7 +3,7 @@ import type { Node } from 'react';
 import React from 'react';
 import Yrbl from 'component/yrbl';
 import Button from 'component/button';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import analytics from 'analytics';
 import I18nMessage from 'component/i18nMessage';
 import Native from 'native';
@@ -18,23 +18,20 @@ type Props = {
 
 type State = {
   hasError: boolean,
-  sentryEventId: ?string,
   desktopErrorReported: boolean,
 };
 
 class ErrorBoundary extends React.Component<Props, State> {
-  constructor() {
-    super();
-    this.state = { hasError: false, sentryEventId: undefined, desktopErrorReported: false };
-
-    (this: any).refresh = this.refresh.bind(this);
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false, desktopErrorReported: false };
   }
 
-  static getDerivedStateFromError() {
+  static getDerivedStateFromError(): { hasError: boolean } {
     return { hasError: true };
   }
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error): void {
     // @if TARGET='app'
     let errorMessage = 'Uncaught error\n';
     Native.getAppVersionInfo().then(({ localVersion }) => {
@@ -51,15 +48,15 @@ class ErrorBoundary extends React.Component<Props, State> {
     // @endif
   }
 
-  refresh() {
+  refresh = (): void => {
     const { history } = this.props;
 
     // use history.replace instead of history.push so the user can't click back to the errored page
-    history.replace('');
+    history.replace('/');
     this.setState({ hasError: false });
-  }
+  };
 
-  render() {
+  render(): React.Node {
     const { hasError } = this.state;
     const { desktopErrorReported } = this.state;
 
@@ -112,4 +109,6 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-export default withRouter(ErrorBoundary);
+const RoutedErrorBoundary: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ErrorBoundary);
+export default RoutedErrorBoundary;

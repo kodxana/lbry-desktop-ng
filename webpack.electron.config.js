@@ -1,40 +1,43 @@
-const config = require('./config');
+// Load desktop defaults before resolving aliases and desktop build conditions.
+require('./config');
 const path = require('path');
 const webpack = require('webpack');
-const merge = require('webpack-merge');
+const { merge } = require('webpack-merge');
 const baseConfig = require('./webpack.base.config.js');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { DefinePlugin, ProvidePlugin } = require('webpack');
-const { getIfUtils, removeEmpty } = require('webpack-config-utils');
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const STATIC_ROOT = path.resolve(__dirname, 'static/');
 const DIST_ROOT = path.resolve(__dirname, 'dist/');
-const NODE_ENV = process.env.NODE_ENV || 'development';
 
-const { ifProduction } = getIfUtils(NODE_ENV);
+const desktopSettings = path.resolve(
+  __dirname,
+  process.env.LBRY_DESKTOP_BUILD === 'sdk-test' ? 'sdk-test.json' : 'desktop-settings.json'
+);
 
-let mainConfig = {
+const mainConfig = {
   target: 'electron-main',
   entry: {
     main: './electron/index.js',
+    preload: './electron/preload.cjs',
   },
   output: {
     filename: '[name].js',
-    path: __dirname + '/dist/electron/webpack',
+    path: path.join(DIST_ROOT, 'electron/webpack'),
+    publicPath: '',
   },
   module: {
     rules: [
+      { test: /\.cjs$/, type: 'javascript/auto' },
       {
         test: /\.(jsx?$|s?css$)/,
+        exclude: /node_modules/,
         use: [
           {
-            loader: 'preprocess-loader',
+            loader: path.resolve(__dirname, 'build/conditionalLoader.cjs'),
             options: {
               TARGET: 'app',
-              ppOptions: {
-                type: 'js',
-              },
+              CUSTOM_HOMEPAGE: process.env.CUSTOM_HOMEPAGE,
             },
           },
         ],
@@ -42,8 +45,35 @@ let mainConfig = {
     ],
   },
   plugins: [
+    new webpack.NormalModuleReplacementPlugin(/desktop-settings\.json$/, desktopSettings),
     new CopyWebpackPlugin({
       patterns: [
+        {
+          from: path.resolve(__dirname, 'node_modules/libarchive.js/dist/worker-bundle.js'),
+          to: `${DIST_ROOT}/electron/static/webworkers/worker-bundle.js`,
+          // Preserve the published worker alongside its matching WASM.
+          info: { minimized: true },
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/libarchive.js/dist/libarchive.wasm'),
+          to: `${DIST_ROOT}/electron/static/webworkers/libarchive.wasm`,
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/libarchive.js/LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/libarchive.LICENSE`,
+        },
+        {
+          from: path.resolve(__dirname, 'node_modules/font-awesome/README.md'),
+          to: `${DIST_ROOT}/electron/static/licenses/font-awesome-README.md`,
+        },
+        {
+          from: path.resolve(__dirname, 'ui/util/dictionaries/LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/english-dictionary.LICENSE`,
+        },
+        {
+          from: path.resolve(__dirname, 'ui/util/electron-cookies.LICENSE'),
+          to: `${DIST_ROOT}/electron/static/licenses/electron-cookies.LICENSE`,
+        },
         {
           from: `${STATIC_ROOT}/`,
           to: `${DIST_ROOT}/electron/static/`,
@@ -62,30 +92,16 @@ let mainConfig = {
       ],
     }),
   ],
+  externals: {
+    electron: 'commonjs electron',
+    express: 'commonjs express',
+    'electron-updater': 'commonjs electron-updater',
+    'electron-updater/out/providers/GitHubProvider': 'commonjs electron-updater/out/providers/GitHubProvider',
+  },
 };
 
-if (process.env.NODE_ENV === 'production') {
-  // Apply prod overrides
-  mainConfig = merge(mainConfig, {
-    externals: {
-      electron: 'require("electron")',
-      express: 'require("express")',
-      'electron-updater': 'require("electron-updater")',
-    },
-  });
-} else {
-  const nodeExternals = require('webpack-node-externals');
-  // Apply dev overrides
-  mainConfig = merge(mainConfig, {
-    externals: {
-      electron: 'require("electron")',
-      express: 'require("express")',
-      'electron-updater': 'require("electron-updater")',
-    },
-  });
-}
-
-let plugins = [
+const plugins = [
+  new webpack.NormalModuleReplacementPlugin(/desktop-settings\.json$/, desktopSettings),
   new DefinePlugin({
     IS_WEB: JSON.stringify(false),
   }),
@@ -94,45 +110,57 @@ let plugins = [
   }),
 ];
 
-// if (hasSentryToken) {
-//   plugins.push(
-//     new SentryWebpackPlugin({
-//       include: './dist',
-//       ignoreFile: '.sentrycliignore',
-//       ignore: ['node_modules', 'webpack.config.js', 'webworkers'],
-//       configFile: 'sentry.properties',
-//     })
-//   );
-// }
-
 const renderConfig = {
-  target: 'electron-renderer',
+  target: 'web',
+  resolve: {
+    alias: { config: path.resolve(__dirname, 'configValues.js') },
+    fallback: {
+      path: require.resolve('path-browserify'),
+      url: require.resolve('url/'),
+      util: require.resolve('util/'),
+      buffer: require.resolve('buffer/'),
+      stream: require.resolve('stream-browserify'),
+      assert: require.resolve('assert/'),
+    },
+  },
   entry: {
     ui: ['./ui/index.jsx'],
   },
   output: {
     filename: '[name].js',
-    path: __dirname + '/dist/electron/webpack',
+    path: path.join(DIST_ROOT, 'electron/webpack'),
+    publicPath: '',
   },
   module: {
     rules: [
       {
         test: /\.jsx?$/,
+        exclude: /node_modules/,
         use: [
           {
-            loader: 'preprocess-loader',
+            loader: path.resolve(__dirname, 'build/conditionalLoader.cjs'),
             options: {
               TARGET: 'app',
-              ppOptions: {
-                type: 'js',
-              },
+              CUSTOM_HOMEPAGE: process.env.CUSTOM_HOMEPAGE,
             },
           },
         ],
       },
     ],
   },
-  plugins,
+  plugins: [
+    ...plugins,
+    new ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+      process: require.resolve('process/browser.js'),
+      'global.process': require.resolve('process/browser.js'),
+    }),
+    new DefinePlugin({
+      'process.platform': 'window.lbryDesktop.platform',
+      'process.env.APPIMAGE': '(window.lbryDesktop.appImage ? "AppImage" : undefined)',
+      'process.env': '{}',
+    }),
+  ],
 };
 
 module.exports = [merge(baseConfig, mainConfig), merge(baseConfig, renderConfig)];

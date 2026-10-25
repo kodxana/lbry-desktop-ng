@@ -9,7 +9,7 @@ type Props = {
   className: ?string,
 };
 
-export default (props: Props) => {
+export default (props: Props): React.Node => {
   const { numberOfHiddenClaims: number, obscureNsfw } = props;
 
   return (

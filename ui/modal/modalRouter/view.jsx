@@ -1,6 +1,6 @@
 // @flow
 import React from 'react';
-import { withRouter } from 'react-router';
+import { withDesktopRouter } from 'component/common/desktop-router';
 import * as MODALS from 'constants/modal_types';
 
 import ModalAffirmPurchase from 'modal/modalAffirmPurchase';
@@ -64,7 +64,7 @@ import ModalWalletEncrypt from 'modal/modalWalletEncrypt';
 
 import ModalWalletUnlock from 'modal/modalWalletUnlock';
 
-function getModal(id) {
+function getModal(id: string) {
   switch (id) {
     case MODALS.UPGRADE:
       return ModalUpgrade;
@@ -181,4 +181,6 @@ function ModalRouter(props: Props) {
   return <SelectedModal {...modalProps} />;
 }
 
-export default withRouter(ModalRouter);
+const RoutedModalRouter: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(ModalRouter);
+export default RoutedModalRouter;

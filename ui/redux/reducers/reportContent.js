@@ -7,7 +7,7 @@ const defaultState: ReportContentState = {
   error: '',
 };
 
-export default handleActions(
+const reducer: (state: ReportContentState | void, action: { type: string, ... }) => ReportContentState = handleActions(
   {
     [ACTIONS.REPORT_CONTENT_STARTED]: (state: ReportContentState): ReportContentState => ({
       ...state,
@@ -27,3 +27,5 @@ export default handleActions(
   },
   defaultState
 );
+
+export default reducer;

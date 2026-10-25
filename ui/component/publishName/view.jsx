@@ -12,24 +12,16 @@ type Props = {
   isStillEditing: boolean,
   myClaimForUri: ?StreamClaim,
   amountNeededForTakeover: number,
-  prepareEdit: ({}, string) => void,
-  updatePublishForm: ({}) => void,
+  prepareEdit: (Claim, string) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   activeChannelClaim: ?ChannelClaim,
   incognito: boolean,
 };
 
-function PublishName(props: Props) {
-  const {
-    name,
-    uri,
-    isStillEditing,
-    myClaimForUri,
-    prepareEdit,
-    updatePublishForm,
-    activeChannelClaim,
-    incognito,
-  } = props;
-  const [nameError, setNameError] = useState(undefined);
+function PublishName(props: Props): React.Node {
+  const { name, uri, isStillEditing, myClaimForUri, prepareEdit, updatePublishForm, activeChannelClaim, incognito } =
+    props;
+  const [nameError, setNameError] = useState<string | void>(undefined);
   const [blurred, setBlurred] = React.useState(false);
   const activeChannelName = activeChannelClaim && activeChannelClaim.name;
   let prefix = IS_WEB ? `${DOMAIN}/` : 'lbry://';
@@ -43,7 +35,7 @@ function PublishName(props: Props) {
     }
   }
 
-  function handleNameChange(event) {
+  function handleNameChange(event: { target: { value: string, ... }, ... }): void {
     updatePublishForm({ name: event.target.value });
   }
 

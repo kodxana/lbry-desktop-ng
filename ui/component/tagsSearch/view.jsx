@@ -1,7 +1,7 @@
 // @flow
 import React, { useState } from 'react';
 import { Form, FormField } from 'component/common/form';
-import Tag from 'component/tag';
+import TagView from 'component/tag';
 import { setUnion, setDifference } from 'util/set-operations';
 import I18nMessage from 'component/i18nMessage';
 import analytics from 'analytics';
@@ -13,7 +13,7 @@ type Props = {
   followedTags: Array<Tag>,
   doToggleTagFollowDesktop: (string) => void,
   doAddTag: (string) => void,
-  onSelect?: (Tag) => void,
+  onSelect?: (Array<Tag>) => void,
   hideSuggestions?: boolean,
   hideInputField?: boolean,
   suggestMature?: boolean,
@@ -39,7 +39,7 @@ const UNALLOWED_TAGS = ['lbry-first'];
  We suggest tags based on followed, unfollowed, and passedIn
  */
 
-export default function TagsSearch(props: Props) {
+export default function TagsSearch(props: Props): React.Node {
   const TAG_FOLLOW_MAX = 1000;
   const {
     tagsPassedIn = [],
@@ -64,7 +64,7 @@ export default function TagsSearch(props: Props) {
     disableControlTags,
   } = props;
   const [newTag, setNewTag] = useState('');
-  const doesTagMatch = (name) => {
+  const doesTagMatch = (name: string) => {
     const nextTag = newTag.slice(newTag.lastIndexOf(',') + 1, newTag.length).trim();
     return newTag ? name.toLowerCase().includes(nextTag.toLowerCase()) : true;
   };
@@ -97,11 +97,11 @@ export default function TagsSearch(props: Props) {
     suggestedTags.push('mature');
   }
 
-  function onChange(e) {
+  function onChange(e: { target: HTMLInputElement, ... }) {
     setNewTag(e.target.value);
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: { preventDefault: () => void, ... }) {
     e.preventDefault();
     let tags = newTag.trim();
 
@@ -123,7 +123,7 @@ export default function TagsSearch(props: Props) {
 
     // Split into individual tags, normalize the tags, and remove duplicates with a set.
     if (onSelect) {
-      const arrOfObjectTags = newTagsArr.map((tag) => {
+      const arrOfObjectTags: Array<Tag> = newTagsArr.map((tag): Tag => {
         return { name: tag };
       });
       onSelect(arrOfObjectTags);
@@ -176,12 +176,14 @@ export default function TagsSearch(props: Props) {
             )}
           </label>
           <ul className="tags--remove">
-            {countWithoutSpecialTags === 0 && <Tag key={`placeholder-tag`} name={'example'} disabled type={'remove'} />}
+            {countWithoutSpecialTags === 0 && (
+              <TagView key={`placeholder-tag`} name={'example'} disabled type={'remove'} />
+            )}
             {Boolean(tagsPassedIn.length) &&
               tagsPassedIn
                 .filter((t) => !INTERNAL_TAGS.includes(t.name))
                 .map((tag) => (
-                  <Tag
+                  <TagView
                     key={`passed${tag.name}`}
                     name={tag.name}
                     type="remove"
@@ -208,7 +210,7 @@ export default function TagsSearch(props: Props) {
               <label>{labelSuggestions || (newTag.length ? __('Matching') : __('Known Tags'))}</label>
               <ul className="tags">
                 {Boolean(newTag.length) && !suggestedTags.includes(newTag) && (
-                  <Tag
+                  <TagView
                     disabled={newTag !== 'mature' && maxed}
                     key={`entered${newTag}`}
                     name={newTag}
@@ -217,7 +219,7 @@ export default function TagsSearch(props: Props) {
                   />
                 )}
                 {suggestedTags.map((tag) => (
-                  <Tag
+                  <TagView
                     disabled={tag !== 'mature' && maxed}
                     key={`suggested${tag}`}
                     name={tag}

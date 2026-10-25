@@ -9,16 +9,10 @@ import { FORCE_CONTENT_TYPE_PLAYER } from 'constants/claim';
 import AutoplayCountdown from 'component/autoplayCountdown';
 import usePrevious from 'effects/use-previous';
 import LoadingScreen from 'component/common/loading-screen';
-import { addTheaterModeButton } from './internal/theater-mode';
-import { addAutoplayNextButton } from './internal/autoplay-next';
-import { addPlayNextButton } from './internal/play-next';
-import { addPlayPreviousButton } from './internal/play-previous';
-import { useHistory } from 'react-router';
-import type { HomepageCat } from 'util/buildHomepage';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import debounce from 'util/debounce';
 import { formatLbryUrlForWeb, generateListSearchUrlParams } from 'util/url';
 
-const PLAY_TIMEOUT_ERROR = 'play_timeout_error';
 const PLAY_TIMEOUT_LIMIT = 2000;
 
 type Props = {
@@ -44,7 +38,7 @@ type Props = {
   toggleAutoplayNext: () => void,
   setVideoPlaybackRate: (number) => void,
   userId: number,
-  homepageData?: { [string]: HomepageCat },
+  homepageData?: HomepageData,
   shareTelemetry: boolean,
   isFloating: boolean,
   doPlayUri: (string, string) => void,
@@ -55,12 +49,7 @@ type Props = {
   isMarkdownOrComment: boolean,
 };
 
-/*
-codesandbox of idealized/clean videojs and react 16+
-https://codesandbox.io/s/71z2lm4ko6
- */
-
-function VideoViewer(props: Props) {
+function VideoViewer(props: Props): React.Node {
   const {
     contentType,
     source,
@@ -97,19 +86,19 @@ function VideoViewer(props: Props) {
   const claimId = claim && claim.claim_id;
   const isAudio = contentType.includes('audio');
   const forcePlayer = FORCE_CONTENT_TYPE_PLAYER.includes(contentType);
-  const { push } = useHistory();
+  const { push } = useDesktopHistory();
   const [doNavigate, setDoNavigate] = useState(false);
   const [playNextUrl, setPlayNextUrl] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [ended, setEnded] = useState(false);
   const [showAutoplayCountdown, setShowAutoplayCountdown] = useState(false);
-  const vjsCallbackDataRef: any = React.useRef();
+  const playbackRateRef = React.useRef(videoPlaybackRate);
   const previousUri = usePrevious(uri);
   /* isLoading was designed to show loading screen on first play press, rather than completely black screen, but
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
   const [isLoading, setIsLoading] = useState(false);
   const [replay, setReplay] = useState(false);
-  const [videoNode, setVideoNode] = useState();
+  const activePlayerRef = React.useRef<?Player>(null);
 
   const updateVolumeState = React.useCallback(
     debounce((volume, muted) => {
@@ -127,21 +116,22 @@ function VideoViewer(props: Props) {
     }
   }, [uri, previousUri]);
 
-  // Update vjsCallbackDataRef (ensures videojs callbacks are not using stale values):
   useEffect(() => {
-    vjsCallbackDataRef.current = {
-      videoPlaybackRate: videoPlaybackRate,
-    };
+    playbackRateRef.current = videoPlaybackRate;
   }, [videoPlaybackRate]);
 
-  function doTrackingBuffered(e: Event, data: any) {
+  function doTrackingBuffered(e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    const data = e.detail;
     fetch(source, { method: 'HEAD', cache: 'no-store' }).then((response) => {
       data.playerPoweredBy = response.headers.get('x-powered-by');
       doAnalyticsBuffer(uri, data);
     });
   }
 
-  function doTrackingFirstPlay(e: Event, data: any) {
+  function doTrackingFirstPlay(player: Player, e: Event) {
+    if (!(e instanceof CustomEvent)) return;
+    const data = e.detail;
     let timeToStart = data.secondsToLoad;
 
     if (desktopPlayStartTime !== undefined) {
@@ -166,7 +156,7 @@ function VideoViewer(props: Props) {
         playerPoweredBy,
         userId,
         claim.canonical_url,
-        this,
+        player,
         bitrateAsBitsPerSecond
       );
     });
@@ -177,15 +167,14 @@ function VideoViewer(props: Props) {
   }
 
   const doPlay = useCallback(
-    (playUri) => {
+    (playUri: string) => {
       setDoNavigate(false);
       if (!isFloating) {
         const navigateUrl = formatLbryUrlForWeb(playUri);
-        push({
-          pathname: navigateUrl,
-          search: collectionId && generateListSearchUrlParams(collectionId),
-          state: { collectionId, forceAutoplay: true, hideFloatingPlayer: true },
-        });
+        push(
+          { pathname: navigateUrl, search: (collectionId && generateListSearchUrlParams(collectionId)) || '' },
+          { collectionId, forceAutoplay: true, hideFloatingPlayer: true }
+        );
       } else {
         doPlayUri(playUri, collectionId);
       }
@@ -206,13 +195,14 @@ function VideoViewer(props: Props) {
         setReplay(true);
       }
     } else {
-      if (videoNode) {
-        const currentTime = videoNode.currentTime;
+      const activePlayer = activePlayerRef.current;
+      if (activePlayer) {
+        const currentTime = activePlayer.currentTime;
 
         if (currentTime <= 5) {
           if (previousListUri && permanentUrl !== previousListUri) doPlay(previousListUri);
         } else {
-          videoNode.currentTime = 0;
+          activePlayer.currentTime = 0;
         }
         setDoNavigate(false);
       }
@@ -230,7 +220,6 @@ function VideoViewer(props: Props) {
     permanentUrl,
     playNextUrl,
     previousListUri,
-    videoNode,
   ]);
 
   React.useEffect(() => {
@@ -247,7 +236,7 @@ function VideoViewer(props: Props) {
     clearPosition(uri);
   }, [autoplayNext, clearPosition, collectionId, ended, uri]);
 
-  function onPlay(player) {
+  function onPlay(player: Player) {
     setEnded(false);
     setIsLoading(false);
     setIsPlaying(true);
@@ -257,33 +246,29 @@ function VideoViewer(props: Props) {
     analytics.videoIsPlaying(true, player);
   }
 
-  function onPause(event, player) {
+  function onPause(event: Event, player: Player) {
     setIsPlaying(false);
     handlePosition(player);
     analytics.videoIsPlaying(false, player);
   }
 
-  function onDispose(event, player) {
+  function onDispose(event: Event, player: Player) {
     handlePosition(player);
     analytics.videoIsPlaying(false, player);
   }
 
-  function handlePosition(player) {
-    const currTime = player.currentTime();
-    const durationInSeconds = claim.value.video && claim.value.video.duration;
-    if (Number(durationInSeconds) > Number(currTime)) {
-      savePosition(uri, player.currentTime());
+  function handlePosition(player: Player) {
+    const currTime = player.currentTime;
+    if (player.duration > currTime) {
+      savePosition(uri, player.currentTime);
     }
   }
 
-  function restorePlaybackRate(player) {
-    if (!vjsCallbackDataRef.current.embedded) {
-      player.playbackRate(vjsCallbackDataRef.current.videoPlaybackRate);
-    }
+  function restorePlaybackRate(player: Player) {
+    player.playbackRate = playbackRateRef.current;
   }
 
-  const playerReadyDependencyList = [uri];
-  playerReadyDependencyList.push(desktopPlayStartTime);
+  const playerReadyDependencyList = [uri, desktopPlayStartTime];
 
   const doPlayNext = () => {
     setPlayNextUrl(true);
@@ -295,81 +280,45 @@ function VideoViewer(props: Props) {
     setEnded(true);
   };
 
-  const onPlayerReady = useCallback((player: Player, videoNode: any) => {
-    setVideoNode(videoNode);
-    player.muted(muted);
-    player.volume(volume);
-    player.playbackRate(videoPlaybackRate);
-    if (!isMarkdownOrComment) {
-      addTheaterModeButton(player, toggleVideoTheaterMode);
-      if (collectionId) {
-        addPlayNextButton(player, doPlayNext);
-        addPlayPreviousButton(player, doPlayPrevious);
-      } else {
-        addAutoplayNextButton(player, toggleAutoplayNext, autoplayNext);
+  const onPlayerReady = useCallback((player: Player) => {
+    activePlayerRef.current = player;
+    player.muted = muted;
+    player.volume = Math.max(0, Math.min(1, volume));
+    player.playbackRate = videoPlaybackRate;
+    let active = true;
+    let restored = false;
+    const restore = () => {
+      restorePlaybackRate(player);
+      if (!restored) {
+        restored = true;
+        if (position && Number.isFinite(player.duration)) player.currentTime = Math.min(position, player.duration);
       }
-    }
-
-    // https://blog.videojs.com/autoplay-best-practices-with-video-js/#Programmatic-Autoplay-and-Success-Failure-Detection
-    const playPromise = player.play();
-    const timeoutPromise = new Promise((resolve, reject) =>
-      setTimeout(() => reject(PLAY_TIMEOUT_ERROR), PLAY_TIMEOUT_LIMIT)
-    );
-
-    Promise.race([playPromise, timeoutPromise]).catch((error) => {
-      if (typeof error === 'object' && error.name && error.name === 'NotAllowedError') {
-        if (player.autoplay() && !player.muted()) {
-          // player.muted(true);
-          // another version had player.play()
-        }
-      }
-      setIsLoading(false);
-      setIsPlaying(false);
-    });
-
-    setIsLoading(true); // if we are here outside of an embed, we're playing
-
-    // PR: #5535
-    // Move the restoration to a later `loadedmetadata` phase to counter the
-    // delay from the header-fetch. This is a temp change until the next
-    // re-factoring.
-    player.on('loadedmetadata', () => restorePlaybackRate(player));
-
-    // used for tracking buffering for watchman
-    player.on('tracking:buffered', doTrackingBuffered);
-
-    // first play tracking, used for initializing the watchman api
-    player.on('tracking:firstplay', doTrackingFirstPlay);
-    player.on('ended', () => setEnded(true));
-    player.on('play', onPlay);
-    player.on('pause', (event) => onPause(event, player));
-    player.on('dispose', (event) => onDispose(event, player));
-
-    player.on('error', () => {
-      const error = player.error();
-      if (error) {
-        analytics.sentryError('Video.js error', error);
-      }
-    });
-    player.on('volumechange', () => {
-      if (player) {
-        updateVolumeState(player.volume(), player.muted());
-      }
-    });
-    player.on('ratechange', () => {
-      const HAVE_NOTHING = 0; // https://docs.videojs.com/player#readyState
-      if (player && player.readyState() !== HAVE_NOTHING) {
-        // The playbackRate occasionally resets to 1, typically when loading a fresh video or when 'src' changes.
-        // Videojs says it's a browser quirk (https://github.com/videojs/video.js/issues/2516).
-        // [x] Don't update 'videoPlaybackRate' in this scenario.
-        // [ ] Ideally, the controlBar should be hidden to prevent users from changing the rate while loading.
-        setVideoPlaybackRate(player.playbackRate());
-      }
-    });
-
-    if (position) {
-      player.currentTime(position);
-    }
+    };
+    const listeners = {
+      loadedmetadata: restore,
+      'tracking:buffered': doTrackingBuffered,
+      'tracking:firstplay': (event: Event) => doTrackingFirstPlay(player, event),
+      ended: () => setEnded(true),
+      play: () => onPlay(player),
+      pause: (event: Event) => onPause(event, player),
+      volumechange: () => updateVolumeState(player.volume, player.muted),
+      ratechange: () => {
+        if (player.readyState !== 0) setVideoPlaybackRate(player.playbackRate);
+      },
+    };
+    Object.keys(listeners).forEach((event) => player.addEventListener(event, listeners[event]));
+    if (player.readyState >= 1) restore();
+    setIsLoading(true);
+    const timeout = setTimeout(() => {
+      if (active) setIsLoading(false);
+    }, PLAY_TIMEOUT_LIMIT);
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      onDispose(new Event('dispose'), player);
+      Object.keys(listeners).forEach((event) => player.removeEventListener(event, listeners[event]));
+      if (activePlayerRef.current === player) activePlayerRef.current = null;
+    };
   }, playerReadyDependencyList); // eslint-disable-line
 
   return (
@@ -397,6 +346,9 @@ function VideoViewer(props: Props) {
         toggleVideoTheaterMode={toggleVideoTheaterMode}
         autoplay
         autoplaySetting={autoplayNext}
+        toggleAutoplayNext={toggleAutoplayNext}
+        collectionId={collectionId}
+        isMarkdownOrComment={isMarkdownOrComment}
         claimId={claimId}
         userId={userId}
         shareTelemetry={shareTelemetry}

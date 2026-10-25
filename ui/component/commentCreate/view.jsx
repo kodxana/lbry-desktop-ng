@@ -3,11 +3,12 @@
 import 'scss/component/_comment-create.scss';
 
 import { buildValidSticker } from 'util/comments';
+import type { Sticker } from 'constants/stickers';
 import { FF_MAX_CHARS_IN_COMMENT } from 'constants/form-field';
 import { FormFieldAreaAdvanced, Form } from 'component/common/form';
 import { getChannelIdFromClaim } from 'util/claim';
 import { Lbryio } from 'lbryinc';
-import { useHistory } from 'react-router';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import * as ICONS from 'constants/icons';
 import * as KEYCODES from 'constants/keycodes';
 import * as PAGES from 'constants/pages';
@@ -55,16 +56,16 @@ type Props = {
   uri: string,
   createComment: (string, string, string, ?string, ?string, ?string, ?boolean) => Promise<any>,
   doFetchCreatorSettings: (channelId: string) => Promise<any>,
-  doToast: ({ message: string }) => void,
+  doToast: (ToastParams) => void,
   fetchComment: (commentId: string) => Promise<any>,
   onCancelReplying?: () => void,
   onDoneReplying?: () => void,
-  sendTip: ({}, (any) => void, (any) => void) => void,
-  setQuickReply: (any) => void,
+  sendTip: ({ amount: number, channel_id: string, claim_id: string }, (any) => void, (any) => void) => void,
+  setQuickReply?: (any) => void,
   toast: (string) => void,
 };
 
-export function CommentCreate(props: Props) {
+export function CommentCreate(props: Props): React.Node {
   const {
     activeChannelClaim,
     bottom,
@@ -94,27 +95,30 @@ export function CommentCreate(props: Props) {
   const {
     push,
     location: { pathname },
-  } = useHistory();
+  } = useDesktopHistory();
 
   const [isSubmitting, setSubmitting] = React.useState(false);
   const [commentFailure, setCommentFailure] = React.useState(false);
-  const [successTip, setSuccessTip] = React.useState({ txid: undefined, tipAmount: undefined });
-  const [isSupportComment, setIsSupportComment] = React.useState();
-  const [isReviewingSupportComment, setReviewingSupportComment] = React.useState();
-  const [isReviewingStickerComment, setReviewingStickerComment] = React.useState();
-  const [selectedSticker, setSelectedSticker] = React.useState();
+  const [successTip, setSuccessTip] = React.useState<{ txid: string | void, tipAmount: number | void }>({
+    txid: undefined,
+    tipAmount: undefined,
+  });
+  const [isSupportComment, setIsSupportComment] = React.useState<boolean | void>();
+  const [isReviewingSupportComment, setReviewingSupportComment] = React.useState<boolean | void>();
+  const [isReviewingStickerComment, setReviewingStickerComment] = React.useState<boolean | void>();
+  const [selectedSticker, setSelectedSticker] = React.useState<?Sticker>();
   const [tipAmount, setTipAmount] = React.useState(1);
-  const [convertedAmount, setConvertedAmount] = React.useState();
+  const [convertedAmount, setConvertedAmount] = React.useState<number | void>();
   const [commentValue, setCommentValue] = React.useState('');
   const [advancedEditor, setAdvancedEditor] = usePersistedState('comment-editor-mode', false);
-  const [stickerSelector, setStickerSelector] = React.useState();
-  const [activeTab, setActiveTab] = React.useState();
-  const [tipError, setTipError] = React.useState();
+  const [stickerSelector, setStickerSelector] = React.useState<boolean | void>();
+  const [activeTab, setActiveTab] = React.useState<string | void>();
+  const [tipError, setTipError] = React.useState<string | false | void>();
   const [deletedComment, setDeletedComment] = React.useState(false);
   const [showEmotes, setShowEmotes] = React.useState(false);
-  const [disableReviewButton, setDisableReviewButton] = React.useState();
-  const [exchangeRate, setExchangeRate] = React.useState();
-  const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState(undefined);
+  const [disableReviewButton, setDisableReviewButton] = React.useState<boolean | void>();
+  const [exchangeRate, setExchangeRate] = React.useState<number | void>();
+  const [canReceiveFiatTip, setCanReceiveFiatTip] = React.useState<boolean | void>(undefined);
 
   const claimId = claim && claim.claim_id;
   const charCount = commentValue ? commentValue.length : 0;
@@ -134,8 +138,7 @@ export function CommentCreate(props: Props) {
   // Functions
   // **************************************************************************
 
-  function handleSelectSticker(sticker: any) {
-    // $FlowFixMe
+  function handleSelectSticker(sticker: Sticker) {
     setSelectedSticker(sticker);
     setReviewingStickerComment(true);
     setTipAmount(sticker.price || 0);
@@ -147,18 +150,11 @@ export function CommentCreate(props: Props) {
     }
   }
 
-  function handleCommentChange(event) {
-    let commentValue;
-    if (isReply) {
-      commentValue = advancedEditor ? event : event.target.value;
-    } else {
-      commentValue = advancedEditor ? event : event.target.value;
-    }
-
-    setCommentValue(commentValue);
+  function handleCommentChange(event: string | { target: { value: string }, ... }) {
+    setCommentValue(typeof event === 'string' ? event : event.target.value);
   }
 
-  function altEnterListener(e: SyntheticKeyboardEvent<*>) {
+  function altEnterListener(e: KeyboardEvent) {
     if ((e.ctrlKey || e.metaKey) && e.keyCode === KEYCODES.ENTER) {
       e.preventDefault();
       buttonRef.current.click();
@@ -274,7 +270,7 @@ export function CommentCreate(props: Props) {
    * @param {string} [payment_intent_id] Optional payment_intent_id from Stripe payment
    * @param {string} [environment] Optional environment for Stripe (test|live)
    */
-  function handleCreateComment(txid, payment_intent_id, environment) {
+  function handleCreateComment(txid?: ?string, payment_intent_id?: ?string, environment?: ?string) {
     if (isSubmitting) return;
 
     setShowEmotes(false);
@@ -504,8 +500,8 @@ export function CommentCreate(props: Props) {
               isSubmitting
                 ? __('Sending...')
                 : commentFailure && tipAmount === successTip.tipAmount
-                ? __('Re-submit')
-                : __('Send')
+                  ? __('Re-submit')
+                  : __('Send')
             }
             onClick={handleSupportComment}
           />
@@ -548,8 +544,8 @@ export function CommentCreate(props: Props) {
                     ? __('Replying...')
                     : __('Reply')
                   : isSubmitting
-                  ? __('Commenting...')
-                  : __('Comment --[button to submit something]--')
+                    ? __('Commenting...')
+                    : __('Comment --[button to submit something]--')
               }
               onClick={() => activeChannelClaim && commentValue.length && handleCreateComment()}
             />
@@ -641,8 +637,8 @@ export function CommentCreate(props: Props) {
                 minTip
                   ? __('This channel requires a minimum tip for each comment.')
                   : minSuper
-                  ? __('This channel requires a minimum amount for HyperChats to be visible.')
-                  : ''
+                    ? __('This channel requires a minimum amount for HyperChats to be visible.')
+                    : ''
               }
               className="icon--help"
               icon={ICONS.HELP}

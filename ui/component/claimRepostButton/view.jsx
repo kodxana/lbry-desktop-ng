@@ -9,11 +9,21 @@ type Props = {
   uri: string,
   claim: StreamClaim,
   hasChannels: boolean,
-  doOpenModal: (string, {}) => void,
-  doToast: ({ message: string }) => void,
+  doOpenModal: (
+    string,
+    {
+      uri: string,
+      contentUri: string,
+      setContentUri: (string) => void,
+      repostUri: string,
+      setRepostUri: (string) => void,
+      isModal: boolean,
+    }
+  ) => void,
+  doToast: ({ message: string, linkText?: string, linkTarget?: string }) => void,
 };
 
-export default function ClaimRepostButton(props: Props) {
+export default function ClaimRepostButton(props: Props): React.Node {
   const { uri, claim, hasChannels, doOpenModal, doToast } = props;
   const [contentUri, setContentUri] = React.useState('');
   const [repostUri, setRepostUri] = React.useState('');

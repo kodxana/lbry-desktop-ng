@@ -14,12 +14,12 @@ type Props = {
   myClaimForUri: ?StreamClaim,
   isResolvingUri: boolean,
   amountNeededForTakeover: number,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
 };
 
-function PublishName(props: Props) {
+function PublishName(props: Props): React.Node {
   const { name, myClaimForUri, bid, isResolvingUri, amountNeededForTakeover, updatePublishForm, balance } = props;
-  const [bidError, setBidError] = useState(undefined);
+  const [bidError, setBidError] = useState<string | void>(undefined);
   const previousBidAmount = myClaimForUri && Number(myClaimForUri.amount);
 
   useEffect(() => {
@@ -56,8 +56,8 @@ function PublishName(props: Props) {
           value={bid}
           error={bidError}
           disabled={!name}
-          onChange={event => updatePublishForm({ bid: parseFloat(event.target.value) })}
-          onWheel={e => e.stopPropagation()}
+          onChange={(event) => updatePublishForm({ bid: parseFloat(event.target.value) })}
+          onWheel={(e) => e.stopPropagation()}
           helper={
             <>
               <BidHelpText

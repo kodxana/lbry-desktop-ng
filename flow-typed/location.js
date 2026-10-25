@@ -12,7 +12,7 @@ declare type UrlLocation = {
   port: string,
   protocol: string,
   reload: () => void,
-  replace: string => void,
-  search: string,
-  state: {},
+  replace: (string) => void,
+  state: { ... },
+  ...
 };

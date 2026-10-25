@@ -1,13 +1,14 @@
 import * as ACTIONS from 'constants/action_types';
 import { persistStore, persistReducer } from 'redux-persist';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
-import createCompressor from 'redux-persist-transform-compress';
+import createCompressor from 'util/persist-compressor';
 import { createFilter, createBlacklistFilter } from 'redux-persist-transform-filter';
 import localForage from 'localforage';
 import { createStore, applyMiddleware, compose } from 'redux';
-import thunk from 'redux-thunk';
-import { createMemoryHistory, createBrowserHistory } from 'history';
-import { routerMiddleware } from 'connected-react-router';
+import { thunk } from 'redux-thunk';
+import { createBrowserHistory } from 'history';
+import createDesktopHistory from 'util/desktop-history';
+import { createReduxHistoryContext } from 'redux-first-history';
 import createRootReducer from './reducers';
 import Lbry from 'lbry';
 import { buildSharedStateMiddleware } from 'redux/middleware/shared-state';
@@ -113,15 +114,12 @@ const persistOptions = {
   transforms,
 };
 
-let history;
+let baseHistory;
 // @if TARGET='app'
-history = createMemoryHistory({
-  initialEntries: [generateInitialUrl(window.location.hash)],
-  initialIndex: 0,
-});
+baseHistory = createDesktopHistory(generateInitialUrl(window.location.hash));
 // @endif
 // @if TARGET='web'
-history = createBrowserHistory();
+baseHistory = createBrowserHistory();
 // @endif
 
 const triggerSharedStateActions = [
@@ -193,7 +191,8 @@ const populateAuthTokenHeader = () => {
 };
 
 const sharedStateMiddleware = buildSharedStateMiddleware(triggerSharedStateActions, sharedStateFilters, sharedStateCb);
-const rootReducer = createRootReducer(history);
+const { createReduxHistory, routerMiddleware, routerReducer } = createReduxHistoryContext({ history: baseHistory });
+const rootReducer = createRootReducer(routerReducer);
 const persistedReducer = persistReducer(persistOptions, rootReducer);
 const bulkThunk = createBulkThunkMiddleware();
 const middleware = [
@@ -201,7 +200,7 @@ const middleware = [
   // @if TARGET='web'
   populateAuthTokenHeader,
   // @endif
-  routerMiddleware(history),
+  routerMiddleware,
   thunk,
   bulkThunk,
 ];
@@ -212,6 +211,12 @@ const store = createStore(
   composeEnhancers(applyMiddleware(...middleware))
 );
 
+const history = createReduxHistory(store);
+// The desktop's back/forward menus use the memory history's live entries.
+Object.defineProperties(history, {
+  index: { get: () => baseHistory.index },
+  entries: { get: () => baseHistory.entries },
+});
 const persistor = persistStore(store);
 window.persistor = persistor;
 

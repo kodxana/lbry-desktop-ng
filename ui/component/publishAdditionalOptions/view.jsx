@@ -13,7 +13,7 @@ import { sortLanguageMap } from 'util/default-languages';
 // @if TARGET='app'
 // import ErrorText from 'component/common/error-text';
 // import { LbryFirst } from 'lbry-redux';
-// import { ipcRenderer } from 'electron';
+// import desktop from 'util/desktop';
 // @endif
 
 type Props = {
@@ -24,14 +24,14 @@ type Props = {
   otherLicenseDescription: ?string,
   licenseUrl: ?string,
   disabled: boolean,
-  updatePublishForm: ({}) => void,
+  updatePublishForm: (UpdatePublishFormData) => void,
   useLBRYUploader: boolean,
   needsYTAuth: boolean,
   fetchAccessToken: () => void,
   accessToken: string,
 };
 
-function PublishAdditionalOptions(props: Props) {
+function PublishAdditionalOptions(props: Props): React.Node {
   const {
     language,
     name,

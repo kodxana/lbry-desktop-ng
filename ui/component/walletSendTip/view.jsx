@@ -26,7 +26,7 @@ type SupportParams = { amount: number, claim_id: string, channel_id?: string };
 type Props = {
   activeChannelClaim: ?ChannelClaim,
   balance: number,
-  claim: StreamClaim,
+  claim: ?Claim,
   claimIsMine: boolean,
   fetchingChannels: boolean,
   incognito: boolean,
@@ -40,11 +40,11 @@ type Props = {
   doSendTip: (SupportParams, boolean) => void,
 };
 
-function WalletSendTip(props: Props) {
+function WalletSendTip(props: Props): React.Node {
   const {
     activeChannelClaim,
     balance,
-    claim = {},
+    claim,
     claimIsMine,
     fetchingChannels,
     incognito,
@@ -61,9 +61,9 @@ function WalletSendTip(props: Props) {
 
   const [tipAmount, setTipAmount] = usePersistedState('comment-support:customTip', 1.0);
   const [isOnConfirmationPage, setConfirmationPage] = React.useState(false);
-  const [tipError, setTipError] = React.useState();
+  const [tipError, setTipError] = React.useState<string | false | void>();
   const [activeTab, setActiveTab] = usePersistedState('comment-tip:tab', TAB_BOOST);
-  const [disableSubmitButton, setDisableSubmitButton] = React.useState();
+  const [disableSubmitButton, setDisableSubmitButton] = React.useState<boolean | void>();
 
   /** CONSTS **/
 
@@ -72,7 +72,7 @@ function WalletSendTip(props: Props) {
   const titleText = claimIsMine
     ? __('Boost Your %claimTypeText%', { claimTypeText })
     : __('Boost This %claimTypeText%', { claimTypeText });
-  const { claim_id: claimId } = claim;
+  const claimId = claim?.claim_id;
   let channelName;
   try {
     ({ channelName } = parseURI(uri));
@@ -109,7 +109,7 @@ function WalletSendTip(props: Props) {
   /** FUNCTIONS **/
 
   function getClaimTypeText() {
-    switch (claim.value_type) {
+    switch (claim?.value_type) {
       case 'stream':
         return __('Content');
       case 'channel':
@@ -124,7 +124,8 @@ function WalletSendTip(props: Props) {
   }
 
   // make call to the backend to send lbc or fiat
-  function sendSupportOrConfirm(instantTipMaxAmount = null) {
+  function sendSupportOrConfirm(instantTipMaxAmount: ?number = null) {
+    if (!claimId) return;
     if (!isOnConfirmationPage && (!instantTipMaxAmount || !instantTipEnabled || tipAmount > instantTipMaxAmount)) {
       setConfirmationPage(true);
     } else {
@@ -159,14 +160,14 @@ function WalletSendTip(props: Props) {
 
   function buildButtonText() {
     // test if frontend will show up as isNan
-    function isNan(tipAmount) {
+    function isNan(tipAmount: number | string) {
       // testing for NaN ES5 style https://stackoverflow.com/a/35912757/3973137
       // also sometimes it's returned as a string
       // eslint-disable-next-line
       return tipAmount !== tipAmount || tipAmount === 'NaN';
     }
 
-    function convertToTwoDecimals(number) {
+    function convertToTwoDecimals(number: number) {
       return (Math.round(number * 100) / 100).toFixed(2);
     }
 

@@ -1,0 +1,18 @@
+[
+  ["document ł #1.TXT", "text/plain"],
+  ["post.md", "text/markdown"],
+  ["document.pdf", "application/pdf"],
+  ["document.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+  ["book.epub", "application/epub+zip"],
+  ["photo.JPEG", "image/jpeg"],
+  ["image.webp", "image/webp"],
+  ["video.mp4", "video/mp4"],
+  ["video.mkv", "video/x-matroska"],
+  ["audio.m4a", "audio/mp4"],
+  ["audio.mp3", "audio/mpeg"],
+  ["audio.ogg", "audio/ogg"],
+  ["audio.wav", "audio/wav"],
+  ["script.js", "text/javascript"],
+  ["unknown.lbry-unknown", null],
+  ["no-extension", null]
+]

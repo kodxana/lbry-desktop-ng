@@ -1,8 +1,11 @@
 {
-  "appId": "io.lbry.LBRY",
-  "productName": "LBRY",
+  "appId": "net.lbry.community.desktop",
+  "productName": "LBRY Desktop NG",
+  "allowMissingDependencies": false,
+  "detectUpdateChannel": false,
+  "electronUpdaterCompatibility": ">=4.6.5",
   "directories": {
-    "output": "dist/electron"
+    "output": "dist/ng"
   },
   "files": [
     {
@@ -12,94 +15,71 @@
     {
       "from": "dist/electron/static",
       "to": "./"
-    }
+    },
+    "package.json",
+    "node_modules/**/*",
+    "!node_modules/electron{,/**/*}"
   ],
   "extraResources": [
     {
       "from": "./static/daemon/",
       "to": "static/daemon/",
-      "filter": ["**/*"]
+      "filter": [
+        "lbrynet.exe"
+      ]
     },
     {
       "from": "./static/img",
       "to": "static/img",
-      "filter": ["**/*"]
+      "filter": [
+        "**/*"
+      ]
     },
     {
       "from": "./static/font",
       "to": "static/font",
-      "filter": ["**/*"]
-    },
-    {
-      "from": "./static/app-update.yml",
-      "to": "app-update.yml"
+      "filter": [
+        "**/*"
+      ]
     }
   ],
   "publish": [
     {
-      "provider": "github"
+      "provider": "github",
+      "owner": "kodxana",
+      "repo": "lbry-desktop-ng"
     }
   ],
-  "mac": {
-    "category": "public.app-category.entertainment",
-    "entitlements": "build/entitlements.mac.plist",
-    "entitlementsInherit": "build/entitlements.mac.plist",
-    "hardenedRuntime" : true,
-    "gatekeeperAssess": false
-  },
-  "dmg": {
-    "iconSize": 128,
-    "contents": [
-      {
-        "x": 115,
-        "y": 164
-      },
-      {
-        "x": 387,
-        "y": 164,
-        "type": "link",
-        "path": "/Applications"
-      }
-    ],
-    "window": {
-      "x": 200,
-      "y": 200,
-      "width": 500,
-      "height": 300
-    },
-    "background": "./build/background.png"
-  },
-  "protocols": [
-    {
-      "name": "LBRY URI",
-      "schemes": ["lbry"],
-      "role": "Viewer"
-    }
-  ],
-  "linux": {
-    "target": ["AppImage", "deb"],
-    "executableName": "lbry",
-    "category": "AudioVideo;Video",
-    "desktop": {
-      "MimeType": "x-scheme-handler/lbry"
-    }
-  },
-  "deb": {
-    "depends": ["gconf2", "gconf-service", "libnotify4", "libxtst6", "libnss3"]
-  },
+  "protocols": [],
   "nsis": {
-    "perMachine": true,
-    "createDesktopShortcut": "always",
-    "differentialPackage": true
+    "include": "build/installer.nsh",
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "differentialPackage": true,
+    "deleteAppDataOnUninstall": false
   },
   "win": {
     "target": [
       {
         "target": "nsis",
-        "arch": ["x64"]
+        "arch": [
+          "x64"
+        ]
       }
     ]
   },
-  "artifactName": "${productName}_${version}.${ext}",
-  "afterSign": "./build/afterSignHook.js"
+  "artifactName": "LBRY-Desktop-NG-${version}-windows-${arch}.${ext}",
+  "afterSign": null,
+  "extraMetadata": {
+    "main": "main.js"
+  },
+  "npmRebuild": false,
+  "extraFiles": [
+    {
+      "from": "build/sdk-candidate.json",
+      "to": "SDK-CANDIDATE.json"
+    }
+  ],
+  "copyright": "Copyright \u00a9 LBRY Inc. and LBRY Desktop NG contributors"
 }

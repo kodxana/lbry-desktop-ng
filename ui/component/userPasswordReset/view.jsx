@@ -1,7 +1,7 @@
 // @flow
 import * as PAGES from 'constants/pages';
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useDesktopHistory } from 'component/common/desktop-router';
 import Card from 'component/common/card';
 import Spinner from 'component/spinner';
 import { Form, FormField } from 'component/common/form';
@@ -13,7 +13,7 @@ import Nag from 'component/common/nag';
 type Props = {
   user: ?User,
   doToast: ({ message: string }) => void,
-  doUserPasswordReset: string => void,
+  doUserPasswordReset: (string) => void,
   doClearPasswordEntry: () => void,
   doClearEmailEntry: () => void,
   passwordResetPending: boolean,
@@ -22,7 +22,7 @@ type Props = {
   emailToVerify: ?string,
 };
 
-function UserPasswordReset(props: Props) {
+function UserPasswordReset(props: Props): React.Node {
   const {
     doUserPasswordReset,
     passwordResetPending,
@@ -33,7 +33,7 @@ function UserPasswordReset(props: Props) {
     doClearEmailEntry,
     emailToVerify,
   } = props;
-  const { location, push, goBack } = useHistory();
+  const { location, push, goBack } = useDesktopHistory();
   const [email, setEmail] = React.useState(emailToVerify || '');
   const valid = email.match(EMAIL_REGEX);
   const restartAtSignInPage = location.pathname === `/$/${PAGES.AUTH_SIGNIN}`;
@@ -80,7 +80,7 @@ function UserPasswordReset(props: Props) {
                 autoComplete="on"
                 label={__('Email')}
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
               />
 
               <div className="section__actions">

@@ -1,11 +1,11 @@
 // @flow
 import React from 'react';
 import Button from 'component/button';
+import desktop from 'util/desktop';
 import { FormField } from 'component/common/form-components/form-field';
 import { Form } from 'component/common/form-components/form';
-import { withRouter } from 'react-router-dom';
+import { withDesktopRouter } from 'component/common/desktop-router';
 
-// $FlowFixMe cannot resolve ...
 import image from 'static/img/yrblhappy.svg';
 import * as DAEMON_SETTINGS from 'constants/daemon_settings';
 
@@ -46,6 +46,9 @@ function HostingSplash(props: Props) {
   const blobSpaceUsed = viewBlobSpace + autoBlobSpace;
 
   const [hostingChoice, setHostingChoice] = React.useState('MANAGED');
+  React.useEffect(() => {
+    desktop.requestDiskSpace();
+  }, []);
   function handleSubmit() {
     if (hostingChoice === 'CUSTOM') {
       handleNextPage();
@@ -75,6 +78,7 @@ function HostingSplash(props: Props) {
   }
 
   function getManagedCopy() {
+    if (!diskSpace) return __('Continue with my current settings');
     if (viewHostingLimit || autoHostingLimit || !saveBlobs) {
       return __("I'm happy with my settings");
     } else if (getManagedLimitMB() > 0) {
@@ -88,6 +92,7 @@ function HostingSplash(props: Props) {
   }
 
   function getManagedHelper() {
+    if (!diskSpace) return __('Storage information is unavailable. You can check hosting settings later.');
     if (viewHostingLimit || autoHostingLimit || !saveBlobs) {
       return __(`We've noticed you already have some settings.`);
     } else if (getManagedLimitMB() > 0) {
@@ -98,7 +103,7 @@ function HostingSplash(props: Props) {
   }
 
   async function handleAuto() {
-    if (viewHostingLimit || autoHostingLimit || !saveBlobs) {
+    if (!diskSpace || viewHostingLimit || autoHostingLimit || !saveBlobs) {
       handleDone();
     } else if (getManagedLimitMB() > 0) {
       // limit to used // maybe move this to a single action function that doesn't live inside the component.
@@ -138,6 +143,9 @@ function HostingSplash(props: Props) {
                 onChange={(e) => setHostingChoice('CUSTOM')}
               />
             </fieldset>
+            {!diskSpace && (
+              <Button button="link" label={__('Retry storage check')} onClick={() => desktop.requestDiskSpace()} />
+            )}
           </div>
           <Form onSubmit={handleSubmit} className="section__body">
             <div className={'card__actions'}>
@@ -153,4 +161,6 @@ function HostingSplash(props: Props) {
   );
 }
 
-export default withRouter(HostingSplash);
+const RoutedHostingSplash: React.ComponentType<Omit<Props, 'history' | 'location'>> =
+  withDesktopRouter<Props>(HostingSplash);
+export default RoutedHostingSplash;
