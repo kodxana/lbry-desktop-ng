@@ -27,7 +27,7 @@ function createDesktopBridge({ ipcRenderer, webFrame, webUtils, platform, electr
       if (filePath) ipcRenderer.send('selected-file', filePath);
       return filePath;
     },
-    fileUrl: (filePath) => require('url').pathToFileURL(filePath).href,
+    fileUrl: (filePath) => ipcRenderer.sendSync('file-url', filePath),
     readDocument: (filePath) => ipcRenderer.invoke('read-document', filePath),
     fileDetails: (filePath) => ipcRenderer.invoke('get-file-details-from-path', filePath),
     savePost: (text) => ipcRenderer.invoke('save-post', text),

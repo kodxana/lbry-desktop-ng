@@ -14,7 +14,7 @@ updates Sass and handles its declaration-order changes.
 
 That build-tooling migration kept Electron 17.2.0, React and the SDK pin at their
 RC3 versions. The [subsequent runtime migration](electron-runtime.md) moves to
-the supported Electron 44.9.3 release. Packaging and
+the supported Electron 45.0.0 release. Packaging and
 updater changes are described in [their migration notes](packaging-updater.md).
 Updating build-host Node does not update the Node or
 Chromium embedded in Electron. RC3 remains the published regression baseline;

@@ -76,9 +76,9 @@ async function unitTests() {
   const root = directory();
   const crypto = backend();
   const store = new PasswordStore(root, crypto);
-  assert.equal(store.read().state, 'missing');
-  store.save(secret);
-  equalSecret(new PasswordStore(root, crypto).read().password);
+  assert.equal((await store.read()).state, 'missing');
+  await store.save(secret);
+  equalSecret((await new PasswordStore(root, crypto).read()).password);
   const bytes = fs.readFileSync(store.file);
   assert(!bytes.includes(Buffer.from('synthetic')), 'Disk record must not contain the password');
   if (process.platform !== 'win32') assert.equal(fs.statSync(store.file).mode & 0o777, 0o600);
@@ -89,36 +89,39 @@ async function unitTests() {
         throw new Error('Synthetic disk failure');
       },
     });
-    assert.throws(() => broken.save('replacement'), 'Write failures must propagate');
+    await assert.rejects(() => broken.save('replacement'), 'Write failures must propagate');
     assert(fs.readFileSync(store.file).equals(bytes), 'A failed write must preserve the previous protected record');
     assert.equal(fs.readdirSync(root).length, 1, 'Temporary files must be removed after failure');
   }
   const brokenCrypto = {
     ...crypto,
-    decryptString: () => {
+    decryptStringAsync: () => {
       throw new Error('Synthetic decryption failure');
     },
   };
-  assert.throws(() => new PasswordStore(root, brokenCrypto).save('replacement'));
+  await assert.rejects(() => new PasswordStore(root, brokenCrypto).save('replacement'));
   assert(fs.readFileSync(store.file).equals(bytes), 'Verification must finish before replacing the old record');
   crypto.available = false;
-  assert.throws(() => store.save(secret));
-  assert.throws(() => store.read());
+  await assert.rejects(() => store.save(secret));
+  await assert.rejects(() => store.read());
   assert(fs.readFileSync(store.file).equals(bytes), 'Unavailable OS storage must preserve encrypted data');
-  store.forget();
-  assert.equal(store.read().state, 'forgotten', 'Forgetting works while the keyring is locked');
+  await store.forget();
+  assert.equal((await store.read()).state, 'forgotten', 'Forgetting works while the keyring is locked');
   crypto.available = true;
   for (const value of ['{"version":9}', '{"version":1,"ciphertext":"broken!"}', '{']) {
     fs.writeFileSync(store.file, value);
-    assert.throws(() => store.read());
+    await assert.rejects(() => store.read());
     assert.equal(fs.readFileSync(store.file, 'utf8'), value, 'Never reset corrupt or future records on read');
   }
-  const insecure = { ...backend(), encryptString: () => Buffer.from('v10-insecure') };
-  assert.throws(() => new PasswordStore(directory(), insecure, fs, 'linux').save(secret));
-  assert.throws(() =>
-    new PasswordStore(directory(), { ...backend(), getSelectedStorageBackend: () => 'basic_text' }, fs, 'linux').save(
-      secret
-    )
+  const insecure = { ...backend(), encryptStringAsync: () => Buffer.from('v10-insecure') };
+  await assert.rejects(() => new PasswordStore(directory(), insecure, fs, 'linux').save(secret));
+  await assert.rejects(() =>
+    new PasswordStore(
+      directory(),
+      { ...backend(), encryptStringAsync: async () => Buffer.from('v99-unknown') },
+      fs,
+      'linux'
+    ).save(secret)
   );
 
   const fixture = cookieFixture();
@@ -133,7 +136,11 @@ async function unitTests() {
     'Keep recovery copy until restart'
   );
   assert(await svc.client().setSavedPassword(first.password, true));
-  assert.equal(svc.store.read().pending, true, 'Auto-unlock must not commit migration within the first process');
+  assert.equal(
+    (await svc.store.read()).pending,
+    true,
+    'Auto-unlock must not commit migration within the first process'
+  );
   svc.store.migratedThisRun = false; // Simulate a new main process; OS tests also use actual process restarts.
   assert.equal(await svc.client().getSavedPassword(), first.password);
   assert(
@@ -155,7 +162,11 @@ async function unitTests() {
   assert.equal(await interruptedMigration.client().getSavedPassword(), first.password);
   interruptedMigration.store.crypto = backend(); // A crash lost the first process's new OS key.
   interruptedMigration.store.migratedThisRun = false;
-  assert.equal(await interruptedMigration.client().getSavedPassword(), first.password, 'Recover from the retained cookie');
+  assert.equal(
+    await interruptedMigration.client().getSavedPassword(),
+    first.password,
+    'Recover from the retained cookie'
+  );
   assert.equal(interruptedMigration.legacy.read().length, 1, 'Recovery must retain the cookie until a good restart');
   interruptedMigration.store.migratedThisRun = false;
   assert.equal(await interruptedMigration.client().getSavedPassword(), first.password);
@@ -182,7 +193,7 @@ async function unitTests() {
     const legacy = cookieFixture();
     const original = legacy.storage.getItem();
     const test = service({ legacy: legacy.legacy });
-    if (failure.includes('cleanup')) test.store.save(first.password);
+    if (failure.includes('cleanup')) await test.store.save(first.password);
     if (failure === 'unavailable') test.store.crypto.available = false;
     if (failure === 'write') {
       test.store.fs = {
@@ -193,7 +204,9 @@ async function unitTests() {
       };
     }
     if (failure === 'verification') {
-      test.store.crypto.decryptString = () => '{"kind":"lbry-desktop-password","password":"wrong"}';
+      test.store.crypto.decryptStringAsync = async () => ({
+        result: '{"kind":"lbry-desktop-password","password":"wrong"}',
+      });
     }
     if (failure === 'read-back') {
       test.store.fs = {
@@ -223,12 +236,12 @@ async function unitTests() {
     if (failure !== 'native-cleanup') {
       assert.equal(legacy.storage.getItem(), original, 'Keep the legacy source after ' + failure);
     }
-    if (failure.includes('cleanup')) assert.equal(test.store.read().password, first.password);
+    if (failure.includes('cleanup')) assert.equal((await test.store.read()).password, first.password);
   }
 
   const conflict = service({ cookies: [{ name: 'saved_password', value: 'different', domain: 'lbry.tv', path: '/' }] });
   assert.equal(await conflict.client().getSavedPassword(), null, 'Conflicting legacy passwords need manual entry');
-  assert.equal(conflict.store.read().state, 'missing');
+  assert.equal((await conflict.store.read()).state, 'missing');
   assert.equal(conflict.legacy.read().length, 1, 'Do not erase conflicting legacy copies');
   assert.equal(conflict.notices.length, 1);
 
@@ -291,7 +304,38 @@ async function unitTests() {
   }
   concurrent.frame.url = 'https://example.com/index.html';
   assert.equal((await concurrent.invoke('save', secret)).ok, false, 'Reject a navigated renderer');
-  assert.equal(concurrent.store.read().state, 'forgotten');
+  assert.equal((await concurrent.store.read()).state, 'forgotten');
+  const delayed = service();
+  let finishEncryption;
+  const encrypt = delayed.store.crypto.encryptStringAsync.bind(delayed.store.crypto);
+  delayed.store.crypto.encryptStringAsync = async (value) => {
+    await new Promise((resolve) => {
+      finishEncryption = resolve;
+    });
+    return encrypt(value);
+  };
+  const saving = delayed.invoke('save', secret);
+  const forgettingAfterSave = delayed.invoke('forget');
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(typeof finishEncryption, 'function');
+  assert(!fs.existsSync(delayed.store.file), 'Do not write until asynchronous encryption finishes');
+  finishEncryption();
+  assert.equal((await saving).ok, true);
+  assert.equal((await forgettingAfterSave).ok, true);
+  assert.equal((await delayed.store.read()).state, 'forgotten', 'Queued Forget must win over a pending save');
+
+  const portalCrypto = backend();
+  const portalEncrypt = portalCrypto.encryptStringAsync.bind(portalCrypto);
+  portalCrypto.encryptStringAsync = async (value) => {
+    const bytes = await portalEncrypt(value);
+    bytes.write('v12');
+    return bytes;
+  };
+  const portal = new PasswordStore(directory(), portalCrypto, fs, 'linux');
+  const portalBytes = await portalCrypto.encryptStringAsync(
+    JSON.stringify({ kind: 'lbry-desktop-password', password: secret })
+  );
+  equalSecret((await portal.decode({ version: 1, ciphertext: portalBytes.toString('base64') })).password);
   console.log(
     'PASS: protected password writes, migration, failure preservation, opt-out, forget, serialization and IPC boundaries'
   );
@@ -302,6 +346,8 @@ function nativeTests() {
   const env = { ...process.env };
   delete env.ELECTRON_RUN_AS_NODE;
   for (const phase of [
+    'legacy-save',
+    'restart',
     'migrate',
     'recover',
     'restart',
@@ -319,7 +365,11 @@ function nativeTests() {
     });
     process.stdout.write((result.stdout || '') + (result.stderr || ''));
     if (result.error) throw result.error;
-    assert.equal(result.status, 0, 'Native password test failed: ' + phase + (result.signal ? ' (' + result.signal + ')' : ''));
+    assert.equal(
+      result.status,
+      0,
+      'Native password test failed: ' + phase + (result.signal ? ' (' + result.signal + ')' : '')
+    );
   }
 }
 

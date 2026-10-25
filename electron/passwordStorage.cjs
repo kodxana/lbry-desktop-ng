@@ -41,13 +41,13 @@ function registerPasswordStorage({
           case 'status':
             return { ok: true, saved: store.hasSavedPassword() || (await legacyCookies()).length > 0 };
           case 'read':
-            return { ok: true, ...store.read() };
+            return { ok: true, ...(await store.read()) };
           case 'save':
-            return { ok: true, pending: Boolean(store.save(value).pending) };
+            return { ok: true, pending: Boolean((await store.save(value)).pending) };
           case 'migrate':
-            return { ok: true, pending: Boolean(store.save(value, true).pending) };
+            return { ok: true, pending: Boolean((await store.save(value, true)).pending) };
           case 'forget':
-            store.forget();
+            await store.forget();
             return { ok: true };
           case 'legacy':
             return { ok: true, passwords: (await legacyCookies()).map((cookie) => cookie.value) };

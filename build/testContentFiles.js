@@ -53,6 +53,22 @@ async function main() {
     },
   });
   const invoke = (name, value, sender = event) => handlers[name](sender, value);
+  const fileUrl = (filename, sender = event) => {
+    const request = { ...sender };
+    invoke('file-url', filename, request);
+    return request.returnValue;
+  };
+  for (const filename of [
+    source,
+    path.join(root, 'a % # ? ł.pdf'),
+    ...(process.platform === 'win32' ? ['\\\\server\\share\\file #1.pdf'] : ['/tmp/back\\slash.pdf']),
+  ]) {
+    assert.equal(fileUrl(filename), require('url').pathToFileURL(filename).href);
+  }
+  for (const invalid of [null, 42, '../relative', 'file:///already-url', source + '\0'])
+    assert.equal(fileUrl(invalid), null);
+  assert.equal(fileUrl(source, { ...event, sender: {} }), null);
+  assert.equal(fileUrl(source, { ...event, senderFrame: { url: frame.url } }), null);
   for (const file of [secret, source, root, '../wallet']) await assert.rejects(invoke('read-document', file));
   downloaded = [source];
   assert.equal((await invoke('read-document', source)).toString(), 'Document ł');

@@ -113,6 +113,13 @@ app
       assert.equal(await evaluate('typeof window.lbryDesktop[' + JSON.stringify(key) + ']'), 'undefined');
     }
     assert.equal(await evaluate("window.lbryDesktop.filePath(new File(['text'], 'virtual.txt'))"), '');
+    for (const filename of [path.join(root, 'document ł # %.pdf'), path.join(root, 'document.html')]) {
+      assert.equal(
+        await call('fileUrl', filename),
+        pathToFileURL(filename).href,
+        'File URLs work without preload Node shims'
+      );
+    }
     await assert.rejects(evaluate("window.lbryDesktop.filePath({ path: 'private-wallet' })"));
     await assert.rejects(call('readDocument', path.join(wallet, 'default_wallet')));
     const selected = path.join(root, 'selected ł #1.txt');
