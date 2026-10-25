@@ -52,6 +52,10 @@ reject the removed dependencies. The existing wallet backup/encryption,
 saved-password migration/native storage, updater, SDK and installed-upgrade
 gates remain required on the candidate revision.
 
+The media phase runs in a separate fixture process, so decoding does not consume
+the general UI suite's timeout. The sandbox suite also decodes MP4, HLS and DASH
+with Node integration disabled and the production preload.
+
 Fixtures contain no personal wallet or third-party media. Hardware decoding,
 live/adaptive behavior on slow public streams, DRM and macOS still need separate
 acceptance testing. This migration does not change the SDK or Electron version.

@@ -145,6 +145,29 @@ app
       vertices: 3,
     });
     console.log('PASS: sandboxed Three.js loads authorized model bytes and renders with WebGL 2 without Node globals');
+    const media = await require('./mediaServer.cjs')();
+    try {
+      for (const [file, format] of [
+        ['sample.mp4', 'mp4'],
+        ['master.m3u8', 'hls'],
+        ['manifest.mpd', 'dash'],
+      ]) {
+        const result = await evaluate(
+          'window.probeMedia(' + JSON.stringify(media.origin + '/' + file) + ',' + JSON.stringify(format) + ')'
+        );
+        assert.equal(result.node, 'undefined');
+        assert(
+          result.time >= 0.1 && result.frames > 0,
+          format + ' must advance and decode video frames in the sandbox'
+        );
+        assert([32, 64].includes(result.height));
+        if (format !== 'mp4')
+          assert(result.source.startsWith('blob:'), 'Adaptive media uses MediaSource in the sandbox');
+      }
+      console.log('PASS: sandboxed Video.js 10 MP4, HLS and DASH adapters decode and play without Node globals');
+    } finally {
+      await media.close();
+    }
     const comic = path.join(root, 'comic.cbz');
     const comicZip = new AdmZip();
     comicZip.addFile('1.png', Buffer.from(docxFixture.png, 'base64'));

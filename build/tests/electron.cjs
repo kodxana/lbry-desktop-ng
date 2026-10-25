@@ -368,7 +368,6 @@ app
               'formsAndDates',
               'markdownEditor',
               'documents',
-              'media',
               'fileDialogs',
               'fileUploads',
               'windowControls',

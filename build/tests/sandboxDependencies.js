@@ -17,6 +17,54 @@ import sanitizeDocumentHtml from 'util/document-html';
 import ElectronCookies from 'util/electron-cookies.cjs';
 import legacyCookies from './fixtures/legacy-cookies.json';
 import runtimeUtilities from './runtimeUtilities';
+import { VideoPlayer, Video } from '@videojs/react/video';
+import { HlsJsVideo } from '@videojs/react/media/hlsjs-video';
+import { DashVideo } from '@videojs/react/media/dash-video';
+
+// The adapters must decode without the Node globals available to the UI fixture runner.
+window.probeMedia = async (source, format) => {
+  const container = document.createElement('div');
+  document.body.append(container);
+  const root = createRoot(container);
+  let media;
+  const Component = format === 'hls' ? HlsJsVideo : format === 'dash' ? DashVideo : Video;
+  try {
+    root.render(
+      React.createElement(
+        VideoPlayer,
+        null,
+        React.createElement(Component, {
+          src: source,
+          preload: 'auto',
+          muted: true,
+          ref: (element) => {
+            if (element) media = element;
+          },
+        })
+      )
+    );
+    for (let count = 0; count < 500; count++) {
+      if (media && media.readyState >= 2) break;
+      if (media?.error) throw new Error(media.error.message);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (!media || media.readyState < 2) throw new Error('Sandbox media did not decode: ' + format);
+    await media.play();
+    for (let count = 0; count < 500 && media.currentTime < 0.1; count++)
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    return {
+      node: typeof window.require,
+      time: media.currentTime,
+      height: media.videoHeight,
+      frames: media.getVideoPlaybackQuality().totalVideoFrames,
+      source: media.currentSrc,
+    };
+  } finally {
+    media?.pause();
+    root.unmount();
+    container.remove();
+  }
+};
 
 window.probeComic = async (filename) => {
   const urls = await readComic(await desktop.readDocument(filename), new AbortController().signal);

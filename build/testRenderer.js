@@ -43,9 +43,11 @@ fs.writeFileSync(
   '<!doctype html><meta charset="utf-8"><div id="app"></div><script src="renderer.js"></script>'
 );
 
+// Decoding and graphics suites get separate windows and timeout budgets.
 for (const [command, args] of [
   [process.execPath, ['node_modules/webpack/bin/webpack.js', '--config', 'build/tests/webpack.config.js']],
   [require('electron'), ['build/tests/electron.cjs']],
+  [require('electron'), ['build/tests/electron.cjs', '--media']],
   [require('electron'), ['build/tests/electron.cjs', '--comics']],
   [require('electron'), ['build/tests/electron.cjs', '--three']],
   [require('electron'), ['build/tests/sandbox.cjs']],
@@ -67,15 +69,17 @@ for (const [command, args] of [
       'dist/ci',
       command === process.execPath
         ? 'renderer-build.log'
-        : args.includes('--comics')
-          ? 'comic-tests.log'
-          : args.includes('--three')
-            ? 'three-tests.log'
-            : args[0].endsWith('sandbox.cjs')
-              ? 'sandbox-tests.log'
-              : args[0].endsWith('devtools.cjs')
-                ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
-                : 'renderer-tests.log'
+        : args.includes('--media')
+          ? 'media-tests.log'
+          : args.includes('--comics')
+            ? 'comic-tests.log'
+            : args.includes('--three')
+              ? 'three-tests.log'
+              : args[0].endsWith('sandbox.cjs')
+                ? 'sandbox-tests.log'
+                : args[0].endsWith('devtools.cjs')
+                  ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
+                  : 'renderer-tests.log'
     ),
     log
   );

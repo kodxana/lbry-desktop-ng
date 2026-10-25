@@ -89,7 +89,7 @@ function CaptionControl(): React.Node {
     >
       {captions.options.map((option) => (
         <option key={option.value} value={option.value}>
-          {option.label}
+          {option.value === 'off' ? __('Off') : option.label}
         </option>
       ))}
     </select>
@@ -253,7 +253,7 @@ function Playback(props: { ...Props, resolved: MediaSource, retry: () => void })
       )}
       <Controls.Root>
         <Controls.Content className="player-controls">
-          <TimeSlider.Root className="player-timeline" aria-label={__('Seek')}>
+          <TimeSlider.Root className="player-timeline" label={__('Seek')}>
             <TimeSlider.Track className="player-track">
               <TimeSlider.Buffer className="player-buffer" />
               <TimeSlider.Fill className="player-fill" />
@@ -296,12 +296,12 @@ function Playback(props: { ...Props, resolved: MediaSource, retry: () => void })
             )}
             <MuteButton
               className="player-mute"
-              aria-label={state.muted ? __('Unmute (m)') : __('Mute (m)')}
-              title={state.muted ? __('Unmute (m)') : __('Mute (m)')}
+              aria-label={state.muted || !state.volume ? __('Unmute (m)') : __('Mute (m)')}
+              title={state.muted || !state.volume ? __('Unmute (m)') : __('Mute (m)')}
             >
               {state.muted || !state.volume ? <VolumeOffIcon /> : <VolumeHighIcon />}
             </MuteButton>
-            <VolumeSlider.Root className="player-volume" aria-label={__('Volume')}>
+            <VolumeSlider.Root className="player-volume" label={__('Volume')}>
               <VolumeSlider.Track className="player-track">
                 <VolumeSlider.Fill className="player-fill" />
               </VolumeSlider.Track>
@@ -385,7 +385,10 @@ function SourcePlayer(props: Props): React.Node {
     );
     return () => controller.abort();
   }, [props.source, props.sourceType, attempt]);
-  const retry = () => setAttempt((value) => value + 1);
+  const retry = () => {
+    setResolved(null);
+    setAttempt((value) => value + 1);
+  };
   return (
     <div className="video-js-parent">
       {resolved ? (
