@@ -1,13 +1,52 @@
 # Electron runtime migration
 
-The source build moves from Electron 34.5.8 to 44.9.3, a supported stable release
-as of October 13, 2026. Embedded Node moves from 20 to 24.21.0 and Chromium to
-152.0.7977.130. The published 0.54.0-rc.3 installers remain on Electron 17.2.0.
-The source renderer now uses a sandboxed preload; other application dependencies
-still need modernization.
-The SDK binary, wallet format, React, updater and application version are unchanged.
+Source builds use Electron 45.0.0, with embedded Node 24.22.0 and Chromium
+156.0.8078.48. The build host remains Node 24.21.0. Published 0.54.0-rc.3
+installers remain on Electron 17.2.0. The source renderer uses a sandboxed
+preload. The SDK binary, wallet format, React, updater and application version
+are unchanged by the runtime update.
 
 ## Breaking changes reviewed
+
+References: [Electron 45.0.0](https://releases.electronjs.org/release/v45.0.0)
+and [its migration notes](https://github.com/electron/electron/blob/v45.0.0/docs/breaking-changes.md).
+
+- Sandboxed preloads no longer provide Node's url, events or timers shims,
+  Buffer, setImmediate or clearImmediate. The PDF/HTML file URL helper now asks
+  the main process to perform Node's pathToFileURL conversion. This is a
+  synchronous, pure conversion with no filesystem access; the existing main-frame
+  guard and absolute-path validation reject invalid requests. Real sandbox tests
+  cover Unicode, spaces, percent signs and hashes. Renderer dependencies already
+  bundle their own required browser polyfills.
+- Remember Password uses asynchronous safeStorage operations. IPC operations
+  remain serialized, and writes still verify temporary and final ciphertext
+  before acknowledging success or removing recovery cookies. Existing version-1
+  records are read unchanged; an explicit save uses the new encryption API.
+  Native tests produce a record with the old API, read it in a new process, and
+  exercise async save/restart/forget. Fault tests include delayed encryption
+  followed by Forget and failed verification preserving the prior record.
+- On Linux, async encryption availability can include the insecure fallback.
+  The store accepts only the protected v11 (desktop secret store) and v12
+  (Secret Portal) ciphertext tags, rejecting v10 and unknown tags before
+  replacing an existing password. The tags follow Chromium's
+  [desktop secret provider](https://github.com/chromium/chromium/blob/main/components/os_crypt/async/browser/freedesktop_secret_key_provider.cc),
+  [Secret Portal provider](https://github.com/chromium/chromium/blob/main/components/os_crypt/async/browser/secret_portal_key_provider.h)
+  and [fallback provider](https://github.com/chromium/chromium/blob/main/components/os_crypt/async/browser/posix_key_provider.cc).
+  Hosted tests use an isolated GNOME keyring
+  and separately exercise the basic backend. Actual Secret Portal integration
+  remains outside the test matrix.
+- ASAR descriptors may now only be consumed by Node's filesystem APIs. The app
+  does not pass archive descriptors to native code or child processes; SDK and
+  media files live outside app.asar. Package startup and real installer upgrades
+  remain required checks.
+- Worker/subframe integration, extension preloads, screen-capture permissions,
+  heap profiling, requestStorageAccessFor and child-window process changes have
+  no affected production call sites. The app denies renderer-created windows
+  and keeps Node integration disabled. Development extension tests use the
+  session.extensions namespace; the installer dependency still calls deprecated
+  aliases internally, which remain available in Electron 45.
+
+## Earlier runtime checkpoints
 
 References: [Electron 44.9.3 runtime versions](https://releases.electronjs.org/release/v44.9.3)
 and [the pinned release's migration notes](https://github.com/electron/electron/blob/v44.9.3/docs/breaking-changes.md).
@@ -109,7 +148,7 @@ Development-mode detection uses `electron-is-dev` 3.0.1 in the main process.
 It uses Electron's `app.isPackaged` flag instead of version 0.3's executable-path
 heuristic. The existing `ELECTRON_IS_DEV` override remains supported; `NODE_ENV`
 does not determine whether the running app is packaged. The dependency is now
-ESM-only and requires Electron 28+, which the current Electron 44 runtime meets.
+ESM-only and requires Electron 28+, which the current Electron 45 runtime meets.
 Both application callers already use its default import. See the
 [upstream documentation](https://github.com/sindresorhus/electron-is-dev).
 Tests cover automatic development detection and explicit overrides in real
@@ -163,7 +202,7 @@ check window bounds written by the actual published RC3 through both upgrades.
   in `dist`. The unsupported case exits with 1633 without reaching that action.
   This checks the guard, not actual installation on a Windows 7 virtual machine.
 - The hosted Windows installed-upgrade test moves the checksum-pinned RC3
-  (Electron 17) to the private Electron 44 candidate, then to a second candidate.
+  (Electron 17) to the private Electron 45 candidate, then to a second candidate.
   It asserts both main and renderer runtime versions, install/decline choices,
   SDK exit before NSIS, automatic restart, unchanged wallet keys/addresses,
   encryption, remembered passwords and cookie/localStorage persistence. An

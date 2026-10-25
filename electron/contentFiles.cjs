@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
 const mime = require('mime').default;
 const { createRendererGuard } = require('./rendererGuard.cjs');
 
@@ -37,6 +38,13 @@ const OPEN_EXTENSIONS = new Set([
 function registerContentFiles({ ipcMain, shell, rpc, profile, probe, getWindow, rendererURL }) {
   const allowed = createRendererGuard(getWindow, rendererURL);
   const selected = new Map();
+  // Pure conversion only: sandboxed preloads no longer provide Node's url module.
+  ipcMain.on('file-url', (event, filename) => {
+    event.returnValue =
+      allowed(event) && typeof filename === 'string' && path.isAbsolute(filename) && !filename.includes('\0')
+        ? pathToFileURL(filename).href
+        : null;
+  });
   const grant = (filename) => {
     if (typeof filename !== 'string' || !path.isAbsolute(filename)) return;
     const resolved = fs.promises.realpath(filename).catch(() => null);

@@ -21,29 +21,42 @@ app
     // initialize the same service before using safeStorage (no network request).
     await session.defaultSession.cookies.get({});
     const store = new PasswordStore(root, safeStorage);
-    if (phase === 'save' || phase === 'migrate') {
-      assert(safeStorage.isEncryptionAvailable(), 'Real OS encryption must be available for this test');
-      store.save(secret, phase === 'migrate');
+    if (phase === 'legacy-save') {
+      // Produce the old desktop format with the real OS backend before testing the async reader.
+      const ciphertext = safeStorage.encryptString(JSON.stringify({ kind: 'lbry-desktop-password', password: secret }));
+      fs.writeFileSync(store.file, JSON.stringify({ version: 1, ciphertext: ciphertext.toString('base64') }), {
+        mode: 0o600,
+      });
+    } else if (phase === 'save' || phase === 'migrate') {
+      assert(await safeStorage.isAsyncEncryptionAvailable(), 'Real OS encryption must be available for this test');
+      await store.save(secret, phase === 'migrate');
       assert(!fs.readFileSync(store.file).includes(Buffer.from('synthetic')), 'No plaintext in the protected record');
     } else if (phase === 'recover') {
-      const record = store.read();
-      if (record.state === 'migration-unreadable') store.save(secret, true); // Legacy copy is still present.
+      const record = await store.read();
+      if (record.state === 'migration-unreadable')
+        await store.save(secret, true); // Legacy copy is still present.
       else assert(record.password === secret, 'A persisted key can finish migration immediately');
     } else if (phase === 'restart') {
-      assert(store.read().password === secret, 'Real OS encryption must round-trip across processes');
+      const before = fs.readFileSync(store.file);
+      assert((await store.read()).password === secret, 'Real OS encryption must round-trip across processes');
+      assert.deepEqual(
+        fs.readFileSync(store.file),
+        before,
+        'Reading an existing password must preserve its encrypted record'
+      );
     } else if (phase === 'forget') {
-      store.forget();
+      await store.forget();
     } else if (phase === 'forgotten') {
-      assert.equal(store.read().state, 'forgotten');
+      assert.equal((await store.read()).state, 'forgotten');
     } else if (phase === 'unavailable') {
-      assert.equal(safeStorage.isEncryptionAvailable(), false, 'Electron must reject the Linux basic backend');
-      assert.throws(() => store.save(secret));
-      assert.equal(store.read().state, 'forgotten', 'Insecure fallback must not replace the existing record');
+      await assert.rejects(() => store.save(secret), /unavailable/);
+      assert.equal((await store.read()).state, 'forgotten', 'Insecure fallback must not replace the existing record');
     } else throw new Error('Unknown phase');
     assert(fs.existsSync(path.join(root, 'remembered-password.json')));
     console.log('PASS: native OS password storage: ' + phase);
     clearTimeout(timeout);
-    if (phase === 'migrate') app.exit(0); // Simulate an immediate first-launch interruption.
+    if (phase === 'migrate')
+      app.exit(0); // Simulate an immediate first-launch interruption.
     else app.quit();
   })
   .catch((error) => {

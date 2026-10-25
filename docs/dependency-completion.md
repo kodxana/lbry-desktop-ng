@@ -55,11 +55,11 @@ Existing checks and warnings are preserved. The React/Flow peer declarations
 still stop at ESLint 9; native plugin support remains maintenance work, and the
 adapter is required until those plugins migrate.
 
-Electron 45.0.0 is also available. The current patched 44.9.3 remains within
-Electron's [latest-three-stable-major support policy](https://www.electronjs.org/docs/latest/tutorial/electron-timelines).
-Treat 45 as the next supported-runtime upgrade, with the same isolation,
-password, backup and installer checks, rather than combining it with editor or
-player changes.
+The next maintenance batch moves Electron 44.9.3 to 45.0.0, including the
+sandbox preload and asynchronous password-storage compatibility changes.
+See [runtime migration](electron-runtime.md) for the changes and validation.
+A registry recheck on October 25 found no other newer direct dependencies
+except unist-util-visit 5.2.0, still within the one-day release-age safeguard.
 
 ## Release criteria
 

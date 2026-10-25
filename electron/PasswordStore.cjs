@@ -12,36 +12,32 @@ class PasswordStore {
     this.migratedThisRun = false;
   }
 
-  available() {
-    if (!this.crypto.isEncryptionAvailable()) throw new Error('unavailable');
-    if (
-      this.platform === 'linux' &&
-      this.crypto.getSelectedStorageBackend &&
-      this.crypto.getSelectedStorageBackend() === 'basic_text'
-    ) {
-      throw new Error('unavailable');
-    }
+  async available() {
+    if (!(await this.crypto.isAsyncEncryptionAvailable())) throw new Error('unavailable');
   }
 
-  decode(record) {
+  async decode(record) {
     if (!record || record.version !== 1) throw new Error('unreadable');
     if (record.forgotten === true) return { state: 'forgotten' };
     if (typeof record.ciphertext !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(record.ciphertext)) {
       throw new Error('unreadable');
     }
-    this.available();
+    await this.available();
     const bytes = Buffer.from(record.ciphertext, 'base64');
-    // Electron 17 has no getSelectedStorageBackend(). Chromium's Linux v10 format
-    // uses a hardcoded key; only v11 is backed by the desktop's secret store.
-    if (this.platform === 'linux' && bytes.slice(0, 3).toString() !== 'v11') throw new Error('unavailable');
-    const value = JSON.parse(this.crypto.decryptString(bytes));
+    // Linux v10 uses a hardcoded key. v11 uses the desktop secret store; v12
+    // uses Secret Portal. Async availability alone also permits the v10 fallback.
+    if (this.platform === 'linux' && !['v11', 'v12'].includes(bytes.subarray(0, 3).toString())) {
+      throw new Error('unavailable');
+    }
+    const { result } = await this.crypto.decryptStringAsync(bytes);
+    const value = JSON.parse(result);
     if (value.kind !== 'lbry-desktop-password' || typeof value.password !== 'string' || !value.password) {
       throw new Error('unreadable');
     }
     return { state: 'saved', password: value.password };
   }
 
-  read() {
+  async read() {
     let bytes;
     try {
       bytes = this.fs.readFileSync(this.file, 'utf8');
@@ -52,7 +48,7 @@ class PasswordStore {
     const record = JSON.parse(bytes);
     let saved;
     try {
-      saved = this.decode(record);
+      saved = await this.decode(record);
     } catch (error) {
       if (record.version === 1 && record.migration === true) return { state: 'migration-unreadable' };
       throw error;
@@ -76,7 +72,7 @@ class PasswordStore {
     }
   }
 
-  write(record, password) {
+  async write(record, password) {
     const temporary = this.file + '.' + randomBytes(12).toString('hex') + '.tmp';
     let fd;
     try {
@@ -85,7 +81,7 @@ class PasswordStore {
       this.fs.fsyncSync(fd);
       this.fs.closeSync(fd);
       fd = undefined;
-      const checked = this.decode(JSON.parse(this.fs.readFileSync(temporary, 'utf8')));
+      const checked = await this.decode(JSON.parse(this.fs.readFileSync(temporary, 'utf8')));
       if (password !== undefined && checked.password !== password) throw new Error('verification');
       if (password === undefined && checked.state !== 'forgotten') throw new Error('verification');
       this.fs.renameSync(temporary, this.file);
@@ -98,7 +94,7 @@ class PasswordStore {
         }
       }
       // Do not let the caller remove legacy copies before verifying the final file.
-      const saved = this.read();
+      const saved = await this.read();
       if (password !== undefined && saved.password !== password) throw new Error('verification');
       if (password === undefined && saved.state !== 'forgotten') throw new Error('verification');
       return saved;
@@ -113,14 +109,16 @@ class PasswordStore {
     }
   }
 
-  save(password, migrate = false) {
+  async save(password, migrate = false) {
     if (typeof password !== 'string' || !password || password.length > 1024 * 1024) throw new Error('invalid');
-    this.available();
+    await this.available();
     if (!migrate && this.migratedThisRun) {
-      const saved = this.read();
+      const saved = await this.read();
       if (saved.state === 'saved' && saved.password === password && saved.pending) return saved;
     }
-    const ciphertext = this.crypto.encryptString(JSON.stringify({ kind: 'lbry-desktop-password', password }));
+    const ciphertext = await this.crypto.encryptStringAsync(
+      JSON.stringify({ kind: 'lbry-desktop-password', password })
+    );
     if (migrate) this.migratedThisRun = true;
     return this.write(
       { version: 1, ciphertext: ciphertext.toString('base64'), ...(migrate ? { migration: true } : {}) },
@@ -128,9 +126,9 @@ class PasswordStore {
     );
   }
 
-  forget() {
+  async forget() {
     // Keep this marker: an interrupted cookie cleanup must never resurrect a password.
-    const result = this.write({ version: 1, forgotten: true });
+    const result = await this.write({ version: 1, forgotten: true });
     // A process killed during a write can leave an encrypted temporary file.
     for (const name of this.fs.readdirSync(path.dirname(this.file))) {
       if (/^remembered-password\.json\.[a-f0-9]{24}\.tmp$/.test(name)) {

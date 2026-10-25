@@ -56,4 +56,9 @@ process restarts, migration recovery and failures, Forget/opt-out/sign-out,
 wallet encryption and backup restoration with disposable wallets, and packaged
 startup/shutdown. Installed old-to-new upgrades and different Linux desktop
 keyrings still need tester feedback. Published RC3 builds retain Electron 17;
-current source builds use the [Electron 44 migration](electron-runtime.md).
+current source builds use the [Electron 45 migration](electron-runtime.md).
+Its asynchronous OS storage API reads the same version-1 encrypted records;
+ordinary reads do not rewrite them. The native tests also create a record with
+the old synchronous API and verify it after a restart with the async reader.
+Installed Windows CI covers the actual published RC3 upgrade with an unfunded
+wallet, including recovery of the remembered password.

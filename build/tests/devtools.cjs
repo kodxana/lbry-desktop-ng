@@ -59,7 +59,7 @@ app
       console: { log: (...args) => logs.push(args) },
     });
     await module.exports.default();
-    const installed = session.defaultSession.getAllExtensions();
+    const installed = session.defaultSession.extensions.getAllExtensions();
     const expected = process.argv.includes('--failure') ? [fixtures[1]] : fixtures;
     assert.deepEqual(installed.map((extension) => extension.name).sort(), expected.map(([, name]) => name).sort());
     for (const [, name] of expected) {
@@ -74,7 +74,7 @@ app
     );
     const existing = installed.find((extension) => extension.name === 'Fixture Redux tools');
     assert.equal((await installer.installExtension(existing.id)).id, existing.id, 'Reuse an installed extension');
-    assert.equal(session.defaultSession.getAllExtensions().length, expected.length);
+    assert.equal(session.defaultSession.extensions.getAllExtensions().length, expected.length);
     assert.equal(requests, 0, 'Cached and already-installed extensions must not download');
     console.log(
       'PASS: devtools ' +

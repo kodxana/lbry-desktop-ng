@@ -50,7 +50,7 @@ profile retains its wallet and downloaded data.
 
 Use Linux x64 and Node 24.21.0. Install the checked-in Yarn lock with
 `node .yarn/releases/yarn-4.18.1.cjs install --immutable --mode=skip-build`, then
-run `node .yarn/releases/yarn-4.18.1.cjs exec install-electron` to install the pinned Electron 44.9.3.
+run `node .yarn/releases/yarn-4.18.1.cjs exec install-electron` to install the pinned Electron 45.0.0.
 
 Current source builds also need GTK 4 on GNOME (`libgtk-4-1` on Ubuntu 24.04).
 Electron now uses native Wayland in Wayland sessions. CI validates X11 with Xvfb;

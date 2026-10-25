@@ -9,6 +9,10 @@ ipc.invoke = async (...values) => {
   return { ok: true };
 };
 ipc.send = (...values) => requests.push(values);
+ipc.sendSync = (...values) => {
+  requests.push(values);
+  return 'file:///fixture';
+};
 let zoom = 1;
 const bridge = createDesktopBridge({
   ipcRenderer: ipc,
@@ -43,6 +47,8 @@ assert.throws(() => bridge.filePath({ path: '/arbitrary' }), TypeError);
 assert.equal(requests.length, 0, 'Synthetic files and forged paths cannot grant disk access');
 assert.equal(bridge.filePath('disk-file'), '/selected/file');
 assert.deepEqual(requests.pop(), ['selected-file', '/selected/file']);
+assert.equal(bridge.fileUrl('/document ł #%.pdf'), 'file:///fixture');
+assert.deepEqual(requests.pop(), ['file-url', '/document ł #%.pdf']);
 for (const value of [NaN, Infinity, 0, -1, 4, '2']) bridge.setZoom(value);
 assert.equal(zoom, 1);
 bridge.setZoom(1.5);

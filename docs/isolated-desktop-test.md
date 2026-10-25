@@ -33,7 +33,7 @@ operation is not needed; the SDK uses a light wallet and public wallet servers.
 ## Rebuild
 
 Use Node 24.21.0 and the checked-in Yarn 4.18.1. The original desktop runtime is
-Electron 17.2.0. Current source builds use Electron 44.9.3;
+Electron 17.2.0. Current source builds use Electron 45.0.0;
 see [runtime migration notes](electron-runtime.md).
 These source builds require Windows 10 or later, including the portable test ZIP.
 
