@@ -19,6 +19,8 @@ function createDesktopBridge({ ipcRenderer, webFrame, webUtils, platform, electr
     updater: (command, value) => ipcRenderer.invoke('desktop-updater', command, value),
     onUpdater: (callback) => subscribe('desktop-updater-state', callback),
     backupWallet: (request) => ipcRenderer.invoke('wallet-backup', request),
+    walletSetup: (operation, value) => ipcRenderer.invoke('wallet-setup', operation, value),
+    walletCloudSyncEnabled: () => ipcRenderer.sendSync('wallet-cloud-sync-enabled'),
     cancelBackup: (id) => ipcRenderer.send('wallet-backup-cancel', id),
     openWalletFolder: () => ipcRenderer.invoke('wallet-folder'),
     selectFile: (request) => ipcRenderer.invoke('select-file', request),

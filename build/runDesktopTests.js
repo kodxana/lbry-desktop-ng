@@ -55,6 +55,7 @@ for (const file of [
   'testDesktopInfo.js',
   'testTranslationCollection.js',
   'testWalletBackup.js',
+  'testWalletImport.js',
   'testDesktopBridge.js',
   'testContentFiles.js',
   'testMediaAdapters.js',

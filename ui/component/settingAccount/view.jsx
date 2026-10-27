@@ -8,6 +8,7 @@ import Card from 'component/common/card';
 import SettingsRow from 'component/settingsRow';
 import SyncToggle from 'component/syncToggle';
 import { getSavedPasswordState } from 'util/saved-passwords';
+import desktop from 'util/desktop';
 
 type Props = {
   isAuthenticated: boolean,
@@ -20,6 +21,9 @@ type Props = {
 export default function SettingAccount(props: Props): React.Node {
   const { isAuthenticated, walletEncrypted, hasChannels, doWalletStatus } = props;
   const [storedPassword, setStoredPassword] = React.useState(false);
+  const [setupError, setSetupError] = React.useState('');
+  const [openingSetup, setOpeningSetup] = React.useState(false);
+  const localWallet = desktop.walletCloudSyncEnabled() === false;
 
   // Determine if password is stored.
   React.useEffect(() => {
@@ -55,7 +59,35 @@ export default function SettingAccount(props: Props): React.Node {
               </SettingsRow>
             )}
 
-            <SyncToggle disabled={walletEncrypted && !storedPassword} />
+            {localWallet ? (
+              <SettingsRow
+                title={__('Odysee wallet sync is off')}
+                subtitle={__('This separate profile keeps its wallet local. Signing in does not upload or replace it.')}
+              />
+            ) : (
+              <SyncToggle disabled={walletEncrypted && !storedPassword} />
+            )}
+            <SettingsRow
+              title={__('Wallet setup')}
+              subtitle={__('Import a wallet copy, start fresh or return to another NG profile. The app will restart.')}
+            >
+              <Button
+                button="inverse"
+                label={__('Open wallet setup')}
+                disabled={openingSetup}
+                onClick={async () => {
+                  setOpeningSetup(true);
+                  setSetupError('');
+                  try {
+                    await desktop.walletSetup('open');
+                  } catch (_) {
+                    setSetupError(__('Could not open wallet setup. Close and reopen the app.'));
+                    setOpeningSetup(false);
+                  }
+                }}
+              />
+              {setupError && <p role="alert">{setupError}</p>}
+            </SettingsRow>
 
             {hasChannels && (
               <SettingsRow title={__('Comments')} subtitle={__('View your past comments.')}>

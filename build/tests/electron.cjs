@@ -3,6 +3,9 @@ const assert = require('assert').strict;
 const fs = require('fs');
 const path = require('path');
 const { app, BrowserWindow, ipcMain, session } = require('electron');
+ipcMain.on('wallet-cloud-sync-enabled', (event) => {
+  event.returnValue = true;
+});
 const { registerPasswordStorage } = require('../../electron/passwordStorage.cjs');
 const passwordBackend = require('./passwordBackend.cjs')();
 let activeWindow;
@@ -21,6 +24,7 @@ app.setPath('userData', root);
 const graphics = process.argv.includes('--three');
 const comics = process.argv.includes('--comics');
 const mediaOnly = process.argv.includes('--media');
+const importOnly = process.argv.includes('--wallet-import');
 if (graphics) {
   // Exercise real WebGL 2 rendering deterministically on GPU-less CI runners.
   app.commandLine.appendSwitch('use-angle', 'swiftshader');
@@ -39,6 +43,7 @@ async function run(phase) {
     show: false,
     ...(phase === 'uiComponents' ? { width: 1280, height: 800 } : {}),
     ...(phase === 'collections' ? { width: 1280, height: 900 } : {}),
+    ...(phase === 'walletImport' ? { width: 1280, height: 1000 } : {}),
     ...(phase === 'comics' ? { width: 1100, height: 750 } : {}),
     webPreferences: {
       nodeIntegration: true,
@@ -53,7 +58,7 @@ async function run(phase) {
       plugins: true,
       // Hidden fixture windows still need animation frames for the real viewers.
       backgroundThrottling: false,
-      offscreen: ['documents', 'three', 'comics', 'markdownEditor', 'media'].includes(phase),
+      offscreen: ['documents', 'three', 'comics', 'markdownEditor', 'media', 'walletImport'].includes(phase),
     },
   });
   activeWindow = window;
@@ -216,6 +221,14 @@ app
         (await activeWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
       );
     });
+    ipcMain.handle('fixture-wallet-import-capture', async (event) => {
+      assert.equal(activePhase, 'walletImport');
+      assert.equal(event.sender, activeWindow.webContents);
+      fs.writeFileSync(
+        path.resolve('dist/ci/wallet-import.png'),
+        (await activeWindow.webContents.capturePage(undefined, { stayHidden: true, stayAwake: true })).toPNG()
+      );
+    });
     ipcMain.handle('fixture-editor-capture', async (event, theme) => {
       assert.equal(activePhase, 'markdownEditor');
       assert.equal(event.sender, activeWindow.webContents);
@@ -348,47 +361,49 @@ app
         callback({ cancel: true });
       }
     );
-    for (const phase of mediaOnly
-      ? ['media']
-      : graphics
-        ? ['three']
-        : comics
-          ? ['comics']
-          : [
-              'bundling',
-              'fresh',
-              'legacy',
-              'restart',
-              'stateUpdates',
-              'reactState',
-              'uiComponents',
-              'accessibleControls',
-              'collections',
-              'browserIntegrations',
-              'formsAndDates',
-              'markdownEditor',
-              'documents',
-              'fileDialogs',
-              'fileUploads',
-              'windowControls',
-              'contextMenu',
-              'updater',
-              'updaterRestart',
-              'wallet',
-              'accountOutage',
-              'downloadNotifications',
-              'passwords',
-              'passwordRestart',
-              'analytics',
-              'analyticsEnabled',
-              'analyticsDisabled',
-              'analyticsUnconfigured',
-            ]) {
+    for (const phase of importOnly
+      ? ['walletImport']
+      : mediaOnly
+        ? ['media']
+        : graphics
+          ? ['three']
+          : comics
+            ? ['comics']
+            : [
+                'bundling',
+                'fresh',
+                'legacy',
+                'restart',
+                'stateUpdates',
+                'reactState',
+                'uiComponents',
+                'accessibleControls',
+                'collections',
+                'browserIntegrations',
+                'formsAndDates',
+                'markdownEditor',
+                'documents',
+                'fileDialogs',
+                'fileUploads',
+                'windowControls',
+                'contextMenu',
+                'updater',
+                'updaterRestart',
+                'wallet',
+                'accountOutage',
+                'downloadNotifications',
+                'passwords',
+                'passwordRestart',
+                'analytics',
+                'analyticsEnabled',
+                'analyticsDisabled',
+                'analyticsUnconfigured',
+              ]) {
       await run(phase);
     }
     assert.deepEqual(
       analyticsRequests,
-      graphics || comics || mediaOnly
+      graphics || comics || mediaOnly || importOnly
         ? []
         : [
             { phase: 'analytics', url: 'https://analytics.lbry.com/matomo.js' },
@@ -397,7 +412,7 @@ app
       'Only explicit analytics opt-in may request the tracking script'
     );
     assert.deepEqual(blocked, [], 'Unexpected renderer requests: ' + JSON.stringify(blocked));
-    if (!graphics && !comics && !mediaOnly) {
+    if (!graphics && !comics && !mediaOnly && !importOnly) {
       const purchases = integrationRequests.filter((request) => request.type === 'subFrame');
       assert(purchases.length >= 2, 'The purchase fixture must exercise signed iframe destinations');
       for (const { url } of purchases) {

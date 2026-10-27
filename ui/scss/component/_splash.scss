@@ -146,3 +146,27 @@
     scroll-behavior: auto !important;
   }
 }
+.wallet-setup__import,
+.wallet-setup__notice {
+  margin-block: var(--spacing-m);
+}
+
+.wallet-setup__notice {
+  border-left: 3px solid var(--color-primary);
+  padding-left: var(--spacing-m);
+
+  p {
+    margin-block: var(--spacing-s);
+  }
+}
+
+.wallet-setup__file {
+  display: block;
+  margin-block: var(--spacing-m);
+
+  select {
+    display: block;
+    width: 100%;
+    margin-top: var(--spacing-s);
+  }
+}

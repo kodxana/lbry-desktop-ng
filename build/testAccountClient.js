@@ -15,6 +15,7 @@ async function main() {
   const requests = [];
   const timers = new Set();
   const tokenWrites = [];
+  const browserWindow = {};
   let fetchResponse = async () => ({ status: 200, json: async () => ({ data: 'fixture response' }) });
   vm.runInNewContext(code, {
     module,
@@ -38,7 +39,7 @@ async function main() {
       return callback;
     },
     clearTimeout: (callback) => timers.delete(callback),
-    window: {},
+    window: browserWindow,
   });
   const client = module.exports.default;
   client.authToken = 'fixture +& token';
@@ -69,6 +70,12 @@ async function main() {
   await assert.rejects(client.call('user', 'me'), /disabled/);
   assert.equal(requests.length, 2);
   client.enabled = true;
+  browserWindow.lbryDesktop = { walletCloudSyncEnabled: () => false };
+  for (const action of ['get', 'set', 'reset', 'change-password']) {
+    await assert.rejects(client.call('sync', action, {}, 'post'), (error) => error.code === 'WALLET_SYNC_DISABLED');
+  }
+  assert.equal(requests.length, 2, 'An imported profile must not contact cloud wallet endpoints');
+  delete browserWindow.lbryDesktop;
   client.setOverride('setAuthToken', (token) => tokenWrites.push(token));
   const json = (status, data) => ({ status, json: async () => data });
   for (const response of [

@@ -70,6 +70,7 @@ async function main() {
     phase === 'updater' ||
     phase === 'updaterRestart' ||
     phase === 'wallet' ||
+    phase === 'walletImport' ||
     phase === 'accountOutage' ||
     phase === 'downloadNotifications' ||
     phase === 'passwords' ||
@@ -97,6 +98,7 @@ async function main() {
       updater: () => require('./updater'),
       updaterRestart: () => require('./updaterRestart'),
       wallet: () => require('./wallet'),
+      walletImport: () => require('./walletImport'),
       accountOutage: () => require('./accountOutage'),
       downloadNotifications: () => require('./downloadNotifications'),
       passwords: () => require('./passwords'),

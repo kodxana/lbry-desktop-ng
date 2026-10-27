@@ -18,7 +18,7 @@ import path from 'path';
 import desktopSettings from '../desktop-settings.json';
 
 const Daemon = require('./Daemon.cjs');
-const { createProfile } = require('./testProfile.cjs');
+const { openProfiles } = require('./walletProfiles.cjs');
 const DesktopUpdater = require('./DesktopUpdater.cjs');
 const { registerUpdaterIpc } = require('./updaterIpc.cjs');
 const { registerPasswordStorage } = require('./passwordStorage.cjs');
@@ -33,10 +33,11 @@ const probe = require('./mediaProbe.cjs');
 
 const rootFlag = desktopSettings.autoUpdates ? '--ng-profile=' : '--sdk-test-root=';
 const rootArgument = process.argv.find((arg) => arg.startsWith(rootFlag));
-const desktopProfile = createProfile(
+const walletProfiles = openProfiles(
   rootArgument ? rootArgument.slice(rootFlag.length) : path.join(app.getPath('appData'), desktopSettings.appName),
   desktopSettings
 );
+const desktopProfile = walletProfiles.current;
 app.setPath('userData', desktopProfile.desktop);
 // Chromium session data defaults to this profile's userData directory.
 app.setPath('logs', desktopProfile.logs);
@@ -156,9 +157,28 @@ const startDaemon = async (settingsOnly = false) => {
 };
 
 const hubSetupMarker = path.join(desktopProfile.root, 'hub-setup-complete.json');
+const walletSetup = require('./walletImport.cjs').registerWalletImport({
+  ipcMain,
+  dialog,
+  profiles: walletProfiles,
+  allowed,
+  getWindow: () => rendererWindow,
+  rpc,
+  settingsOnly: () => hubs.settingsOnly,
+  restart: async (activate) => {
+    if (appState.isQuitting) throw new Error('Application is closing.');
+    if (daemon) {
+      daemon.expectedExit = true;
+      await daemon.quitForUpdate();
+    }
+    if (activate) activate();
+    app.relaunch();
+    app.quit();
+  },
+});
 const readHubConfig = () => parseHubConfig(fs.readFileSync(desktopProfile.config, 'utf8'));
 const hubs = new HubSelection({
-  settingsOnly: !fs.existsSync(hubSetupMarker),
+  settingsOnly: walletSetup.pending() || !fs.existsSync(hubSetupMarker),
   rpc: (method, params) => {
     if (!daemon || appState.isQuitting) throw new Error('SDK is not running.');
     return daemon.rpc(method, params);
@@ -182,11 +202,12 @@ ipcMain.handle('hub-servers-scan', (event) => {
 });
 ipcMain.handle('hub-servers-select', (event, endpoint) => {
   if (!allowed(event)) throw new Error('Unknown window.');
+  if (walletSetup.pending()) throw new Error('Choose your wallet before starting sync.');
   return hubs.select(endpoint);
 });
 ipcMain.handle('hub-startup-state', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
-  return { settingsOnly: hubs.settingsOnly };
+  return { settingsOnly: hubs.settingsOnly, walletSetup: walletSetup.pending() };
 });
 ipcMain.handle('hub-servers-prepare', (event) => {
   if (!allowed(event)) throw new Error('Unknown window.');
