@@ -252,7 +252,7 @@ async function main() {
   };
   const preferenceFixture = require('./tests/fixtures/persist-v0.json');
   const targetElectron = require('../package.json').devDependencies.electron;
-  const launch = async () => {
+  const launch = async (confirmWalletChoice = false) => {
     const reservation = net.createServer();
     const port = await listen(reservation);
     const mainReservation = net.createServer();
@@ -283,6 +283,37 @@ async function main() {
       await mainClient.evaluate("process.mainModule.require('electron').app.getPath('userData')"),
       profile.desktop
     );
+    if (confirmWalletChoice) {
+      await until(
+        () => client.evaluate("document.body.innerText.includes('Wallet setup')"),
+        'The upgraded application did not offer a wallet choice'
+      );
+      const choice = await client.evaluate("window.lbryDesktop.walletSetup('state')");
+      assert(choice.pending && choice.hasWallet && choice.cloudSync);
+      assert.equal((await rpc('status')).startup_status.wallet, undefined);
+      assert.equal(await client.evaluate("document.querySelector('#wallet-keep').checked"), true);
+      await client.evaluate(
+        "Array.from(document.querySelectorAll('button')).find(button => button.innerText.includes('Continue to hub selection')).click()"
+      );
+      await until(
+        () =>
+          client.evaluate(
+            "document.body.innerText.includes('Choose a wallet hub') && Boolean(document.querySelector('fieldset') && !document.querySelector('fieldset').disabled)"
+          ),
+        'Hub selection did not follow the existing wallet choice'
+      );
+      // Select the only configured server: the unfunded local regtest fixture.
+      await client.evaluate("document.querySelectorAll('input[type=radio]')[1].click()");
+      await client.evaluate(
+        "Array.from(document.querySelectorAll('button')).find(button => button.innerText.includes('Start syncing')).click()"
+      );
+      const setup = JSON.parse(fs.readFileSync(path.join(profile.root, 'wallet-setup.json')));
+      assert.equal(setup.kind, 'existing');
+      assert.equal(setup.cloudSync, true, 'Keeping the wallet must preserve its existing sync policy');
+      console.log(
+        'PASS: upgrade pauses for wallet choice and resumes the existing profile after explicit confirmation'
+      );
+    }
     await waitForWallet();
     await verifyProfile();
   };
@@ -398,6 +429,7 @@ async function main() {
       assert(!fs.existsSync(handoffFile));
       await verifyProfile();
       const previousPid = running.pid;
+      const beforeUpdateWallet = hash(fs.readFileSync(walletFile));
       await command('accept');
       await until(
         () => fs.existsSync(handoffFile),
@@ -415,8 +447,24 @@ async function main() {
         'NSIS did not automatically restart the installed application',
         180000
       );
-      await waitForWallet();
-      await verifyProfile();
+      if (legacy) {
+        await until(async () => {
+          try {
+            return (await rpc('status')).startup_status.wallet === undefined;
+          } catch (_) {
+            return false;
+          }
+        }, 'The first upgraded launch did not pause before wallet startup');
+        assert.equal(
+          hash(fs.readFileSync(walletFile)),
+          beforeUpdateWallet,
+          'The setup prompt must not rewrite the wallet'
+        );
+        assert(!fs.existsSync(path.join(profile.root, 'wallet-setup.json')), 'Wallet setup needs an explicit choice');
+      } else {
+        await waitForWallet();
+        await verifyProfile();
+      }
       const archive = path.join(installDirectory, 'resources/app.asar');
       assert.equal(
         hash(fs.readFileSync(archive)),
@@ -425,15 +473,15 @@ async function main() {
       );
       assert.equal(JSON.parse(asar.extractFile(archive, 'package.json')).version, candidate.version);
       assert.equal(hash(fs.readFileSync(sdk)), sdkCandidate.artifacts.win32.sha256, 'Installed SDK hash changed');
-      assert.equal((await rpc('wallet_status')).is_encrypted, true);
-      assert.deepEqual((await rpc('address_list')).items.map((item) => item.address).sort(), originalAddresses);
       closeApplication(executable, restarted.ProcessId);
       await until(
         () => applicationProcesses(executable).length === 0 && sdkPids().length === 0,
         'Restarted application did not close cleanly'
       );
       await assertPortsAvailable(settings);
-      await launch();
+      await launch(legacy);
+      assert.equal((await rpc('wallet_status')).is_encrypted, true);
+      assert.deepEqual((await rpc('address_list')).items.map((item) => item.address).sort(), originalAddresses);
       assert.deepEqual(
         await mainClient.evaluate(nativeWindow + '.getBounds()'),
         originalBounds,
@@ -517,6 +565,7 @@ async function main() {
         applicationArchiveMatched: true,
         sdkSha256: sdkCandidate.artifacts.win32.sha256,
         walletKeysPreserved: true,
+        walletChoiceBeforeSync: legacy,
         updaterLogPreserved: true,
         windowBoundsPreserved: true,
         addressCount: originalAddresses.length,
