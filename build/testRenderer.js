@@ -47,6 +47,7 @@ fs.writeFileSync(
 for (const [command, args] of [
   [process.execPath, ['node_modules/webpack/bin/webpack.js', '--config', 'build/tests/webpack.config.js']],
   [require('electron'), ['build/tests/electron.cjs']],
+  [require('electron'), ['build/tests/electron.cjs', '--wallet-import']],
   [require('electron'), ['build/tests/electron.cjs', '--media']],
   [require('electron'), ['build/tests/electron.cjs', '--comics']],
   [require('electron'), ['build/tests/electron.cjs', '--three']],
@@ -69,17 +70,19 @@ for (const [command, args] of [
       'dist/ci',
       command === process.execPath
         ? 'renderer-build.log'
-        : args.includes('--media')
-          ? 'media-tests.log'
-          : args.includes('--comics')
-            ? 'comic-tests.log'
-            : args.includes('--three')
-              ? 'three-tests.log'
-              : args[0].endsWith('sandbox.cjs')
-                ? 'sandbox-tests.log'
-                : args[0].endsWith('devtools.cjs')
-                  ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
-                  : 'renderer-tests.log'
+        : args.includes('--wallet-import')
+          ? 'wallet-import-tests.log'
+          : args.includes('--media')
+            ? 'media-tests.log'
+            : args.includes('--comics')
+              ? 'comic-tests.log'
+              : args.includes('--three')
+                ? 'three-tests.log'
+                : args[0].endsWith('sandbox.cjs')
+                  ? 'sandbox-tests.log'
+                  : args[0].endsWith('devtools.cjs')
+                    ? 'devtools' + (args.includes('--failure') ? '-failure' : '') + '-tests.log'
+                    : 'renderer-tests.log'
     ),
     log
   );

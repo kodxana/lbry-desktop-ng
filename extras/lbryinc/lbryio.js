@@ -25,6 +25,18 @@ Lbryio.setLocalApi = (endpoint) => {
 };
 
 Lbryio.call = (resource, action, params = {}, method = 'get') => {
+  if (
+    resource === 'sync' &&
+    typeof window !== 'undefined' &&
+    window.lbryDesktop &&
+    window.lbryDesktop.walletCloudSyncEnabled() === false
+  ) {
+    const error = new Error(
+      __('Odysee wallet sync is off for this separate wallet profile. Your original wallet is unchanged.')
+    );
+    error.code = 'WALLET_SYNC_DISABLED';
+    return Promise.reject(error);
+  }
   if (!Lbryio.enabled) {
     return Promise.reject(new Error(__('LBRY internal API is disabled')));
   }

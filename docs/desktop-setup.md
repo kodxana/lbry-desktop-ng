@@ -1,5 +1,50 @@
 # Desktop setup
 
+## Wallet import
+
+The first launch offers **Keep using this wallet** (when one exists), **Import a
+wallet copy**, and **Create a new wallet** before hub selection. Return through
+Settings → Account → Wallet setup; opening it restarts the app with the SDK in
+settings-only mode. The original LBRY application directories are never selected
+automatically or modified.
+
+Import accepts a format-1 SDK wallet JSON file (including an extensionless
+`default_wallet`) or a LBRY Desktop backup ZIP. If a ZIP has several wallets,
+choose one; database files, downloads and blobs are not imported. Wallets are
+limited to 8 MiB, archives to 256 MiB. ZIP entries are read with a decompression
+limit and CRC verification, never extracted by archive path. Encrypted ZIPs,
+raw lbryum wallets and password-packed `wallet_export` strings are not supported.
+
+The file picker and file contents stay in the main process. The SDK checks a
+private staging copy, including its network, account keys and channel
+certificates. Encrypted wallets require their password for validation. The
+renderer receives only filenames, counts and non-sensitive errors; the password
+is cleared after the check and is not remembered. Import preserves the original
+bytes and protection, including the limitations of format 1: imported channel
+certificates are not encrypted. This is not a new wallet encryption format.
+
+Import and fresh-wallet choices create a new NG profile under the original NG
+profile's `profiles/` directory. Its wallet is copied exclusively, flushed and
+read back before activation. A complete setup record disables Odysee wallet
+sync for that profile. Only after clean SDK shutdown does an atomic
+`active-wallet-profile.json` pointer select it for the next launch. Failures
+before activation leave the previous profile selected. Completed profiles can
+be selected again in Wallet setup. Incomplete profile directories are retained
+for recovery but are never offered for activation.
+
+The confirmation explains that a copy controls the same funds, that the original
+must be kept, and that cloud wallet changes no longer flow in either direction.
+All `sync/*` account-service requests are blocked in these separate profiles,
+even after login; local hub synchronization continues normally. Keeping an
+existing profile preserves its prior cloud-sync behavior. Automatic re-enabling
+of cloud sync and combining wallets are deliberately absent from this flow.
+
+Tests cover private staging cleanup, wrong passwords, corrupt/oversized ZIPs,
+source changes after preview, rejected senders, write and activation failures,
+SDK shutdown failures, directory aliases, profile recovery, cloud-sync blocking,
+and the actual dark setup controls. SDK packaged tests check encrypted preview
+with all wallet/network components stopped. Personal wallets are not fixtures.
+
 ## Wallet hubs
 
 Before the first wallet sync, the desktop starts the bundled SDK in a

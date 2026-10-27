@@ -229,7 +229,7 @@ async function main() {
     // Observe the real main-world context before sending any page JavaScript.
     const { frameTree } = await cdp('Page.getFrameTree');
     await cdp('Runtime.enable');
-    const context = await until(
+    let context = await until(
       () =>
         [...contexts.values()].find(
           (candidate) =>
@@ -273,17 +273,45 @@ async function main() {
           );
           // A stalled external analytics script can keep readyState interactive.
           // The actual setup content proves that the application's bundle ran.
-          return setupPage.text.includes('Choose a wallet hub');
+          return setupPage.text.includes('Wallet setup');
         } catch (error) {
           if (error.code === -32000 && error.message === 'Execution context was destroyed.') return false;
           throw error;
         }
-      }, 'Hub picker did not render');
+      }, 'Wallet choice did not render');
     } catch (error) {
       console.error('Setup page at failure:', setupPage);
       throw error;
     }
     console.log('PASS: setup content ready; document state: ' + setupPage.readyState);
+    assert.equal(await evaluate("document.querySelector('.setup-layout').getAttribute('theme')"), 'dark');
+    assert.equal(
+      (await rpc('status')).startup_status.wallet,
+      undefined,
+      'Wallet must not start before the import choice'
+    );
+    await evaluate("window.lbryDesktop.walletSetup('keep')");
+    const previousContext = context.id;
+    await cdp('Page.reload');
+    context = await until(
+      () =>
+        [...contexts.values()].find(
+          (candidate) =>
+            candidate.id !== previousContext &&
+            candidate.auxData &&
+            candidate.auxData.isDefault &&
+            candidate.auxData.frameId === frameTree.frame.id &&
+            candidate.origin === (development ? new URL(page.url).origin : 'file://')
+        ),
+      'No application context after wallet choice'
+    );
+    await until(async () => {
+      try {
+        return await evaluate("document.body.innerText.includes('Choose a wallet hub')");
+      } catch (_) {
+        return false;
+      }
+    }, 'Hub picker did not render after wallet choice');
     if (development) {
       for (const [name, mime] of [
         ['worker-bundle.js', /^text\/javascript\b/],

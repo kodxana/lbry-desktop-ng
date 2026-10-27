@@ -3,6 +3,7 @@ import React from 'react';
 import desktop from 'util/desktop';
 import Button from 'component/button';
 import HubSetup from 'component/hubSetup';
+import WalletSetup from 'component/walletSetup';
 import SplashScreen from 'component/splash';
 import SetupLayout from 'component/setupLayout';
 
@@ -17,7 +18,7 @@ export default function SdkStartup({ onReadyToLaunch }: Props): React.Node {
     desktop
       .startupState()
       .then((state) => {
-        if (active) setPhase(state.settingsOnly ? 'choose' : 'sync');
+        if (active) setPhase(state.walletSetup ? 'wallet' : state.settingsOnly ? 'choose' : 'sync');
       })
       .catch(() => {
         if (active) setError(__('Could not read startup state. Please close and reopen the app.'));
@@ -40,6 +41,7 @@ export default function SdkStartup({ onReadyToLaunch }: Props): React.Node {
   }
 
   if (phase === 'sync') return <SplashScreen onReadyToLaunch={onReadyToLaunch} onChooseHub={chooseHub} />;
+  if (phase === 'wallet') return <WalletSetup onContinue={() => setPhase('choose')} />;
   if (phase === 'choose') return <HubSetup handleNextPage={() => setPhase('sync')} />;
   return (
     <SetupLayout>
