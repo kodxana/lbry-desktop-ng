@@ -3,7 +3,7 @@ import { doClearEmailEntry, doClearPasswordEntry } from 'redux/actions/user';
 import { doSignOut } from 'redux/actions/app';
 import { formatCredits } from 'util/format-credits';
 import { selectClientSetting } from 'redux/selectors/settings';
-import { selectGetSyncErrorMessage } from 'redux/selectors/sync';
+import { selectSyncApplyPasswordError } from 'redux/selectors/sync';
 import { selectHasNavigated } from 'redux/selectors/app';
 import { selectTotalBalance, selectBalance, selectWalletSyncStatus } from 'redux/selectors/wallet';
 import { selectEmailToVerify, selectUser } from 'redux/selectors/user';
@@ -18,7 +18,7 @@ const select = (state) => ({
   hideBalance: selectClientSetting(state, SETTINGS.HIDE_BALANCE),
   roundedBalance: formatCredits(selectTotalBalance(state), 2, true),
   roundedSpendableBalance: formatCredits(selectBalance(state), 2, true),
-  syncError: selectGetSyncErrorMessage(state),
+  syncError: selectSyncApplyPasswordError(state),
   user: selectUser(state),
 });
 

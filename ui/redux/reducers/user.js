@@ -4,6 +4,7 @@ const reducers = {};
 
 const defaultState = {
   authenticationIsPending: false,
+  accountServiceUnavailable: false,
   userIsPending: false,
   emailNewIsPending: false,
   emailNewErrorMessage: '',
@@ -36,13 +37,13 @@ reducers[ACTIONS.AUTHENTICATION_STARTED] = (state) => ({
   ...state,
   authenticationIsPending: true,
   userIsPending: true,
-  accessToken: defaultState.accessToken,
 });
 
 reducers[ACTIONS.AUTHENTICATION_SUCCESS] = (state, action) => ({
   ...state,
   authenticationIsPending: false,
   userIsPending: false,
+  accountServiceUnavailable: false,
   accessToken: action.data.accessToken,
   user: action.data.user,
 });
@@ -51,7 +52,7 @@ reducers[ACTIONS.AUTHENTICATION_FAILURE] = (state) => ({
   ...state,
   authenticationIsPending: false,
   userIsPending: false,
-  user: null,
+  accountServiceUnavailable: true,
 });
 
 reducers[ACTIONS.USER_FETCH_STARTED] = (state) => ({ ...state, userIsPending: true });
@@ -59,11 +60,16 @@ reducers[ACTIONS.USER_FETCH_STARTED] = (state) => ({ ...state, userIsPending: tr
 reducers[ACTIONS.USER_FETCH_SUCCESS] = (state, action) => ({
   ...state,
   userIsPending: false,
+  accountServiceUnavailable: false,
   user: action.data.user,
   emailToVerify: action.data.user.has_verified_email ? null : state.emailToVerify,
 });
 
-reducers[ACTIONS.USER_FETCH_FAILURE] = (state) => ({ ...state, userIsPending: true, user: null });
+reducers[ACTIONS.USER_FETCH_FAILURE] = (state) => ({
+  ...state,
+  userIsPending: false,
+  accountServiceUnavailable: true,
+});
 
 reducers[ACTIONS.USER_PHONE_NEW_STARTED] = (state, action) => {
   const user = { ...state.user };

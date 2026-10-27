@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+ - Keep local preferences, wallet access and playback usable during account-service outages. Preserve saved credentials and cloud-backup state, and offer a retry without restarting.
+ - Reject purchases with unavailable prices instead of treating them as free.
+
 ## [0.53.9] - [2023-2-8]
  
 ### Changed

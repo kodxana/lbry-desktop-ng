@@ -174,17 +174,32 @@ export function doPlayUri(
     const alreadyDownloaded = fileInfo && (fileInfo.completed || (fileInfo.blobs_remaining === 0 && uriIsStreamable));
     const alreadyDownloading = fileInfo && !!downloadingByOutpoint[fileInfo.outpoint];
 
-    if (alreadyDownloading || alreadyDownloaded) {
-      attemptPlay();
-      return;
-    }
-
     const daemonSettings = selectDaemonSettings(state);
     const costInfo = selectCostInfoForUri(state, uri);
+    const claim = selectClaimForUri(state, uri);
+    const fee = claim && claim.value_type === 'stream' && claim.value && claim.value.fee;
     const cost = (costInfo && Number(costInfo.cost)) || 0;
     const saveFile = !uriIsStreamable ? true : daemonSettings.save_files || saveFileOverride || cost > 0;
     const instantPurchaseEnabled = makeSelectClientSetting(SETTINGS.INSTANT_PURCHASE_ENABLED)(state);
     const instantPurchaseMax = makeSelectClientSetting(SETTINGS.INSTANT_PURCHASE_MAX)(state);
+
+    if (alreadyDownloading || alreadyDownloaded) {
+      beginGetFile();
+      return;
+    }
+    if (
+      !isMine &&
+      !fileInfo &&
+      !claimWasPurchased &&
+      fee &&
+      Number(fee.amount) > 0 &&
+      (!costInfo || !Number.isFinite(Number(costInfo.cost)) || Number(costInfo.cost) <= 0)
+    ) {
+      dispatch(
+        doToast({ isError: true, message: __('The price is unavailable. Please try again before purchasing.') })
+      );
+      return;
+    }
 
     function beginGetFile() {
       dispatch(doPurchaseUriWrapper(uri, cost, saveFile, cb));
@@ -219,9 +234,16 @@ export function doPlayUri(
         attemptPlay(instantPurchaseMax.amount);
       } else {
         // Need to convert currency of instant purchase maximum before trying to play
-        Lbryio.getExchangeRates().then(({ LBC_USD }) => {
-          attemptPlay(instantPurchaseMax.amount / LBC_USD);
-        });
+        Lbryio.getExchangeRates()
+          .then(({ LBC_USD }) => {
+            if (!Number.isFinite(LBC_USD) || LBC_USD <= 0) throw new Error('Invalid exchange rate');
+            attemptPlay(instantPurchaseMax.amount / LBC_USD);
+          })
+          .catch(() =>
+            dispatch(
+              doToast({ isError: true, message: __('The price is unavailable. Please try again before purchasing.') })
+            )
+          );
       }
     } else {
       attemptPlay();

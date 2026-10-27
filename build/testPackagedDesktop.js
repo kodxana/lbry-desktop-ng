@@ -83,6 +83,7 @@ async function main() {
         const end = buffer.indexOf('\n');
         const call = JSON.parse(buffer.slice(0, end));
         buffer = buffer.slice(end + 1);
+        const positionalParams = Array.isArray(call.params) ? call.params : [];
         const replies = {
           'server.version': ['desktop-smoke-fixture', '0.113.0'],
           'server.features': { genesis_hash: GENESIS, protocol_min: '0.113.0', protocol_max: '0.113.0' },
@@ -90,8 +91,13 @@ async function main() {
           'server.ping': null,
           'blockchain.headers.subscribe': { height: 0, hex: '' },
           'blockchain.block.headers': { count: 0, hex: '' },
-          'blockchain.address.subscribe': (call.params || []).map(() => null),
+          'blockchain.address.subscribe': positionalParams.map(() => null),
           'blockchain.address.unsubscribe': true,
+          // Outputs protobuf: one NOT_FOUND result per URL, without any transaction data.
+          'blockchain.claimtrie.resolve': Buffer.concat(
+            positionalParams.map(() => Buffer.from('CgR6AggB', 'base64'))
+          ).toString('base64'),
+          'blockchain.claimtrie.search': '',
         };
         const reply = Object.prototype.hasOwnProperty.call(replies, call.method)
           ? { result: replies[call.method] }
@@ -253,6 +259,9 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
+    // The real renderer must finish startup without the centralized account service.
+    await cdp('Network.enable');
+    await cdp('Network.setBlockedURLs', { urls: ['https://api.lbry.com/*'] });
     // Wait for the browser bundle to render before starting asynchronous IPC checks.
     let setupPage;
     try {
@@ -388,6 +397,24 @@ async function main() {
     const addressCount = (await rpc('address_list')).items.length;
     assert(addressCount > 0);
     assert(fs.existsSync(path.join(profile.root, 'hub-setup-complete.json')));
+    await until(
+      () =>
+        evaluate(`Boolean(window.store && window.store.getState().sync.prefsReady &&
+        window.store.getState().user.accountServiceUnavailable &&
+        !window.store.getState().sync.fatalError && document.querySelector('.main-wrapper'))`),
+      'Account-service outage prevented local application startup'
+    ).catch(async (error) => {
+      console.error(
+        'Local startup state:',
+        await evaluate(`({ hasStore: Boolean(window.store),
+          prefsReady: window.store?.getState().sync.prefsReady,
+          serviceUnavailable: window.store?.getState().user.accountServiceUnavailable,
+          fatalError: window.store?.getState().sync.fatalError,
+          text: document.body.innerText.slice(0, 2000) })`)
+      );
+      throw error;
+    });
+    console.log('PASS: ' + label + ' loads local preferences and the application with api.lbry.com blocked');
     const storage = await evaluate(`new Promise((resolve, reject) => {
       const timer = setTimeout(() => { unsubscribe(); reject(new Error('No storage IPC reply')); }, 15000);
       const unsubscribe = window.lbryDesktop.onDiskSpace(result => {
@@ -435,6 +462,8 @@ async function main() {
       label,
       appVersion,
       rendererLoaded: true,
+      accountApiBlocked: true,
+      localPreferencesReady: true,
       hubPicker: before,
       walletBalance: '0.0',
       addressCount,

@@ -16,6 +16,7 @@ const defaultState = {
   syncLocked: false,
   hashChanged: false,
   fatalError: false,
+  serviceUnavailable: false,
 };
 
 reducers[ACTIONS.SYNC_STATE_POPULATE] = (state) => {
@@ -29,7 +30,12 @@ reducers[ACTIONS.SYNC_STATE_POPULATE] = (state) => {
 
 reducers[ACTIONS.SET_PREFS_READY] = (state, action) => ({ ...state, prefsReady: action.data });
 
-reducers[ACTIONS.GET_SYNC_STARTED] = (state) => ({ ...state, getSyncIsPending: true, getSyncErrorMessage: null });
+reducers[ACTIONS.GET_SYNC_STARTED] = (state) => ({
+  ...state,
+  getSyncIsPending: true,
+  getSyncErrorMessage: null,
+  syncApplyPasswordError: false,
+});
 
 reducers[ACTIONS.SET_SYNC_LOCK] = (state, action) => ({ ...state, syncLocked: action.data });
 
@@ -39,6 +45,7 @@ reducers[ACTIONS.GET_SYNC_COMPLETED] = (state, action) => ({
   syncData: action.data.syncData,
   hasSyncedWallet: action.data.hasSyncedWallet,
   getSyncIsPending: false,
+  serviceUnavailable: false,
   hashChanged: action.data.hashChanged,
   fatalError: action.data.fatalError,
 });
@@ -47,6 +54,7 @@ reducers[ACTIONS.GET_SYNC_FAILED] = (state, action) => ({
   ...state,
   getSyncIsPending: false,
   getSyncErrorMessage: action.data.error,
+  serviceUnavailable: Boolean(action.data.serviceUnavailable),
 });
 
 reducers[ACTIONS.SET_SYNC_STARTED] = (state) => ({ ...state, setSyncIsPending: true, setSyncErrorMessage: null });
@@ -55,12 +63,14 @@ reducers[ACTIONS.SET_SYNC_FAILED] = (state, action) => ({
   ...state,
   setSyncIsPending: false,
   setSyncErrorMessage: action.data.error,
+  serviceUnavailable: true,
 });
 
 reducers[ACTIONS.SET_SYNC_COMPLETED] = (state, action) => ({
   ...state,
   setSyncIsPending: false,
   setSyncErrorMessage: null,
+  serviceUnavailable: false,
   hasSyncedWallet: true, // sync was successful, so the user has a synced wallet at this point
   syncHash: action.data.syncHash,
 });

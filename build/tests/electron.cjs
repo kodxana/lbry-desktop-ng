@@ -375,6 +375,7 @@ app
               'updater',
               'updaterRestart',
               'wallet',
+              'accountOutage',
               'downloadNotifications',
               'passwords',
               'passwordRestart',

@@ -59,7 +59,7 @@ type Props = {
   getWalletSyncPref?: () => Promise<any>,
   uploadCount: number,
   balance: ?number,
-  syncError: ?string,
+  syncError: boolean,
   syncEnabled: boolean,
   rewards: Array<Reward>,
   setReferrer: (string, boolean) => void,
@@ -119,7 +119,6 @@ function App(props: Props) {
   const isEnhancedLayout = useKonamiListener();
   const [hasSignedIn, setHasSignedIn] = useState(false);
   const [readyForSync, setReadyForSync] = useState(false);
-  const [readyForPrefs, setReadyForPrefs] = useState(false);
   const hasVerifiedEmail = user && Boolean(user.has_verified_email);
   const isRewardApproved = user && user.is_reward_approved;
   const previousHasVerifiedEmail = usePrevious(hasVerifiedEmail);
@@ -273,14 +272,14 @@ function App(props: Props) {
   }, [previousRewardApproved, isRewardApproved]);
 
   useEffect(() => {
-    if (updatePreferences && getWalletSyncPref && readyForPrefs) {
+    if (updatePreferences && getWalletSyncPref) {
       getWalletSyncPref()
         .then(() => updatePreferences())
         .then(() => {
           setReadyForSync(true);
         });
     }
-  }, [updatePreferences, getWalletSyncPref, setReadyForSync, readyForPrefs, hasVerifiedEmail]);
+  }, [updatePreferences, getWalletSyncPref, setReadyForSync]);
 
   // ready for sync syncs, however after signin when hasVerifiedEmail, that syncs too.
   useEffect(() => {
@@ -290,15 +289,6 @@ function App(props: Props) {
       syncLoop();
     }
   }, [readyForSync, hasVerifiedEmail, syncLoop]);
-
-  // We know someone is logging in or not when we get their user object
-  // We'll use this to determine when it's time to pull preferences
-  // This will no longer work if desktop users no longer get a user object from lbryinc
-  useEffect(() => {
-    if (user) {
-      setReadyForPrefs(true);
-    }
-  }, [user, setReadyForPrefs]);
 
   useEffect(() => {
     if (syncError && isAuthenticated && !pathname.includes(PAGES.AUTH_WALLET_PASSWORD) && !currentModal) {

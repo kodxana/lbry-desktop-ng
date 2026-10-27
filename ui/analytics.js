@@ -116,9 +116,10 @@ const analytics: Analytics = {
   error: (message) => {
     return new Promise((resolve) => {
       if (internalAnalyticsEnabled && isProduction) {
-        return Lbryio.call('event', 'desktop_error', { error_message: message }).then(() => {
-          resolve(true);
-        });
+        return Lbryio.call('event', 'desktop_error', { error_message: message }).then(
+          () => resolve(true),
+          () => resolve(false)
+        );
       } else {
         resolve(false);
       }
@@ -184,7 +185,7 @@ const analytics: Analytics = {
           params.time_to_start = timeToStart;
         }
 
-        resolve(Lbryio.call('file', 'view', params));
+        resolve(Lbryio.call('file', 'view', params).catch(() => undefined));
       } else {
         resolve();
       }
@@ -192,7 +193,7 @@ const analytics: Analytics = {
   },
   apiLogSearch: () => {
     if (internalAnalyticsEnabled && isProduction) {
-      Lbryio.call('event', 'search');
+      Lbryio.call('event', 'search').catch(() => {});
     }
   },
   apiLogPublish: (claimResult: Claim) => {
@@ -209,13 +210,13 @@ const analytics: Analytics = {
         params['channel_claim_id'] = channelClaimId;
       }
 
-      Lbryio.call('event', 'publish', params);
+      Lbryio.call('event', 'publish', params).catch(() => {});
     }
   },
 
   apiSyncTags: (params) => {
     if (internalAnalyticsEnabled && isProduction) {
-      Lbryio.call('content_tags', 'sync', params);
+      Lbryio.call('content_tags', 'sync', params).catch(() => {});
     }
   },
   adsFetchedEvent: () => {

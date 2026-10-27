@@ -10,6 +10,7 @@ import Wallpaper from 'component/wallpaper';
 import SettingsSideNavigation from 'component/settingsSideNavigation';
 import SideNavigation from 'component/sideNavigation';
 import StatusBar from 'component/common/status-bar';
+import AccountServiceStatus from 'component/accountServiceStatus';
 import usePersistedState from 'effects/use-persisted-state';
 import type { Node } from 'react';
 
@@ -127,6 +128,7 @@ function Page(props: Props): React.Node {
               'main--theater-mode': isOnFilePage && videoTheaterMode && !isMediumScreen && !isMarkdown,
             })}
           >
+            <AccountServiceStatus />
             {children}
 
             {!isMobile && rightSide && <div className="main__right-side">{rightSide}</div>}

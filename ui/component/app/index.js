@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { selectGetSyncErrorMessage, selectSyncFatalError } from 'redux/selectors/sync';
+import { selectSyncApplyPasswordError, selectSyncFatalError } from 'redux/selectors/sync';
 import { doFetchAccessToken, doUserSetReferrer } from 'redux/actions/user';
 import { selectUser, selectAccessToken, selectUserVerifiedEmail } from 'redux/selectors/user';
 import { selectUnclaimedRewards } from 'redux/selectors/rewards';
@@ -41,7 +41,7 @@ const select = (state) => ({
   languages: selectLoadedLanguages(state),
   autoUpdateDownloaded: selectAutoUpdateDownloaded(state),
   isUpgradeAvailable: selectIsUpgradeAvailable(state),
-  syncError: selectGetSyncErrorMessage(state),
+  syncError: selectSyncApplyPasswordError(state),
   rewards: selectUnclaimedRewards(state),
   isAuthenticated: selectUserVerifiedEmail(state),
   currentModal: selectModal(state),
