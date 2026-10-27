@@ -253,6 +253,9 @@ async function main() {
       assert(!result.error, JSON.stringify(result.error));
       return result.result;
     };
+    // The real renderer must finish startup without the centralized account service.
+    await cdp('Network.enable');
+    await cdp('Network.setBlockedURLs', { urls: ['https://api.lbry.com/*'] });
     // Wait for the browser bundle to render before starting asynchronous IPC checks.
     let setupPage;
     try {
@@ -388,6 +391,14 @@ async function main() {
     const addressCount = (await rpc('address_list')).items.length;
     assert(addressCount > 0);
     assert(fs.existsSync(path.join(profile.root, 'hub-setup-complete.json')));
+    await until(
+      () =>
+        evaluate(`Boolean(window.store && window.store.getState().sync.prefsReady &&
+        window.store.getState().user.accountServiceUnavailable &&
+        !window.store.getState().sync.fatalError && document.querySelector('.main-wrapper'))`),
+      'Account-service outage prevented local application startup'
+    );
+    console.log('PASS: ' + label + ' loads local preferences and the application with api.lbry.com blocked');
     const storage = await evaluate(`new Promise((resolve, reject) => {
       const timer = setTimeout(() => { unsubscribe(); reject(new Error('No storage IPC reply')); }, 15000);
       const unsubscribe = window.lbryDesktop.onDiskSpace(result => {
@@ -435,6 +446,8 @@ async function main() {
       label,
       appVersion,
       rendererLoaded: true,
+      accountApiBlocked: true,
+      localPreferencesReady: true,
       hubPicker: before,
       walletBalance: '0.0',
       addressCount,
