@@ -229,7 +229,7 @@ async function main() {
     // Observe the real main-world context before sending any page JavaScript.
     const { frameTree } = await cdp('Page.getFrameTree');
     await cdp('Runtime.enable');
-    const context = await until(
+    let context = await until(
       () =>
         [...contexts.values()].find(
           (candidate) =>
@@ -291,7 +291,20 @@ async function main() {
       'Wallet must not start before the import choice'
     );
     await evaluate("window.lbryDesktop.walletSetup('keep')");
+    const previousContext = context.id;
     await cdp('Page.reload');
+    context = await until(
+      () =>
+        [...contexts.values()].find(
+          (candidate) =>
+            candidate.id !== previousContext &&
+            candidate.auxData &&
+            candidate.auxData.isDefault &&
+            candidate.auxData.frameId === frameTree.frame.id &&
+            candidate.origin === (development ? new URL(page.url).origin : 'file://')
+        ),
+      'No application context after wallet choice'
+    );
     await until(async () => {
       try {
         return await evaluate("document.body.innerText.includes('Choose a wallet hub')");

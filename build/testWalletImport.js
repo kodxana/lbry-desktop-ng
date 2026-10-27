@@ -30,6 +30,22 @@ async function main() {
     const entries = readSelection(backup);
     assert.equal(entries.length, 2);
     assert.deepEqual(entries.find((entry) => entry.name.endsWith('default_wallet')).read(), imported);
+    const single = new AdmZip();
+    single.addFile('wallets/default_wallet', imported);
+    const corrupt = Buffer.from(single.toBuffer());
+    const central = corrupt.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+    corrupt.writeUInt32LE((corrupt.readUInt32LE(central + 16) ^ 1) >>> 0, central + 16);
+    fs.writeFileSync(path.join(root, 'corrupt.zip'), corrupt);
+    assert.throws(() => readSelection(path.join(root, 'corrupt.zip'))[0].read(), /integrity/);
+    const traversal = new AdmZip();
+    traversal.addFile('safe/wallets/default_wallet', imported);
+    const traversalBytes = Buffer.from(traversal.toBuffer());
+    const safeName = Buffer.from('safe/wallets/default_wallet');
+    for (let offset = traversalBytes.indexOf(safeName); offset !== -1; offset = traversalBytes.indexOf(safeName)) {
+      traversalBytes.write('.././wallets/default_wallet', offset);
+    }
+    fs.writeFileSync(path.join(root, 'traversal.zip'), traversalBytes);
+    assert.throws(() => readSelection(path.join(root, 'traversal.zip')), /No supported wallet/);
     const oversized = new AdmZip();
     oversized.addFile('wallets/default_wallet', Buffer.alloc(8 * 1024 * 1024 + 1));
     oversized.writeZip(path.join(root, 'oversized.zip'));
