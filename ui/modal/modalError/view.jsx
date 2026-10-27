@@ -19,7 +19,7 @@ class ModalError extends React.PureComponent<Props> {
     const failedToDownloadError = errorMessage.startsWith('Failed to download');
 
     if (process.env.NODE_ENV === 'production' && !failedToDownloadError) {
-      Lbryio.call('event', 'desktop_error', { error_message: JSON.stringify(error) });
+      Lbryio.call('event', 'desktop_error', { error_message: JSON.stringify(error) }).catch(() => {});
     }
   }
 

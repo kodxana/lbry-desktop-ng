@@ -34,6 +34,7 @@ for (const file of [
   'testDependencyContracts.js',
   'testRemainingDependencyContracts.js',
   'testAccountClient.js',
+  'testAccountOutagePlayback.js',
   'testArtifactDownload.js',
   'testYaml.js',
   'testBuildHelpers.js',

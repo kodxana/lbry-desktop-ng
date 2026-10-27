@@ -551,9 +551,8 @@ export function doGetAndPopulatePreferences() {
   return (dispatch, getState) => {
     const state = getState();
     const syncEnabled = makeSelectClientSetting(SETTINGS.ENABLE_SYNC)(state);
-    const hasVerifiedEmail = state.user && state.user.user && state.user.user.has_verified_email;
-    let preferenceKey;
-    preferenceKey = syncEnabled && hasVerifiedEmail ? 'shared' : 'local';
+    // These preferences are already in the local wallet, even without the account service.
+    const preferenceKey = syncEnabled ? 'shared' : 'local';
 
     async function successCb(savedPreferences) {
       const localHubs = await desktop.hubConfig();
@@ -578,7 +577,10 @@ export function doGetAndPopulatePreferences() {
         dispatch(doSetPrefsReady());
       }
       dispatch(doSaveCustomWalletServers(localHubs ? localHubs.map(([host, port]) => [host, String(port)]) : []));
-      dispatch({ type: ACTIONS.SHARED_PREFERENCE_SET, data: { key: DAEMON_SETTINGS.LBRYUM_SERVERS, value: localHubs } });
+      dispatch({
+        type: ACTIONS.SHARED_PREFERENCE_SET,
+        data: { key: DAEMON_SETTINGS.LBRYUM_SERVERS, value: localHubs },
+      });
       return true;
     }
 

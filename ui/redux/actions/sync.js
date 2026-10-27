@@ -25,6 +25,7 @@ type SyncAttempt = {
   syncData?: string,
   changed?: boolean,
   hasSyncedWallet?: boolean,
+  noRemoteWallet?: boolean,
 };
 
 let syncTimer: ReturnType<typeof setInterval> | null = null;
@@ -103,6 +104,7 @@ export function doSetSync(oldHash: string, newHash: string, data: string): Thunk
           type: ACTIONS.SET_SYNC_FAILED,
           data: { error },
         });
+        return false;
       });
   };
 }
@@ -125,7 +127,7 @@ export const doGetSyncDesktop =
     });
   };
 
-export function doSyncLoop(noInterval?: boolean): ThunkAction<void> {
+export function doSyncLoop(noInterval?: boolean): ThunkAction<Promise<unknown> | void> {
   return (dispatch: Dispatch, getState: GetState) => {
     if (!noInterval && syncTimer) clearInterval(syncTimer);
     const state = getState();
@@ -133,7 +135,9 @@ export function doSyncLoop(noInterval?: boolean): ThunkAction<void> {
     const syncEnabled = makeSelectClientSetting(SETTINGS.ENABLE_SYNC)(state);
     const syncLocked = selectSyncIsLocked(state);
     if (hasVerifiedEmail && syncEnabled && !syncLocked) {
-      dispatch(doGetSyncDesktop((error, hasNewData) => dispatch(doHandleSyncComplete(error, hasNewData))));
+      const attempt = dispatch(
+        doGetSyncDesktop((error, hasNewData) => dispatch(doHandleSyncComplete(error, hasNewData)))
+      );
       dispatch(doAnalyticsTagSync());
       if (!noInterval) {
         syncTimer = setInterval(() => {
@@ -145,6 +149,7 @@ export function doSyncLoop(noInterval?: boolean): ThunkAction<void> {
           }
         }, SYNC_INTERVAL);
       }
+      return attempt;
     }
   };
 }
@@ -157,7 +162,7 @@ export function doSyncUnsubscribe(): ThunkAction<void> {
   };
 }
 
-export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): ThunkAction<void> {
+export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): ThunkAction<Promise<unknown>> {
   const password = passedPassword === null || passedPassword === undefined ? '' : passedPassword;
 
   function handleCallback(error?: unknown, hasNewData?: ?boolean): void {
@@ -179,9 +184,10 @@ export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): Th
 
     const data: SyncAttempt = {};
 
-    Lbry.wallet_status()
+    return Lbry.wallet_status()
       .then((status) => {
         if (status.is_locked) {
+          data.unlockFailed = true;
           return Lbry.wallet_unlock({ password });
         }
 
@@ -190,14 +196,23 @@ export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): Th
       })
       .then((isUnlocked) => {
         if (isUnlocked) {
+          data.unlockFailed = false;
           return Lbry.sync_hash();
         }
         data.unlockFailed = true;
         throw new Error();
       })
-      .then((hash?: string) => Lbryio.call('sync', 'get', { hash }, 'post'))
+      .then((hash?: string) =>
+        Lbryio.call('sync', 'get', { hash }, 'post').catch((error) => {
+          data.noRemoteWallet = error && error.message === NO_WALLET_ERROR;
+          throw error;
+        })
+      )
       .then((response: { hash: string, data?: string, changed?: boolean, ... }) => {
         if (typeof response.hash !== 'string') throw new Error('No hash returned for sync/get.');
+        if (response.changed && (typeof response.data !== 'string' || !response.data)) {
+          throw new Error('No wallet data returned for sync/get.');
+        }
         const syncHash = response.hash;
         data.syncHash = syncHash;
         data.syncData = response.data;
@@ -208,7 +223,7 @@ export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): Th
           return Lbry.sync_apply({ password, data: response.data, blocking: true });
         }
       })
-      .then((response) => {
+      .then(async (response) => {
         if (!response) {
           dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data });
           handleCallback(null, data.changed);
@@ -221,7 +236,15 @@ export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): Th
 
         if (walletHash !== syncHash) {
           // different local hash, need to synchronise
-          dispatch(doSetSync(syncHash, walletHash, walletData));
+          const uploaded = await dispatch(doSetSync(syncHash, walletHash, walletData));
+          if (uploaded === false) {
+            const error = __('Cloud backup could not be updated. Please try again later.');
+            dispatch({ type: ACTIONS.GET_SYNC_FAILED, data: { error, serviceUnavailable: true } });
+            handleCallback(error);
+            return;
+          }
+          data.syncHash = walletHash;
+          data.syncData = walletData;
         }
 
         dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data });
@@ -254,28 +277,30 @@ export function doGetSync(passedPassword?: ?string, callback?: SyncCallback): Th
 
           handleCallback(error);
         } else {
-          const noWalletError = syncAttemptError && syncAttemptError.message === NO_WALLET_ERROR;
-
-          dispatch({
-            type: ACTIONS.GET_SYNC_COMPLETED,
-            data: {
-              hasSyncedWallet: false,
-              syncHash: null,
-              // If there was some unknown error, bail
-              fatalError: !noWalletError,
-            },
-          });
+          if (!data.noRemoteWallet) {
+            const error = (syncAttemptError && syncAttemptError.message) || __('Cloud backup is unavailable.');
+            dispatch({ type: ACTIONS.GET_SYNC_FAILED, data: { error, serviceUnavailable: true } });
+            handleCallback(error);
+            return;
+          }
 
           // user doesn't have a synced wallet
           //   call sync_apply to get data to sync
           //   first time sync. use any string for old hash
-          if (noWalletError) {
-            Lbry.sync_apply({ password })
-              .then(({ hash: walletHash, data: syncApplyData }) => {
-                dispatch(doSetSync('', walletHash, syncApplyData));
-                handleCallback();
+          if (data.noRemoteWallet) {
+            return Lbry.sync_apply({ password })
+              .then(async ({ hash: walletHash, data: syncApplyData }) => {
+                const uploaded = await dispatch(doSetSync('', walletHash, syncApplyData));
+                if (uploaded === false)
+                  throw new Error(__('Cloud backup could not be created. Please try again later.'));
+                dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data: { hasSyncedWallet: true, syncHash: walletHash } });
+                handleCallback(null, true);
               })
               .catch((syncApplyError) => {
+                dispatch({
+                  type: ACTIONS.GET_SYNC_FAILED,
+                  data: { error: syncApplyError.message, serviceUnavailable: true },
+                });
                 handleCallback(syncApplyError);
               });
           }
@@ -312,31 +337,37 @@ export function doSyncApply(syncHash: string, syncData: string, password: string
   };
 }
 
-export function doCheckSync(): ThunkAction<void> {
+export function doCheckSync(): ThunkAction<Promise<unknown>> {
   return (dispatch: Dispatch) => {
     dispatch({
       type: ACTIONS.GET_SYNC_STARTED,
     });
 
-    Lbry.sync_hash().then((hash) => {
-      Lbryio.call('sync', 'get', { hash }, 'post')
-        .then((response) => {
-          const data = {
-            hasSyncedWallet: true,
-            syncHash: response.hash,
-            syncData: response.data,
-            hashChanged: response.changed,
-          };
-          dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data });
-        })
-        .catch(() => {
-          // user doesn't have a synced wallet
-          dispatch({
-            type: ACTIONS.GET_SYNC_COMPLETED,
-            data: { hasSyncedWallet: false, syncHash: null },
+    return Lbry.sync_hash()
+      .then((hash) => {
+        return Lbryio.call('sync', 'get', { hash }, 'post')
+          .then((response) => {
+            if (!response || typeof response.hash !== 'string') throw new Error('No hash returned for sync/get.');
+            if (response.changed && (typeof response.data !== 'string' || !response.data)) {
+              throw new Error('No wallet data returned for sync/get.');
+            }
+            const data = {
+              hasSyncedWallet: true,
+              syncHash: response.hash,
+              syncData: response.data,
+              hashChanged: response.changed,
+            };
+            dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data });
+          })
+          .catch((error) => {
+            if (error && error.message === NO_WALLET_ERROR) {
+              dispatch({ type: ACTIONS.GET_SYNC_COMPLETED, data: { hasSyncedWallet: false, syncHash: null } });
+            } else {
+              dispatch({ type: ACTIONS.GET_SYNC_FAILED, data: { error: error.message, serviceUnavailable: true } });
+            }
           });
-        });
-    });
+      })
+      .catch((error) => dispatch({ type: ACTIONS.GET_SYNC_FAILED, data: { error: error.message } }));
   };
 }
 

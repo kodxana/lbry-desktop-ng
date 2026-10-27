@@ -53,13 +53,13 @@ export function doToggleSubscription(
           channel_name: subscription.channelName,
           claim_id: channelClaimId,
           notifications_disabled: subscription.notificationsDisabled,
-        });
+        }).catch(() => {});
 
         dispatch(doClaimRewardType(REWARDS.TYPE_SUBSCRIPTION, { failSilently: true }));
       } else {
         Lbryio.call('subscription', 'delete', {
           claim_id: channelClaimId,
-        });
+        }).catch(() => {});
       }
     }
     if (followToast) {

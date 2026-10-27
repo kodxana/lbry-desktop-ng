@@ -27,9 +27,12 @@ export function doFetchCostInfoForUri(uri) {
     } else if (fee.currency === 'LBC') {
       resolve({ cost: fee.amount, includesData: true });
     } else {
-      Lbryio.getExchangeRates().then(({ LBC_USD }) => {
-        resolve({ cost: fee.amount / LBC_USD, includesData: true });
-      });
+      // Leave the price unknown on failure; never turn a paid claim into a free one.
+      Lbryio.getExchangeRates()
+        .then(({ LBC_USD }) => {
+          if (Number.isFinite(LBC_USD) && LBC_USD > 0) resolve({ cost: fee.amount / LBC_USD, includesData: true });
+        })
+        .catch(() => {});
     }
   };
 }

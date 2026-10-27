@@ -268,12 +268,98 @@ async function preferences() {
   }
 }
 
+async function outages() {
+  savedPassword = 'stored-password';
+  const reducer = load('redux/reducers/sync.js', { 'constants/action_types': actions }).default;
+  const before = {
+    ...reducer(undefined, { type: 'init' }),
+    hasSyncedWallet: true,
+    syncHash: 'last-good',
+    syncData: 'encrypted-backup',
+  };
+  state = { enabled: true, hash: 'last-good' };
+  sdk.wallet_status = async () => ({ is_locked: false });
+  sdk.sync_hash = async () => 'local-hash';
+  sdk.sync_apply = async (params) => {
+    calls.push(['apply', params]);
+    return { hash: 'merged-hash', data: 'encrypted-merged' };
+  };
+  for (const response of [
+    () => {
+      throw Error('service unavailable');
+    },
+    () => null,
+    () => ({ data: 'missing hash' }),
+    () => ({ hash: 'remote-hash', changed: true }),
+  ]) {
+    api = async () => response();
+    for (const checkOnly of [false, true]) {
+      calls.length = events.length = 0;
+      let callbackError;
+      if (checkOnly) await dispatch(sync.doCheckSync());
+      else
+        await dispatch(
+          sync.doGetSync('stored-password', (error) => {
+            callbackError = error;
+          })
+        );
+      const after = events.reduce(reducer, before);
+      assert.equal(after.syncHash, 'last-good');
+      assert.equal(after.syncData, 'encrypted-backup');
+      assert.equal(after.hasSyncedWallet, true);
+      assert.equal(after.getSyncIsPending, false);
+      assert.equal(after.fatalError, false);
+      assert.equal(after.syncApplyPasswordError, false);
+      assert.equal(after.serviceUnavailable, true);
+      if (!checkOnly) assert(callbackError, 'An outage must settle the caller with a failure');
+      assert(
+        !calls.some(([name, method]) => name === 'apply' || method === 'set'),
+        'An outage must neither import nor upload a wallet'
+      );
+      assert.equal(savedPassword, 'stored-password');
+    }
+  }
+  for (const firstBackup of [false, true]) {
+    calls.length = events.length = 0;
+    api = async (_resource, method) => {
+      if (method === 'set') throw Error('upload unavailable');
+      if (firstBackup) throw Error('no wallet found for this user');
+      return { hash: 'remote-hash', changed: true, data: 'encrypted-remote' };
+    };
+    let callbackError;
+    await dispatch(
+      sync.doGetSync('stored-password', (error) => {
+        callbackError = error;
+      })
+    );
+    assert(callbackError, 'An unsuccessful upload must never report a completed backup');
+    assert(!events.some((event) => event.type === actions.SET_SYNC_COMPLETED));
+    const after = events.reduce(reducer, before);
+    assert.equal(after.syncHash, before.syncHash);
+    assert.equal(after.getSyncIsPending, false);
+    assert.equal(after.setSyncIsPending, false);
+    assert.equal(after.serviceUnavailable, true);
+  }
+  events.length = 0;
+  api = async (_resource, method) =>
+    method === 'set' ? { hash: 'merged-hash' } : { hash: 'remote-hash', changed: true, data: 'encrypted-remote' };
+  await dispatch(sync.doGetSync('stored-password'));
+  assert.equal(events.reduce(reducer, before).syncHash, 'merged-hash', 'A completed upload must retain its new hash');
+  events.length = 0;
+  api = async () => ({ hash: 'last-good', changed: false });
+  await dispatch(sync.doGetSync('stored-password'));
+  assert.equal(events.reduce(reducer, { ...before, serviceUnavailable: true }).serviceUnavailable, false);
+}
+
 async function main() {
   await encryptionOrdering();
   await encryptionFailures();
   await savedPasswordSync();
   await preferences();
-  console.log('PASS sync ordering, failure handling, saved passwords, first sync and preference persistence');
+  await outages();
+  console.log(
+    'PASS sync ordering, outage recovery, failed uploads, saved passwords, first sync and preference persistence'
+  );
 }
 main().catch((error) => {
   console.error(error);

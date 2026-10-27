@@ -44,7 +44,7 @@ type Props = {
   roundedBalance: string,
   roundedSpendableBalance: string,
   sidebarOpen: boolean,
-  syncError: ?string,
+  syncError: boolean,
   clearEmailEntry: () => void,
   clearPasswordEntry: () => void,
   setSidebarOpen: (boolean) => void,

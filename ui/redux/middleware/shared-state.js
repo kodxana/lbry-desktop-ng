@@ -30,8 +30,7 @@ export const buildSharedStateMiddleware =
       const nextState = getState();
       const syncEnabled =
         nextState.settings && nextState.settings.clientSettings && nextState.settings.clientSettings.enable_sync;
-      const hasVerifiedEmail = nextState.user && nextState.user.user && nextState.user.user.has_verified_email;
-      const preferenceKey = syncEnabled && hasVerifiedEmail ? 'shared' : 'local';
+      const preferenceKey = syncEnabled ? 'shared' : 'local';
       const shared: { [string]: unknown } = {};
 
       Object.keys(sharedStateFilters).forEach((key) => {

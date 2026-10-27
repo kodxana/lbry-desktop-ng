@@ -30,7 +30,7 @@ export function doInstallNew(appVersion, os = null, firebaseToken = null, callba
       payload.daemon_version = version.lbrynet_version;
       payload.operating_system = os || version.os_system;
       payload.platform = version.platform;
-      Lbryio.call('install', 'new', payload);
+      Lbryio.call('install', 'new', payload).catch(() => {});
 
       if (callbackForUsersWhoAreSharingData) {
         callbackForUsersWhoAreSharingData(status);
@@ -59,7 +59,7 @@ export function doInstallNewWithParams(
     payload.daemon_version = lbrynetVersion;
     payload.operating_system = os;
     payload.platform = platform;
-    Lbryio.call('install', 'new', payload);
+    Lbryio.call('install', 'new', payload).catch(() => {});
   };
 }
 
@@ -80,7 +80,7 @@ export function doAuthenticate(
     return Lbryio.authenticate(DOMAIN, getDefaultLanguage())
       .then((user) => {
         if (sessionStorageAvailable) window.sessionStorage.removeItem(AUTH_IN_PROGRESS);
-        Lbryio.getAuthToken().then((token) => {
+        return Lbryio.getAuthToken().then((token) => {
           dispatch({
             type: ACTIONS.AUTHENTICATION_SUCCESS,
             data: { user, accessToken: token },

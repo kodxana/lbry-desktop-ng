@@ -11,10 +11,16 @@ const Lbryio = {
 };
 
 const EXCHANGE_RATE_TIMEOUT = 20 * 60 * 1000;
-const INTERNAL_APIS_DOWN = 'internal_apis_down';
+const REQUEST_TIMEOUT = 15000;
+
+function unavailable() {
+  const error = new Error(__('Account services are unavailable. Please try again later.'));
+  error.code = 'ACCOUNT_API_UNAVAILABLE';
+  return error;
+}
 
 // We can't use env's because they aren't passed into node_modules
-Lbryio.setLocalApi = endpoint => {
+Lbryio.setLocalApi = (endpoint) => {
   Lbryio.CONNECTION_STRING = endpoint.replace(/\/*$/, '/'); // exactly one slash at the end;
 };
 
@@ -27,35 +33,33 @@ Lbryio.call = (resource, action, params = {}, method = 'get') => {
     return Promise.reject(new Error(__('Invalid method')));
   }
 
-  function checkAndParse(response) {
-    if (response.status >= 200 && response.status < 300) {
-      return response.json();
-    }
-
-    if (response.status === 500) {
-      return Promise.reject(INTERNAL_APIS_DOWN);
-    }
-
-    if (response)
-      return response.json().then(json => {
-        let error;
-        if (json.error) {
-          error = new Error(json.error);
-        } else {
-          error = new Error('Unknown API error signature');
-        }
-        error.response = response; // This is primarily a hack used in actions/user.js
-        return Promise.reject(error);
+  async function makeRequest(url, options) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal }).catch(() => {
+        throw unavailable();
       });
+      if (response.status >= 500 || response.status === 429) throw unavailable();
+      const json = await response.json().catch(() => {
+        throw unavailable();
+      });
+      if (!json || typeof json !== 'object') throw unavailable();
+      if (response.status < 200 || response.status >= 300 || json.success === false || json.error) {
+        const error = new Error(typeof json.error === 'string' ? json.error : __('Account request failed.'));
+        error.response = response;
+        throw error;
+      }
+      if (!Object.prototype.hasOwnProperty.call(json, 'data')) throw unavailable();
+      return json.data;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
-  function makeRequest(url, options) {
-    return fetch(url, options).then(checkAndParse);
-  }
-
-  return Lbryio.getAuthToken().then(token => {
+  return Lbryio.getAuthToken().then((token) => {
     const fullParams = { auth_token: token, ...params };
-    Object.keys(fullParams).forEach(key => {
+    Object.keys(fullParams).forEach((key) => {
       const value = fullParams[key];
       if (typeof value === 'object') {
         fullParams[key] = JSON.stringify(value);
@@ -80,20 +84,18 @@ Lbryio.call = (resource, action, params = {}, method = 'get') => {
       url = `${Lbryio.CONNECTION_STRING}${resource}/${action}`;
     }
 
-    return makeRequest(url, options).then(response => response.data);
+    return makeRequest(url, options);
   });
 };
 
 Lbryio.authToken = null;
 
 Lbryio.getAuthToken = () =>
-  new Promise(resolve => {
+  new Promise((resolve, reject) => {
     if (Lbryio.authToken) {
       resolve(Lbryio.authToken);
     } else if (Lbryio.overrides.getAuthToken) {
-      Lbryio.overrides.getAuthToken().then(token => {
-        resolve(token);
-      });
+      Lbryio.overrides.getAuthToken().then(resolve, reject);
     } else if (typeof window !== 'undefined') {
       const { store } = window;
       if (store) {
@@ -122,7 +124,7 @@ Lbryio.authenticate = (domain, language) => {
       language: language || 'en',
     };
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       resolve(params);
     });
   }
@@ -130,30 +132,31 @@ Lbryio.authenticate = (domain, language) => {
   if (Lbryio.authenticationPromise === null) {
     Lbryio.authenticationPromise = new Promise((resolve, reject) => {
       Lbryio.getAuthToken()
-        .then(token => {
+        .then((token) => {
           if (!token || token.length > 60) {
             return false;
           }
 
           // check that token works
           return Lbryio.getCurrentUser()
-            .then(user => user)
-            .catch(error => {
-              if (error === INTERNAL_APIS_DOWN) {
-                throw new Error('Internal APIS down');
-              }
-
-              return false;
+            .then((user) => {
+              if (!user || typeof user !== 'object' || !user.id) throw unavailable();
+              return user;
+            })
+            .catch((error) => {
+              // Only an explicit rejection of the token permits a new session.
+              if (error.response && error.response.status === 401) return false;
+              throw error;
             });
         })
-        .then(user => {
+        .then((user) => {
           if (user) {
             return user;
           }
 
           return Lbry.status()
             .then(
-              status =>
+              (status) =>
                 new Promise((res, rej) => {
                   const appId =
                     domain && domain !== 'lbry.tv'
@@ -169,7 +172,7 @@ Lbryio.authenticate = (domain, language) => {
                     },
                     'post'
                   )
-                    .then(response => {
+                    .then((response) => {
                       if (!response.auth_token) {
                         throw new Error('auth_token was not set in the response');
                       }
@@ -188,10 +191,10 @@ Lbryio.authenticate = (domain, language) => {
                       Lbryio.authToken = response.auth_token;
                       return res(response);
                     })
-                    .catch(error => rej(error));
+                    .catch((error) => rej(error));
                 })
             )
-            .then(newUser => {
+            .then((newUser) => {
               if (!newUser) {
                 return Lbryio.getCurrentUser();
               }
@@ -199,6 +202,9 @@ Lbryio.authenticate = (domain, language) => {
             });
         })
         .then(resolve, reject);
+    }).finally(() => {
+      // A failed attempt must not poison every retry until the app restarts.
+      Lbryio.authenticationPromise = null;
     });
   }
 
@@ -211,17 +217,17 @@ Lbryio.getStripeToken = () =>
     : 'pk_live_e8M4dRNnCCbmpZzduEUZBgJO';
 
 Lbryio.getExchangeRates = () => {
-  if (
-    !Lbryio.exchangeLastFetched ||
-    Date.now() - Lbryio.exchangeLastFetched > EXCHANGE_RATE_TIMEOUT
-  ) {
+  if (!Lbryio.exchangeLastFetched || Date.now() - Lbryio.exchangeLastFetched > EXCHANGE_RATE_TIMEOUT) {
     Lbryio.exchangePromise = new Promise((resolve, reject) => {
       Lbryio.call('lbc', 'exchange_rate', {}, 'get', true)
         .then(({ lbc_usd: LBC_USD, lbc_btc: LBC_BTC, btc_usd: BTC_USD }) => {
           const rates = { LBC_USD, LBC_BTC, BTC_USD };
           resolve(rates);
         })
-        .catch(reject);
+        .catch((error) => {
+          Lbryio.exchangeLastFetched = null;
+          reject(error);
+        });
     });
     Lbryio.exchangeLastFetched = Date.now();
   }

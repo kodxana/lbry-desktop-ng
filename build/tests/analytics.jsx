@@ -124,6 +124,15 @@ export default async function testAnalytics(phase, history) {
     assert.equal(commands.length, count, 'Opt-out stops route, event and user commands');
     assert.equal(scripts().length, 1, 'Toggling consent must reuse the loaded tracker');
     analytics.toggleInternal(true); // Exercise saved opt-in in the next fresh renderer.
+    Lbryio.call = async () => {
+      throw Error('account service unavailable');
+    };
+    assert.equal(await analytics.error('outage fixture'), false);
+    await analytics.apiLogView('fixture', 'outpoint', 'claim');
+    analytics.apiLogSearch();
+    analytics.apiLogPublish({ permanent_url: 'fixture', claim_id: 'claim', txid: 'tx', nout: 0 });
+    analytics.apiSyncTags({ tags: ['fixture'] });
+    await tick(); // Unhandled rejections fail the renderer harness.
   } finally {
     Lbryio.call = originalCall;
     Native.getAppVersionInfo = originalVersions;
